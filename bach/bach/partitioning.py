@@ -542,5 +542,4 @@ def get_order_by_expression(order_by: List['SortColumn'], nulls_last: bool = Fal
             expr = Expression.construct('{} {}', level_expr, asc_expr if sc.asc else desc_expr)
             expressions.append(expr)
 
-    join_expressions(expressions)
     return Expression.construct('order by {}', join_expressions(expressions))
