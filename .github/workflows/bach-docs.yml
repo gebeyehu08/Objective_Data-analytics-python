@@ -40,6 +40,8 @@ jobs:
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       # Just the path to a temp file, the actual secret is fully contained in the env var above.
       OBJ_DB_BQ_CREDENTIALS_PATH: './sa.json'
+      # give non-zero exit code on warnings
+      SPHINXOPTS: -W
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
