@@ -431,22 +431,6 @@ class Window(GroupBy):
                       start_boundary=start_boundary, start_value=start_value,
                       end_boundary=end_boundary, end_value=end_value)
 
-    def _get_order_by_expression(self) -> Expression:
-        """
-        Get a properly formatted order by clause based on this df's order_by.
-        Will return an empty string in case ordering in not requested.
-        """
-        if self._order_by:
-            exprs = [sc.expression for sc in self._order_by]
-            nulls_last_stmt = 'nulls last' if self._nulls_last else ''
-            fmtstr = [
-                f"{{}} {'asc' if sc.asc else 'desc'} {nulls_last_stmt}".strip()
-                for sc in self._order_by
-            ]
-            return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
-        else:
-            return Expression.construct('')
-
     def get_index_expressions(self) -> List[Expression]:
         from bach.series import SeriesAbstractMultiLevel
         exprs = []
