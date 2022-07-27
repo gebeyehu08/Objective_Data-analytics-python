@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'bach/**'
+      - 'modelhub/**'
       # Also run if we update this file, or any other workflow
       - '.github/**'
 
