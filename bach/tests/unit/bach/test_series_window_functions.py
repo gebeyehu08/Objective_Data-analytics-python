@@ -11,11 +11,11 @@ def test_window_row_number(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'row_number() over ( order by `b` asc )'
+        assert result_sql == 'row_number() over ( order by `b` asc nulls first )'
 
     else:
         assert result_sql == (
-            'row_number() over ( order by "b" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+            'row_number() over ( order by "b" asc nulls first RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
         )
 
 
@@ -28,11 +28,11 @@ def test_window_rank(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'rank() over ( order by `b` asc )'
+        assert result_sql == 'rank() over ( order by `b` asc nulls first )'
 
     else:
         assert result_sql == (
-            'rank() over ( order by "b" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+            'rank() over ( order by "b" asc nulls first RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
         )
 
 
@@ -45,11 +45,11 @@ def test_window_dense_rank(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'dense_rank() over ( order by `b` asc )'
+        assert result_sql == 'dense_rank() over ( order by `b` asc nulls first )'
 
     else:
         assert result_sql == (
-            'dense_rank() over ( order by "b" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+            'dense_rank() over ( order by "b" asc nulls first RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
         )
 
 
@@ -62,11 +62,11 @@ def test_window_percent_rank(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'percent_rank() over ( order by `b` asc )'
+        assert result_sql == 'percent_rank() over ( order by `b` asc nulls first )'
 
     else:
         assert result_sql == (
-            'percent_rank() over ( order by "b" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+            'percent_rank() over ( order by "b" asc nulls first RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
         )
 
 
@@ -79,11 +79,11 @@ def test_window_cume_dist(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'cume_dist() over ( order by `b` desc )'
+        assert result_sql == 'cume_dist() over ( order by `b` desc nulls last )'
 
     else:
         assert result_sql == (
-            'cume_dist() over ( order by "b" desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+            'cume_dist() over ( order by "b" desc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
         )
 
 
@@ -96,11 +96,11 @@ def test_window_ntile(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'ntile(1) over ( order by `b` desc )'
+        assert result_sql == 'ntile(1) over ( order by `b` desc nulls last )'
 
     else:
         assert result_sql == (
-            'ntile(1) over ( order by "b" desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+            'ntile(1) over ( order by "b" desc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
         )
 
 
@@ -118,13 +118,13 @@ def test_window_lag(dialect):
     if is_bigquery(dialect):
         assert result_sql == (
             f'lag({column_name}, 1, {value}) over '
-            f'( order by {column_name} desc )'
+            f'( order by {column_name} desc nulls last )'
         )
         return
 
     assert result_sql == (
         f'lag({column_name}, 1, {value}) over '
-        f'( order by {column_name} desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+        f'( order by {column_name} desc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
     )
 
 
@@ -142,13 +142,13 @@ def test_window_lead(dialect):
     if is_bigquery(dialect):
         assert result_sql == (
             f'lead({column_name}, 1, {value}) over '
-            f'( order by {column_name} desc )'
+            f'( order by {column_name} desc nulls last )'
         )
         return
 
     assert result_sql == (
         f'lead({column_name}, 1, {value}) over '
-        f'( order by {column_name} desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+        f'( order by {column_name} desc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
     )
 
 
@@ -163,7 +163,7 @@ def test_window_first_value(dialect):
     column_name = '`b`' if is_bigquery(dialect) else '"b"'
     assert result_sql == (
         f'first_value({column_name}) over '
-        f'( order by {column_name} desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+        f'( order by {column_name} desc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
     )
 
 
@@ -178,7 +178,7 @@ def test_window_last_value(dialect):
     column_name = '`b`' if is_bigquery(dialect) else '"b"'
     assert result_sql == (
         f'last_value({column_name}) over '
-        f'( order by {column_name} desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+        f'( order by {column_name} desc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
     )
 
 
@@ -193,5 +193,5 @@ def test_window_nth_value(dialect):
     column_name = '`b`' if is_bigquery(dialect) else '"b"'
     assert result_sql == (
         f'nth_value({column_name}, 10) over '
-        f'( order by {column_name} desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+        f'( order by {column_name} desc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
     )

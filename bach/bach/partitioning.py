@@ -4,9 +4,9 @@ from typing import List, Dict, Optional, cast, TypeVar
 
 from sqlalchemy.engine import Dialect
 
-from bach import SeriesAbstractMultiLevel, SortColumn
+from bach import SortColumn
 from bach.series import Series
-from bach.expression import Expression, WindowFunctionExpression
+from bach.expression import Expression, WindowFunctionExpression, join_expressions
 from bach.sql_model import BachSqlModel
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
@@ -94,7 +94,7 @@ class GroupBy:
     return a fresh copy.
     """
     def __init__(self, group_by_columns: List[Series]):
-
+        from bach.series import SeriesAbstractMultiLevel
         self._index = {}
 
         for col in group_by_columns:
@@ -431,22 +431,6 @@ class Window(GroupBy):
                       start_boundary=start_boundary, start_value=start_value,
                       end_boundary=end_boundary, end_value=end_value)
 
-    def _get_order_by_expression(self) -> Expression:
-        """
-        Get a properly formatted order by clause based on this df's order_by.
-        Will return an empty string in case ordering in not requested.
-        """
-        if self._order_by:
-            exprs = [sc.expression for sc in self._order_by]
-            nulls_last_stmt = 'nulls last' if self._nulls_last else ''
-            fmtstr = [
-                f"{{}} {'asc' if sc.asc else 'desc'} {nulls_last_stmt}".strip()
-                for sc in self._order_by
-            ]
-            return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
-        else:
-            return Expression.construct('')
-
     def get_index_expressions(self) -> List[Expression]:
         from bach.series import SeriesAbstractMultiLevel
         exprs = []
@@ -465,7 +449,7 @@ class Window(GroupBy):
             {window_func} OVER (PARTITION BY .. ORDER BY ... frame_clause)
         """
         # TODO implement NULLS FIRST / NULLS LAST, probably not here but in the sorting logic.
-        order_by = self._get_order_by_expression()
+        order_by = get_order_by_expression(order_by=self._order_by, nulls_last=self._nulls_last)
 
         if self.frame_clause is None:
             frame_clause = ''
@@ -498,3 +482,48 @@ class Window(GroupBy):
         On a Window, there is no default group_by clause
         """
         return None
+
+
+def get_order_by_expression(order_by: List['SortColumn'], nulls_last: bool = False) -> Expression:
+    """
+    INTERNAL: Convert order_by into an order by expression that is usable inside an aggregation or window
+    function.
+
+    Note: The default ordering is slightly different from regular ordering of rows inside a DataFrame or
+    Series. In DataFrames/Series we sort 'asc nulls last' and `desc nulls last` to mimic the behaviour of
+    pandas. But that's not supported by BigQuery for aggregation functions. So we default here to sort
+    'asc nulls first' and `desc nulls last`.
+
+    :param order_by: List of SortColumns defining the ordering
+    :param nulls_last: By default (=False) the sorting is 'asc null first' and 'desc nulls last'. If
+        `nulls_last` is True, then the sorting is set to 'asc nulls last', 'desc nulls last'
+    :return: An Expression containing a complete order by clause of the form 'order by ...'. Will return
+        an empty Expression if the specified `order_by` list is empty
+    """
+
+    # This logic is partially duplicating DataFrame._get_order_by_clause(), but we can't quite re-use
+    # that as some of the checks there are not applicable, e.g. it's fine to use a column that we are not
+    # grouping on in an aggregate order by.
+    if not order_by:
+        return Expression.construct('')
+
+    if nulls_last:
+        asc_expr = Expression.construct('asc nulls last')
+        desc_expr = Expression.construct('desc nulls last')
+    else:
+        asc_expr = Expression.construct('asc nulls first')
+        desc_expr = Expression.construct('desc nulls last')
+
+    expressions: List[Expression] = []
+    for sc in order_by:
+        if sc.expression.has_multi_level_expressions:
+            multi_lvl_exprs = [
+                level_expr for level_expr in sc.expression.data if isinstance(level_expr, Expression)
+            ]
+        else:
+            multi_lvl_exprs = [sc.expression]
+        for level_expr in multi_lvl_exprs:
+            expr = Expression.construct('{} {}', level_expr, asc_expr if sc.asc else desc_expr)
+            expressions.append(expr)
+
+    return Expression.construct('order by {}', join_expressions(expressions))
