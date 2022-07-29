@@ -39,6 +39,7 @@ describe('FetchTransport', () => {
     expect(fetch).toHaveBeenCalledWith(MOCK_ENDPOINT, {
       body: JSON.stringify({
         events: [testEvent],
+        client_session_id: globalThis.objectiv.clientSessionId,
         transport_time: Date.now(),
       }),
       ...defaultFetchOptions,
@@ -62,6 +63,7 @@ describe('FetchTransport', () => {
     expect(fetch).toHaveBeenCalledWith(MOCK_ENDPOINT, {
       body: JSON.stringify({
         events: [testEvent],
+        client_session_id: globalThis.objectiv.clientSessionId,
         transport_time: Date.now(),
       }),
       ...customOptions,

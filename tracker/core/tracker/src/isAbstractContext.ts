@@ -3,7 +3,7 @@
  */
 
 import { AbstractContext } from '@objectiv/schema';
-import { ContextNames } from './ContextNames';
+import { ContextNames } from './generated/ContextNames';
 
 /**
  * A type guard to determine if the given object has the shape of an AbstractContext.
