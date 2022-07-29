@@ -2057,6 +2057,8 @@ __metadata:
   resolution: "@objectiv/tracker-react-core@workspace:core/react"
   dependencies:
     "@objectiv/developer-tools": ^0.0.23
+    "@objectiv/plugin-application-context": ^0.0.23
+    "@objectiv/plugin-path-context-from-url": ^0.0.23
     "@objectiv/schema": ^0.0.23
     "@objectiv/testing-tools": ^0.0.23
     "@objectiv/tracker-core": ~0.0.23
@@ -2064,7 +2066,6 @@ __metadata:
     "@testing-library/react-hooks": ^7.0.2
     "@types/jest": ^27.4.1
     "@types/react": ^17.0.39
-    fast-deep-equal: ^3.1.3
     jest: ^27.5.1
     jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
