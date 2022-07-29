@@ -8,14 +8,9 @@ import { ContentContextWrapperProps } from './ContentContextWrapper';
 import { LocationContextWrapper } from './LocationContextWrapper';
 
 /**
- * The props of MediaPlayerContextWrapper. No extra attributes, same as ContentContextWrapper.
- */
-export type MediaPlayerContextWrapperProps = ContentContextWrapperProps;
-
-/**
  * Wraps its children in a MediaPlayerContext.
  */
-export const MediaPlayerContextWrapper = ({ children, id }: MediaPlayerContextWrapperProps) => (
+export const MediaPlayerContextWrapper = ({ children, id }: ContentContextWrapperProps) => (
   <LocationContextWrapper locationContext={makeMediaPlayerContext({ id })}>
     {(trackingContext) => (typeof children === 'function' ? children(trackingContext) : children)}
   </LocationContextWrapper>
