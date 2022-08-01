@@ -185,10 +185,10 @@ def test_to_json_array_sorting_null(engine):
         expected_columns=['no_sorting', 'descending', 'index_asc', 'index_desc', 'group_index'],
         expected_data=[[
             [None, 'aa', 'aa', 'bb', 'cc', 'dd', 'ee'],
-            ['ee', 'dd', 'cc', 'bb', 'aa', 'aa', None],
+            [None, 'ee', 'dd', 'cc', 'bb', 'aa', 'aa'],
             ['cc', 'aa', 'bb', 'dd', None, 'ee', 'aa'],
-            ['aa', 'ee', None, 'dd', 'bb', 'aa', 'cc'],
-            ['bb', 'aa', 'aa', None, 'dd', 'cc', 'ee']
+            ['cc', 'aa', 'ee', None, 'dd', 'bb', 'aa'],
+            ['bb', 'aa', 'cc', 'aa', None, 'dd', 'ee']
         ]]
     )
 
