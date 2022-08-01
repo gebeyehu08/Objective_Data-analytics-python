@@ -170,6 +170,7 @@ def test_windowing_frame_clause(engine):
 def test_windowing_windows(engine):
     ## Just test that different windows don't generate SQL errors. Logic will be checked in different tests.
     bt = get_df_with_test_data(engine, full_data_set=True)
+    bt = bt.sort_index()
 
     # no sorting, no partition
     p0 = bt.window()
@@ -185,6 +186,10 @@ def test_windowing_windows(engine):
 
     for w in [p0,p1,p2,p3]:
         bt.inhabitants.window_row_number(window=w).to_pandas()
+
+    with pytest.raises(ValueError, match=r'Window must me sorted when applying'):
+        # exception should be raised as sorting is required when calling any Series.window_* function
+        bt.inhabitants.window_row_number(window=bt.sort_values(by=[]).groupby().window())
 
     with pytest.raises(ValueError):
         # Specific window functions should fail on being passed a groupby
