@@ -1740,9 +1740,12 @@ class DataFrame:
         # TODO Better argument typing, needs fancy import logic
         from bach.partitioning import Window
         index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(group_by_columns=index,
-                          order_by=self._order_by,
-                          **frame_args)
+        group_by = Window(
+            dialect=self.engine.dialect,
+            group_by_columns=index,
+            order_by=self._order_by,
+            **frame_args,
+        )
         return DataFrame._groupby_to_frame(self, group_by)
 
     def cube(self,
@@ -1825,12 +1828,15 @@ class DataFrame:
             end_boundary = WindowFrameBoundary.FOLLOWING
 
         index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(group_by_columns=index,
-                          order_by=self._order_by,
-                          mode=mode,
-                          start_boundary=start_boundary, start_value=start_value,
-                          end_boundary=end_boundary, end_value=end_value,
-                          min_values=min_periods)
+        group_by = Window(
+            dialect=self.engine.dialect,
+            group_by_columns=index,
+            order_by=self._order_by,
+            mode=mode,
+            start_boundary=start_boundary, start_value=start_value,
+            end_boundary=end_boundary, end_value=end_value,
+            min_values=min_periods,
+        )
         return DataFrame._groupby_to_frame(self, group_by)
 
     def expanding(self,
@@ -1861,12 +1867,15 @@ class DataFrame:
         end_value = None
 
         index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(group_by_columns=index,
-                          order_by=self._order_by,
-                          mode=mode,
-                          start_boundary=start_boundary, start_value=start_value,
-                          end_boundary=end_boundary, end_value=end_value,
-                          min_values=min_periods)
+        group_by = Window(
+            dialect=self.engine.dialect,
+            group_by_columns=index,
+            order_by=self._order_by,
+            mode=mode,
+            start_boundary=start_boundary, start_value=start_value,
+            end_boundary=end_boundary, end_value=end_value,
+            min_values=min_periods
+        )
 
         return DataFrame._groupby_to_frame(self, group_by)
 

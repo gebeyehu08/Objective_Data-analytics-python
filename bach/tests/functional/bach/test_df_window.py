@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+from bach import DataFrame
 from bach.partitioning import WindowFrameMode, WindowFrameBoundary
 from tests.functional.bach.test_data_and_utils import (
     assert_equals_data, get_df_with_test_data,
@@ -584,3 +585,89 @@ def test_window_functions_not_in_where_having_groupby(engine):
     with pytest.raises(ValueError,
                        match='Cannot apply a Boolean series containing a window function to DataFrame.'):
         x = bt[bt.founding_min == 4]
+
+
+def test_window_nav_functions_with_nulls(engine):
+    pdf = pd.DataFrame(
+        data={
+            'A': ['a',   'a', 'b', 'b', 'a', 'a'],
+            'B': [  1,  None,   2,   3,  -1,  2 ],
+        }
+    )
+    df = DataFrame.from_pandas(engine, df=pdf, convert_objects=True)
+    df = df.reset_index(drop=True)
+
+    gb_asc = df.sort_values(by=['B']).groupby(['A'])
+    gb_desc = df.sort_values(by=['B'], ascending=False).groupby(['A'])
+    windows = {
+        'asc_nulls_last': gb_asc.window(nulls_last=True, end_boundary=WindowFrameBoundary.FOLLOWING),
+        'asc_nulls_first': gb_asc.window(nulls_last=False, end_boundary=WindowFrameBoundary.FOLLOWING),
+        'desc_nulls_last': gb_desc.window(nulls_last=True, end_boundary=WindowFrameBoundary.FOLLOWING),
+        'desc_nulls_first': gb_desc.window(nulls_last=True, end_boundary=WindowFrameBoundary.FOLLOWING),
+    }
+
+    nav_functions = {
+        'first_value': {},
+        'last_value': {},
+        'nth_value': {'n': 2},
+        'lead': {'offset': 1},
+        'lag': {'offset': 1},
+    }
+    for nav_func, kwargs in nav_functions.items():
+        for window_descr, window in windows.items():
+            func = getattr(df['B'], f'window_{nav_func}')
+            df[f'{nav_func}_{window_descr}'] = func(window=window, **kwargs)
+
+    expected_fln_value = {
+        'a': {
+            'first_value_asc_nulls_last':   -1.,
+            'first_value_asc_nulls_first': None,
+            'first_value_desc_nulls_last':   2.,
+            'first_value_desc_nulls_first':  2.,
+            'last_value_asc_nulls_last':   None,
+            'last_value_asc_nulls_first':    2.,
+            'last_value_desc_nulls_last':  None,
+            'last_value_desc_nulls_first': None,
+            'nth_value_asc_nulls_last':      1.,
+            'nth_value_asc_nulls_first':    -1.,
+            'nth_value_desc_nulls_last':     1.,
+            'nth_value_desc_nulls_first':    1.,
+        },
+        'b': {
+            'first_value_asc_nulls_last':    2.,
+            'first_value_asc_nulls_first':   2.,
+            'first_value_desc_nulls_last':   3.,
+            'first_value_desc_nulls_first':  3.,
+            'last_value_asc_nulls_last':     3.,
+            'last_value_asc_nulls_first':    3.,
+            'last_value_desc_nulls_last':    2.,
+            'last_value_desc_nulls_first':   2.,
+            'nth_value_asc_nulls_last':      3.,
+            'nth_value_asc_nulls_first':     3.,
+            'nth_value_desc_nulls_last':     2.,
+            'nth_value_desc_nulls_first':    2.,
+        },
+    }
+    assert_equals_data(
+        df.sort_values(by=['A', 'B']),
+        expected_columns=[
+            'A', 'B',
+            *expected_fln_value['a'].keys(),
+            'lead_asc_nulls_last',
+            'lead_asc_nulls_first',
+            'lead_desc_nulls_last',
+            'lead_desc_nulls_first',
+            'lag_asc_nulls_last',
+            'lag_asc_nulls_first',
+            'lag_desc_nulls_last',
+            'lag_desc_nulls_first',
+        ],
+        expected_data=[
+            ['a',   -1., *expected_fln_value['a'].values(),   1.,   1., None, None, None, None,   1.,    1.],
+            ['a',    1., *expected_fln_value['a'].values(),   2.,   2.,  -1.,  -1.,  -1.,  -1.,   2.,    2.],
+            ['a',    2., *expected_fln_value['a'].values(), None, None,   1.,   1.,   1.,   1., None,  None],
+            ['a',  None, *expected_fln_value['a'].values(), None,  -1., None, None,   2., None,  -1.,   -1.],
+            ['b',    2., *expected_fln_value['b'].values(),   3.,   3., None, None, None, None,   3.,    3.],
+            ['b',    3., *expected_fln_value['b'].values(), None, None,   2.,   2.,   2.,   2., None,  None],
+        ]
+    )

@@ -327,6 +327,7 @@ class Window(GroupBy):
     which selects the current row itself.
     """
     def __init__(self,
+                 dialect: Dialect,
                  group_by_columns: List['Series'],
                  order_by: List[SortColumn],
                  nulls_last: bool = False,
@@ -381,6 +382,7 @@ class Window(GroupBy):
                         and start_value > end_value:
                     raise ValueError("frame boundaries defined in wrong order.")
 
+        self._dialect = dialect
         self._mode = mode
         self._start_boundary = start_boundary
         self._start_value = start_value
@@ -424,12 +426,15 @@ class Window(GroupBy):
         Convenience function to clone this window with new frame parameters
         :see: __init__()
         """
-        return Window(group_by_columns=list(self._index.values()),
-                      order_by=self._order_by,
-                      nulls_last=self._nulls_last,
-                      mode=mode,
-                      start_boundary=start_boundary, start_value=start_value,
-                      end_boundary=end_boundary, end_value=end_value)
+        return Window(
+            dialect=self._dialect,
+            group_by_columns=list(self._index.values()),
+            order_by=self._order_by,
+            nulls_last=self._nulls_last,
+            mode=mode,
+            start_boundary=start_boundary, start_value=start_value,
+            end_boundary=end_boundary, end_value=end_value,
+        )
 
     def get_index_expressions(self) -> List[Expression]:
         from bach.series import SeriesAbstractMultiLevel
@@ -449,7 +454,9 @@ class Window(GroupBy):
             {window_func} OVER (PARTITION BY .. ORDER BY ... frame_clause)
         """
         # TODO implement NULLS FIRST / NULLS LAST, probably not here but in the sorting logic.
-        order_by = get_order_by_expression(order_by=self._order_by, nulls_last=self._nulls_last)
+        order_by = get_order_by_expression(
+            dialect=self._dialect, order_by=self._order_by, nulls_last=self._nulls_last,
+        )
 
         if self.frame_clause is None:
             frame_clause = ''
@@ -484,7 +491,9 @@ class Window(GroupBy):
         return None
 
 
-def get_order_by_expression(order_by: List['SortColumn'], nulls_last: bool = False) -> Expression:
+def get_order_by_expression(
+    dialect: Dialect, order_by: List['SortColumn'], nulls_last: bool = False,
+) -> Expression:
     """
     INTERNAL: Convert order_by into an order by expression that is usable inside an aggregation or window
     function.
@@ -507,12 +516,12 @@ def get_order_by_expression(order_by: List['SortColumn'], nulls_last: bool = Fal
     if not order_by:
         return Expression.construct('')
 
+    asc_expr = Expression.raw('asc')
+    desc_expr = Expression.raw('desc')
     if nulls_last:
-        asc_expr = Expression.construct('asc nulls last')
-        desc_expr = Expression.construct('desc nulls last')
+        nulls_expr = Expression.construct('nulls last')
     else:
-        asc_expr = Expression.construct('asc nulls first')
-        desc_expr = Expression.construct('desc nulls last')
+        nulls_expr = Expression.construct('nulls first')
 
     expressions: List[Expression] = []
     for sc in order_by:
@@ -523,7 +532,17 @@ def get_order_by_expression(order_by: List['SortColumn'], nulls_last: bool = Fal
         else:
             multi_lvl_exprs = [sc.expression]
         for level_expr in multi_lvl_exprs:
-            expr = Expression.construct('{} {}', level_expr, asc_expr if sc.asc else desc_expr)
+            expr = Expression.construct('{} {}', level_expr,  asc_expr if sc.asc else desc_expr)
+            if is_bigquery(dialect):
+                # Big Query does not support NULLS LAST and NULLS FIRST (might generate some errors)
+                # in window order by, therefore we require to simulate it.
+                simulate_nulls_last_expr = Expression.construct(
+                    '({} is null) {}', level_expr, asc_expr if nulls_last else desc_expr
+                )
+                expressions.append(simulate_nulls_last_expr)
+            else:
+                expr = Expression.construct('{} {}', expr, nulls_expr)
+
             expressions.append(expr)
 
     return Expression.construct('order by {}', join_expressions(expressions))

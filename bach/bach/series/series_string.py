@@ -237,7 +237,7 @@ class SeriesString(Series):
         The order of the values in the array will be based of the order of the values in this Series. If
         this Series does not have a deterministic sorting, then the values are additionally sorted by the
         values themselves. A difference in sorting can occur between the resulting array and the values in a
-        Series when the Series contains None/NULL values. Null values will be sorted first when sorting
+        Series when the Series contains None/NULL values. Null values will be sorted last when sorting
         ascending, contrary to sorting inside a DataFrame or a Series where they come last.
 
         :param partition: The partition to apply, optional.
@@ -249,7 +249,9 @@ class SeriesString(Series):
         from bach import SortColumn
         order_by += [SortColumn(expression=self.expression, asc=True)]
 
-        order_by_expr = get_order_by_expression(order_by=order_by, nulls_last=False)
+        order_by_expr = get_order_by_expression(
+            dialect=self.engine.dialect, order_by=order_by, nulls_last=False,
+        )
         array_agg_expression = AggregateFunctionExpression.construct('array_agg({} {})', self, order_by_expr)
         if is_postgres(self.engine):
             expression = Expression.construct('to_jsonb({})', array_agg_expression)

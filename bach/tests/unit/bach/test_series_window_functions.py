@@ -11,7 +11,7 @@ def test_window_row_number(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'row_number() over ( order by `b` asc nulls first )'
+        assert result_sql == 'row_number() over ( order by (`b` is null) desc, `b` asc )'
 
     else:
         assert result_sql == (
@@ -28,7 +28,7 @@ def test_window_rank(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'rank() over ( order by `b` asc nulls first )'
+        assert result_sql == 'rank() over ( order by (`b` is null) desc, `b` asc )'
 
     else:
         assert result_sql == (
@@ -45,7 +45,7 @@ def test_window_dense_rank(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'dense_rank() over ( order by `b` asc nulls first )'
+        assert result_sql == 'dense_rank() over ( order by (`b` is null) desc, `b` asc )'
 
     else:
         assert result_sql == (
@@ -62,7 +62,7 @@ def test_window_percent_rank(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'percent_rank() over ( order by `b` asc nulls first )'
+        assert result_sql == 'percent_rank() over ( order by (`b` is null) desc, `b` asc )'
 
     else:
         assert result_sql == (
@@ -79,7 +79,7 @@ def test_window_cume_dist(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'cume_dist() over ( order by `b` desc nulls last )'
+        assert result_sql == 'cume_dist() over ( order by (`b` is null) asc, `b` desc )'
 
     else:
         assert result_sql == (
@@ -96,7 +96,7 @@ def test_window_ntile(dialect):
 
     result_sql = result.expression.to_sql(dialect)
     if is_bigquery(dialect):
-        assert result_sql == 'ntile(1) over ( order by `b` desc nulls last )'
+        assert result_sql == 'ntile(1) over ( order by (`b` is null) asc, `b` desc )'
 
     else:
         assert result_sql == (
@@ -118,7 +118,7 @@ def test_window_lag(dialect):
     if is_bigquery(dialect):
         assert result_sql == (
             f'lag({column_name}, 1, {value}) over '
-            f'( order by {column_name} desc nulls last )'
+            f'( order by ({column_name} is null) asc, {column_name} desc )'
         )
         return
 
