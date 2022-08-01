@@ -2,9 +2,13 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-export * from './abstracts';
-export * from './discriminators';
-export * from './events';
-export * from './global_contexts';
-export * from './location_contexts';
+/**
+ * Set package version in globals
+ */
+import pkg from '../package.json';
+globalThis.objectiv = globalThis.objectiv ?? {};
+globalThis.objectiv.versions = globalThis.objectiv.versions ?? new Map();
+globalThis.objectiv.versions.set(pkg.name, pkg.version);
+
+export * from './generated';
 export * from './static';
