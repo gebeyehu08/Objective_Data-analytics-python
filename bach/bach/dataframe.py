@@ -1195,7 +1195,7 @@ class DataFrame:
             if isinstance(key, int):
                 raise NotImplementedError("index key lookups not supported, use slices instead.")
             if isinstance(key, slice):
-                node = self.get_current_node(name='getitem_slice', limit=key)
+                node = self.sort_deterministically().get_current_node(name='getitem_slice', limit=key)
                 single_value = (
                     # This is our best guess, there can always be zero results, but at least we tried.
                     # Negative slices are not supported, Exceptions was raised in get_current_node()
@@ -1953,7 +1953,7 @@ class DataFrame:
         .. note::
             This function queries the database.
         """
-        sql = self.view_sql(limit=limit)
+        sql = self.sort_deterministically().view_sql(limit=limit)
 
         series_name_to_dtype = {}
         for series in self.all_series.values():
@@ -2152,7 +2152,8 @@ class DataFrame:
         """
         dialect = self.engine.dialect
         # we need to construct each multi-level series, since it should resemble the final result
-        model = self.get_current_node('view_sql', limit=limit, construct_multi_levels=True)
+        df = self.sort_deterministically()
+        model = df.get_current_node('view_sql', limit=limit, construct_multi_levels=True)
         model = model.copy_set_materialization(Materialization.QUERY)
 
         placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
@@ -2901,6 +2902,7 @@ class DataFrame:
             if dedup_sort:
                 df = df.sort_values(by=dedup_sort, ascending=ascending)
 
+            df = df.sort_deterministically()
             df = df.groupby(by=dedup_on).window(end_boundary=end_boundary, end_value=None)
             df = df[dedup_data].agg(func=func_to_apply).reset_index(drop=False)
             df = df.rename(columns={f'{ddd}_{func_to_apply}': ddd for ddd in dedup_data})
@@ -2916,6 +2918,20 @@ class DataFrame:
 
         df = df if ignore_index else df.set_index(keys=self.index_columns)
         return df
+
+    def sort_deterministically(self) -> 'DataFrame':
+        sort_columns = self.order_by
+        sorted_on_expressions = {sc.expression for sc in sort_columns}
+        for series in self.all_series.values():
+            expression = series.expression
+            if expression in sorted_on_expressions:
+                continue  # we already sorted on this expression
+            if expression.is_constant:
+                # Order by a constant gives broken sql. Constants don't matter for a deterministic sorting.
+                continue
+            sorted_on_expressions.add(expression)
+            sort_columns.append(SortColumn(expression=expression, asc=True))
+        return self.copy_override(order_by=sort_columns)
 
     def value_counts(
         self,
