@@ -114,4 +114,26 @@ describe('useTrackOnToggle', () => {
     expect(LogTransport2.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'VisibleEvent' }));
     expect(LogTransport2.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'HiddenEvent' }));
   });
+
+  it('should allow omitting the false event', () => {
+    const LogTransport2 = { transportName: 'LogTransport2', handle: jest.fn(), isUsable: () => true };
+    const anotherTracker = new Tracker({ applicationId: 'app-id', transport: LogTransport2 });
+    const { rerender } = renderHook(
+      (state) =>
+        useTrackOnToggle({
+          state,
+          trueEvent: makeVisibleEvent(),
+          tracker: anotherTracker,
+        }),
+      { initialProps: false }
+    );
+
+    rerender(true);
+    rerender(false);
+
+    expect(LogTransport.handle).not.toHaveBeenCalled();
+    expect(LogTransport2.handle).toHaveBeenCalledTimes(2);
+    expect(LogTransport2.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport2.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'VisibleEvent' }));
+  });
 });
