@@ -26,35 +26,54 @@ if snowplow_config.aws_enabled:
     import botocore.exceptions
 
 
-def make_snowplow_custom_context(self_describing_event: Dict, config: SnowplowConfig) -> str:
+def filter_dict(data: Dict, filter_keys: List) -> Dict:
+    return {k: v for k, v in data.items() if k not in filter_keys}
+
+
+def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> str:
     """
     Create Snowplow custom context, containing snowplow_event, base64 encoded, ready to be inserted into a
     snowplow event
-    :param self_describing_event: Dict containing a schema and a payload
+    :param event: List of Dict containing a schema and a payload
     :param config: SnowplowConfig
     :return: base64 encoded snowplow self-describing custom context
     """
+    self_describing_contexts = []
+
+    # first add global contexts
+    blocked = ['_type', '_types']
+    version = '1-0-0'
+    schema_base = 'iglu:io.objectiv.context'
+    for context in event['global_contexts']:
+        context_type = context['_type']
+        schema = f'{schema_base}/{context_type}/jsonschema/{version}'
+        data = filter_dict(context, blocked)
+        self_describing_contexts.append(make_snowplow_context(schema, data))
+
+    # now add location_stack
+    schema = f'iglu:io.objectiv/location_stack/jsonschema/1-0-4'
+    #for location in event['location_stack']:
+    #    self_describing_contexts.append(make_snowplow_context(schema, filter_dict(location, ['_types'])))
+    #    break
+
+    schema = f'iglu:io.objectiv/location_stack/jsonschema/1-0-5'
+    location_stack = {'location_stack': [filter_dict(v, ['_types']) for i, v in enumerate(event['location_stack'])]}
+    self_describing_contexts.append(make_snowplow_context(schema, location_stack))
+
     snowplow_contexts_schema = config.schema_contexts
     custom_context = {
         'schema': snowplow_contexts_schema,
-        'data': [self_describing_event]
+        'data': self_describing_contexts
     }
+    print(json.dumps(custom_context, indent=4))
     custom_context_json = json.dumps(custom_context)
     return str(base64.b64encode(custom_context_json.encode('UTF-8')), 'UTF-8')
 
 
-def objectiv_event_to_snowplow(event: EventData, config: SnowplowConfig) -> Dict[str, Union[str, EventData]]:
-    """
-    Wrap objectiv event in self-describing Snowplow object
-    :param event: EventData
-    :param config: SnowplowConfig
-    :return: Dict containing event and schema describing the event
-    """
-    objectiv_schema = config.schema_objectiv_taxonomy
-
+def make_snowplow_context(schema: str, data: Dict) -> Dict:
     return {
-        'schema': objectiv_schema,
-        'data': event
+        'schema': schema,
+        'data': data
     }
 
 
@@ -73,6 +92,8 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     except ValueError:
         http_context = {}
 
+    http_context['referrer'] = 'mike'
+
     try:
         cookie_context = get_context(event, 'CookieIdContext')
     except ValueError:
@@ -83,22 +104,28 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     except ValueError:
         path_context = {}
 
+    try:
+        application_context = get_context(event, 'ApplicationContext')
+    except ValueError:
+        application_context = {}
     query_string = urlparse(str(path_context.get('id', ''))).query
 
     rich_event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
     rich_event['cookie_id'] = cookie_context.get('id', '')
 
-    snowplow_event = objectiv_event_to_snowplow(event=rich_event, config=config)
-    snowplow_custom_context = make_snowplow_custom_context(self_describing_event=snowplow_event, config=config)
+    snowplow_custom_context = make_snowplow_custom_contexts(event=event, config=config)
+
     payload = {
         "schema": snowplow_payload_data_schema,
         "data": [{
             "e": "se",  # mandatory: event type: structured event
+            "se_ca": event['_type'],
             "p": "web",  # mandatory: platform
             "tv": "objectiv-tracker-0.0.5",  # mandatory: tracker version
             "eid": event['id'],  # event_id
             "url": path_context.get('id', ''),
-            "cx": snowplow_custom_context
+            "cx": snowplow_custom_context,
+            "tna": application_context.get('id', '')
         }]
     }
     return CollectorPayload(
@@ -253,6 +280,7 @@ def prepare_event_for_snowplow_pipeline(event: EventData,
     :return: bytes object to be ingested by Snowplow pipeline
     """
     payload: CollectorPayload = objectiv_event_to_snowplow_payload(event=event, config=config)
+    print(f'sending payload: {payload}')
     if good:
         data = payload_to_thrift(payload=payload)
     else:
