@@ -5,15 +5,15 @@ import re
 from dataclasses import dataclass
 
 import nbformat as nbformat
-from papermill.iorw import load_notebook_node
 from papermill.engines import NBClientEngine, NotebookExecutionManager
+from papermill.iorw import load_notebook_node
 
 from checklock_holmes.models.nb_checker_models import (
-    NoteBookCheck, NoteBookMetadata, CellTiming, CellError
+    CellError, CellTiming, NoteBookCheck, NoteBookMetadata
 )
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
-    NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE,
+    NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE
 )
 from checklock_holmes.utils.helpers import CuriousIncident
 from checklock_holmes.utils.supported_engines import SupportedEngine
@@ -22,10 +22,12 @@ from checklock_holmes.utils.supported_engines import SupportedEngine
 class WatsonExecutionManager(NotebookExecutionManager):
     MAX_LOG_EXCEPTION_MESSAGE = 500
 
-    def cell_exception(self, cell, cell_index=None, **kwargs) -> None:
+    def cell_exception(
+        self, cell: nbformat.NotebookNode, cell_index: str = None, **kwargs,
+    ) -> None:
         super().cell_exception(cell, cell_index, **kwargs)
 
-        exc = kwargs.get('exception')
+        exc = kwargs['exception']
 
         self.nb.metadata.papermill.error = CellError(
             number=cell.metadata.papermill.index,
@@ -38,16 +40,18 @@ class WatsonExecutionManager(NotebookExecutionManager):
             cell.metadata.papermill.index = cell_idx
 
 
-class ChecklockEngine(NBClientEngine):
+class ChecklockNBEngine(NBClientEngine):
+    EXECUTION_TIMEOUT = 2 * 60  # 2 minutes
+
     @classmethod
     def execute_notebook(
         cls,
-        nb,
-        kernel_name,
-        output_path=None,
-        progress_bar=True,
-        log_output=False,
-        autosave_cell_every=30,
+        nb: nbformat.NotebookNode,
+        kernel_name: str = 'python3',
+        output_path: str = None,
+        progress_bar: bool = True,
+        log_output: bool = False,
+        autosave_cell_every: int = 0,
         **kwargs
     ):
         """
@@ -67,7 +71,13 @@ class ChecklockEngine(NBClientEngine):
 
         nb_man.notebook_start()
         try:
-            cls.execute_managed_notebook(nb_man, kernel_name, log_output=log_output, **kwargs)
+            cls.execute_managed_notebook(
+                nb_man,
+                kernel_name,
+                log_output=log_output,
+                execution_timeout=cls.EXECUTION_TIMEOUT,
+                **kwargs
+            )
         finally:
             nb_man.cleanup_pbar()
             nb_man.notebook_complete()
@@ -100,7 +110,7 @@ class NoteBookChecker:
             )
 
         try:
-            executed_nb = ChecklockEngine.execute_notebook(
+            executed_nb = ChecklockNBEngine.execute_notebook(
                 nb=self._load_notebook_node(engine),
                 kernel_name='python3',
                 output_path=None,  # don't save notebook outputs

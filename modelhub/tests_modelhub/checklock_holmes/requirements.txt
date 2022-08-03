@@ -1,3 +1,5 @@
+papermill
+
 # dev and styling
 pydantic==1.9.1
 python-dotenv
