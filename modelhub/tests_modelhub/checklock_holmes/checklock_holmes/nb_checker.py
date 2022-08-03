@@ -3,8 +3,11 @@ Copyright 2022 Objectiv B.V.
 """
 import re
 from dataclasses import dataclass
+from typing import Optional
 
-import nbformat as nbformat
+import nbformat
+from nbclient.exceptions import CellExecutionError
+from papermill.clientwrap import PapermillNotebookClient
 from papermill.engines import NBClientEngine, NotebookExecutionManager
 from papermill.iorw import load_notebook_node
 
@@ -29,10 +32,11 @@ class WatsonExecutionManager(NotebookExecutionManager):
 
         exc = kwargs['exception']
 
-        self.nb.metadata.papermill.error = CellError(
-            number=cell.metadata.papermill.index,
-            exc=f'{exc.ename}: {exc.evalue[:self.MAX_LOG_EXCEPTION_MESSAGE]}',
-        )
+        if self.nb.metadata.papermill.error is None:
+            self.nb.metadata.papermill.error = CellError(
+                number=cell.metadata.papermill.index,
+                exc=f'{exc.ename}: {exc.evalue[:self.MAX_LOG_EXCEPTION_MESSAGE]}',
+            )
 
     def notebook_start(self, **kwargs) -> None:
         super().notebook_start(**kwargs)
@@ -40,20 +44,35 @@ class WatsonExecutionManager(NotebookExecutionManager):
             cell.metadata.papermill.index = cell_idx
 
 
+class ChecklockNBClient(PapermillNotebookClient):
+    async def async_execute_cell(
+        self,
+        cell: nbformat.NotebookNode,
+        cell_index: int,
+        execution_count: Optional[int] = None,
+        store_history: bool = True,
+    ) -> nbformat.NotebookNode:
+        try:
+            self.nb_man.cell_start(cell, cell_index)
+            await super().async_execute_cell(
+                cell=cell,
+                cell_index=cell_index,
+                execution_count=execution_count,
+                store_history=store_history,
+            )
+        except CellExecutionError as ex:
+            self.nb_man.cell_exception(cell, cell_index=cell_index, exception=ex)
+        finally:
+            self.nb_man.cell_complete(cell, cell_index=cell_index)
+
+        return cell
+
+
 class ChecklockNBEngine(NBClientEngine):
     EXECUTION_TIMEOUT = 2 * 60  # 2 minutes
 
     @classmethod
-    def execute_notebook(
-        cls,
-        nb: nbformat.NotebookNode,
-        kernel_name: str = 'python3',
-        output_path: str = None,
-        progress_bar: bool = True,
-        log_output: bool = False,
-        autosave_cell_every: int = 0,
-        **kwargs
-    ):
+    async def async_execute_notebook(cls, nb: nbformat.NotebookNode) -> nbformat.NotebookNode:
         """
         A wrapper to handle notebook execution tasks.
 
@@ -71,31 +90,35 @@ class ChecklockNBEngine(NBClientEngine):
 
         nb_man.notebook_start()
         try:
-            cls.execute_managed_notebook(
-                nb_man,
-                kernel_name,
-                log_output=log_output,
-                execution_timeout=cls.EXECUTION_TIMEOUT,
-                **kwargs
-            )
+            await cls.async_execute_managed_notebook(nb_man)
         finally:
             nb_man.cleanup_pbar()
             nb_man.notebook_complete()
 
         return nb_man.nb
 
+    @classmethod
+    async def async_execute_managed_notebook(cls, nb_man: WatsonExecutionManager) -> nbformat.NotebookNode:
+        nb_client = ChecklockNBClient(
+            nb_man=nb_man,
+            timeout=cls.EXECUTION_TIMEOUT,
+            interrupt_on_timeout=True,
+            allow_errors=True,
+            force_raise_errors=True,
+        )
+        return await nb_client.async_execute()
+
 
 @dataclass
 class NoteBookChecker:
     metadata: NoteBookMetadata
-    display_cell_timing: bool
 
     _DEFAULT_ENV_VARIABLES = {
         'OBJECTIV_VERSION_CHECK_DISABLE': 'true'
     }
     _ENV_VAR_CELL_TAG = 'injected-engine-variables'
 
-    def check_notebook(self, engine: SupportedEngine) -> NoteBookCheck:
+    async def async_check_notebook(self, engine: SupportedEngine) -> NoteBookCheck:
         """
         Creates and executes the notebook's script for the provided engine.
 
@@ -110,12 +133,8 @@ class NoteBookChecker:
             )
 
         try:
-            executed_nb = ChecklockNBEngine.execute_notebook(
+            executed_nb = await ChecklockNBEngine.async_execute_notebook(
                 nb=self._load_notebook_node(engine),
-                kernel_name='python3',
-                output_path=None,  # don't save notebook outputs
-                progress_bar=False,  # ignore for now
-                autosave_cell_every=0,  # don't perform any autosave
             )
         except Exception as exc:
             raise CuriousIncident(notebook_name=self.metadata.name, exc=exc)
@@ -158,16 +177,14 @@ class NoteBookChecker:
         """
         formatted_blocks = []
         nb_node = self._load_notebook_node(engine)
-        for cell in nb_node.cells:
+        for cell_index, cell in enumerate(nb_node.cells):
             if cell.cell_type != 'code':
                 continue
 
-            formatted_block = (
-                f'    # CELL {cell.metadata.papermill.index}\n    ' + '    '.join(cell.source)
-            )
-            formatted_blocks.append(formatted_block)
+            formatted_block = f'\n# CELL {cell_index}\n{cell.source}'
+            formatted_blocks.append(formatted_block.replace('\n', '\n    '))
 
-        nb_script = '\n\n'.join(formatted_blocks)
+        nb_script = '\n'.join(formatted_blocks)
         if self.metadata.name:
             # creates script for debugging
             # the template defines a function for the entire notebook
