@@ -5,7 +5,6 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**.ts'],
   moduleNameMapper: {
     '@objectiv/developer-tools': '<rootDir>../../core/developer-tools/src',

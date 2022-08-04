@@ -1425,20 +1425,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/console@npm:^26.6.0":
-  version: 26.6.2
-  resolution: "@jest/console@npm:26.6.2"
-  dependencies:
-    "@jest/types": ^26.6.2
-    "@types/node": "*"
-    chalk: ^4.0.0
-    jest-message-util: ^26.6.2
-    jest-util: ^26.6.2
-    slash: ^3.0.0
-  checksum: 69a9ca6ba357d7634fd537e3b87c64369865ffb59f57fe6661223088bd62273d0c1d660fefce3625a427f42a37d32590f6b291e1295ea6d6b7cb31ddae36a737
-  languageName: node
-  linkType: hard
-
 "@jest/console@npm:^27.5.1":
   version: 27.5.1
   resolution: "@jest/console@npm:27.5.1"
@@ -1775,7 +1761,6 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -1794,7 +1779,6 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -1813,7 +1797,6 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -1831,7 +1814,6 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -1849,7 +1831,6 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -1867,7 +1848,6 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -1892,7 +1872,6 @@ __metadata:
     "@testing-library/react-native": ^11.0.0
     "@types/react-native": ^0.67.2
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     react-native: ^0.67.3
     react-native-gesture-handler: ^2.3.1
@@ -1920,7 +1899,6 @@ __metadata:
     "@testing-library/react": ^13.3.0
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     react-router-dom: ^6.2.2
     ts-jest: ^27.1.3
@@ -1941,7 +1919,6 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -1960,7 +1937,6 @@ __metadata:
     "@objectiv/tracker-core": ~0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -2028,7 +2004,6 @@ __metadata:
     "@types/jest": ^27.4.1
     jest: ^27.5.1
     jest-fetch-mock: ^3.0.3
-    jest-standard-reporter: ^2.0.0
     jest-useragent-mock: ^0.1.1
     prettier: ^2.5.1
     ts-jest: ^27.1.3
@@ -2070,7 +2045,6 @@ __metadata:
     "@types/jest": ^27.4.1
     "@types/react": ^17.0.39
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     react: ^18.2.0
     react-dom: ^18.2.0
@@ -2099,7 +2073,6 @@ __metadata:
     "@types/react-native": ^0.67.2
     jest: ^27.5.1
     jest-fetch-mock: ^3.0.3
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     react-native: ^0.67.3
     react-native-get-random-values: ^1.7.2
@@ -2135,7 +2108,6 @@ __metadata:
     "@types/react": ^17.0.39
     jest: ^27.5.1
     jest-fetch-mock: ^3.0.3
-    jest-standard-reporter: ^2.0.0
     jest-useragent-mock: ^0.1.1
     prettier: ^2.5.1
     react: ^18.2.0
@@ -2156,7 +2128,6 @@ __metadata:
     "@objectiv/tracker-core": ~0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -2174,7 +2145,6 @@ __metadata:
     "@types/jest": ^27.4.1
     jest: ^27.5.1
     jest-fetch-mock: ^3.0.3
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -2191,7 +2161,6 @@ __metadata:
     "@objectiv/tracker-core": ~0.0.24
     "@types/jest": ^27.4.1
     jest: ^27.5.1
-    jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     ts-jest: ^27.1.3
     tsup: ^5.12.0
@@ -6490,13 +6459,6 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"inherits@npm:2.0.3":
-  version: 2.0.3
-  resolution: "inherits@npm:2.0.3"
-  checksum: 78cb8d7d850d20a5e9a7f3620db31483aa00ad5f722ce03a55b110e5a723539b3716a3b463e2b96ce3fe286f33afc7c131fa2f91407528ba80cea98a7545d4c0
-  languageName: node
-  linkType: hard
-
 "ini@npm:1.3.7":
   version: 1.3.7
   resolution: "ini@npm:1.3.7"
@@ -7348,23 +7310,6 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"jest-message-util@npm:^26.6.2":
-  version: 26.6.2
-  resolution: "jest-message-util@npm:26.6.2"
-  dependencies:
-    "@babel/code-frame": ^7.0.0
-    "@jest/types": ^26.6.2
-    "@types/stack-utils": ^2.0.0
-    chalk: ^4.0.0
-    graceful-fs: ^4.2.4
-    micromatch: ^4.0.2
-    pretty-format: ^26.6.2
-    slash: ^3.0.0
-    stack-utils: ^2.0.2
-  checksum: ffe5a715591c41240b9ed4092faf10f3eaf9ddfdf25d257a0c9f903aaa8d9eed5baa7e38016d2ec4f610fd29225e0f5231a91153e087a043e62824972c83d015
-  languageName: node
-  linkType: hard
-
 "jest-message-util@npm:^27.5.1":
   version: 27.5.1
   resolution: "jest-message-util@npm:27.5.1"
@@ -7556,20 +7501,6 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"jest-standard-reporter@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "jest-standard-reporter@npm:2.0.0"
-  dependencies:
-    "@jest/console": ^26.6.0
-    chalk: ^4.1.0
-    jest-util: ^26.6.0
-    path: ^0.12.7
-    slash: ^3.0.0
-    string-length: ^4.0.1
-  checksum: d0c9d264d2c68acd5557d533432a81a550b88866448c3cb3be24ca60240b602561242e3fabeae9da210ca2e534598fe9ae802cff7a8a742b052e9f45a0a48c5f
-  languageName: node
-  linkType: hard
-
 "jest-useragent-mock@npm:^0.1.1":
   version: 0.1.1
   resolution: "jest-useragent-mock@npm:0.1.1"
@@ -7577,7 +7508,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"jest-util@npm:^26.6.0, jest-util@npm:^26.6.2":
+"jest-util@npm:^26.6.2":
   version: 26.6.2
   resolution: "jest-util@npm:26.6.2"
   dependencies:
@@ -9628,16 +9559,6 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"path@npm:^0.12.7":
-  version: 0.12.7
-  resolution: "path@npm:0.12.7"
-  dependencies:
-    process: ^0.11.1
-    util: ^0.10.3
-  checksum: 5dedb71e78fc008fcba797defc0b4e1cf06c1f18e0a631e03ba5bb505136f587ff017afc14f9a3d481cbe77aeedff7dc0c1d2ce4d820c1ebf3c4281ca49423a1
-  languageName: node
-  linkType: hard
-
 "picocolors@npm:^0.2.1":
   version: 0.2.1
   resolution: "picocolors@npm:0.2.1"
@@ -9839,7 +9760,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"process@npm:^0.11.1, process@npm:^0.11.10":
+"process@npm:^0.11.10":
   version: 0.11.10
   resolution: "process@npm:0.11.10"
   checksum: bfcce49814f7d172a6e6a14d5fa3ac92cc3d0c3b9feb1279774708a719e19acd673995226351a082a9ae99978254e320ccda4240ddc474ba31a76c79491ca7c3
@@ -11313,7 +11234,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"stack-utils@npm:^2.0.2, stack-utils@npm:^2.0.3":
+"stack-utils@npm:^2.0.3":
   version: 2.0.5
   resolution: "stack-utils@npm:2.0.5"
   dependencies:
@@ -12400,15 +12321,6 @@ typescript@~3.8.3:
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 474acf1146cb2701fe3b074892217553dfcf9a031280919ba1b8d651a068c9b15d863b7303cb15bd00a862b498e6cf4ad7b4a08fb134edd5a6f7641681cb54a2
-  languageName: node
-  linkType: hard
-
-"util@npm:^0.10.3":
-  version: 0.10.4
-  resolution: "util@npm:0.10.4"
-  dependencies:
-    inherits: 2.0.3
-  checksum: 913f9a90d05a60e91f91af01b8bd37e06bca4cc02d7b49e01089f9d5b78be2fffd61fb1a41b517de7238c5fc7337fa939c62d1fb4eb82e014894c7bee6637aaf
   languageName: node
   linkType: hard
 
