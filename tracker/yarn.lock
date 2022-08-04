@@ -1883,7 +1883,7 @@ __metadata:
     "@react-navigation/core": ^6.2.2
     "@react-navigation/native": ^6.0.11
     "@react-navigation/stack": ^6.2.2
-    "@testing-library/react-native": ^9.0.0
+    "@testing-library/react-native": ^9.1.0
     "@types/react-native": ^0.67.2
     jest: ^27.5.1
     jest-standard-reporter: ^2.0.0
@@ -1911,7 +1911,7 @@ __metadata:
     "@objectiv/testing-tools": ^0.0.24
     "@objectiv/tracker-core": ^0.0.24
     "@objectiv/tracker-react": ^0.0.24
-    "@testing-library/react": ^12.1.4
+    "@testing-library/react": ^12.1.5
     "@types/jest": ^27.4.1
     jest: ^27.5.1
     jest-standard-reporter: ^2.0.0
@@ -2062,8 +2062,8 @@ __metadata:
     "@objectiv/schema": ^0.0.24
     "@objectiv/testing-tools": ^0.0.24
     "@objectiv/tracker-core": ~0.0.24
-    "@testing-library/react": ^12.1.4
-    "@testing-library/react-hooks": ^7.0.2
+    "@testing-library/react": ^12.1.5
+    "@testing-library/react-hooks": ^8.0.1
     "@types/jest": ^27.4.1
     "@types/react": ^17.0.39
     jest: ^27.5.1
@@ -2092,7 +2092,7 @@ __metadata:
     "@objectiv/tracker-react-core": ~0.0.24
     "@objectiv/transport-debug": ^0.0.24
     "@objectiv/transport-fetch": ^0.0.24
-    "@testing-library/react-native": ^9.0.0
+    "@testing-library/react-native": ^9.1.0
     "@types/react-native": ^0.67.2
     jest: ^27.5.1
     jest-fetch-mock: ^3.0.3
@@ -2127,7 +2127,7 @@ __metadata:
     "@objectiv/transport-debug": ^0.0.24
     "@objectiv/transport-fetch": ^0.0.24
     "@objectiv/transport-xhr": ^0.0.24
-    "@testing-library/react": ^12.1.4
+    "@testing-library/react": ^12.1.5
     "@types/jest": ^27.4.1
     "@types/react": ^17.0.39
     jest: ^27.5.1
@@ -2606,52 +2606,52 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react-hooks@npm:^7.0.2":
-  version: 7.0.2
-  resolution: "@testing-library/react-hooks@npm:7.0.2"
+"@testing-library/react-hooks@npm:^8.0.1":
+  version: 8.0.1
+  resolution: "@testing-library/react-hooks@npm:8.0.1"
   dependencies:
     "@babel/runtime": ^7.12.5
-    "@types/react": ">=16.9.0"
-    "@types/react-dom": ">=16.9.0"
-    "@types/react-test-renderer": ">=16.9.0"
     react-error-boundary: ^3.1.0
   peerDependencies:
-    react: ">=16.9.0"
-    react-dom: ">=16.9.0"
-    react-test-renderer: ">=16.9.0"
+    "@types/react": ^16.9.0 || ^17.0.0
+    react: ^16.9.0 || ^17.0.0
+    react-dom: ^16.9.0 || ^17.0.0
+    react-test-renderer: ^16.9.0 || ^17.0.0
   peerDependenciesMeta:
+    "@types/react":
+      optional: true
     react-dom:
       optional: true
     react-test-renderer:
       optional: true
-  checksum: 27c6169b5c9832bd02dcea232e6a0a3cd8d4504e13ecb49d57eb5ab6bea5e2f1bff65f3102068b7e57eec3cbd671326dc0b277335014b0edfbdedf11a1fe6db5
+  checksum: 7fe44352e920deb5cb1876f80d64e48615232072c9d5382f1e0284b3aab46bb1c659a040b774c45cdf084a5257b8fe463f7e08695ad8480d8a15635d4d3d1f6d
   languageName: node
   linkType: hard
 
-"@testing-library/react-native@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@testing-library/react-native@npm:9.0.0"
+"@testing-library/react-native@npm:^9.1.0":
+  version: 9.1.0
+  resolution: "@testing-library/react-native@npm:9.1.0"
   dependencies:
     pretty-format: ^27.0.0
   peerDependencies:
     react: ">=16.0.0"
     react-native: ">=0.59"
     react-test-renderer: ">=16.0.0"
-  checksum: f30ba0ada3901185063397585d4c76a4822b9f03a5a40dad46468104c9a62f3fdc62eb66179cdec5f9a08f5bbc6f940e9d7d0424d3faff17f5fee5702f7fda4c
+  checksum: 0777cc569939bd996bdae31a8c94d8417fbfe1f34ddd84dc99aafc96709064e5e02f3c5a687a662a4f040c5c1767442fd7c4530886f716738d40e930cce446d1
   languageName: node
   linkType: hard
 
-"@testing-library/react@npm:^12.1.4":
-  version: 12.1.4
-  resolution: "@testing-library/react@npm:12.1.4"
+"@testing-library/react@npm:^12.1.5":
+  version: 12.1.5
+  resolution: "@testing-library/react@npm:12.1.5"
   dependencies:
     "@babel/runtime": ^7.12.5
     "@testing-library/dom": ^8.0.0
-    "@types/react-dom": "*"
+    "@types/react-dom": <18.0.0
   peerDependencies:
-    react: "*"
-    react-dom: "*"
-  checksum: 944c5f8d4abb22c0650c25c7ae499651828c37c0e741ff67a4635d4cd99b307d486dabec05b372aba638bd359d29cd2af97393b5055ea294a201d80b4bc384b8
+    react: <18.0.0
+    react-dom: <18.0.0
+  checksum: 4abd0490405e709a7df584a0db604e508a4612398bb1326e8fa32dd9393b15badc826dcf6d2f7525437886d507871f719f127b9860ed69ddd204d1fa834f576a
   languageName: node
   linkType: hard
 
@@ -2842,12 +2842,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:*, @types/react-dom@npm:>=16.9.0":
-  version: 17.0.13
-  resolution: "@types/react-dom@npm:17.0.13"
+"@types/react-dom@npm:<18.0.0":
+  version: 17.0.17
+  resolution: "@types/react-dom@npm:17.0.17"
   dependencies:
-    "@types/react": "*"
-  checksum: 62c42a54ac8961c23a0e74b9cdd8b0a78563757e462b1ab665b2aa365bfd8b86a73d3f6eafc09a4a80fb08659321db168f012aa597c41c0df36f645a94e9266b
+    "@types/react": ^17
+  checksum: 23caf98aa03e968811560f92a2c8f451694253ebe16b670929b24eaf0e7fa62ba549abe9db0ac028a9d8a9086acd6ab9c6c773f163fa21224845edbc00ba6232
   languageName: node
   linkType: hard
 
@@ -2860,16 +2860,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-test-renderer@npm:>=16.9.0":
-  version: 17.0.1
-  resolution: "@types/react-test-renderer@npm:17.0.1"
-  dependencies:
-    "@types/react": "*"
-  checksum: ecaae8df36cd8cfeb89080d52534856acc3789bad9a6e369ff5119426377c827b4e5b5daa638507f2c1c2fd6c994bf45de288a698143178cd4049c2cd8b77b35
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:*, @types/react@npm:>=16.9.0, @types/react@npm:^17.0.39":
+"@types/react@npm:*, @types/react@npm:^17.0.39":
   version: 17.0.39
   resolution: "@types/react@npm:17.0.39"
   dependencies:
@@ -2877,6 +2868,17 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: bf04d3c2894559012710d595553e12b422d3b91cd8f4f7e122d8cb044ba9c2ba17f6e8a4e09581359cc5509ddc59cd8c8fabd6774f3505a40a45393f074d6e6e
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^17":
+  version: 17.0.48
+  resolution: "@types/react@npm:17.0.48"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: b683fa33f751ced0b8c8715df9f40de15513c1d7ce66064a75cdfb8805cc913b0b214a2e7022ef0b724bd62a1e8651d040cd265dd0452bde03cca9b8e495742d
   languageName: node
   linkType: hard
 
