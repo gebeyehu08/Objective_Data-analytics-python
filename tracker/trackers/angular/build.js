@@ -5,7 +5,7 @@ ngPackage
   .forProject('ng-package.json')
   .withTsConfig('tsconfig.build.json')
   .build()
-  .catch(error => {
+  .catch((error) => {
     console.error(error);
     process.exit(1);
   });
