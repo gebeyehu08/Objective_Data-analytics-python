@@ -16,5 +16,5 @@ module.exports = {
     '@objectiv/tracker-react-core': '<rootDir>../../core/react/src',
     '@objectiv/tracker-core': '<rootDir>../../core/tracker/src',
     '@objectiv/tracker-react': '<rootDir>../../trackers/react/src',
-  }
+  },
 };
