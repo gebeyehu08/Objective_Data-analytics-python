@@ -31,7 +31,7 @@
     "test:coverage": "turbo run test:coverage",
     "tsc": "turbo run tsc"
   },
-  "devDependencies": {
+  "dependencies": {
     "@changesets/cli": "^2.24.1",
     "shx": "^0.3.4",
     "turbo": "^1.4.2"
