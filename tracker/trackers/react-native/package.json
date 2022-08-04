@@ -54,13 +54,13 @@
     "@objectiv/testing-tools": "^0.0.24",
     "@objectiv/transport-debug": "^0.0.24",
     "@testing-library/react-native": "^11.0.0",
-    "@types/react-native": "^0.67.2",
+    "@types/react-native": "^0.67.12",
     "jest": "^27.5.1",
     "jest-fetch-mock": "^3.0.3",
-    "prettier": "^2.5.1",
+    "prettier": "^2.7.1",
     "react-native": "^0.67.3",
     "react-test-renderer": "^18.2.0",
-    "tsup": "^5.12.0",
+    "tsup": "^6.2.1",
     "typescript": "^4.7.4"
   },
   "dependencies": {

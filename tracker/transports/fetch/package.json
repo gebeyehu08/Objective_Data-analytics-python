@@ -52,12 +52,12 @@
   "devDependencies": {
     "@objectiv/developer-tools": "^0.0.24",
     "@objectiv/testing-tools": "^0.0.24",
-    "@types/jest": "^27.4.1",
+    "@types/jest": "^27.5.2",
     "jest": "^27.5.1",
     "jest-fetch-mock": "^3.0.3",
-    "prettier": "^2.5.1",
-    "ts-jest": "^27.1.3",
-    "tsup": "^5.12.0",
+    "prettier": "^2.7.1",
+    "ts-jest": "^27.1.5",
+    "tsup": "^6.2.1",
     "typescript": "^4.7.4"
   },
   "dependencies": {
