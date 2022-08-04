@@ -5,7 +5,7 @@
 module.exports = {
   preset: 'ts-jest',
   globals: {
-    "ts-jest": {
+    'ts-jest': {
       isolatedModules: true,
     },
   },
