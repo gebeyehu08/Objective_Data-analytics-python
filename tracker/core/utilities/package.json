@@ -16,7 +16,7 @@
     "generate:language-codes": "node src/generateLanguageCodes.js",
     "generate:locale-codes": "yarn generate:country-codes && yarn generate:language-codes",
     "generate": "yarn generate:schema && yarn generate:errors && yarn generate:locale-codes",
-    "depcheck": "npx depcheck --ignores uuid"
+    "depcheck": "npx depcheck"
   },
   "devDependencies": {
     "@objectiv/tracker-core": "^0.0.24",

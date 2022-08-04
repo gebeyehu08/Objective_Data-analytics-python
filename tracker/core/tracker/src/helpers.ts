@@ -1,7 +1,8 @@
 /*
  * Copyright 2021-2022 Objectiv B.V.
  */
-import { v4 as uuid } from 'uuid';
+
+import { uuidv4 } from './uuidv4';
 
 /**
  * A TypeScript friendly Object.keys
@@ -28,7 +29,7 @@ export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
 /**
  * A UUID v4 generator
  */
-export const generateGUID = () => uuid();
+export const generateGUID = () => uuidv4();
 
 /**
  * Executes the given predicate every `intervalMs` for a maximum of `timeoutMs`.
