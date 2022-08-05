@@ -3,7 +3,7 @@
  */
 
 import { makePressableContext } from '@objectiv/tracker-core';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 import { useOnContextChange } from '../src/';
 
 describe('useOnContextChange', () => {
