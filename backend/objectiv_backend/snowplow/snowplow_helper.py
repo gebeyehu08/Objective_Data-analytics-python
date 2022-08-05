@@ -96,8 +96,6 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     except ValueError:
         http_context = {}
 
-    http_context['referrer'] = 'mike'
-
     try:
         cookie_context = get_context(event, 'CookieIdContext')
     except ValueError:
