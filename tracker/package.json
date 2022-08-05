@@ -32,7 +32,7 @@
     "tsc": "turbo run tsc"
   },
   "dependencies": {
-    "@changesets/cli": "^2.24.1",
+    "@changesets/cli": "^2.24.2",
     "shx": "^0.3.4",
     "turbo": "^1.4.2"
   },
