@@ -1,9 +1,9 @@
 import os
-import json5
+import json5  # type: ignore
 import json
 
 version = '1-0-0'
-schema_file = '../../../../../schema/base_schema.json5'
+schema_file = '../../../../../../schema/base_schema.json5'
 
 
 def get_sp_schema(schema, context_name):
