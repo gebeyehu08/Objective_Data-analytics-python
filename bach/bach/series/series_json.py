@@ -10,13 +10,13 @@ from sqlalchemy.engine import Dialect
 
 from bach import SortColumn
 from bach.series import Series
-from bach.expression import Expression
-from bach.series.series import WrappedPartition, ToPandasInfo
+from bach.expression import Expression, join_expressions
+from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
 from bach.sql_model import BachSqlModel
 from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
 from sql_models.model import Materialization
-from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery
+from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean, SeriesString, SeriesInt64
@@ -31,6 +31,7 @@ class SeriesJson(Series):
     **Database support and types**
 
     * On Postgres this utilizes the native 'jsonb' database type.
+    * On Athena this utilizes the native 'json' database type.
     * On BigQuery this utilizes the generic 'STRING' database type.
 
     .. note::
@@ -141,11 +142,12 @@ class SeriesJson(Series):
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'jsonb',
+        DBDialect.ATHENA: 'json',
         # on BigQuery we use STRING for JSONs. Of course SeriesString is the default class for that, so
         # here we set None
         DBDialect.BIGQUERY: None
     }
-    supported_value_types = (dict, list)
+    supported_value_types = (dict, list, str, float, int, bool)
 
     @property
     def json(self) -> 'JsonAccessor':
@@ -167,6 +169,8 @@ class SeriesJson(Series):
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         if is_postgres(dialect):
             return super().supported_literal_to_expression(dialect=dialect, literal=literal)
+        if is_athena(dialect):
+            return Expression.construct('json_parse({})', literal)
         if is_bigquery(dialect):
             from bach import SeriesString
             return SeriesString.supported_literal_to_expression(dialect=dialect, literal=literal)
@@ -192,6 +196,12 @@ class SeriesJson(Series):
                 return expression
             if source_dtype == 'string':
                 return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
+            raise ValueError(f'cannot convert {source_dtype} to json')
+        if is_athena(dialect):
+            if source_dtype == 'json':
+                return expression
+            if source_dtype == 'string':
+                return Expression.construct('json_parse({})', expression)
             raise ValueError(f'cannot convert {source_dtype} to json')
         if is_bigquery(dialect):
             if source_dtype in ('json', 'string'):
@@ -225,6 +235,9 @@ class SeriesJson(Series):
         if is_postgres(self.engine):
             other_dtypes = ('json_postgres', 'json', 'string')
             fmt_str = f'cast({{}} as jsonb) {comparator} cast({{}} as jsonb)'
+        elif is_athena(self.engine):
+            other_dtypes = ('json', 'string')
+            fmt_str = f'{{}} {comparator} {{}}'
         elif is_bigquery(self.engine):
             other_dtypes = ('json', 'string')
             fmt_str = f'{{}} {comparator} {{}}'
@@ -342,9 +355,13 @@ class JsonAccessor(Generic[TSeriesJson]):
 
         # _implementation implements the actual functionality.
         engine = self._series_object.engine
-        self._implementation: Union[JsonPostgresAccessorImpl, JsonBigQueryAccessorImpl]
+        self._implementation: Union[
+            JsonPostgresAccessorImpl, JsonAthenaAccessorImpl, JsonBigQueryAccessorImpl
+        ]
         if is_postgres(engine):
             self._implementation = JsonPostgresAccessorImpl(series_object)
+        elif is_athena(engine):
+            self._implementation = JsonAthenaAccessorImpl(series_object)
         elif is_bigquery(engine):
             self._implementation = JsonBigQueryAccessorImpl(series_object)
         else:
@@ -469,7 +486,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         is_start: bool,
     ) -> Expression:
         """
-        Return expression for either the lower bound or upper bound of a slice.
+        Helper of get_array_slice(). return expression for either the lower bound or upper bound of a slice.
 
         Assumes that self._series_object is an array!
 
@@ -554,7 +571,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """ For documentation, see function :meth:`JsonAccessor.get_value()` """
-        # Special characters are tricky. According to the latests jsonpath spec draft we should use the
+        # Special characters are tricky. According to the latest jsonpath spec draft we should use the
         # index selector [1] (e.g. `$['key with special characters']`). But BigQuery only supports the dot
         # selector [2][3]. However BigQuery does allow us to quote the key when using the dot selector [4],
         # which is not in the jsonpath draft spec. So we quote the key, and just raise an exception if
@@ -736,3 +753,201 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         from bach.series.array_operations.flattening import PostgresArrayFlattening
         return PostgresArrayFlattening(self._series_object)()
+
+
+class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
+    """
+    Athena specific implementation of JsonAccessor functions.
+    """
+
+    def __init__(self, series_object: 'TSeriesJson'):
+        self._series_object = series_object
+
+    def get_array_slice(self, key: slice) -> 'TSeriesJson':
+        """ See implementation in parent class :class:`JsonAccessor` """
+        if key.step:
+            raise NotImplementedError('slice steps not supported')
+
+        start_expression = self._get_slice_partial_expr(value=key.start, is_start=True)
+        stop_expression = self._get_slice_partial_expr(value=key.stop, is_start=False)
+
+        values_expression = Expression.construct(
+            "slice(cast({} as array(json)), {}, {})",
+            self._series_object,
+            start_expression,
+            Expression.construct('({} - {})', stop_expression, start_expression),
+        )
+        non_null_expr = Expression.construct('coalesce({}, ARRAY [])', values_expression)
+        json_expression = Expression.construct('cast({} as json)', non_null_expr)
+        return self._series_object\
+            .copy_override(expression=json_expression)
+
+    def _get_slice_partial_expr(
+        self,
+        value: Optional[Union[Dict[str, str], int]],
+        is_start: bool,
+    ) -> Expression:
+        """
+        Helper of get_array_slice(). return expression for either the lower bound or upper bound of a slice.
+
+        Assumes that self._series_object is an array!
+
+        :param value: slice.start or slice.stop
+        :param is_start: whether value is the slice.start (True) or slice.stop (False) value
+        :return: Expression that will evaluate to an integer that can be used as an one-based array index.
+        """
+        if isinstance(value, dict):
+            return self._find_in_json_list(value, is_start)
+
+        if value is not None and not isinstance(value, int):
+            raise TypeError(f'Slice value must be None or an integer, value: {value}')
+
+        if value is None:
+            if is_start:
+                # return index of first item in the array
+                return Expression.construct('1')
+            else:
+                # return index that is guaranteed to be beyond the last item in the array, but no bigger
+                # than a 32-bit integer. Experiments have shown that slice() will give empty results, if
+                # the length is larger than a 32 bit integer.
+                max_int = 2 ** 31 - 1
+                return Expression.construct(f'{max_int}')
+        elif value >= 0:
+            return Expression.construct(f'{value + 1}')
+        else:
+            array_len = self.get_array_length()
+            return Expression.construct(f'({{}} {value} + 1)', array_len)
+
+    def _find_in_json_list(self, filtering_slice: Dict[str, str], is_start: bool):
+        """
+        Return expression for the position of the element that contains the filtering values
+
+        Assumes that self._series_object is an array and each element is a json!
+
+        :param filtering_slice: dictionary containing the keys and values to use on filter.
+        :param is_start: whether value is the slice.start (True) or slice.stop (False) value. If true,
+            the first element containing the values is returned, otherwise the last.
+        :return: Expression that gets the position (1-based) of the element based on the slicing filters.
+        """
+        raise NotImplementedError('TODO - THIS DOES NOT YET WORK')
+        if not isinstance(filtering_slice, dict):
+            raise TypeError(f'key should be a dict, actual type: {type(filtering_slice)}')
+
+        # this way we can reuse code from the accessor without duplicating.
+        # 'element' will be filled by iterating over the json array in the query below.
+        element_json = self._series_object.copy_override(
+            expression=Expression.construct('element'),
+        )
+
+        all_filters = [
+            element_json.json.get_value(filter_key, as_str=True) == str(filter_value)
+            for filter_key, filter_value in filtering_slice.items()
+        ]
+        slicing_mask = reduce(operator.and_, all_filters)
+        fmt = (
+            # end slicing is inclusive
+            f"("
+            f"select {'min' if is_start else '1 + max'}(case when {{}} then pos end) "
+            f"from unnest(cast({{}} as array(json))) with ordinality as __unnest(element, pos)"
+            f")"
+        )
+        return Expression.construct(fmt, slicing_mask, self._series_object)
+
+
+    def get_array_item(self, key: int) -> 'TSeriesJson':
+        """
+        Returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exist this will render None/NULL.
+        This assumes the top-level item in the json is an array
+        """
+        # Athena also has a function `json_array_get()`. That function should do what we want, but it's
+        # broken and of no use to us as it returns invalid json in some cases. The docs warn of the
+        # brokenness, but offer no alternative: https://prestodb.io/docs/0.217/functions/json.html
+
+        # We'll use json_extract() with json path '$[<index>]'. However this only works for positive
+        # indexes, and gives an error on negative indexes, so we need to calculate a positive index
+        # TODO: maybe use the array function element_at()?
+        if key < 0:
+            json_path_exp = join_expressions([
+                    Expression.string_value("$["),
+                    Expression.construct(f'cast(({{}} {key}) as varchar)', self.get_array_length()),
+                    Expression.string_value("]")
+                ],
+                join_str=' || '
+            )
+            # wrap json_extract in a `try`, that way we'll get NULL for negative indexes, which will happen
+            # in case the offset is larger than the array length.
+            expression = Expression.construct(
+                'try(json_extract({}, {}))',
+                self._series_object,
+                json_path_exp
+            )
+        else:
+            expression = Expression.construct(f"json_extract({{}}, '$[{key}]')", self._series_object)
+        return self._series_object.copy_override(expression=expression)
+
+    def get_dict_item(self, key: str) -> 'TSeriesJson':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        return cast('TSeriesJson', self.get_value(key=key, as_str=False))
+
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
+        """ For documentation, see function :meth:`JsonAccessor.get_value()` """
+        if '"' in key:
+            raise ValueError(f'key values containing double quotes are not supported. key: {key}')
+
+        json_expression = Expression.construct(
+            '''json_extract({}, '$["{}"]')''',
+            self._series_object,
+            Expression.raw(key)
+        )
+
+        if not as_str:
+            return self._series_object.copy_override(expression=json_expression)
+
+        # TODO: use SeriesString.str.replace() when it supports regexp
+        str_expression = Expression.construct('json_format({})', json_expression)
+        value_expression = Expression.construct(
+            f'regexp_replace({{}}, {{}}, {{}})',
+            str_expression,
+            Expression.raw('\'(^"|"$)\''),
+            Expression.string_value(''),
+        )
+        from bach.series import SeriesString
+        return self._series_object\
+            .copy_override(expression=value_expression)\
+            .copy_override_type(SeriesString)
+
+    def get_array_length(self) -> 'SeriesInt64':
+        """ For documentation, see function :meth:`JsonAccessor.get_array_length()` """
+        from bach.series import SeriesInt64
+        expression = Expression.construct('json_array_length({})', self._series_object)
+        return self._series_object \
+            .copy_override_type(SeriesInt64) \
+            .copy_override(expression=expression)
+
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
+        from bach.series import SeriesBoolean
+        if item is None:
+            # json_array_contains does not work when the item we are looking for is `null`, it will always
+            # return a sql NULL in that case. So for that special case we fall back to the regular array
+            # contains.
+            expression = Expression.construct(
+                "contains(cast({} as array(json)), json_parse('null'))",
+                self._series_object
+            )
+        else:
+            # Regular case.
+            # The second argument to json_array_contains has to be an Athena native bigint, double, bool, or
+            # varchar, not a json.
+            item_expr = value_to_series(base=self._series_object, value=item).expression
+            expression = Expression.construct('json_array_contains({}, {})', self._series_object, item_expr)
+        return self._series_object \
+            .copy_override_type(SeriesBoolean) \
+            .copy_override(expression=expression)
+
+    def flatten_array(self) -> Tuple['TSeriesJson', 'SeriesInt64']:
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
+        from bach.series.array_operations.flattening import AthenaArrayFlattening
+        return AthenaArrayFlattening(self._series_object)()
