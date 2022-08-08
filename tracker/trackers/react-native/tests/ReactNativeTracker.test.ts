@@ -71,6 +71,7 @@ describe('ReactNativeTracker', () => {
       batchDelayMs: 1000,
       batchSize: 10,
       concurrency: 4,
+      firstBatchSuccessfullySent: false,
       lastRunTimestamp: 0,
       running: false,
       processFunction: expect.any(Function),
@@ -98,6 +99,18 @@ describe('ReactNativeTracker', () => {
       expect(testTracker.plugins?.plugins).toEqual(
         expect.arrayContaining([expect.objectContaining({ pluginName: 'ApplicationContextPlugin' })])
       );
+    });
+
+    it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
+      const testTracker = new ReactNativeTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+        trackApplicationContext: false,
+      });
+      expect(testTracker).toBeInstanceOf(ReactNativeTracker);
+      expect(testTracker.plugins?.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+      ]);
     });
 
     it('should add Plugins `plugins` has been specified', () => {

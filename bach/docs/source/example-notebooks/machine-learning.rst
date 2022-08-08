@@ -19,8 +19,8 @@ to run on your own data or use our
 `quickstart
 <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
 
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 This object points to all data in the data set. Without any aggregation, this dataset is too large to
 for pandas and sklearn. For the data set that we need, we aggregate to user level, at which point it is
@@ -32,6 +32,11 @@ We create a data set of per user all the root locations that the user clicked on
 
     # extract the root location from the location stack
     df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+
+    # root series is later unstacked and its values might contain dashes
+    # which are not allowed in BigQuery column names, lets replace them
+    df['root'] = df['root'].str.replace('-', '_')
+
     # only look at press events and count the root locations
     features = df[(df.event_type=='PressEvent')].groupby('user_id').root.value_counts()
     # unstack the series, to create a DataFrame with the number of clicks per root location as columns

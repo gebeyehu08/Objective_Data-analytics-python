@@ -16,12 +16,11 @@ data set prepared in Bach can be used for machine learning with sklearn
 
 This example is also available in a `notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/feature-engineering.ipynb>`_
-to run on your own data or use our
-`quickstart
-<https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+out with demo data in 5 minutes.
 
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 This object points to all data in the data set. Too large to run in pandas and therefore sklearn. For the
 data set that we need, we aggregate to user level, at which point it is small enough to fit in memory.
@@ -49,6 +48,9 @@ the root location from the location stack. This indicates what parts of our webs
 .. code-block:: python
 
     df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+    # root series is later unstacked and its values might contain dashes
+    # which are not allowed in BigQuery column names, lets replace them
+    df['root'] = df['root'].str.replace('-', '_')
     df.root.unique().to_numpy()
 
 `['jobs', 'docs', 'home'...]` etc is returned, the sections of the objectiv.io website.
@@ -108,11 +110,12 @@ Visualize the data
 .. code-block:: python
 
     from matplotlib import pyplot as plt
-    figure, axis = plt.subplots(2, 4,figsize=(15,10))
+    import math
+
+    figure, axis = plt.subplots(math.ceil(len(features_unstacked.data_columns)/4), 4, figsize=(15,10))
 
     for idx, name in enumerate(features_unstacked.data_columns):
-        df_bins = features_unstacked[name].cut(bins=5)
-        df_bins.value_counts().to_pandas().plot(title = name, kind='bar', ax=axis.flat[idx])
+        features_unstacked[[name]].plot.hist(bins=5, title=name, ax=axis.flat[idx])
     plt.tight_layout()
 
 The histograms show that indeed the higher values seem quite anomalous for most of the root locations. This

@@ -2,8 +2,14 @@ import re
 from typing import NamedTuple, Dict, List, Set
 from sqlalchemy.engine import Connection, Dialect
 
-from bach.expression import Expression
-from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
+from bach.expression import Expression, ColumnReferenceToken
+from bach.sql_model import BachSqlModel
+from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
+
+
+class SortColumn(NamedTuple):
+    expression: Expression
+    asc: bool
 
 
 class FeatureRange(NamedTuple):
@@ -62,6 +68,12 @@ def is_valid_column_name(dialect: Dialect, name: str) -> bool:
         # could lead to identifier collisions, so we just disallow it.
         # source: https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
         return len(name) < 64
+    if is_athena(dialect):
+        # Source: https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
+        regex = '^[a-z0-9_]*$'
+        len_ok = len(name) <= 255
+        pattern_ok = bool(re.match(pattern=regex, string=name))
+        return len_ok and pattern_ok
     if is_bigquery(dialect):
         # sources:
         #  https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#column_names
@@ -80,3 +92,26 @@ def is_valid_column_name(dialect: Dialect, name: str) -> bool:
         prefix_ok = not any(name.startswith(prefix) for prefix in reserved_prefixes)
         return len_ok and pattern_ok and prefix_ok
     raise DatabaseNotSupportedException(dialect)
+
+
+def validate_node_column_references_in_sorting_expressions(
+    node: BachSqlModel, order_by: List[SortColumn],
+) -> None:
+    """
+    Validate that all ColumnReferenceTokens in order_by expressions refer columns that exist in node.
+    """
+    for ob in order_by:
+        invalid_column_references = [
+            token.column_name
+            for token in ob.expression.get_all_tokens()
+            if isinstance(token, ColumnReferenceToken) and token.column_name not in node.column_expressions
+        ]
+        if invalid_column_references:
+            raise ValueError(
+                (
+                    'Sorting contains expressions referencing '
+                    f'non-existent columns in current base node. {invalid_column_references}.'
+                    ' Please call DataFrame.sort_values([]) or DataFrame.sort_index() for removing'
+                    ' sorting and try again.'
+                )
+            )

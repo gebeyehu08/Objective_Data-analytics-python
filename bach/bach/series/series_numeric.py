@@ -7,12 +7,13 @@ from typing import cast, Union, TYPE_CHECKING, Optional, List, Tuple
 import numpy
 from sqlalchemy.engine import Dialect
 
+from bach import DataFrameOrSeries
 from bach.series import Series
 from bach.expression import Expression, AggregateFunctionExpression
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean, SeriesNumericInterval
@@ -235,22 +236,29 @@ class SeriesInt64(SeriesAbstractNumeric):
     dtype_aliases = ('integer', 'bigint', 'i8', int, numpy.int64, 'int32')
     supported_db_dtype = {
         DBDialect.POSTGRES: 'bigint',
+        DBDialect.ATHENA: 'bigint',
         DBDialect.BIGQUERY: 'INT64'
     }
     supported_value_types = (int, numpy.int64, numpy.int32)
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        if is_postgres(dialect):
+        # We override the parent class here because integers are really common, and we don't strictly need
+        # to cast all of them for BigQuery. Not casting integer literals greatly improves the readability of
+        # the generated SQL.
+
+        if is_postgres(dialect) or is_athena(dialect):
             # A stringified integer is a valid integer or bigint literal, depending on the size. We want to
             # consistently get bigints, so always cast the result
-            # See the section on numeric constants in the Postgres documentation
+            # PG: See the section on numeric constants in the Postgres documentation
             # https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
-            return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
+            # Athena: experimentally established that the integer typing mimicks Postgres's behaviour
+            return super().supported_literal_to_expression(dialect=dialect, literal=literal)
         if is_bigquery(dialect):
             # BigQuery has only one integer type, so there is no confusion between 32-bit and 64-bit integers
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#integer_type
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#integer_literals
+            # Additionally, we don't even need to cast NULL, because on BigQuery that's an INT64 by default.
             return literal
         raise DatabaseNotSupportedException(dialect)
 
@@ -355,10 +363,6 @@ class SeriesFloat64(SeriesAbstractNumeric):
     # https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#floating_point_literals
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,
@@ -374,3 +378,48 @@ class SeriesFloat64(SeriesAbstractNumeric):
         if source_dtype not in ['int64', 'string']:
             raise ValueError(f'cannot convert {source_dtype} to float64')
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
+
+    @classmethod
+    def random(cls, base: DataFrameOrSeries) -> 'SeriesFloat64':
+        """
+        Create a new Series object with an expression, that will evaluate to a random float in the range
+        [0, 1) for each row.
+
+        :param base: DataFrame or Series from which the newly created Series' engine, base_node and index
+            parameters are copied.
+
+        .. warning::
+            The returned Series has a non-deterministic expression, it will give a different result each
+            time it is evaluated by the database.
+
+        The non-deterministic expression can have some unexpected consequences. Consider the following code:
+
+        .. code-block:: python
+
+            df['x'] = SeriesFloat64.random(df)
+            df['y'] = df['x']
+            df['different'] = df['y'] != df['x']
+
+        The df['different'] series will be True for (almost) all rows, because the second statement copies
+        the unevaluated expression, not the result of the expression. So at evaluation time the expression
+        will be evaluated twice for each row, for the 'x' column and the 'y' column, giving different
+        results both times. One way to work around this is to materialize the dataframe in its current state
+        (using materialize()), before adding any columns that reference a column that's created with
+        this function.
+        """
+        if is_postgres(base.engine):
+            expr_str = 'random()'
+        elif is_bigquery(base.engine):
+            expr_str = 'RAND()'
+        else:
+            raise DatabaseNotSupportedException(base.engine)
+        return cls.get_class_instance(
+            engine=base.engine,
+            base_node=base.base_node,
+            index=base.index,
+            name='random',
+            expression=Expression.construct(expr_str),
+            group_by=None,
+            order_by=[],
+            instance_dtype=cls.dtype
+        )

@@ -12,16 +12,18 @@ import numpy
 import pandas
 from sqlalchemy.engine import Engine
 
-from bach.expression import Expression, SingleValueExpression, VariableToken, AggregateFunctionExpression
+from bach.expression import Expression, SingleValueExpression, VariableToken, ColumnReferenceToken
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
-from bach.utils import escape_parameter_characters
+from bach.utils import (
+    escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn
+)
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
-from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
+from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
 
 if TYPE_CHECKING:
@@ -45,11 +47,6 @@ ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 #     - dict of axis labels -> functions, function names or list of such.
 
 Level = Union[int, List[int], str, List[str]]
-
-
-class SortColumn(NamedTuple):
-    expression: Expression
-    asc: bool
 
 
 class DtypeNamePair(NamedTuple):
@@ -172,7 +169,7 @@ class DataFrame:
             index: Dict[str, 'Series'],
             series: Dict[str, 'Series'],
             group_by: Optional['GroupBy'],
-            order_by: List[SortColumn],
+            order_by: Optional[List[SortColumn]],
             savepoints: 'Savepoints',
             variables: Dict['DtypeNamePair', Hashable] = None
     ):
@@ -227,6 +224,8 @@ class DataFrame:
         if set(index.keys()) & set(series.keys()):
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
+
+        validate_node_column_references_in_sorting_expressions(node=base_node, order_by=self.order_by)
 
     @property
     def engine(self):
@@ -536,9 +535,6 @@ class DataFrame:
             table_name: str,
             index: List[str],
             all_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
-            *,
-            bq_dataset: Optional[str] = None,
-            bq_project_id: Optional[str] = None
     ) -> 'DataFrame':
         """
         Instantiate a new DataFrame based on the content of an existing table in the database.
@@ -546,49 +542,30 @@ class DataFrame:
         If all_dtypes is not specified, the column dtypes are queried from the database's information
         schema.
 
-        :param engine: an sqlalchemy engine for the database.
+        :param engine: a sqlalchemy engine for the database.
         :param table_name: the table name that contains the data to instantiate as DataFrame.
+            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'.
         :param index: list of column names that make up the index. At least one column needs to be
             selected for the index.
         :param all_dtypes: Optional. Mapping from column name to dtype.
             Must contain all index and data columns.
             Must be in same order as the columns appear in the the sql-model.
-        :param bq_dataset: BigQuery-only. Dataset in which the table resides, if different from engine.url
-        :param bq_project_id: BigQuery-only. Project of dataset, if different from engine.url
         :returns: A DataFrame based on a sql table.
 
         .. note::
             If all_dtypes is not set, then this will query the database.
         """
-        if bq_project_id and not bq_dataset:
-            raise ValueError('Cannot specify bq_project_id without setting bq_dataset.')
-        if bq_dataset and not is_bigquery(engine):
-            raise ValueError('bq_dataset is a BigQuery-only option.')
-
         if all_dtypes is not None:
             dtypes = all_dtypes
         else:
             dtypes = get_dtypes_from_table(
                 engine=engine,
                 table_name=table_name,
-                bq_dataset=bq_dataset,
-                bq_project_id=bq_project_id
             )
 
-        # For postgres we just generate:
+        # We generate sql of the form (with quote characters depending on the database):
         # 'SELECT "column_1", ... , "column_N" FROM "table_name"'
-        # For BQ we might need to generate:
-        # 'SELECT `column_1`, ... , `column_N`  FROM `project_id`.`data_set`.`table_name`'
-        #  columns in select statement are based on keys from dtypes
-        sql_table_name_template = '{table_name}'
         sql_params = {'table_name': quote_identifier(engine.dialect, table_name)}
-        if bq_dataset:
-            sql_table_name_template = f'{{bq_dataset}}.{sql_table_name_template}'
-            sql_params['bq_dataset'] = quote_identifier(engine.dialect, bq_dataset)
-        if bq_project_id:
-            sql_table_name_template = f'{{bq_project_id}}.{sql_table_name_template}'
-            sql_params['bq_project_id'] = quote_identifier(engine.dialect, bq_project_id)
-
         # use placeholders for columns in order to avoid conflicts when extracting spec references
         column_stmt = ','.join(f'{{col_{col_index}}}' for col_index in range(len(dtypes)))
         column_placeholders = {
@@ -597,7 +574,7 @@ class DataFrame:
         }
         sql_params.update(column_placeholders)
 
-        sql = f'SELECT {column_stmt} FROM {sql_table_name_template}'
+        sql = f'SELECT {column_stmt} FROM {{table_name}}'
         model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
         sql_model = model_builder(**sql_params)
 
@@ -704,6 +681,7 @@ class DataFrame:
             convert_objects: bool,
             name: str = 'loaded_data',
             materialization: str = 'cte',
+            *,
             if_exists: str = 'fail'
     ) -> 'DataFrame':
         """
@@ -783,8 +761,7 @@ class DataFrame:
             'engine': engine,
             'base_node': base_node,
             'group_by': group_by,
-            'sorted_ascending': None,
-            'index_sorting': [],
+            'order_by': [],
         }
         index: Dict[str, Series] = {
             name: get_series_type_from_dtype(dtype).get_class_instance(
@@ -876,8 +853,7 @@ class DataFrame:
                     name=name,
                     expression=expression_class.column_reference(name),
                     group_by=args['group_by'],
-                    sorted_ascending=None,
-                    index_sorting=[],
+                    order_by=[],
                     instance_dtype=dtype
                 )
             args['index'] = new_index
@@ -911,8 +887,7 @@ class DataFrame:
                     name=name,
                     expression=expression_class.column_reference(name),
                     group_by=args['group_by'],
-                    sorted_ascending=None,
-                    index_sorting=[],
+                    order_by=[],
                     instance_dtype=dtype,
                     **extra_params
                 )
@@ -942,7 +917,7 @@ class DataFrame:
                 base_node=base_node,
                 group_by=group_by,
                 index=index,
-                index_sorting=[]
+                order_by=[]
             )
             for name, series in self.data.items()
         }
@@ -959,11 +934,11 @@ class DataFrame:
         Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
         The savepoints on the other hand will be shared by the original and the copy.
 
-        If you want to create a snapshot of the data, have a look at :py:meth:`get_sample()`
+        If you want to create a snapshot of the data, have a look at :py:meth:`database_create_table()`.
 
-        Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy()
+        Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy().
 
-        :returns: a copy of the dataframe
+        :returns: A copy of the DataFrame.
         """
         return self.copy_override()
 
@@ -999,7 +974,7 @@ class DataFrame:
         the size of the generated SQL query. But this can be useful if the current DataFrame contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.sql_gen_random_uuid`). Additionally, materializing as a temporary table can
+        :py:meth:`SeriesUuid.random()`). Additionally, materializing as a temporary table can
         improve performance in some instances.
 
         Note this function does NOT query the database or materializes any data in the database. It merely
@@ -1063,6 +1038,7 @@ class DataFrame:
                    table_name: str,
                    filter: 'SeriesBoolean' = None,
                    sample_percentage: int = None,
+                   *,
                    overwrite: bool = False,
                    seed: int = None) -> 'DataFrame':
         """
@@ -1074,16 +1050,31 @@ class DataFrame:
         Use :py:meth:`get_unsampled` to switch back to the unsampled data later on. This returns a new
         DataFrame with all operations that have been done on the sample, applied to that DataFrame.
 
-        :param table_name: the name of the underlying sql table that stores the sampled data.
+        Will materialize the DataFrame if it is not in a materialized state.
+
+        If `seed` is set (Postgres only), this will create a temporary table from which the sample will be
+        queried using the `tablesample bernoulli` sql construction.
+
+        :param table_name: the name of the underlying sql table that is created to store the sampled data.
+            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.
         :param sample_percentage: the approximate size of the sample as a proportion of all rows.
             Between 0-100.
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
-        :param seed: optional seed number used to generate the sample.
+        :param seed: optional seed number used to generate the sample. Only supported for Postgres.
+        :raises Exception: If overwrite=False and the table already exists. The exact exception depends on
+            the underlying database.
         :returns: a sampled DataFrame of the current DataFrame.
 
+        .. warning::
+            With `overwrite=True`, if a table already exist with the given name, then that table will
+            be dropped and all data lost!
+        .. note::
+            This function queries the database.
+        .. note::
+            This function writes to the database.
         .. note::
             All data in the DataFrame to be sampled is queried to create the sample.
         """
@@ -1100,19 +1091,76 @@ class DataFrame:
 
     def get_unsampled(self) -> 'DataFrame':
         """
-        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample` earlier.
+        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample()` earlier.
 
         All other operations that have been done on the sample DataFrame will be applied on the DataFrame
-        that is returned. This does not remove the table that was written to the database by
-        :py:meth:`get_sample`, the new DataFrame just does not query that table anymore.
+        that is returned. The returned DataFrame's data will look as if :py:meth:`get_sample()` was never
+        called, but the state of the DataFrame could be slightly different since :py:meth:`get_sample()`
+        might have called :py:meth:`materialize()`.
+
+        This does not remove the table that was written to the database by :py:meth:`get_sample()`, the new
+        DataFrame just does not query that table anymore.
 
         Will raise an error if the current DataFrame is not sample data of another DataFrame, i.e.
         :py:meth:`get_sample` has not been called.
 
-        :returns: an unsampled copy of the current sampled DataFrame.
+        :returns: An unsampled copy of the current sampled DataFrame.
         """
         from bach.sample import get_unsampled
         return get_unsampled(df=self)
+
+    def database_create_table(self, table_name: str, *, if_exists: str = 'fail') -> 'DataFrame':
+        """
+        Write the current state of the DataFrame to a database table.
+
+        The DataFrame that's returned will query from the written table for any further operations.
+
+        :param table_name: Name of the table to write to. Can include project_id and dataset
+            on BigQuery, e.g. 'project_id.dataset.table_name'
+        :param if_exists: {'fail', 'replace'}. How to behave if the table already exists:
+
+            * fail: Raise an Exception.
+            * replace: Drop the table before inserting new values. All data in that table will be lost! Make \
+            sure that `table_name` does not contain any valuable information. Additionally, make sure \
+            that it is not a source table of this DataFrame.
+
+        :raises Exception: If if_exists='fail'' and the table already exists. The exact exception depends on
+            the underlying database.
+        :return: New DataFrame; the base_node consists of a query on the newly created table.
+
+        .. warning::
+            With `if_exists='replace'`, if a table already exist with the given name, then that table will
+            be dropped and all data lost!
+        .. note::
+            This function queries the database.
+        .. note::
+            This function writes to the database.
+        """
+        if if_exists not in {'fail', 'replace'}:
+            raise ValueError(f'Value of if_exists ({if_exists}) must be either "fail" or "replace"')
+        dialect = self.engine.dialect
+        model = self.get_current_node(name='database_create_table')
+        model = model.copy_set_materialization(Materialization.TABLE)
+        model = model.copy_set_materialization_name(materialization_name=table_name)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
+        model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
+
+        sql = to_sql(dialect=dialect, model=model)
+        with self.engine.connect() as conn:
+            if if_exists == 'replace':
+                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}; {sql}'
+
+            sql = escape_parameter_characters(conn, sql)
+            conn.execute(sql)
+
+        all_dtypes = {**self.index_dtypes, **self.dtypes}
+        return self.from_table(
+            engine=self.engine,
+            table_name=table_name,
+            index=self.index_columns,
+            all_dtypes=all_dtypes
+        )
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
@@ -1184,7 +1232,7 @@ class DataFrame:
                 # If a group_by is set on both, they have to match.
                 if key.group_by and key.group_by != self._group_by:
                     raise ValueError('Can not apply aggregated BooleanSeries with non matching group_by.'
-                                     'Please merge() the selector df with thisdf first.')
+                                     'Please merge() the selector df with this df first.')
 
                 if key.group_by is not None and key.expression.has_aggregate_function:
                     # Create a having-condition if the key is aggregated
@@ -1435,7 +1483,7 @@ class DataFrame:
 
             new_index = {idx: series for idx, series in df.index.items() if idx not in levels_to_remove}
 
-        df._data = {n: s.copy_override(index=new_index, index_sorting=[]) for n, s in series.items()}
+        df._data = {n: s.copy_override(index=new_index, order_by=[]) for n, s in series.items()}
         df._index = new_index
         return df
 
@@ -1473,14 +1521,14 @@ class DataFrame:
                     raise ValueError(f'series \'{k}\' not found')
                 idx_series = df.all_series[k]
 
-            new_index[idx_series.name] = idx_series.copy_override(index={}, index_sorting=[])
+            new_index[idx_series.name] = idx_series.copy_override(index={}, order_by=[])
 
             if not drop and idx_series.name not in df._index and idx_series.name in df._data:
                 raise ValueError('When adding existing series to the index, drop must be True'
                                  ' because duplicate column names are not supported.')
 
         new_series = {
-            n: s.copy_override(index=new_index, index_sorting=[]) for n, s in df._data.items()
+            n: s.copy_override(index=new_index, order_by=[]) for n, s in df._data.items()
             if n not in new_index
         }
 
@@ -1606,7 +1654,7 @@ class DataFrame:
         Given a group_by, and a df create a new DataFrame that has all the right stuff set.
         It will not materialize, just prepared for more operations
         """
-        new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, index_sorting=[])
+        new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, order_by=[])
                       for n, s in df.data.items() if n not in group_by.index.keys()}
         return df.copy_override(
             index=group_by.index,
@@ -2059,7 +2107,7 @@ class DataFrame:
                 raise ValueError(
                     f'The df has groupby set, but contains Series that have no aggregation '
                     f'function yet. Please make sure to first: remove these from the frame, '
-                    f'setup aggregation through agg(), or on all individual series.'
+                    f'setup aggregation through agg(), or on all individual series. '
                     f'Unaggregated series: {not_aggregated}'
                 )
 
@@ -2102,20 +2150,15 @@ class DataFrame:
         :param limit: the limit to apply, either as a max amount of rows or a slice of the data.
         :returns: SQL query
         """
-
+        dialect = self.engine.dialect
         # we need to construct each multi-level series, since it should resemble the final result
         model = self.get_current_node('view_sql', limit=limit, construct_multi_levels=True)
-        placeholder_values = get_variable_values_sql(
-            dialect=self.engine.dialect,
-            variable_values=self.variables
-        )
+        model = model.copy_set_materialization(Materialization.QUERY)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
-        sql_statements = to_sql_materialized_nodes(
-            dialect=self.engine.dialect, start_node=model
-        )
-        sql_statements = [sql_stat for sql_stat in sql_statements
-                          if not sql_stat.materialization.has_lasting_effect]
-        sql = ';\n'.join(sql_stat.sql for sql_stat in sql_statements)
+
+        sql = to_sql(dialect=dialect, model=model)
         return sql
 
     def merge(
@@ -2626,8 +2669,8 @@ class DataFrame:
         :param datetime_is_numeric: not supported
         :returns: a new DataFrame with the descriptive statistics
         """
-        from bach.operations.describe import DescribeOperation
-        return DescribeOperation(
+        from bach.operations.describe import DataFrameDescribeOperation
+        return DataFrameDescribeOperation(
             obj=self,
             include=include,
             exclude=exclude,
@@ -3159,29 +3202,43 @@ class DataFrame:
            pdf = pandas.DataFrame(data)
            df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
            df = df.set_index('index')
-           agg_df = df.agg(['mean', 'std_pop'], numeric_only=True)
 
            feature = df['feature']
-           mean_feature = agg_df['feature_mean']
-           std_feature = agg_df['feature_std_pop']
+           mean_feature = df['feature'].mean()
+           std_feature = df['feature'].std(ddof=0)
            with_mean = True
            with_std = True
 
         .. doctest:: scale
             :skipif: engine is None
 
+            >>> feature.to_pandas()
+            index
+            a           1
+            b           2
+            c           3
+            d           4
+            Name: feature, dtype: int64
+
             >>> scaled_feature = feature.copy()
             >>> if with_mean:
             ...     scaled_feature -= mean_feature
 
-
             >>> if with_std:
             ...     scaled_feature /= std_feature
+
+            >>> scaled_feature.to_pandas()
+            index
+            a   -1.341641
+            b   -0.447214
+            c    0.447214
+            d    1.341641
+            Name: feature, dtype: float64
 
         Where:
             * ``feature`` is the series to be scaled
             * ``mean_feature`` is the mean of ``feature``
-            * ``std_feature`` is the (population-based) stardard deviation of ``feature``
+            * ``std_feature`` is the (population-based) standard deviation of ``feature``
 
         """
         from bach.preprocessing.scalers import StandardScaler
@@ -3215,9 +3272,16 @@ class DataFrame:
         .. doctest:: minmax_scale
             :skipif: engine is None
 
-            >>> range_min,  = (0, 1)
+            >>> range_min, range_max = (0, 1)
             >>> feature_std = (feature - min_feature) / (max_feature - min_feature)
             >>> scaled_feature = feature_std * (range_max - range_min) + range_min
+            >>> scaled_feature.to_pandas()
+            index
+            a    0.000000
+            b    0.333333
+            c    0.666667
+            d    1.000000
+            Name: feature, dtype: float64
 
         Where:
             * ``feature`` is the series to be scaled
@@ -3286,9 +3350,7 @@ class DataFrame:
                 new_column_name = f'{column}__{curr_col}'
                 new_columns.append(new_column_name)
 
-                df[new_column_name] = None
-                # previous statement will change dtype to string because value is None
-                df[new_column_name] = df[new_column_name].astype(df[curr_col].dtype)
+                df[new_column_name] = df[curr_col].from_value(base=df, value=None)
                 df.loc[df[index_to_unstack] == column, new_column_name] = df[curr_col]
 
         df = df.groupby(remaining_indexes).aggregate(aggregation)

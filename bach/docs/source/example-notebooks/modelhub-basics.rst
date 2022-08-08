@@ -9,21 +9,18 @@ Open model hub basics
 =====================
 
 In this example, we briefly demonstrate how you can use pre-built models from the open model hub in
-conjunction with, :ref:`Bach <bach>`, our modeling library.
+conjunction with, :ref:`Bach <bach>`, our modeling library. It's also available in a `notebook
+<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-demo-notebook.ipynb>`_
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+out with demo data in 5 minutes.
 
 This example uses real, unaltered data that was collected from https://objectiv.io with Objectiv’s Tracker. All models
 in the open model hub are compatible with data sets that have been validated against the
 `open analytics taxonomy
 <https://objectiv.io/docs/taxonomy/>`_.
 
-This example is also available in a `notebook
-<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-demo-notebook.ipynb>`_
-to run on your own data or use our
-`quickstart
-<https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
-
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 Using the open model hub
 ------------------------
@@ -90,7 +87,7 @@ As the map functions above retured a SeriesBoolean, they can be used in the mode
 
 .. code-block:: python
 
-    modelhub.aggregate.unique_users(df[df.conversion_events]).head(10)
+    modelhub.aggregate.unique_users(df[df.conversion_events]).sort_index(ascending=False).head(10)
 
 Similarly, we can use other aggregation models from the model hub. In the example below, the average session duration is calculated for new users.
 
@@ -116,8 +113,7 @@ In this example we calculate the number of users that were new in a month and al
 
     df['is_new_user_month'] = modelhub.map.is_new_user(df, time_aggregation = '%Y-%m')
     df['is_twice_converted'] = modelhub.map.conversions_in_time(df, name='quickstart_presses')==2
-    modelhub.aggregate.unique_users(df[df.is_new_user_month & df.is_twice_converted]).head()
-
+    modelhub.aggregate.unique_users(df[df.is_new_user_month & df.is_twice_converted]).sort_index(ascending=False).head()
 
 What's next?
 ------------

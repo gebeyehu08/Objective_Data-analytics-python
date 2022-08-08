@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Any, Tuple, TYPE_CHECKING, Dict, Optional, Mapping
+from typing import Any, Tuple, TYPE_CHECKING, Dict, Optional, Mapping, Union
 
 from sqlalchemy.engine import Dialect
 
@@ -9,6 +9,7 @@ from bach.series import Series
 from bach.expression import Expression, join_expressions
 from bach.types import DtypeOrAlias, get_series_type_from_dtype, StructuredDtype, Dtype, validate_dtype_value
 from sql_models.constants import DBDialect
+from sql_models.model import Materialization
 from sql_models.util import DatabaseNotSupportedException, is_bigquery
 
 
@@ -49,10 +50,6 @@ class SeriesDict(Series):
     supported_value_types = (dict, )
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return literal
-
-    @classmethod
     def supported_value_to_literal(
             cls,
             dialect: Dialect,
@@ -83,7 +80,7 @@ class SeriesDict(Series):
         cls,
         base: 'DataFrameOrSeries',
         value: Dict[str, Any],
-        name: str,
+        name: str = 'new_series',
         dtype: Optional[StructuredDtype] = None
     ) -> 'SeriesDict':
         """
@@ -132,8 +129,7 @@ class SeriesDict(Series):
             name=name,
             expression=expr,
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=dtype
         )
         return result
@@ -154,6 +150,7 @@ class SeriesDict(Series):
             node_name='manual_materialize',
             limit: Any = None,
             distinct: bool = False,
+            materialization: Union[Materialization, str] = Materialization.CTE
     ):
         raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 

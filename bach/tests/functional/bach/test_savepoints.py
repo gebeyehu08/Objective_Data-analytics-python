@@ -4,16 +4,15 @@ Copyright 2021 Objectiv B.V.
 from typing import List
 
 import pytest
-from sqlalchemy.dialects.postgresql.base import PGDialect
 from sqlalchemy.future import Engine
 
 from bach.savepoints import Savepoints, CreatedObject
 from sql_models.model import Materialization
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
 
-def test_add_savepoint():
-    df = get_bt_with_test_data()
+def test_add_savepoint(pg_engine):
+    df = get_df_with_test_data(engine=pg_engine)
     sps = Savepoints()
     sps.add_savepoint('test', df, Materialization.TABLE)
     df2 = df.groupby('municipality').min()
@@ -29,8 +28,8 @@ def test_add_savepoint():
     assert len(sps.all) == 2
 
 
-def test_add_savepoint_double():
-    df = get_bt_with_test_data()
+def test_add_savepoint_double(pg_engine):
+    df = get_df_with_test_data(engine=pg_engine)
     sps = Savepoints()
     df = df.materialize()
     sps.add_savepoint('first', df, Materialization.TABLE)
@@ -38,9 +37,8 @@ def test_add_savepoint_double():
         sps.add_savepoint('second', df, Materialization.QUERY)
 
 
-@pytest.mark.xdist_group(name="db_writers")
-def test_write_to_db_queries_only():
-    df = get_bt_with_test_data()
+def test_write_to_db_queries_only(pg_engine, testrun_uid):
+    df = get_df_with_test_data(engine=pg_engine)
     engine = df.engine
     sps = Savepoints()
     sps.add_savepoint('the_name', df, Materialization.QUERY)
@@ -67,30 +65,30 @@ def test_write_to_db_queries_only():
     )
 
 
-@pytest.mark.xdist_group(name="db_writers")
-def test_write_to_db_create_objects():
-    dialect = PGDialect()  # TODO: BigQuery
-    df = get_bt_with_test_data()
+def test_write_to_db_create_objects(pg_engine, testrun_uid: str):
+    engine = pg_engine
+    dialect = engine.dialect
+    df = get_df_with_test_data(engine)
     engine = df.engine
     sps = Savepoints()
 
     df = df.materialize()
-    sps.add_savepoint('sp_first_point', df, Materialization.TABLE)
+    sps.add_savepoint(f'sp_first_point_{testrun_uid}', df, Materialization.TABLE)
 
     # reduce df to one row and add savepoint
     df = df[df.skating_order == 1]
     df = df.materialize()
-    sps.add_savepoint('sp_second_point', df, Materialization.VIEW)
+    sps.add_savepoint(f'sp_second_point_{testrun_uid}', df, Materialization.VIEW)
 
     # Change columns in df and add savepoint
     df = df[['skating_order', 'city', 'founding']]
     df['x'] = 12345
     df = df.materialize()
-    sps.add_savepoint('sp_third_point', df, Materialization.TABLE)
+    sps.add_savepoint(f'sp_third_point_{testrun_uid}', df, Materialization.TABLE)
 
     # No changes, add query
     df = df.materialize()
-    sps.add_savepoint('sp_final_point', df, Materialization.QUERY)
+    sps.add_savepoint(f'sp_final_point', df, Materialization.QUERY)
 
     expected_columns = ['_index_skating_order', 'skating_order', 'city', 'founding', 'x']
     expected_data = [[1, 1, 'Ljouwert', 1285, 12345]]
@@ -106,17 +104,17 @@ def test_write_to_db_create_objects():
            '"founding" as "founding", ' \
            '"x" as "x" ' \
            'from ' \
-           '"sp_third_point"      '
+           f'"sp_third_point_{testrun_uid}"      '
 
     # get_materialized_df assumes that all tables and views have been created, so this will not yet work
     df_use_materialized = sps.get_materialized_df('sp_final_point')
-    with pytest.raises(Exception, match='relation "sp_third_point" does not exist'):
+    with pytest.raises(Exception, match=f'relation "sp_third_point_{testrun_uid}" does not exist'):
         assert_equals_data(df_use_materialized, expected_columns, expected_data)
 
     expected_created = [
-        CreatedObject('sp_first_point', Materialization.TABLE),
-        CreatedObject('sp_second_point', Materialization.VIEW),
-        CreatedObject('sp_third_point', Materialization.TABLE),
+        CreatedObject(f'sp_first_point_{testrun_uid}', Materialization.TABLE),
+        CreatedObject(f'sp_second_point_{testrun_uid}', Materialization.VIEW),
+        CreatedObject(f'sp_third_point_{testrun_uid}', Materialization.TABLE),
     ]
 
     result = sps.write_to_db()

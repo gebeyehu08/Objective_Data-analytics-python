@@ -10,8 +10,9 @@ from bach.expression import Expression
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, assert_equals_data, df_to_list,
-    get_df_with_railway_data, get_df_with_food_data, get_bt_with_test_data
+    get_df_with_railway_data, get_df_with_food_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
 )
+from tests.unit.bach.util import get_pandas_df
 
 
 def test_series__getitem__(engine):
@@ -40,8 +41,8 @@ def test_series__getitem__(engine):
         non_existing_value_ref.value
 
 
-def test_positional_slicing():
-    bt = get_bt_with_test_data(full_data_set=True)['inhabitants'].sort_values()
+def test_positional_slicing(pg_engine):
+    bt = get_df_with_test_data(engine=pg_engine, full_data_set=True)['inhabitants'].sort_values()
 
     class ReturnSlice:
         def __getitem__(self, key):
@@ -87,6 +88,7 @@ def test_series_value(engine):
 
 def test_series_sort_values(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
+    pdf = get_pandas_df(TEST_DATA_CITIES_FULL, CITIES_COLUMNS)
     bt_series = bt.city
     kwargs_list = [
         {'ascending': True},
@@ -97,7 +99,7 @@ def test_series_sort_values(engine):
         assert_equals_data(
             bt_series.sort_values(**kwargs),
             expected_columns=['_index_skating_order', 'city'],
-            expected_data=df_to_list(bt.to_pandas()['city'].sort_values(**kwargs))
+            expected_data=df_to_list(pdf['city'].sort_values(**kwargs))
         )
 
 
@@ -180,8 +182,7 @@ def test_fillna(engine):
             bt['num'].fillna(val)
 
 
-def test_isnull(pg_engine):
-    engine = pg_engine  # TODO BigQuery, fix sorting for nullable columns
+def test_isnull(engine):
     values = ['a', 'b', None]
     pdf = pd.DataFrame(data=values, columns=['text_with_null'])
     pdf.set_index('text_with_null', drop=False, inplace=True)
@@ -196,6 +197,7 @@ def test_isnull(pg_engine):
     assert bt.const_null.isnull().expression.is_constant
     assert bt.const_not_null.notnull().expression.is_constant
     assert bt.const_null.notnull().expression.is_constant
+    assert bt.const_null.dtype == 'string'
     assert_equals_data(
         bt,
         expected_columns=['_index_text_with_null', 'text_with_null', 'const_not_null', 'const_null', 'y', 'z'],
@@ -234,8 +236,8 @@ def test_aggregation(engine):
         s.agg(['sum','sum'])
 
 
-def test_type_agnostic_aggregation_functions():
-    bt = get_bt_with_test_data(full_data_set=True)
+def test_type_agnostic_aggregation_functions(pg_engine):
+    bt = get_df_with_test_data(engine=pg_engine, full_data_set=True)
     btg = bt.groupby()
 
     # type agnostic aggregations
@@ -364,8 +366,8 @@ def test_series_inherit_flag(engine):
     assert not bts_derived.expression.has_aggregate_function
 
 
-def test_series_independant_subquery_any_value_all_values():
-    bt = get_bt_with_test_data(full_data_set=True)
+def test_series_independant_subquery_any_value_all_values(pg_engine):
+    bt = get_df_with_test_data(engine=pg_engine, full_data_set=True)
     s = bt.inhabitants.max() // 4
 
     bt[bt.inhabitants > s.any_value()].head()
@@ -486,8 +488,9 @@ def test_series_dropna(engine) -> None:
     )
 
 
-def test_series_unstack():
-    bt = get_bt_with_test_data(full_data_set=True)
+def test_series_unstack(pg_engine):
+    engine = pg_engine
+    bt = get_df_with_test_data(engine=engine, full_data_set=True)
 
     stacked_bt = bt.groupby(['city','municipality']).inhabitants.sum()
     unstacked_bt = stacked_bt.unstack()
@@ -539,7 +542,7 @@ def test_series_unstack():
     )
 
     # test with column that references another column and grouping on that column
-    bt = get_bt_with_test_data(full_data_set=False)
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)
     bt['village'] = bt.city + ' village'
     unstacked_bt = bt.groupby(['skating_order', 'village']).inhabitants.sum().unstack()
     # unstacked_bt = bt.set_index(['skating_order', 'village']).inhabitants.unstack()
@@ -714,8 +717,8 @@ def test__set_item_with_merge_index_level_error(engine) -> None:
         bt['inhabitants'] + bt2['inhabitants']
 
 
-def test__set_item_with_merge_different_dtypes() -> None:
-    bt = get_bt_with_test_data(full_data_set=False)
+def test__set_item_with_merge_different_dtypes(engine) -> None:
+    bt = get_df_with_test_data(engine, full_data_set=False)
 
     bt2 = bt.copy()
     bt2._index[bt2.index_columns[0]] = bt2.index[bt2.index_columns[0]].astype(str)

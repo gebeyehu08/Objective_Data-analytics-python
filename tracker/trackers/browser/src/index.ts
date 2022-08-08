@@ -2,6 +2,14 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+/**
+ * Set package version in globals
+ */
+import pkg from '../package.json';
+globalThis.objectiv = globalThis.objectiv ?? {};
+globalThis.objectiv.versions = globalThis.objectiv.versions ?? new Map();
+globalThis.objectiv.versions.set(pkg.name, pkg.version);
+
 export * from '@objectiv/tracker-core';
 
 export * from './common/factories/makeBrowserTrackerDefaultPluginsList';
@@ -19,20 +27,23 @@ export * from './common/guards/isTaggedElement';
 export * from './common/guards/isTagLocationAttributes';
 export * from './common/guards/isTagLocationOptions';
 export * from './common/guards/isTagLocationParameters';
+export * from './common/guards/isTrackBlursAttribute';
 export * from './common/guards/isTrackClicksAttribute';
 export * from './common/guards/isTrackVisibilityAttribute';
 export * from './common/guards/isValidateAttribute';
 export * from './common/guards/isValidChildrenTaggingQuery';
 export * from './common/guards/isWaitUntilTrackedOptions';
-export * from './common/parsers/parseTagChildren';
 export * from './common/parsers/parseJson';
 export * from './common/parsers/parseLocationContext';
+export * from './common/parsers/parseTagChildren';
+export * from './common/parsers/parseTrackBlurs';
 export * from './common/parsers/parseTrackClicks';
 export * from './common/parsers/parseTrackVisibility';
 export * from './common/parsers/parseValidate';
-export * from './common/stringifiers/stringifyTagChildren';
 export * from './common/stringifiers/stringifyJson';
 export * from './common/stringifiers/stringifyLocationContext';
+export * from './common/stringifiers/stringifyTagChildren';
+export * from './common/stringifiers/stringifyTrackBlurs';
 export * from './common/stringifiers/stringifyTrackClicks';
 export * from './common/stringifiers/stringifyTrackVisibility';
 export * from './common/stringifiers/stringifyValidate';
@@ -63,6 +74,8 @@ export * from './definitions/TagLinkParameters';
 export * from './definitions/TagLocationOptions';
 export * from './definitions/TagLocationParameters';
 export * from './definitions/TagLocationReturnValue';
+export * from './definitions/TrackBlursAttribute';
+export * from './definitions/TrackBlursOptions';
 export * from './definitions/TrackClicksAttribute';
 export * from './definitions/TrackClicksOptions';
 export * from './definitions/TrackedElement';

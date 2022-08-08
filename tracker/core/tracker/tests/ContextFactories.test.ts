@@ -14,7 +14,9 @@ import {
   makeHttpContext,
   makeIdentityContext,
   makeInputContext,
+  makeInputValueContext,
   makeLinkContext,
+  makeLocaleContext,
   makeMarketingContext,
   makeMediaPlayerContext,
   makeNavigationContext,
@@ -96,6 +98,16 @@ describe('Context Factories', () => {
     });
   });
 
+  it(GlobalContextName.InputValueContext, () => {
+    expect(makeInputValueContext({ id: 'input-1', value: 'value' })).toStrictEqual({
+      __instance_id: matchUUID,
+      __global_context: true,
+      _type: GlobalContextName.InputValueContext,
+      id: 'input-1',
+      value: 'value',
+    });
+  });
+
   it(LocationContextName.LinkContext, () => {
     expect(makeLinkContext({ id: 'confirm-data', href: '/some/url' })).toStrictEqual({
       __instance_id: matchUUID,
@@ -104,6 +116,44 @@ describe('Context Factories', () => {
       _type: LocationContextName.LinkContext,
       id: 'confirm-data',
       href: '/some/url',
+    });
+  });
+
+  it(GlobalContextName.LocaleContext, () => {
+    expect(makeLocaleContext({ id: 'en' })).toStrictEqual({
+      __instance_id: matchUUID,
+      __global_context: true,
+      _type: GlobalContextName.LocaleContext,
+      id: 'en',
+      language_code: null,
+      country_code: null,
+    });
+
+    expect(makeLocaleContext({ id: 'en', language_code: 'en' })).toStrictEqual({
+      __instance_id: matchUUID,
+      __global_context: true,
+      _type: GlobalContextName.LocaleContext,
+      id: 'en',
+      language_code: 'en',
+      country_code: null,
+    });
+
+    expect(makeLocaleContext({ id: 'US', country_code: 'US' })).toStrictEqual({
+      __instance_id: matchUUID,
+      __global_context: true,
+      _type: GlobalContextName.LocaleContext,
+      id: 'US',
+      language_code: null,
+      country_code: 'US',
+    });
+
+    expect(makeLocaleContext({ id: 'en_US', language_code: 'en', country_code: 'US' })).toStrictEqual({
+      __instance_id: matchUUID,
+      __global_context: true,
+      _type: GlobalContextName.LocaleContext,
+      id: 'en_US',
+      language_code: 'en',
+      country_code: 'US',
     });
   });
 
@@ -161,15 +211,15 @@ describe('Context Factories', () => {
   it(GlobalContextName.IdentityContext, () => {
     expect(
       makeIdentityContext({
-        id: generateUUID(),
-        name: 'backend',
+        id: 'backend',
+        value: generateUUID(),
       })
     ).toStrictEqual({
       __instance_id: matchUUID,
       __global_context: true,
       _type: GlobalContextName.IdentityContext,
-      id: matchUUID,
-      name: 'backend',
+      id: 'backend',
+      value: matchUUID,
     });
   });
 
