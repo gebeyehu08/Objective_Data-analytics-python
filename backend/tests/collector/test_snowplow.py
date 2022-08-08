@@ -2,10 +2,11 @@ import json
 import jsonschema
 import base64
 from objectiv_backend.snowplow.schema.ttypes import CollectorPayload
-from objectiv_backend.snowplow.snowplow_helper import make_snowplow_custom_context, \
-    objectiv_event_to_snowplow, objectiv_event_to_snowplow_payload, snowplow_schema_violation_json
+from objectiv_backend.snowplow.snowplow_helper import make_snowplow_custom_contexts, \
+    objectiv_event_to_snowplow_payload, snowplow_schema_violation_json
 from tests.schema.test_schema import CLICK_EVENT_JSON, make_event_from_dict
 from objectiv_backend.common.config import SnowplowConfig
+from objectiv_backend.common.event_utils import get_context
 from objectiv_backend.schema.validate_events import EventError, ErrorInfo
 
 
@@ -13,6 +14,9 @@ config = SnowplowConfig(
     schema_contexts='test-schema-contexts',
     schema_payload_data='test-schema-payload-data',
     schema_objectiv_taxonomy='test-schema-objectiv-taxonomy',
+    schema_objectiv_location_stack='test-schema-objectiv-location-stack',
+    schema_objectiv_contexts_base='test-schema-objectiv-contexts-base',
+    schema_objectiv_contexts_version='test-schema-objectiv-contexts-version',
     schema_collector_payload='',
     schema_schema_violations='https://raw.githubusercontent.com/snowplow/iglu-central/master/schemas/com.snowplowanalytics.snowplow.badrows/schema_violations/jsonschema/2-0-0',
 
@@ -31,18 +35,8 @@ event_list = json.loads(CLICK_EVENT_JSON)
 event = make_event_from_dict(event_list['events'][0])
 
 
-def test_objectiv_event_to_snowplow():
-
-    sp_event = objectiv_event_to_snowplow(event=event, config=config)
-    assert type(sp_event) == dict
-
-    assert sp_event['schema'] == config.schema_objectiv_taxonomy
-    assert sp_event['data'] == event
-
-
 def test_make_snowplow_custom_context():
-    sp_event = objectiv_event_to_snowplow(event=event, config=config)
-    encoded_context = make_snowplow_custom_context(self_describing_event=sp_event, config=config)
+    encoded_context = make_snowplow_custom_contexts(event=event, config=config)
 
     json_context = base64.b64decode(encoded_context)
     context = json.loads(json_context)
@@ -53,16 +47,17 @@ def test_make_snowplow_custom_context():
     assert context['data'][0]
     context_data = context['data'][0]
     # check we can find the original objectiv event inside of it
-    assert context_data['schema'] == config.schema_objectiv_taxonomy
+    assert context_data['schema'] == f'{config.schema_objectiv_contexts_base}/ApplicationContext/jsonschema/{config.schema_objectiv_contexts_version}'
 
     # check to see the data is still the same as the original event
-    assert context_data['data'] == event
+    # we remove '_type' as that is not in the snowplow global contexts, as they are typed in the db/column
+    assert context_data['data'] == {k: v for k, v in get_context(event, 'ApplicationContext').items() if k != '_type'}
 
 
 def test_objectiv_event_to_snowplow_payload():
 
     collector_payload = objectiv_event_to_snowplow_payload(event=event, config=config)
-    # check iof we get ther proper object
+    # check if we get the proper object
     assert type(collector_payload) == CollectorPayload
 
     # check if the schema is correct

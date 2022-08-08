@@ -42,8 +42,8 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
 
     # first add global contexts
     blocked = ['_type', '_types']
-    version = '1-0-0'
-    schema_base = 'iglu:io.objectiv.context'
+    version = config.schema_objectiv_contexts_version
+    schema_base = config.schema_objectiv_contexts_base
     for context in event['global_contexts']:
         context_type = context['_type']
         schema = f'{schema_base}/{context_type}/jsonschema/{version}'
@@ -51,19 +51,19 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
         self_describing_contexts.append(make_snowplow_context(schema, data))
 
     # add location_stack
-    schema = f'iglu:io.objectiv/location_stack/jsonschema/1-0-0'
+    schema = config.schema_objectiv_location_stack
     location_stack = {'location_stack': [filter_dict(v, ['_types']) for i, v in enumerate(event['location_stack'])]}
     self_describing_contexts.append(make_snowplow_context(schema, location_stack))
 
-    # original format
-    schema = 'iglu:io.objectiv/taxonomy/jsonschema/1-0-0'
-    _event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
-    try:
-        cookie_context = get_context(event, 'CookieIdContext')
-    except ValueError:
-        cookie_context = {}
-    _event['cookie_id'] = cookie_context.get('id', '')
-    self_describing_contexts.append(make_snowplow_context(schema, _event))
+    # # original format
+    # schema = config.schema_objectiv_taxonomy
+    # _event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
+    # try:
+    #     cookie_context = get_context(event, 'CookieIdContext')
+    # except ValueError:
+    #     cookie_context = {}
+    # _event['cookie_id'] = cookie_context.get('id', '')
+    # self_describing_contexts.append(make_snowplow_context(schema, _event))
 
     snowplow_contexts_schema = config.schema_contexts
     custom_context = {
@@ -115,7 +115,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     rich_event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
     rich_event['cookie_id'] = cookie_context.get('id', '')
 
-    snowplow_custom_context = make_snowplow_custom_contexts(event=event, config=config)
+    snowplow_custom_contexts = make_snowplow_custom_contexts(event=event, config=config)
 
     payload = {
         "schema": snowplow_payload_data_schema,
@@ -127,12 +127,8 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "se_ca": event['_type'],  # structured event category
             "eid": event['id'],  # event_id / UUID
             "url": path_context.get('id', ''),  # Page URL
-            "cx": snowplow_custom_context,  # base64 encoded custom context
-            "aid": application_context.get('id', ''),  # Unique identifier for website / application
-
-            "dtm": str(event['corrected_time']),  # Timestamp when event occurred, as recorded by client device
-            "stm": str(event['transport_time']),  # Timestamp when event was sent by client device to collector
-            "ttm": str(event['time'])  # User-set exact timestamp
+            "cx": snowplow_custom_contexts,  # base64 encoded custom context
+            "aid": application_context.get('id', '')
         }]
     }
     return CollectorPayload(
