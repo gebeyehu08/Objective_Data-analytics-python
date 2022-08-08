@@ -1,0 +1,21 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+    "description": "A Location Context that describes a section of the UI containing navigational elements, for example a menu.",
+    "self": {
+        "vendor": "io.objectiv.context",
+        "name": "NavigationContext",
+        "format": "jsonschema",
+        "version": "1-0-0"
+    },
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "description": "some id"
+        }
+    },
+    "additionalProperties": true,
+    "required": [
+        "id"
+    ]
+}
