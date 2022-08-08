@@ -330,7 +330,7 @@ class Window(GroupBy):
                  dialect: Dialect,
                  group_by_columns: List['Series'],
                  order_by: List[SortColumn],
-                 nulls_last: bool = False,
+                 na_position: str = 'last',
                  mode: WindowFrameMode = WindowFrameMode.RANGE,
                  start_boundary: Optional[WindowFrameBoundary] = WindowFrameBoundary.PRECEDING,
                  start_value: int = None,
@@ -346,6 +346,9 @@ class Window(GroupBy):
 
         if mode is None:
             raise ValueError("Mode needs to be defined")
+
+        if na_position not in ['first', 'last']:
+            raise ValueError(f'"{na_position}" is not a valid value for `na_position` param.')
 
         if start_boundary is None and end_boundary is not None:
             raise ValueError("start_boundary needs to be defined if end_boundary is present.")
@@ -399,7 +402,7 @@ class Window(GroupBy):
                                 f' AND {end_boundary.frame_clause(end_value)}'
 
         self._order_by = order_by
-        self._nulls_last = nulls_last
+        self._na_position = na_position
 
     @property
     def frame_clause(self) -> str:
@@ -430,7 +433,7 @@ class Window(GroupBy):
             dialect=self._dialect,
             group_by_columns=list(self._index.values()),
             order_by=self._order_by,
-            nulls_last=self._nulls_last,
+            na_position=self._na_position,
             mode=mode,
             start_boundary=start_boundary, start_value=start_value,
             end_boundary=end_boundary, end_value=end_value,
@@ -455,7 +458,7 @@ class Window(GroupBy):
         """
         # TODO implement NULLS FIRST / NULLS LAST, probably not here but in the sorting logic.
         order_by = get_order_by_expression(
-            dialect=self._dialect, order_by=self._order_by, nulls_last=self._nulls_last,
+            dialect=self._dialect, order_by=self._order_by, na_position=self._na_position,
         )
 
         if self.frame_clause is None:
@@ -492,20 +495,17 @@ class Window(GroupBy):
 
 
 def get_order_by_expression(
-    dialect: Dialect, order_by: List['SortColumn'], nulls_last: bool = False,
+    dialect: Dialect, order_by: List['SortColumn'], na_position: str = 'last',
 ) -> Expression:
     """
     INTERNAL: Convert order_by into an order by expression that is usable inside an aggregation or window
     function.
 
-    Note: The default ordering is slightly different from regular ordering of rows inside a DataFrame or
-    Series. In DataFrames/Series we sort 'asc nulls last' and `desc nulls last` to mimic the behaviour of
-    pandas. But that's not supported by BigQuery for aggregation functions. So we default here to sort
-    'asc nulls first' and `desc nulls last`.
+    Note: The default ordering mimics the default behaviour of pandas, where nulls are always sorted last.
 
     :param order_by: List of SortColumns defining the ordering
-    :param nulls_last: By default (=False) the sorting is 'asc null first' and 'desc nulls last'. If
-        `nulls_last` is True, then the sorting is set to 'asc nulls last', 'desc nulls last'
+    :param na_position: By default (=`last`) the sorting is 'asc null last' and 'desc nulls last'. If
+        `na_position` is `first`, then the sorting is set to 'asc nulls first', 'desc nulls first'
     :return: An Expression containing a complete order by clause of the form 'order by ...'. Will return
         an empty Expression if the specified `order_by` list is empty
     """
@@ -516,9 +516,14 @@ def get_order_by_expression(
     if not order_by:
         return Expression.construct('')
 
+    if na_position not in ['last', 'first']:
+        raise ValueError(
+            f'"{na_position}" is not a valid value for `na_position` param.'
+        )
+
     asc_expr = Expression.raw('asc')
     desc_expr = Expression.raw('desc')
-    if nulls_last:
+    if na_position == 'last':
         nulls_expr = Expression.construct('nulls last')
     else:
         nulls_expr = Expression.construct('nulls first')
@@ -537,7 +542,7 @@ def get_order_by_expression(
                 # Big Query does not support NULLS LAST and NULLS FIRST (might generate some errors)
                 # in window order by, therefore we require to simulate it.
                 simulate_nulls_last_expr = Expression.construct(
-                    '({} is null) {}', level_expr, asc_expr if nulls_last else desc_expr
+                    '({} is null) {}', level_expr, asc_expr if na_position == 'last' else desc_expr
                 )
                 expressions.append(simulate_nulls_last_expr)
             else:

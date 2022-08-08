@@ -600,10 +600,10 @@ def test_window_nav_functions_with_nulls(engine):
     gb_asc = df.sort_values(by=['B']).groupby(['A'])
     gb_desc = df.sort_values(by=['B'], ascending=False).groupby(['A'])
     windows = {
-        'asc_nulls_last': gb_asc.window(nulls_last=True, end_boundary=WindowFrameBoundary.FOLLOWING),
-        'asc_nulls_first': gb_asc.window(nulls_last=False, end_boundary=WindowFrameBoundary.FOLLOWING),
-        'desc_nulls_last': gb_desc.window(nulls_last=True, end_boundary=WindowFrameBoundary.FOLLOWING),
-        'desc_nulls_first': gb_desc.window(nulls_last=True, end_boundary=WindowFrameBoundary.FOLLOWING),
+        'asc_nulls_last': gb_asc.window(na_position='last', end_boundary=WindowFrameBoundary.FOLLOWING),
+        'asc_nulls_first': gb_asc.window(na_position='first', end_boundary=WindowFrameBoundary.FOLLOWING),
+        'desc_nulls_last': gb_desc.window(na_position='last', end_boundary=WindowFrameBoundary.FOLLOWING),
+        'desc_nulls_first': gb_desc.window(na_position='first', end_boundary=WindowFrameBoundary.FOLLOWING),
     }
 
     nav_functions = {
@@ -620,18 +620,18 @@ def test_window_nav_functions_with_nulls(engine):
 
     expected_fln_value = {
         'a': {
-            'first_value_asc_nulls_last':   -1.,
-            'first_value_asc_nulls_first': None,
-            'first_value_desc_nulls_last':   2.,
-            'first_value_desc_nulls_first':  2.,
-            'last_value_asc_nulls_last':   None,
-            'last_value_asc_nulls_first':    2.,
-            'last_value_desc_nulls_last':  None,
-            'last_value_desc_nulls_first': None,
-            'nth_value_asc_nulls_last':      1.,
-            'nth_value_asc_nulls_first':    -1.,
-            'nth_value_desc_nulls_last':     1.,
-            'nth_value_desc_nulls_first':    1.,
+            'first_value_asc_nulls_last':     -1.,
+            'first_value_asc_nulls_first':   None,
+            'first_value_desc_nulls_last':     2.,
+            'first_value_desc_nulls_first':  None,
+            'last_value_asc_nulls_last':     None,
+            'last_value_asc_nulls_first':      2.,
+            'last_value_desc_nulls_last':    None,
+            'last_value_desc_nulls_first':    -1.,
+            'nth_value_asc_nulls_last':        1.,
+            'nth_value_asc_nulls_first':      -1.,
+            'nth_value_desc_nulls_last':       1.,
+            'nth_value_desc_nulls_first':      2.,
         },
         'b': {
             'first_value_asc_nulls_last':    2.,
@@ -666,7 +666,7 @@ def test_window_nav_functions_with_nulls(engine):
             ['a',   -1., *expected_fln_value['a'].values(),   1.,   1., None, None, None, None,   1.,    1.],
             ['a',    1., *expected_fln_value['a'].values(),   2.,   2.,  -1.,  -1.,  -1.,  -1.,   2.,    2.],
             ['a',    2., *expected_fln_value['a'].values(), None, None,   1.,   1.,   1.,   1., None,  None],
-            ['a',  None, *expected_fln_value['a'].values(), None,  -1., None, None,   2., None,  -1.,   -1.],
+            ['a',  None, *expected_fln_value['a'].values(), None,  -1., None,   2.,   2., None,  -1.,  None],
             ['b',    2., *expected_fln_value['b'].values(),   3.,   3., None, None, None, None,   3.,    3.],
             ['b',    3., *expected_fln_value['b'].values(), None, None,   2.,   2.,   2.,   2., None,  None],
         ]

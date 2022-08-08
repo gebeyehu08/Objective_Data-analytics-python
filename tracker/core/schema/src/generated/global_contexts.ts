@@ -12,7 +12,7 @@ export interface ApplicationContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'ApplicationContext';
+  _type: 'ApplicationContext';
 }
 
 /**
@@ -23,7 +23,7 @@ export interface CookieIdContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'CookieIdContext';
+  _type: 'CookieIdContext';
 
   /**
    * Unique identifier from the session cookie.
@@ -39,7 +39,7 @@ export interface HttpContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'HttpContext';
+  _type: 'HttpContext';
 
   /**
    * Full URL to HTTP referrer of the current page.
@@ -65,7 +65,7 @@ export interface InputValueContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'InputValueContext';
+  _type: 'InputValueContext';
 
   /**
    * The value of the input element.
@@ -74,14 +74,24 @@ export interface InputValueContext extends AbstractGlobalContext {
 }
 
 /**
- * A GlobalContext describing the locale used by the user. E.g. an ISO 639-1 code.
+ * A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).
  * Inheritance: LocaleContext -> AbstractGlobalContext -> AbstractContext
  */
 export interface LocaleContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'LocaleContext';
+  _type: 'LocaleContext';
+
+  /**
+   * Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.
+   */
+  language_code: string | null;
+
+  /**
+   * Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.
+   */
+  country_code: string | null;
 }
 
 /**
@@ -92,7 +102,7 @@ export interface PathContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'PathContext';
+  _type: 'PathContext';
 }
 
 /**
@@ -103,7 +113,7 @@ export interface SessionContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'SessionContext';
+  _type: 'SessionContext';
 
   /**
    * Hit counter relative to the current session, this event originated in.
@@ -120,7 +130,7 @@ export interface MarketingContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'MarketingContext';
+  _type: 'MarketingContext';
 
   /**
    * Identifies the advertiser, site, publication, etc.
@@ -173,7 +183,7 @@ export interface IdentityContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _type: 'IdentityContext';
+  _type: 'IdentityContext';
 
   /**
    * The unique identifier for this user/group/entity within the scope defined by `id`.

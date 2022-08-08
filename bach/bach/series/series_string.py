@@ -8,7 +8,7 @@ from sqlalchemy.engine import Dialect
 
 from bach.partitioning import get_order_by_expression
 from bach.series import Series
-from bach.expression import Expression, AggregateFunctionExpression
+from bach.expression import Expression, AggregateFunctionExpression, get_variable_tokens
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
@@ -165,12 +165,22 @@ class SeriesString(Series):
     dtype_aliases = ('text', str)
     supported_db_dtype = {
         DBDialect.POSTGRES: 'text',
+        DBDialect.ATHENA: 'varchar',
         DBDialect.BIGQUERY: 'STRING'
     }
     supported_value_types = (str, type(None))  # NoneType ends up as a string for now
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        # We override the parent class here because strings are really common, and we don't strictly need
+        # to cast them. As all supported databases will interpret a string literal as a string.
+        # Not casting string literals greatly improves the readability of the generated SQL.
+
+        # However, there is an edge case: NULL values should be cast to string. e.g. BigQuery considers a
+        # naked NULL to be INT64. Additionally, we'll always cast variables, just so this keeps working if
+        # the variable get set to `None`
+        if literal.to_sql(dialect=dialect).upper() == 'NULL' or get_variable_tokens([literal]):
+            return super().supported_literal_to_expression(dialect=dialect, literal=literal)
         return literal
 
     @classmethod
@@ -250,7 +260,7 @@ class SeriesString(Series):
         order_by += [SortColumn(expression=self.expression, asc=True)]
 
         order_by_expr = get_order_by_expression(
-            dialect=self.engine.dialect, order_by=order_by, nulls_last=False,
+            dialect=self.engine.dialect, order_by=order_by, na_position='first',
         )
         array_agg_expression = AggregateFunctionExpression.construct('array_agg({} {})', self, order_by_expr)
         if is_postgres(self.engine):

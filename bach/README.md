@@ -10,11 +10,13 @@ Visit [Objectiv Docs](https://objectiv.io/docs/modeling/bach/) to learn more
 To use Bach, use the following command:
 ```bash
 pip install objectiv-bach
+pip install objectiv-bach[bigquery] # for bigquery support
 ```
 
 If you want the latest and greatest from your local checkout, install objectiv_bach in edit mode:
 ```bash
 pip install -e .
+pip install -e .[bigquery] # for bigquery support
 ```
 
 This will install Bach in edit mode, meaning you get the latest version from the local checkout.
@@ -22,73 +24,56 @@ For detailed installation & usage instructions, visit [Objectiv Docs](https://ww
 
 
 ## Running Functional and Unit Tests
-In case you are interested on running tests, install all requirements from ``requirements-dev.txt``
+In case you are interested on running tests, install all dev requirements through:
+```bash
+pip install -e .[dev,bigquery]
+```
 
 ### Setting up environmental variables
-Functional tests require reading from multiple databases, in order to run them you should define
-any of the following variables (based on the engine you want to test):
+Functional tests require access to multiple databases. In order to run them you should define
+the variables shown in the below table, depending on the engine you want to test.
+Variables can be set as environment variables, or can be defined in the file `.secrets/.test_env`.
 
-|    Database     |                  |           Variables          |
-|:---------------:|------------------|:----------------------------:|
-|    Postgres     | Database URL     |     `OBJ_DB_PG_TEST_URL`     |
-|    BigQuery     | Database URL     |     `OBJ_DB_BQ_TEST_URL`     |
-|    BigQuery     | Credentials Path | `OBJ_DB_BQ_CREDENTIALS_PATH` |
+| Database | Variables                              | Description                  |
+|:--------:|----------------------------------------|------------------------------|
+| Postgres | `OBJ_DB_PG_TEST_URL`                   | Database URL                 |
+|          |                                        |                              |
+|  Athena  | `OBJ_DB_ATHENA_TEST_URL`               | Database URL                 |
+|  Athena  | `OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID`      | Access key id*               |
+|  Athena  | `OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY`  | Secret key*                  |
+|  Athena  | `OBJ_DB_ATHENA_REGION_NAME`            | Region*                      |
+|  Athena  | `OBJ_DB_ATHENA_SCHEMA_NAME`            | Schema name*                 |
+|  Athena  | `OBJ_DB_ATHENA_S3_STAGING_DIR`         | S3 staging dir*              |
+|  Athena  | `OBJ_DB_ATHENA_WORK_GROUP`             | Workgroup to run queries as* |
+|          |                                        |                              |
+| BigQuery | `OBJ_DB_BQ_TEST_URL`                   | Database URL                 |
+| BigQuery | `OBJ_DB_BQ_CREDENTIALS_PATH`           | Credentials Path             |
+
+For Athena one can either specify the full connection string as `OBJ_DB_ATHENA_TEST_URL` or set
+all the fields marked with an asterisk. The asterisk marked fields are ignored if `OBJ_DB_ATHENA_TEST_URL`
+is set.
+
+For more information on creating the correct database setup, see the markdown files in the `tests/` folder.
 
 
-
-### Running Postgres-only tests
-For running tests for Postgres, run the following command:
+### Running Tests for different databases
+For running tests for Postgres, as well as database independent tests, run the following command:
 ```bash
 make tests
 ```
 
-### Running BigQuery-only tests
-Before running tests for BigQuery, please make sure you have the following tables in your dataset:
-
-**Cities**
-```sql
-insert into `<YOUR_PROJECT>.<YOUR_DATASET>.cities`(skating_order, city, municipality, inhabitants, founding)
-values
-    (1, 'Ljouwert', 'Leeuwarden', 93485, 1285),
-    (2, 'Snits', 'Súdwest-Fryslân', 33520, 1456),
-    (3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268),
-    (4, 'Sleat', 'De Friese Meren', 700, 1426),
-    (5, 'Starum', 'Súdwest-Fryslân', 960, 1061),
-    (6, 'Hylpen', 'Súdwest-Fryslân', 870, 1225),
-    (7, 'Warkum', 'Súdwest-Fryslân', 4440, 1399),
-    (8, 'Boalsert', 'Súdwest-Fryslân', 10120, 1455),
-    (9, 'Harns', 'Harlingen', 14740, 1234),
-    (10, 'Frjentsjer', 'Waadhoeke', 12760, 1374),
-    (11, 'Dokkum', 'Noardeast-Fryslân', 12675, 1298);
-```
-**Foods**
-```sql
-insert into `<YOUR_PROJECT>.<YOUR_DATASET>.foods`(skating_order, food, moment, date)
-values
-    (1, 'Sûkerbôlle', '2021-05-03 11:28:36.388', '2021-05-03'),
-    (2, 'Dúmkes', '2021-05-04 23:28:36.388', '2021-05-04'),
-    (4, 'Grutte Pier Bier', '2022-05-03 14:13:13.388', '2022-05-03');
-```
-**Railways**
-```sql
-insert into `<YOUR_PROJECT>.<YOUR_DATASET>.railways`(station_id, town, station, platforms)
-values
-    (1, 'Drylts', 'IJlst', 1),
-    (2, 'It Hearrenfean', 'Heerenveen', 1),
-    (3, 'It Hearrenfean', 'Heerenveen IJsstadion', 2),
-    (4, 'Ljouwert', 'Leeuwarden', 4),
-    (5, 'Ljouwert', 'Camminghaburen', 1),
-    (6, 'Snits', 'Sneek', 2),
-    (7, 'Snits', 'Sneek Noord', 2);
+For running tests for Athena, as well as database independent tests, run the following command:
+```bash
+make tests-athena
 ```
 
-After setting up your tables, run the following command:
+For running tests for BigQuery, as well as database independent tests, run the following command:
 ```bash
 make tests-bigquery
 ```
 
-### Running tests for all databases
-In case you want to run all tests for multiple database, run the following command:
+In case you want to run all tests for all supported databases, as well as database independent tests, run
+the following command:
 ```bash
 make tests-all
 ```

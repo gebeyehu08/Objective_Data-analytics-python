@@ -7,4 +7,3 @@ export * from './discriminators';
 export * from './events';
 export * from './global_contexts';
 export * from './location_contexts';
-export * from './static';

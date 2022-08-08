@@ -11,7 +11,7 @@ from bach.expression import Expression
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
 
 class SeriesBoolean(Series, ABC):
@@ -42,6 +42,7 @@ class SeriesBoolean(Series, ABC):
     dtype_aliases = ('boolean', '?', bool)
     supported_db_dtype = {
         DBDialect.POSTGRES: 'boolean',
+        DBDialect.ATHENA: 'boolean',
         DBDialect.BIGQUERY: 'BOOL',
     }
     supported_value_types = (bool, )
@@ -49,10 +50,6 @@ class SeriesBoolean(Series, ABC):
     # Notes for supported_value_to_literal() and supported_literal_to_expression():
     # 'True' and 'False' are valid boolean literals in Postgres
     # See https://www.postgresql.org/docs/14/datatype-boolean.html
-
-    @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return literal
 
     @classmethod
     def supported_value_to_literal(
@@ -116,7 +113,7 @@ class SeriesBoolean(Series, ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        if is_postgres(self.engine):
+        if is_postgres(self.engine) or is_athena(self.engine):
             return self._derived_agg_func(partition, 'bool_and', skipna=skipna)
         if is_bigquery(self.engine):
             return self._derived_agg_func(partition, 'logical_and', skipna=skipna)
@@ -131,7 +128,7 @@ class SeriesBoolean(Series, ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        if is_postgres(self.engine):
+        if is_postgres(self.engine) or is_athena(self.engine):
             return self._derived_agg_func(partition, 'bool_or', skipna=skipna)
         if is_bigquery(self.engine):
             return self._derived_agg_func(partition, 'logical_or', skipna=skipna)
