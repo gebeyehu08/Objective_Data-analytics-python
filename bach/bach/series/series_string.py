@@ -246,9 +246,8 @@ class SeriesString(Series):
 
         The order of the values in the array will be based of the order of the values in this Series. If
         this Series does not have a deterministic sorting, then the values are additionally sorted by the
-        values themselves. A difference in sorting can occur between the resulting array and the values in a
-        Series when the Series contains None/NULL values. Null values will be sorted last when sorting
-        ascending, contrary to sorting inside a DataFrame or a Series where they come last.
+        values themselves. Null values will always be sorted last when aggregating all values, following
+        default sorting behavior for DataFrame/Series.
 
         :param partition: The partition to apply, optional.
         :return: SeriesJson containing an array of strings on each row.
@@ -260,7 +259,7 @@ class SeriesString(Series):
         order_by += [SortColumn(expression=self.expression, asc=True)]
 
         order_by_expr = get_order_by_expression(
-            dialect=self.engine.dialect, order_by=order_by, na_position='first',
+            dialect=self.engine.dialect, order_by=order_by, na_position='last',
         )
         array_agg_expression = AggregateFunctionExpression.construct('array_agg({} {})', self, order_by_expr)
         if is_postgres(self.engine):
