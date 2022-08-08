@@ -1,11 +1,15 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
 import re
 import warnings
+from typing import cast, List
 
 import numpy as np
 
-from bach import DataFrameOrSeries
+from bach.dataframe import DataFrameOrSeries
 from bach.merge import MergeSqlModel
-from sql_models.model import SqlModel
+from bach.sql_model import BachSqlModel
 
 # default styling for bach graphs
 DEFAULT_GRAPH_NODE_FORMAT = {
@@ -31,13 +35,14 @@ class SqlModelGraphDisplay:
                 category=UserWarning,
             )
             print(obj.view_sql())
-
-        self._added_nodes = []
-
-        # fill graph
-        self._add_node_references(obj.base_node)
+        else:
+            self._added_nodes: List[str] = []
+            self._add_node_references(obj.base_node)
 
     def __call__(self) -> None:
+        if not hasattr(self, '_graph'):
+            return None
+
         try:
             from IPython.display import display_svg
             display_svg(self._graph)
@@ -48,11 +53,13 @@ class SqlModelGraphDisplay:
             )
             print(self._graph.source)
 
-    def _add_node_references(self, current_node: SqlModel) -> None:
+    def _add_node_references(self, current_node: BachSqlModel) -> None:
         # add current node to graph
         target = self._add_node_as_vertex(current_node)
         # add edges with ref nodes
         for ref_name, ref in current_node.references.items():
+            ref = cast(BachSqlModel, ref)
+
             node_target = target
             if isinstance(current_node, MergeSqlModel):
                 # ref_name is left_node or right_node
@@ -63,7 +70,7 @@ class SqlModelGraphDisplay:
             if ref.hash not in self._added_nodes:
                 self._add_node_references(ref)
 
-    def _add_node_as_vertex(self, current_node: SqlModel) -> str:
+    def _add_node_as_vertex(self, current_node: BachSqlModel) -> str:
         """
         Adds the node as a vertex into the graph using its hash as identifier.
         The vertex will be displayed based on default template:
@@ -101,14 +108,14 @@ class SqlModelGraphDisplay:
         self._added_nodes.append(current_node.hash)
 
         # add a node for merge information
-        # and make references create edges to merge info node instead
+        # and make references to create edges to merge info node instead
         if isinstance(current_node, MergeSqlModel):
             return self._add_merge_info_node(current_node)
 
         return current_node.hash
 
     @staticmethod
-    def _get_column_names_rows(current_node: SqlModel):
+    def _get_column_names_rows(current_node: BachSqlModel):
         """
         Generates column labels for the node.
         """
@@ -204,5 +211,9 @@ def display_sql_as_graph(obj: DataFrameOrSeries) -> None:
 
     .. note::
         Requires the IPython package, if not installed the graph source will be print instead
+
+    .. warning::
+        This functionality is still experimental, graphs for complex SQL models might generate a complex
+        layout where nodes and edges may overlap with other elements.
     """
     SqlModelGraphDisplay(obj)()

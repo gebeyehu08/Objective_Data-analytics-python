@@ -3,7 +3,7 @@ import builtins
 from IPython import display
 from _pytest.monkeypatch import MonkeyPatch
 
-from bach.display_formats import display_sql_as_markdown
+from bach.display_formats import display_sql_as_markdown, display_sql_as_graph
 from tests.unit.bach.util import get_fake_df
 
 
@@ -39,3 +39,20 @@ def test_display_sql_as_markdown(monkeypatch: MonkeyPatch, dialect) -> None:
     monkeypatch.setattr(builtins, '__import__', mocked_import_ipython)
     display_sql_as_markdown(df)
     assert displayed_calls == 2
+
+
+def test_display_sql_as_graph_missing_module(recwarn, monkeypatch: MonkeyPatch, dialect) -> None:
+    df = get_fake_df(dialect, ['a'], ['b', 'c'])
+
+    monkeypatch.setattr(df, 'view_sql', lambda: 'select * from fake_table')
+
+    def mocked_import_graphviz(name, *args, **kwargs) -> None:
+        if name == 'graphviz':
+            raise ModuleNotFoundError
+
+    monkeypatch.setattr(builtins, '__import__', mocked_import_graphviz)
+
+    display_sql_as_graph(df)
+    assert len(recwarn) == 1
+    result = recwarn[0]
+    assert issubclass(result.category, UserWarning)
