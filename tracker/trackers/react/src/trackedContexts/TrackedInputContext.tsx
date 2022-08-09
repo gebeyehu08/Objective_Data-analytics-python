@@ -84,7 +84,6 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>,
     trackingContext: TrackingContext
   ) => {
-    console.log('event handler', event.type);
     if (stateless || previousValue !== event.target.value) {
       setPreviousValue(event.target.value);
 
