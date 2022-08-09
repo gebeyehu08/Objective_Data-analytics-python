@@ -142,6 +142,35 @@ describe('TrackedInputContext', () => {
     );
   });
 
+  it('should track every interaction as InputChangeEvent regardless of value changes when stateless is set', () => {
+    const logTransport = new LogTransport();
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext
+          Component={'input'}
+          type={'text'}
+          id={'input-id'}
+          defaultValue={'some text'}
+          data-testid={'test-input'}
+          stateless={true}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.spyOn(logTransport, 'handle');
+
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
+  });
+
   it('should track an InputChangeEvent when value changed from the previous InputChangeEvent', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');

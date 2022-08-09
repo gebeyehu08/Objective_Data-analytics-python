@@ -22,6 +22,12 @@ export type TrackedInputContextProps = TrackedContextProps<HTMLInputElement> & {
    * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
    */
   trackValue?: boolean;
+
+  /**
+   * Optional. Whether to trigger events only when values actually changed. Default to false.
+   * This is mainly useful for radio buttons, where values never change between onBlurs.
+   */
+  stateless?: boolean;
 };
 
 /**
@@ -36,6 +42,7 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     defaultValue,
     normalizeId = true,
     trackValue = false,
+    stateless = false,
     ...otherProps
   } = props;
   const [previousValue, setPreviousValue] = useState<string>(defaultValue ? defaultValue.toString() : '');
@@ -47,7 +54,7 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
   }
 
   const handleBlur = async (event: FocusEvent<HTMLInputElement>, trackingContext: TrackingContext) => {
-    if (previousValue !== event.target.value) {
+    if (stateless || previousValue !== event.target.value) {
       setPreviousValue(event.target.value);
 
       let eventTrackerParameters: EventTrackerParameters = trackingContext;
