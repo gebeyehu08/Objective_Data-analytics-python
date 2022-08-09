@@ -6,13 +6,13 @@ import React from 'react';
 import { TrackedInputContext, TrackedInputContextProps } from '../trackedContexts/TrackedInputContext';
 
 /**
- * TrackedRadio has the same props of a TrackedInput, except:
+ * TrackedInputRadio has the same props of a TrackedInput, except:
  * - `type` is set to `radio`.
  * - `stateless` is set to `true`.
  * - `eventHandler` is redefined to accept only `onBlur` or `onClick`, since `onChange` doesn't work on radios
  * - The default values of `eventHandler` is set to `onClick`
  */
-export type TrackedRadioProps = Omit<TrackedInputContextProps, 'type' | 'stateless' | 'eventHandler'> & {
+export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'type' | 'stateless' | 'eventHandler'> & {
   /**
    * Optional. Defaults to `onClick`. Valid values: 'onBlur' | 'onClick'.
    */
@@ -24,7 +24,7 @@ export type TrackedRadioProps = Omit<TrackedInputContextProps, 'type' | 'statele
  * Sets also TrackedInputContext `stateless` prop to true to track all interactions, regardless of values changing.
  * Finally, sets the `eventHandler` to `onClick` instead of the default `onBlur`, unless differently specified.
  */
-export const TrackedRadio = React.forwardRef<HTMLInputElement, Omit<TrackedRadioProps, 'Component'>>((props, ref) => (
+export const TrackedInputRadio = React.forwardRef<HTMLInputElement, Omit<TrackedInputRadioProps, 'Component'>>((props, ref) => (
   <TrackedInputContext
     {...props}
     Component={'input'}

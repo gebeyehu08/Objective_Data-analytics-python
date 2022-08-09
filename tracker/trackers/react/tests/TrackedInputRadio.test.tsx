@@ -6,12 +6,12 @@ import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedRadio, TrackedRootLocationContext } from '../src';
+import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputRadio, TrackedRootLocationContext } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
-describe('TrackedRadio', () => {
+describe('TrackedInputRadio', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     globalThis.objectiv.TrackerRepository.trackersMap.clear();
@@ -29,7 +29,7 @@ describe('TrackedRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRadio id={'input-id'} data-testid={'test-radio'} value={'value'} />
+        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} />
       </ObjectivProvider>
     );
 
@@ -63,7 +63,7 @@ describe('TrackedRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRadio id={'input-id'} data-testid={'test-radio'} value={'value'} trackValue={true} />
+        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} trackValue={true} />
       </ObjectivProvider>
     );
 
@@ -108,7 +108,7 @@ describe('TrackedRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRadio id={'input-id'} data-testid={'test-radio'} value={'value'} eventHandler={'onBlur'} />
+        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} eventHandler={'onBlur'} />
       </ObjectivProvider>
     );
 
@@ -137,8 +137,8 @@ describe('TrackedRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRadio id={'Input id 1'} data-testid={'test-radio-1'} value={'text'} />
-        <TrackedRadio id={'Input id 2'} normalizeId={false} data-testid={'test-radio-2'} value={'text'} />
+        <TrackedInputRadio id={'Input id 1'} data-testid={'test-radio-1'} value={'text'} />
+        <TrackedInputRadio id={'Input id 2'} normalizeId={false} data-testid={'test-radio-2'} value={'text'} />
       </ObjectivProvider>
     );
 
@@ -182,7 +182,7 @@ describe('TrackedRadio', () => {
       <ObjectivProvider tracker={tracker}>
         <TrackedRootLocationContext Component={'div'} id={'root'}>
           <TrackedDiv id={'content'}>
-            <TrackedRadio id={'☹️'} />
+            <TrackedInputRadio id={'☹️'} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -201,7 +201,7 @@ describe('TrackedRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRadio id={'input-id'} data-testid={'test-radio'} value={'value'} trackValue={true} />
+        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} trackValue={true} />
       </ObjectivProvider>
     );
 

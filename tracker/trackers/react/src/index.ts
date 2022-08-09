@@ -34,9 +34,9 @@ export * from './trackedElements/TrackedDiv';
 export * from './trackedElements/TrackedFooter';
 export * from './trackedElements/TrackedHeader';
 export * from './trackedElements/TrackedInput';
+export * from './trackedElements/TrackedInputRadio';
 export * from './trackedElements/TrackedMain';
 export * from './trackedElements/TrackedNav';
-export * from './trackedElements/TrackedRadio';
 export * from './trackedElements/TrackedSection';
 
 export * from './ReactTracker';
