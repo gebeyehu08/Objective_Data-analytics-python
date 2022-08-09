@@ -853,7 +853,6 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
         )
         return Expression.construct(fmt, slicing_mask, self._series_object)
 
-
     def get_array_item(self, key: int) -> 'TSeriesJson':
         """
         Returns an item from the json array.
