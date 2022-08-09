@@ -142,6 +142,35 @@ describe('TrackedInputContext', () => {
     );
   });
 
+  it('should track every interaction as InputChangeEvent regardless of value changes when stateless is set', () => {
+    const logTransport = new LogTransport();
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext
+          Component={'input'}
+          type={'text'}
+          id={'input-id'}
+          defaultValue={'some text'}
+          data-testid={'test-input'}
+          stateless={true}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.spyOn(logTransport, 'handle');
+
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
+  });
+
   it('should track an InputChangeEvent when value changed from the previous InputChangeEvent', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');
@@ -228,6 +257,143 @@ describe('TrackedInputContext', () => {
         ]),
       })
     );
+  });
+
+  it('should allow tracking onChange instead of onBlur', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onBlurSpy = jest.fn();
+    const onChangeSpy = jest.fn();
+    const onClickSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext
+          Component={'input'}
+          type={'text'}
+          id={'input-id'}
+          defaultValue={'some text'}
+          data-testid={'test-input'}
+          trackValue={true}
+          eventHandler={'onChange'}
+          onBlur={onBlurSpy}
+          onChange={onChangeSpy}
+          onClick={onClickSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    // Should ignore blur events, because we configured onChange as event handler above
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+    expect(logTransport.handle).not.toHaveBeenCalled();
+    // But it should have still triggered the given onBlur
+    expect(onBlurSpy).toHaveBeenCalledTimes(1);
+
+    jest.resetAllMocks();
+
+    // Should ignore click events, because we configured onChange as event handler above
+    fireEvent.click(screen.getByTestId('test-input'));
+    expect(logTransport.handle).not.toHaveBeenCalled();
+    // But it should have still triggered the given onClick
+    expect(onClickSpy).toHaveBeenCalledTimes(1);
+
+    jest.resetAllMocks();
+
+    fireEvent.change(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id',
+          }),
+        ]),
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'input-id',
+            value: 'some new text',
+          }),
+        ]),
+      })
+    );
+    expect(onBlurSpy).not.toHaveBeenCalled();
+    expect(onChangeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should allow tracking onClick instead of onBlur', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onBlurSpy = jest.fn();
+    const onChangeSpy = jest.fn();
+    const onClickSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext
+          Component={'input'}
+          type={'text'}
+          id={'input-id'}
+          defaultValue={'some text'}
+          data-testid={'test-input'}
+          trackValue={true}
+          eventHandler={'onClick'}
+          onBlur={onBlurSpy}
+          onChange={onChangeSpy}
+          onClick={onClickSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    // Should ignore blur events, because we configured onChange as event handler above
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+    expect(logTransport.handle).not.toHaveBeenCalled();
+    // But it should have still triggered the given onBlur
+    expect(onBlurSpy).toHaveBeenCalledTimes(1);
+
+    jest.resetAllMocks();
+
+    // Should ignore change events, because we configured onChange as event handler above
+    fireEvent.change(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+    expect(logTransport.handle).not.toHaveBeenCalled();
+    // But it should have still triggered the given onChange
+    expect(onChangeSpy).toHaveBeenCalledTimes(1);
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id',
+          }),
+        ]),
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'input-id',
+            value: 'some new text',
+          }),
+        ]),
+      })
+    );
+    expect(onBlurSpy).not.toHaveBeenCalled();
+    expect(onChangeSpy).not.toHaveBeenCalled();
+    expect(onClickSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should allow forwarding the id property', () => {

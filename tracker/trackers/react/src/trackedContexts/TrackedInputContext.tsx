@@ -10,7 +10,7 @@ import {
   trackInputChangeEvent,
   useLocationStack,
 } from '@objectiv/tracker-react-core';
-import React, { FocusEvent, useState } from 'react';
+import React, { ChangeEvent, FocusEvent, SyntheticEvent, useState } from 'react';
 import { TrackedContextProps } from '../types';
 
 /**
@@ -22,6 +22,38 @@ export type TrackedInputContextProps = TrackedContextProps<HTMLInputElement> & {
    * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
    */
   trackValue?: boolean;
+
+  /**
+   * Optional. Whether to trigger events only when values actually changed. Default to false.
+   * This is mainly useful for radio buttons, where values never change between onBlurs.
+   */
+  stateless?: boolean;
+
+  /**
+   * Optional. Which event handler to use. Default is 'onBlur'. Valid values: 'onBlur' | 'onChange' | 'onClick'.
+   */
+  eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+};
+
+/**
+ * A type guard to determine whether the given event is a blur event
+ */
+const isBlurEvent = (event: SyntheticEvent<HTMLInputElement>): event is FocusEvent<HTMLInputElement> => {
+  return event.type === 'blur';
+};
+
+/**
+ * A type guard to determine whether the given event is a change event
+ */
+const isChangeEvent = (event: SyntheticEvent<HTMLInputElement>): event is ChangeEvent<HTMLInputElement> => {
+  return event.type === 'change';
+};
+
+/**
+ * A type guard to determine whether the given event is a click event
+ */
+const isClickEvent = (event: SyntheticEvent<HTMLInputElement>): event is React.MouseEvent<HTMLInputElement> => {
+  return event.type === 'click';
 };
 
 /**
@@ -36,6 +68,8 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     defaultValue,
     normalizeId = true,
     trackValue = false,
+    stateless = false,
+    eventHandler = 'onBlur',
     ...otherProps
   } = props;
   const [previousValue, setPreviousValue] = useState<string>(defaultValue ? defaultValue.toString() : '');
@@ -46,8 +80,12 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     inputId = makeIdFromString(inputId);
   }
 
-  const handleBlur = async (event: FocusEvent<HTMLInputElement>, trackingContext: TrackingContext) => {
-    if (previousValue !== event.target.value) {
+  const handleEvent = async (
+    event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>,
+    trackingContext: TrackingContext
+  ) => {
+    console.log('event handler', event.type);
+    if (stateless || previousValue !== event.target.value) {
       setPreviousValue(event.target.value);
 
       let eventTrackerParameters: EventTrackerParameters = trackingContext;
@@ -63,7 +101,17 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
       trackInputChangeEvent(eventTrackerParameters);
     }
 
-    props.onBlur && props.onBlur(event);
+    if (isBlurEvent(event)) {
+      props.onBlur && props.onBlur(event);
+    }
+
+    if (isChangeEvent(event)) {
+      props.onChange && props.onChange(event);
+    }
+
+    if (isClickEvent(event)) {
+      props.onClick && props.onClick(event);
+    }
   };
 
   const componentProps = {
@@ -88,7 +136,8 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
       {(trackingContext) =>
         React.createElement(Component, {
           ...componentProps,
-          onBlur: (event) => handleBlur(event, trackingContext),
+          [eventHandler]: (event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>) =>
+            handleEvent(event, trackingContext),
         })
       }
     </InputContextWrapper>
