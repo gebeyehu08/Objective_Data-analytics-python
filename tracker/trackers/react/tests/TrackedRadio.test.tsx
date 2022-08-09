@@ -35,7 +35,7 @@ describe('TrackedRadio', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.blur(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-radio'), { target: { value: 'value1' } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -63,13 +63,13 @@ describe('TrackedRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRadio id={'input-id'} data-testid={'test-radio'} defaultValue={'value'} trackValue={true} />
+        <TrackedRadio id={'input-id'} data-testid={'test-radio'} value={'value'} trackValue={true} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.blur(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-radio'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -101,6 +101,35 @@ describe('TrackedRadio', () => {
     );
   });
 
+  it('should allow tracking on onBlur', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedRadio id={'input-id'} data-testid={'test-radio'} value={'value'} eventHandler={'onBlur'} />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.blur(screen.getByTestId('test-radio'));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id',
+          }),
+        ]),
+      })
+    );
+  });
+
   it('should allow disabling id normalization', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');
@@ -115,8 +144,8 @@ describe('TrackedRadio', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.blur(screen.getByTestId('test-radio-1'));
-    fireEvent.blur(screen.getByTestId('test-radio-2'));
+    fireEvent.click(screen.getByTestId('test-radio-1'));
+    fireEvent.click(screen.getByTestId('test-radio-2'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(2);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
@@ -172,15 +201,15 @@ describe('TrackedRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRadio id={'input-id'} data-testid={'test-radio'} defaultValue={'value'} trackValue={true} />
+        <TrackedRadio id={'input-id'} data-testid={'test-radio'} value={'value'} trackValue={true} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.blur(screen.getByTestId('test-radio'));
-    fireEvent.blur(screen.getByTestId('test-radio'));
-    fireEvent.blur(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-radio'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(3);
     const expectedEventPayload = {
