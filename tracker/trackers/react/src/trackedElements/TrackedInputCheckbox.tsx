@@ -7,7 +7,7 @@ import { TrackedInputContext, TrackedInputContextProps } from '../trackedContext
 
 /**
  * TrackedInputCheckbox has the same props of a TrackedInput, except:
- * - `id` is made options, as we can attempt use the `value` attribute for it.
+ * - `id` is made optional, as we can attempt use the `value` attribute for it.
  * - `type` is set to `checkbox`.
  * - `eventHandler` is redefined to accept only `onBlur` or `onClick`, since `onChange` doesn't work on checkboxes
  * - The default value of `eventHandler` is set to `onClick`
