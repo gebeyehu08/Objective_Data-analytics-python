@@ -104,129 +104,131 @@ export const normalizeValue = (value?: unknown) => {
  * Generates a new React Element already wrapped in an InputContext.
  * Automatically tracks InputChangeEvent when the given Component receives an `onBlur` SyntheticEvent.
  */
-export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInputContextProps>((props, ref) => {
-  // Checkboxes and radios will monitor a different attribute (checked) than other inputs (value)
-  const inputType = props.type ?? 'text';
-  const isRadio = inputType === 'radio';
-  const isCheckbox = inputType === 'checkbox';
-  const isCheckboxOrRadio = isRadio || isCheckbox;
+export const TrackedInputContext = React.forwardRef<HTMLInputElement | HTMLSelectElement, TrackedInputContextProps>(
+  (props, ref) => {
+    // Checkboxes and radios will monitor a different attribute (checked) than other inputs (value)
+    const inputType = props.type ?? 'text';
+    const isRadio = inputType === 'radio';
+    const isCheckbox = inputType === 'checkbox';
+    const isCheckboxOrRadio = isRadio || isCheckbox;
 
-  // Parse props and apply some defaults
-  const {
-    id,
-    Component,
-    forwardId = false,
-    normalizeId = true,
-    trackValue = false,
-    stateless = false,
-    eventHandler = 'onBlur',
-    attributeToMonitor = isCheckboxOrRadio && !stateless ? 'checked' : 'value',
-    attributeToTrack = isCheckboxOrRadio ? 'checked' : 'value',
-    ...otherProps
-  } = props;
+    // Parse props and apply some defaults
+    const {
+      id,
+      Component,
+      forwardId = false,
+      normalizeId = true,
+      trackValue = false,
+      stateless = false,
+      eventHandler = 'onBlur',
+      attributeToMonitor = isCheckboxOrRadio && !stateless ? 'checked' : 'value',
+      attributeToTrack = isCheckboxOrRadio ? 'checked' : 'value',
+      ...otherProps
+    } = props;
 
-  // Basic input validation to inform developers of useless options combinations
-  if (globalThis.objectiv.devTools) {
-    if (attributeToMonitor !== 'checked' && isCheckbox) {
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) should be set to 'checked' for checkbox inputs.`
-      );
-    }
-  }
-
-  const initialValue = props[attributeToMonitor] ?? (isCheckboxOrRadio ? props.defaultChecked : props.defaultValue);
-  const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
-  const locationStack = useLocationStack();
-
-  let inputId: string | null = id;
-  if (normalizeId) {
-    inputId = makeIdFromString(inputId);
-  }
-
-  const handleEvent = async (
-    event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>,
-    trackingContext: TrackingContext
-  ) => {
-    const valueToMonitor = normalizeValue(event.target[attributeToMonitor]);
-
-    if (stateless || previousValue !== valueToMonitor) {
-      setPreviousValue(valueToMonitor);
-
-      const eventTrackerParameters: EventTrackerParameters & {
-        globalContexts: GlobalContexts;
-        locationStack: LocationStack;
-      } = {
-        ...trackingContext,
-        globalContexts: [],
-      };
-
-      // Add LocationContext representing the group, if `name` has been set on radio buttons
-      if (isRadio && event.target.name) {
-        const nameContentContextId = makeIdFromString(event.target.name);
-        if (nameContentContextId) {
-          const locationStackClone = [...eventTrackerParameters.locationStack];
-          locationStackClone.splice(
-            eventTrackerParameters.locationStack.length - 1,
-            0,
-            makeContentContext({
-              id: nameContentContextId,
-            })
-          );
-          eventTrackerParameters.locationStack = locationStackClone;
-        }
-      }
-
-      // Add InputValueContext if trackValue has been set
-      if (inputId && trackValue) {
-        eventTrackerParameters.globalContexts.push(
-          makeInputValueContext({
-            id: inputId,
-            value: normalizeValue(event.target[attributeToTrack]),
-          })
+    // Basic input validation to inform developers of useless options combinations
+    if (globalThis.objectiv.devTools) {
+      if (attributeToMonitor !== 'checked' && isCheckbox) {
+        globalThis.objectiv.devTools.TrackerConsole.error(
+          `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) should be set to 'checked' for checkbox inputs.`
         );
       }
-
-      trackInputChangeEvent(eventTrackerParameters);
     }
 
-    if (isBlurEvent(event)) {
-      props.onBlur && props.onBlur(event);
+    const initialValue = props[attributeToMonitor] ?? (isCheckboxOrRadio ? props.defaultChecked : props.defaultValue);
+    const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
+    const locationStack = useLocationStack();
+
+    let inputId: string | null = id;
+    if (normalizeId) {
+      inputId = makeIdFromString(inputId);
     }
 
-    if (isChangeEvent(event)) {
-      props.onChange && props.onChange(event);
-    }
+    const handleEvent = async (
+      event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>,
+      trackingContext: TrackingContext
+    ) => {
+      const valueToMonitor = normalizeValue(event.target[attributeToMonitor]);
 
-    if (isClickEvent(event)) {
-      props.onClick && props.onClick(event);
-    }
-  };
+      if (stateless || previousValue !== valueToMonitor) {
+        setPreviousValue(valueToMonitor);
 
-  const componentProps = {
-    ...otherProps,
-    ...(ref ? { ref } : {}),
-    ...(forwardId ? { id } : {}),
-  };
+        const eventTrackerParameters: EventTrackerParameters & {
+          globalContexts: GlobalContexts;
+          locationStack: LocationStack;
+        } = {
+          ...trackingContext,
+          globalContexts: [],
+        };
 
-  if (!inputId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate a valid id for InputContext @ ${locationPath}. Please provide the \`id\` property.`
-      );
-    }
-    return React.createElement(Component, componentProps);
-  }
+        // Add LocationContext representing the group, if `name` has been set on radio buttons
+        if (isRadio && event.target.name) {
+          const nameContentContextId = makeIdFromString(event.target.name);
+          if (nameContentContextId) {
+            const locationStackClone = [...eventTrackerParameters.locationStack];
+            locationStackClone.splice(
+              eventTrackerParameters.locationStack.length - 1,
+              0,
+              makeContentContext({
+                id: nameContentContextId,
+              })
+            );
+            eventTrackerParameters.locationStack = locationStackClone;
+          }
+        }
 
-  return (
-    <InputContextWrapper id={inputId}>
-      {(trackingContext) =>
-        React.createElement(Component, {
-          ...componentProps,
-          [eventHandler]: (event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>) =>
-            handleEvent(event, trackingContext),
-        })
+        // Add InputValueContext if trackValue has been set
+        if (inputId && trackValue) {
+          eventTrackerParameters.globalContexts.push(
+            makeInputValueContext({
+              id: inputId,
+              value: normalizeValue(event.target[attributeToTrack]),
+            })
+          );
+        }
+
+        trackInputChangeEvent(eventTrackerParameters);
       }
-    </InputContextWrapper>
-  );
-});
+
+      if (isBlurEvent(event)) {
+        props.onBlur && props.onBlur(event);
+      }
+
+      if (isChangeEvent(event)) {
+        props.onChange && props.onChange(event);
+      }
+
+      if (isClickEvent(event)) {
+        props.onClick && props.onClick(event);
+      }
+    };
+
+    const componentProps = {
+      ...otherProps,
+      ...(ref ? { ref } : {}),
+      ...(forwardId ? { id } : {}),
+    };
+
+    if (!inputId) {
+      if (globalThis.objectiv.devTools) {
+        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+        globalThis.objectiv.devTools.TrackerConsole.error(
+          `｢objectiv｣ Could not generate a valid id for InputContext @ ${locationPath}. Please provide the \`id\` property.`
+        );
+      }
+      return React.createElement(Component, componentProps);
+    }
+
+    return (
+      <InputContextWrapper id={inputId}>
+        {(trackingContext) =>
+          React.createElement(Component, {
+            ...componentProps,
+            [eventHandler]: (event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>) =>
+              handleEvent(event, trackingContext),
+          })
+        }
+      </InputContextWrapper>
+    );
+  }
+);

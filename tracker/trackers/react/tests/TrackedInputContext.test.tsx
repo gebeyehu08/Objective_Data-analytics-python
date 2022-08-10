@@ -134,6 +134,53 @@ describe('TrackedInputContext', () => {
     );
   });
 
+  it('should allow tracking <select> elements', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext Component={'select'} id={'test-select'} eventHandler={'onChange'} trackValue={true}>
+          <li data-testid={'test-option-1'} value={'option-1'}>
+            option 1
+          </li>
+          <li data-testid={'test-option-2'} value={'option-2'}>
+            option 2
+          </li>
+          <li data-testid={'test-option-3'} value={'option-3'}>
+            option 3
+          </li>
+        </TrackedInputContext>
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-option-2'));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-select',
+          }),
+        ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'test-select',
+            value: '123',
+          }),
+        ]),
+      })
+    );
+  });
+
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
@@ -253,11 +300,6 @@ describe('TrackedInputContext', () => {
             id: 'checkbox-id',
             value: '123',
           }),
-          expect.objectContaining({
-            _type: GlobalContextName.InputValueContext,
-            id: 'checkbox-id:checked',
-            value: '1',
-          }),
         ]),
       })
     );
@@ -277,11 +319,6 @@ describe('TrackedInputContext', () => {
             id: 'checkbox-id',
             value: '123',
           }),
-          expect.objectContaining({
-            _type: GlobalContextName.InputValueContext,
-            id: 'checkbox-id:checked',
-            value: '0',
-          }),
         ]),
       })
     );
@@ -300,11 +337,6 @@ describe('TrackedInputContext', () => {
             _type: GlobalContextName.InputValueContext,
             id: 'checkbox-id',
             value: '123',
-          }),
-          expect.objectContaining({
-            _type: GlobalContextName.InputValueContext,
-            id: 'checkbox-id:checked',
-            value: '1',
           }),
         ]),
       })
