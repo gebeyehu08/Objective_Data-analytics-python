@@ -908,29 +908,16 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
         This assumes the top-level item in the json is an array
         """
         # Athena also has a function `json_array_get()`. That function should do what we want, but it's
-        # broken and of no use to us as it returns invalid json in some cases. The docs warn of the
-        # brokenness, but offer no alternative: https://prestodb.io/docs/0.217/functions/json.html
+        # broken and of no use to us as it returns invalid json in some cases [1]. Instead, we cast the
+        # json to a sql-array of jsons, and get the requested item from that.
+        # [1] https://prestodb.io/docs/0.217/functions/json.html
 
-        # We'll use json_extract() with json path '$[<index>]'. However this only works for positive
-        # indexes, and gives an error on negative indexes, so we need to calculate a positive index
-        # TODO: maybe use the array function element_at()?
-        if key < 0:
-            json_path_exp = join_expressions([
-                    Expression.string_value("$["),
-                    Expression.construct(f'cast(({{}} {key}) as varchar)', self.get_array_length()),
-                    Expression.string_value("]")
-                ],
-                join_str=' || '
-            )
-            # wrap json_extract in a `try`, that way we'll get NULL for negative indexes, which will happen
-            # in case the offset is larger than the array length.
-            expression = Expression.construct(
-                'try(json_extract({}, {}))',
-                self._series_object,
-                json_path_exp
-            )
-        else:
-            expression = Expression.construct(f"json_extract({{}}, '$[{key}]')", self._series_object)
+        # sql-arrays use zero-based indexing for positive values.
+        offset = key if key < 0 else key + 1
+        expression = Expression.construct(
+            f'element_at(try(cast({{}} as array(json))), {offset})',
+            self._series_object
+        )
         return self._series_object.copy_override(expression=expression)
 
     def get_dict_item(self, key: str) -> 'TSeriesJson':
