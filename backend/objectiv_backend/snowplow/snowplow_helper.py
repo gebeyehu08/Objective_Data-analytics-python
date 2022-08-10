@@ -114,6 +114,8 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
 
     snowplow_custom_contexts = make_snowplow_custom_contexts(event=event, config=config)
 
+# see: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/snowplow-tracker-protocol/
+
     payload = {
         "schema": snowplow_payload_data_schema,
         "data": [{
