@@ -15,7 +15,8 @@ import pytest
 # the tests for dtype 'jsonb' as those databases only support 'json'
 
 pytestmark = [
-    pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True)
+    pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True),
+    pytest.mark.athena_supported()
 ]
 
 
@@ -26,7 +27,6 @@ def dtype(engine, request):
     return request.param
 
 
-@pytest.mark.athena_supported()
 def test_json_get_value(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bt['get_val_dict'] = bt.dict_column.json.get_value('c')
@@ -42,8 +42,6 @@ def test_json_get_value(engine, dtype):
         def __eq__(self, other):
             return other == '{"a": "c"}' or other == '{"a":"c"}'
     magic_value = JsonDictMagivStrValue()
-
-    print(bt.view_sql())
 
     assert_equals_data(
         bt,
@@ -66,14 +64,12 @@ def test_json_get_value(engine, dtype):
     assert bt.dtypes['get_val_mixed_str'] == 'string'
 
 
-@pytest.mark.athena_supported()
 def test_json_get_single_value(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     a = bt.mixed_column[2]
     assert a == {'a': 'b', 'c': {'a': 'c'}}
 
 
-@pytest.mark.athena_supported()
 def test_json_array_contains(engine, dtype):
     # Setting up custom test data
     # The data from `get_df_with_json_data` only contains one row with an array with scalars, so we use this
@@ -109,7 +105,6 @@ def test_json_array_contains(engine, dtype):
     df['f_1_337'] = df.column.json.array_contains(-1.337)
     df['none'] = df.column.json.array_contains(None)
     df = df.drop(columns=['column'])
-    print(df.view_sql())
     assert_equals_data(
         df,
         expected_columns=['_index_index',
@@ -128,7 +123,6 @@ def test_json_array_contains(engine, dtype):
     )
 
 
-@pytest.mark.athena_supported()
 def test_json_getitem(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bt = bt[['mixed_column']]
@@ -138,7 +132,6 @@ def test_json_getitem(engine, dtype):
     bt['get_min5'] = bt.mixed_column.json[-5]  # -5 doesn't exist, we expect to get `None`
     bt['get_a'] = bt.mixed_column.json["a"]
     bt = bt.drop(columns=['mixed_column'])
-    print(bt.view_sql())
     assert_equals_data(
         bt,
         use_to_pandas=True,
@@ -158,7 +151,6 @@ def test_json_getitem(engine, dtype):
     )
 
 
-@pytest.mark.athena_supported()
 def test_json_getitem_special_chars(engine, dtype):
     # We support 'special' characters, except for double quotes because of limitations in BigQuery
     # see comments in bach.series.series_json.JsonBigQueryAccessor.get_value for more information
@@ -177,7 +169,6 @@ def test_json_getitem_special_chars(engine, dtype):
     df['select_b'] = df['data'].json['test'].json['test']
     df['select_c'] = df['data'].json['123test']
     df['select_d'] = df['data'].json['[{}@!{R#(!@(!']
-    print(df.view_sql())
     assert_equals_data(
         df,
         use_to_pandas=True,
@@ -189,7 +180,6 @@ def test_json_getitem_special_chars(engine, dtype):
         df['select_e'] = df['data'].json['"double quote is "not" allowed"']
 
 
-@pytest.mark.athena_supported()
 def test_json_getitem_slice(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bt = bt[['list_column']]
@@ -228,7 +218,6 @@ def test_json_getitem_slice(engine, dtype):
         [i, expected_one_to_end[i][1], expected_one_to_minus_one[i][1], expected_end_to_end[i][1]]
         for i in range(5)
     ]
-    print(bt.view_sql())
     assert_equals_data(
         bt,
         use_to_pandas=True,
@@ -237,7 +226,6 @@ def test_json_getitem_slice(engine, dtype):
     )
 
 
-@pytest.mark.athena_supported()
 def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
     # slices only work on columns with only lists
     # But behaviour of Postgres and BigQuery is different. For now we just accept that's the way it is.
@@ -263,7 +251,6 @@ def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
 
 # tests below are for functions kind of specific to the objectiv (location) stack
 def test_json_getitem_query(engine, dtype):
-    # TODO: support Athena
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bt = bt[['list_column']]
     bt['a'] = bt.list_column.json[{"_type": "SectionContext"}: ]
@@ -303,7 +290,6 @@ def test_json_getitem_query(engine, dtype):
     )
 
 
-@pytest.mark.athena_supported()
 def test_json_get_array_length(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
     s = df.list_column.json.get_array_length()
@@ -320,7 +306,6 @@ def test_json_get_array_length(engine, dtype):
     )
 
 
-@pytest.mark.athena_supported()
 def test_json_flatten_array(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
 

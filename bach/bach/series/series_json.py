@@ -774,8 +774,8 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
         values_expression = Expression.construct(
             "slice(cast({} as array(json)), {}, {})",
             self._series_object,
-            start_expression,
-            Expression.construct('({} - {})', stop_expression, start_expression),
+            start_expression,  # startpoint of slice
+            Expression.construct('({} - {})', stop_expression, start_expression),  # length of slice
         )
         non_null_expr = Expression.construct('coalesce({}, ARRAY [])', values_expression)
         json_expression = Expression.construct('cast({} as json)', non_null_expr)
@@ -820,38 +820,85 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
 
     def _find_in_json_list(self, filtering_slice: Dict[str, str], is_start: bool):
         """
-        Return expression for the position of the element that contains the filtering values
+        Return expression for the position of the element that contains the filtering values. The element
+        can contain more values than the filtering values, but it must contain all of the values in
+        filtering_slice.
 
-        Assumes that self._series_object is an array and each element is a json!
+        Assumes that self._series_object is an array, each element is a json object!
 
         :param filtering_slice: dictionary containing the keys and values to use on filter.
+            Must be a dictionary with strings as keys and values!
         :param is_start: whether value is the slice.start (True) or slice.stop (False) value. If true,
             the first element containing the values is returned, otherwise the last.
-        :return: Expression that gets the position (1-based) of the element based on the slicing filters.
+        :return: Expression that gets the position (one-based) of the element based on the slicing filters.
         """
-        raise NotImplementedError('TODO - THIS DOES NOT YET WORK')
+        # Athena doesn't support correlated subqueries, so we cannot use a select here to find the position
+        # of the element.
+        # Strategy:
+        # 1. convert to array of maps
+        # 2. filter array of maps on the values we look for
+        # 3.1 for is_start:
+        #   find first position of first element from the filtered array in the original json array
+        # 3.2 for not is_start:
+        #   find last position of last element from the filtered array in the original json array
+
         if not isinstance(filtering_slice, dict):
-            raise TypeError(f'key should be a dict, actual type: {type(filtering_slice)}')
+            raise TypeError(f'Key should be a dict, actual type: {type(filtering_slice)}')
+        if not all(isinstance(key, str) for key in filtering_slice.keys()):
+            raise TypeError(f'Keys in the key dict, should all be strings')
+        if not all(isinstance(value, str) for value in filtering_slice.values()):
+            raise TypeError(f'Values in the key dict, should all be strings')
 
-        # this way we can reuse code from the accessor without duplicating.
-        # 'element' will be filled by iterating over the json array in the query below.
-        element_json = self._series_object.copy_override(
-            expression=Expression.construct('element'),
+        array_expr = Expression.construct('cast({} as array(json))', self._series_object)
+        array_map_expr = Expression.construct(
+            'try(cast({} as array(map(varchar, json))))',
+            self._series_object
         )
-
-        all_filters = [
-            element_json.json.get_value(filter_key, as_str=True) == str(filter_value)
-            for filter_key, filter_value in filtering_slice.items()
+        filter_condition_exprs = [
+            Expression.construct(
+                "x[{}] = cast({} as json)",
+                Expression.string_value(key),
+                Expression.string_value(value)
+            )
+            for key, value in filtering_slice.items()
         ]
-        slicing_mask = reduce(operator.and_, all_filters)
-        fmt = (
-            # end slicing is inclusive
-            f"("
-            f"select {'min' if is_start else '1 + max'}(case when {{}} then pos end) "
-            f"from unnest(cast({{}} as array(json))) with ordinality as __unnest(element, pos)"
-            f")"
+        # filter_array_map_expr: array of maps, but only with the maps that match the filter criteria
+        filter_array_map_expr = Expression.construct(
+            'filter({}, x -> ({}))',
+            array_map_expr,
+            join_expressions(filter_condition_exprs, ' and ')
         )
-        return Expression.construct(fmt, slicing_mask, self._series_object)
+        # filter_array_expr: array with all json objects that match the filter criteria, in the same order
+        # as they appear in the original json array
+        filter_array_expr = Expression.construct('cast({} as array(json))', filter_array_map_expr)
+
+        if is_start:
+            # Find the position in the original array, of the first object that matches the filter criteria
+            first_element_pos_expr = Expression.construct(
+                'array_position({}, element_at({}, 1))',
+                array_expr,
+                filter_array_expr
+            )
+            return first_element_pos_expr
+        else:
+            # Find the position in the reversed original array, of the last element that matches the filter
+            # criteria. This is the last element that matches the criteria in the original array.
+            element_reverse_pos_expr = Expression.construct(
+                'array_position(reverse({}), element_at({}, -1))',
+                array_expr,
+                filter_array_expr
+            )
+            # We need to translate the location in the reverse array to the position in the actual array.
+            # Formula for this: `(array_length + 1 ) - element_reverse_pos_expr`
+            # Additionally we need to add 1, because for historical reasons the end of a filtering slice
+            # includes the last matched element (unlike a regular slice where the end element is not
+            # included).
+            last_element_pos_expr = Expression.construct(
+                '({} + 2 ) - {}',
+                self.get_array_length(),
+                element_reverse_pos_expr
+            )
+            return last_element_pos_expr
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
         """
