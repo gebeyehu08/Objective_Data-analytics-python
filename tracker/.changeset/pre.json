@@ -25,5 +25,8 @@
     "@objectiv/transport-fetch": "0.0.23",
     "@objectiv/transport-xhr": "0.0.23"
   },
-  "changesets": []
+  "changesets": [
+    "clever-rabbits-try",
+    "forty-tips-crash"
+  ]
 }
