@@ -8,23 +8,34 @@ import { TrackedInputContext, TrackedInputContextProps } from '../trackedContext
 /**
  * TrackedInputRadio has the same props of a TrackedInput, except:
  * - `id` is made optional, as we can attempt use the `value` attribute for it.
- * - `type` is set to `radio`.
- * - `stateless` is set to `true`.
- * - The default values of `eventHandler` is set to `onChange`
+ * - The default and only allowed value for `type` is set to `radio`.
+ * - `stateless` is set to `true` and cannot be changed.
+ * - The default value of `eventHandler` is set to `onChange`
  */
-export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'id' | 'type' | 'stateless'> & {
+export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'id' | 'stateless'> & {
   /**
    * Optional. Defaults to the `value` attribute.
    */
   id?: string;
+
+  /**
+   * Optional. Restricted to only 'radio'.
+   */
+  type?: 'radio';
 };
 
 /**
  * Generates a TrackedInputContext preconfigured with a <input type="radio"> Element as Component.
  */
 export const TrackedInputRadio = React.forwardRef<HTMLInputElement, Omit<TrackedInputRadioProps, 'Component'>>(
-  (props, ref) => (
-    <TrackedInputContext
+  (props, ref) => {
+    if (globalThis.objectiv.devTools && (props.type && props.type !== 'radio')) {
+      globalThis.objectiv.devTools.TrackerConsole.warn(
+        `｢objectiv｣ TrackedInputRadio type attribute can only be set to 'radio'.`
+      );
+    }
+
+    return <TrackedInputContext
       {...props}
       id={props.id ?? (props.value ? props.value.toString() : '')}
       Component={'input'}
@@ -33,5 +44,5 @@ export const TrackedInputRadio = React.forwardRef<HTMLInputElement, Omit<Tracked
       stateless={true}
       ref={ref}
     />
-  )
+  }
 );

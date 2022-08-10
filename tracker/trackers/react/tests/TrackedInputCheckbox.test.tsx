@@ -22,6 +22,24 @@ describe('TrackedInputCheckbox', () => {
     jest.resetAllMocks();
   });
 
+  it('should not allow changing the type attribute', () => {
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputCheckbox value={'value-1'} />
+        <TrackedInputCheckbox type={'checkbox'} value={'value-2'} />
+        {/* @ts-ignore silence the warning on the wrong type */}
+        <TrackedInputCheckbox type={'text'} id={'input-id'} value={'value-3'} />
+      </ObjectivProvider>
+    );
+
+    expect(MockConsoleImplementation.warn).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
+      "｢objectiv｣ TrackedInputCheckbox type attribute can only be set to 'checkbox'."
+    );
+  });
+
   it('should wrap the given Component in an InputContext', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');

@@ -127,12 +127,10 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement | HTMLSelec
     } = props;
 
     // Basic input validation to inform developers of useless options combinations
-    if (globalThis.objectiv.devTools) {
-      if (attributeToMonitor !== 'checked' && isCheckbox) {
-        globalThis.objectiv.devTools.TrackerConsole.error(
-          `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) should be set to 'checked' for checkbox inputs.`
-        );
-      }
+    if (globalThis.objectiv.devTools && attributeToMonitor !== 'checked' && isCheckbox) {
+      globalThis.objectiv.devTools.TrackerConsole.error(
+        `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) should be set to 'checked' for checkbox inputs.`
+      );
     }
 
     const initialValue = props[attributeToMonitor] ?? (isCheckboxOrRadio ? props.defaultChecked : props.defaultValue);
