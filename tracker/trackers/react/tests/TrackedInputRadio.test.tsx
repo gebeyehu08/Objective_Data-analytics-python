@@ -164,6 +164,10 @@ describe('TrackedInputRadio', () => {
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
+            _type: LocationContextName.ContentContext,
+            id: 'radios',
+          }),
+          expect.objectContaining({
             _type: LocationContextName.InputContext,
             id: 'input-id-1',
           }),

@@ -2,7 +2,13 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { GlobalContexts, makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
+import {
+  GlobalContexts,
+  LocationStack,
+  makeContentContext,
+  makeIdFromString,
+  makeInputValueContext
+} from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -102,6 +108,7 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
   // Checkboxes and radios will monitor a different attribute (checked) than other inputs (value)
   const inputType = props.type ?? 'text';
   const isCheckboxOrRadio = ['radio', 'checkbox'].includes(inputType);
+  const isRadio = inputType === 'radio';
 
   // Parse props and apply some defaults
   const {
@@ -149,10 +156,20 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     if (stateless || previousValue !== valueToMonitor) {
       setPreviousValue(valueToMonitor);
 
-      const eventTrackerParameters: EventTrackerParameters & { globalContexts: GlobalContexts } = {
+      const eventTrackerParameters: EventTrackerParameters & { globalContexts: GlobalContexts, locationStack: LocationStack } = {
         ...trackingContext,
-        globalContexts: [],
+        globalContexts: []
       };
+
+      // Add LocationContext representing the group, if `name` has been set on radio buttons
+      if(isRadio && event.target.name) {
+        const nameContentContextId = makeIdFromString(event.target.name);
+        if (nameContentContextId) {
+          eventTrackerParameters.locationStack.push(makeContentContext({
+            id: nameContentContextId
+          }))
+        }
+      }
 
       // Add InputValueContext if trackValue has been set
       if (inputId && trackValue) {
