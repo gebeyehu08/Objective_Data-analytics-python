@@ -50,7 +50,7 @@ export type TrackedInputContextProps = TrackedContextProps<HTMLInputElement> & {
   attributeToMonitor?: 'checked' | 'value';
 
   /**
-   * Optional. Which attribute to use for InputValueContext. This has effect only when `trackValue` is set to `false`.
+   * Optional. Which attribute to use for InputValueContext. This has effect only when `trackValue` is set to `true`.
    * Supported attributes: 'checked' and 'value'.
    * Default varies depending on input type:
    *  - `radio` and `checkbox`: 'checked' attribute
