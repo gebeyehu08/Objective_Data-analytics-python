@@ -272,7 +272,6 @@ describe('TrackedInputRadio', () => {
           data-testid={'test-radio'}
           value={'value'}
           trackValue={true}
-          stateless={true}
           eventHandler={'onClick'}
         />
       </ObjectivProvider>
