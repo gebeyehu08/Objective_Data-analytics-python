@@ -6,7 +6,14 @@ import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputContext, TrackedRootLocationContext } from '../src';
+import {
+  normalizeValue,
+  ObjectivProvider,
+  ReactTracker,
+  TrackedDiv,
+  TrackedInputContext,
+  TrackedRootLocationContext,
+} from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -29,7 +36,7 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext Component={'input'} type={'text'} id={'input-id'} data-testid={'test-input'} />
+        <TrackedInputContext Component={'input'} id={'input-id'} data-testid={'test-input'} />
       </ObjectivProvider>
     );
 
@@ -41,6 +48,43 @@ describe('TrackedInputContext', () => {
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
       })
+    );
+  });
+
+  it('should allow overriding which attribute to monitor and to track and report misconfigurations', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext
+          Component={'input'}
+          type={'radio'}
+          id={'test-input-1'}
+          attributeToMonitor={'value'}
+          stateless={true}
+          data-testid={'test-input-1'}
+          value={'test'}
+        />
+        <TrackedInputContext
+          Component={'input'}
+          type={'checkbox'}
+          id={'test-input-2'}
+          attributeToTrack={'value'}
+          data-testid={'test-input-2'}
+        />
+      </ObjectivProvider>
+    );
+
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      1,
+      '｢objectiv｣ attributeToMonitor (value) has no effect with stateless set to true.'
+    );
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      2,
+      "｢objectiv｣ attributeToMonitor (value) should be set to 'checked' for radio inputs."
     );
   });
 
@@ -169,6 +213,106 @@ describe('TrackedInputContext', () => {
     expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
     expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
     expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
+  });
+
+  it('should track the also the checked attribute for checkboxes', () => {
+    const logTransport = new LogTransport();
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext
+          Component={'input'}
+          type={'checkbox'}
+          id={'checkbox-id'}
+          value={'123'}
+          data-testid={'test-checkbox'}
+          stateless={true}
+          trackValue={true}
+          eventHandler={'onClick'}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.spyOn(logTransport, 'handle');
+
+    fireEvent.click(screen.getByTestId('test-checkbox'), { target: { checked: true } });
+    fireEvent.click(screen.getByTestId('test-checkbox'), { target: { checked: false } });
+    fireEvent.click(screen.getByTestId('test-checkbox'), { target: { checked: true } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'checkbox-id',
+          }),
+        ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'checkbox-id',
+            value: '123',
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'checkbox-id:checked',
+            value: '1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'checkbox-id',
+          }),
+        ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'checkbox-id',
+            value: '123',
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'checkbox-id:checked',
+            value: '0',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'checkbox-id',
+          }),
+        ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'checkbox-id',
+            value: '123',
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'checkbox-id:checked',
+            value: '1',
+          }),
+        ]),
+      })
+    );
   });
 
   it('should track an InputChangeEvent when value changed from the previous InputChangeEvent', () => {
@@ -461,5 +605,14 @@ describe('TrackedInputContext', () => {
     fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
 
     expect(blurSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should normalize attribute values as expected', () => {
+    expect(normalizeValue()).toStrictEqual('');
+    expect(normalizeValue('')).toStrictEqual('');
+    expect(normalizeValue(0)).toStrictEqual('0');
+    expect(normalizeValue(1)).toStrictEqual('1');
+    expect(normalizeValue(false)).toStrictEqual('0');
+    expect(normalizeValue(true)).toStrictEqual('1');
   });
 });

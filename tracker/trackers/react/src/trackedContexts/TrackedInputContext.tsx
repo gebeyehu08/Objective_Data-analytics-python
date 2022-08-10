@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
+import { GlobalContexts, makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -18,7 +18,7 @@ import { TrackedContextProps } from '../types';
  */
 export type TrackedInputContextProps = TrackedContextProps<HTMLInputElement> & {
   /**
-   * Optional. Whether to track the input value. Default to false.
+   * Optional. Whether to track the input 'value' (or 'checked' for checkboxes and radios). Default to false.
    * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
    */
   trackValue?: boolean;
@@ -33,6 +33,24 @@ export type TrackedInputContextProps = TrackedContextProps<HTMLInputElement> & {
    * Optional. Which event handler to use. Default is 'onBlur'. Valid values: 'onBlur' | 'onChange' | 'onClick'.
    */
   eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+
+  /**
+   * Optional. Which attribute to monitor for changes. This has effect only when `stateless` is set to `false`.
+   * Supported attributes: 'checked' and 'value'.
+   * Default varies depending on input type:
+   *  - `radio` and `checkbox`: 'checked' attribute
+   *  - all other inputs: 'value' attribute
+   */
+  attributeToMonitor?: 'checked' | 'value';
+
+  /**
+   * Optional. Which attribute to use for InputValueContext. This has effect only when `trackValue` is set to `false`.
+   * Supported attributes: 'checked' and 'value'.
+   * Default varies depending on input type:
+   *  - `radio` and `checkbox`: 'checked' attribute
+   *  - all other inputs: 'value' attribute
+   */
+  attributeToTrack?: 'checked' | 'value';
 };
 
 /**
@@ -57,22 +75,64 @@ const isClickEvent = (event: SyntheticEvent<HTMLInputElement>): event is React.M
 };
 
 /**
+ * Helper function to parse the value of the monitored attribute.
+ * Ensures the result is a string and normalizes booleans to '0' and '1'
+ */
+export const normalizeValue = (value?: unknown) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? '1' : '0';
+  }
+
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+
+  return '';
+};
+
+/**
  * Generates a new React Element already wrapped in an InputContext.
  * Automatically tracks InputChangeEvent when the given Component receives an `onBlur` SyntheticEvent.
  */
 export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInputContextProps>((props, ref) => {
+  // Checkboxes and radios will monitor a different attribute (checked) than other inputs (value)
+  const inputType = props.type ?? 'text';
+  const isCheckboxOrRadio = ['radio', 'checkbox'].includes(inputType);
+
+  // Parse props and apply some defaults
   const {
     id,
     Component,
     forwardId = false,
-    defaultValue,
     normalizeId = true,
     trackValue = false,
     stateless = false,
     eventHandler = 'onBlur',
+    attributeToMonitor = isCheckboxOrRadio ? 'checked' : 'value',
+    attributeToTrack = isCheckboxOrRadio ? 'checked' : 'value',
     ...otherProps
   } = props;
-  const [previousValue, setPreviousValue] = useState<string>(defaultValue ? defaultValue.toString() : '');
+
+  // Basic input validation to inform developers of useless options combinations
+  if (globalThis.objectiv.devTools) {
+    if (stateless && attributeToMonitor) {
+      globalThis.objectiv.devTools.TrackerConsole.error(
+        `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) has no effect with stateless set to true.`
+      );
+    }
+    if (attributeToMonitor !== 'checked' && isCheckboxOrRadio) {
+      globalThis.objectiv.devTools.TrackerConsole.error(
+        `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) should be set to 'checked' for ${inputType} inputs.`
+      );
+    }
+  }
+
+  const initialValue = props[attributeToMonitor] ?? (isCheckboxOrRadio ? props.defaultChecked : props.defaultValue);
+  const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
   const locationStack = useLocationStack();
 
   let inputId: string | null = id;
@@ -84,17 +144,24 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>,
     trackingContext: TrackingContext
   ) => {
-    if (stateless || previousValue !== event.target.value) {
-      setPreviousValue(event.target.value);
+    const valueToMonitor = normalizeValue(event.target[attributeToMonitor]);
 
-      let eventTrackerParameters: EventTrackerParameters = trackingContext;
+    if (stateless || previousValue !== valueToMonitor) {
+      setPreviousValue(valueToMonitor);
+
+      const eventTrackerParameters: EventTrackerParameters & { globalContexts: GlobalContexts } = {
+        ...trackingContext,
+        globalContexts: [],
+      };
 
       // Add InputValueContext if trackValue has been set
       if (inputId && trackValue) {
-        eventTrackerParameters = {
-          ...eventTrackerParameters,
-          globalContexts: [makeInputValueContext({ id: inputId, value: event.target.value })],
-        };
+        eventTrackerParameters.globalContexts.push(
+          makeInputValueContext({
+            id: inputId,
+            value: normalizeValue(event.target[attributeToTrack]),
+          })
+        );
       }
 
       trackInputChangeEvent(eventTrackerParameters);
@@ -117,7 +184,6 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     ...otherProps,
     ...(ref ? { ref } : {}),
     ...(forwardId ? { id } : {}),
-    defaultValue,
   };
 
   if (!inputId) {
