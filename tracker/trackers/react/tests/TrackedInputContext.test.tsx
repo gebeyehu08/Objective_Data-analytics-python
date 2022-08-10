@@ -176,11 +176,11 @@ describe('TrackedInputContext', () => {
             id: 'test-select',
           }),
         ]),
-        global_contexts: expect.not.arrayContaining([
+        global_contexts: expect.arrayContaining([
           expect.objectContaining({
             _type: GlobalContextName.InputValueContext,
             id: 'test-select',
-            value: '123',
+            value: 'option-2',
           }),
         ]),
       })
