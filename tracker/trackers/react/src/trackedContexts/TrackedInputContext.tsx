@@ -164,13 +164,15 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
       if (isRadio && event.target.name) {
         const nameContentContextId = makeIdFromString(event.target.name);
         if (nameContentContextId) {
-          eventTrackerParameters.locationStack.splice(
+          const locationStackClone = [...eventTrackerParameters.locationStack];
+          locationStackClone.splice(
             eventTrackerParameters.locationStack.length - 1,
             0,
             makeContentContext({
               id: nameContentContextId,
             })
           );
+          eventTrackerParameters.locationStack = locationStackClone;
         }
       }
 
