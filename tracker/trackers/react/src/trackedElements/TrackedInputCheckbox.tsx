@@ -28,19 +28,21 @@ export type TrackedInputCheckboxProps = Omit<TrackedInputContextProps, 'id'> & {
  */
 export const TrackedInputCheckbox = React.forwardRef<HTMLInputElement, Omit<TrackedInputCheckboxProps, 'Component'>>(
   (props, ref) => {
-    if (globalThis.objectiv.devTools && (props.type && props.type !== 'checkbox')) {
+    if (globalThis.objectiv.devTools && props.type && props.type !== 'checkbox') {
       globalThis.objectiv.devTools.TrackerConsole.warn(
         `｢objectiv｣ TrackedInputCheckbox type attribute can only be set to 'checkbox'.`
       );
     }
 
-    return <TrackedInputContext
-      {...props}
-      id={props.id ?? (props.value ? props.value.toString() : '')}
-      Component={'input'}
-      type={'checkbox'}
-      eventHandler={props.eventHandler ?? 'onChange'}
-      ref={ref}
-    />
+    return (
+      <TrackedInputContext
+        {...props}
+        id={props.id ?? (props.value ? props.value.toString() : '')}
+        Component={'input'}
+        type={'checkbox'}
+        eventHandler={props.eventHandler ?? 'onChange'}
+        ref={ref}
+      />
+    );
   }
 );
