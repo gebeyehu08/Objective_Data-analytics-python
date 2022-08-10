@@ -159,3 +159,15 @@ class PostgresArrayFlattening(ArrayFlattening):
         )
         column_expressions[self.item_offset_series_name] = offset_expr
         return column_expressions
+
+
+class AthenaArrayFlattening(ArrayFlattening):
+    def _get_cross_join_expression(self) -> Expression:
+        """ For documentation, see implementation in class :class:`ArrayFlattening` """
+        return Expression.construct(
+            'unnest(cast({}.{} as array(json))) with ordinality as _unnested({}, {})',
+            Expression.model_reference(self._series_object.base_node),
+            self._series_object,
+            _ITEM_IDENTIFIER_EXPR,
+            _OFFSET_IDENTIFIER_EXPR,
+        )

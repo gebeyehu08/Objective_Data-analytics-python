@@ -14,7 +14,10 @@ import pytest
 # operations. Therefore, we also have the 'dtype' argument. On all other databases than postgres we skip
 # the tests for dtype 'jsonb' as those databases only support 'json'
 
-pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True)]
+pytestmark = [
+    pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True),
+    pytest.mark.athena_supported()
+]
 
 
 @pytest.fixture()
