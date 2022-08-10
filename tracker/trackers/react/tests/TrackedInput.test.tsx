@@ -194,7 +194,13 @@ describe('TrackedInputContext', () => {
     );
 
     expect(MockConsoleImplementation.warn).toHaveBeenCalledTimes(2);
-    expect(MockConsoleImplementation.warn).toHaveBeenNthCalledWith(1, '｢objectiv｣ We recommend using TrackedInputCheckbox for tracking checkbox inputs.');
-    expect(MockConsoleImplementation.warn).toHaveBeenNthCalledWith(2, '｢objectiv｣ We recommend using TrackedInputRadio for tracking radio inputs.');
+    expect(MockConsoleImplementation.warn).toHaveBeenNthCalledWith(
+      1,
+      '｢objectiv｣ We recommend using TrackedInputCheckbox for tracking checkbox inputs.'
+    );
+    expect(MockConsoleImplementation.warn).toHaveBeenNthCalledWith(
+      2,
+      '｢objectiv｣ We recommend using TrackedInputRadio for tracking radio inputs.'
+    );
   });
 });

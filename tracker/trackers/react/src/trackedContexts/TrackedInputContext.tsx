@@ -7,7 +7,7 @@ import {
   LocationStack,
   makeContentContext,
   makeIdFromString,
-  makeInputValueContext
+  makeInputValueContext,
 } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
@@ -156,18 +156,23 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     if (stateless || previousValue !== valueToMonitor) {
       setPreviousValue(valueToMonitor);
 
-      const eventTrackerParameters: EventTrackerParameters & { globalContexts: GlobalContexts, locationStack: LocationStack } = {
+      const eventTrackerParameters: EventTrackerParameters & {
+        globalContexts: GlobalContexts;
+        locationStack: LocationStack;
+      } = {
         ...trackingContext,
-        globalContexts: []
+        globalContexts: [],
       };
 
       // Add LocationContext representing the group, if `name` has been set on radio buttons
-      if(isRadio && event.target.name) {
+      if (isRadio && event.target.name) {
         const nameContentContextId = makeIdFromString(event.target.name);
         if (nameContentContextId) {
-          eventTrackerParameters.locationStack.push(makeContentContext({
-            id: nameContentContextId
-          }))
+          eventTrackerParameters.locationStack.push(
+            makeContentContext({
+              id: nameContentContextId,
+            })
+          );
         }
       }
 
