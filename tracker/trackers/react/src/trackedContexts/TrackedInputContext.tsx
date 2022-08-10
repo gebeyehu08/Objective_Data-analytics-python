@@ -107,8 +107,9 @@ export const normalizeValue = (value?: unknown) => {
 export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInputContextProps>((props, ref) => {
   // Checkboxes and radios will monitor a different attribute (checked) than other inputs (value)
   const inputType = props.type ?? 'text';
-  const isCheckboxOrRadio = ['radio', 'checkbox'].includes(inputType);
   const isRadio = inputType === 'radio';
+  const isCheckbox = inputType === 'checkbox';
+  const isCheckboxOrRadio = isRadio || isCheckbox;
 
   // Parse props and apply some defaults
   const {
@@ -119,21 +120,16 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     trackValue = false,
     stateless = false,
     eventHandler = 'onBlur',
-    attributeToMonitor = isCheckboxOrRadio ? 'checked' : 'value',
+    attributeToMonitor = isCheckboxOrRadio && !stateless ? 'checked' : 'value',
     attributeToTrack = isCheckboxOrRadio ? 'checked' : 'value',
     ...otherProps
   } = props;
 
   // Basic input validation to inform developers of useless options combinations
   if (globalThis.objectiv.devTools) {
-    if (stateless && attributeToMonitor) {
+    if (attributeToMonitor !== 'checked' && isCheckbox) {
       globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) has no effect with stateless set to true.`
-      );
-    }
-    if (attributeToMonitor !== 'checked' && isCheckboxOrRadio) {
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) should be set to 'checked' for ${inputType} inputs.`
+        `｢objectiv｣ attributeToMonitor (${attributeToMonitor}) should be set to 'checked' for checkbox inputs.`
       );
     }
   }

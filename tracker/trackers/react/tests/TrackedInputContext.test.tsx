@@ -62,7 +62,7 @@ describe('TrackedInputContext', () => {
           Component={'input'}
           type={'radio'}
           id={'test-input-1'}
-          attributeToMonitor={'value'}
+          attributeToTrack={'value'}
           stateless={true}
           data-testid={'test-input-1'}
           value={'test'}
@@ -71,20 +71,16 @@ describe('TrackedInputContext', () => {
           Component={'input'}
           type={'checkbox'}
           id={'test-input-2'}
-          attributeToTrack={'value'}
+          attributeToMonitor={'value'}
           data-testid={'test-input-2'}
         />
       </ObjectivProvider>
     );
 
-    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       1,
-      '｢objectiv｣ attributeToMonitor (value) has no effect with stateless set to true.'
-    );
-    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
-      2,
-      "｢objectiv｣ attributeToMonitor (value) should be set to 'checked' for radio inputs."
+      "｢objectiv｣ attributeToMonitor (value) should be set to 'checked' for checkbox inputs."
     );
   });
 

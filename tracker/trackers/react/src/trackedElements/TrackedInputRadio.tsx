@@ -9,9 +9,10 @@ import { TrackedInputContext, TrackedInputContextProps } from '../trackedContext
  * TrackedInputRadio has the same props of a TrackedInput, except:
  * - `id` is made optional, as we can attempt use the `value` attribute for it.
  * - `type` is set to `radio`.
+ * - `stateless` is set to `true`.
  * - The default values of `eventHandler` is set to `onChange`
  */
-export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'id' | 'type'> & {
+export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'id' | 'type' | 'stateless'> & {
   /**
    * Optional. Defaults to the `value` attribute.
    */
@@ -29,6 +30,7 @@ export const TrackedInputRadio = React.forwardRef<HTMLInputElement, Omit<Tracked
       Component={'input'}
       type={'radio'}
       eventHandler={props.eventHandler ?? 'onChange'}
+      stateless={true}
       ref={ref}
     />
   )
