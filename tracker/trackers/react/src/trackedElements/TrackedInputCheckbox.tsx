@@ -26,9 +26,6 @@ export type TrackedInputCheckboxProps = Omit<TrackedInputContextProps, 'id' | 't
 
 /**
  * Generates a TrackedInputContext preconfigured with a <input type="checkbox"> Element as Component.
- * Sets also TrackedInputContext `stateless` prop to true to track all interactions, regardless of values changing.
- * When `trackValue` is set, tracks both the `value` attribute and the `changed` attribute in the forms of two
- * InputValueContexts in globalContexts.
  */
 export const TrackedInputCheckbox = React.forwardRef<HTMLInputElement, Omit<TrackedInputCheckboxProps, 'Component'>>(
   (props, ref) => {

@@ -26,8 +26,6 @@ export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'id' | 'type
 
 /**
  * Generates a TrackedInputContext preconfigured with a <input type="radio"> Element as Component.
- * Sets also TrackedInputContext `stateless` prop to true to track all interactions, regardless of values changing.
- * Finally, sets the `eventHandler` to `onClick` instead of the default `onBlur`, unless differently specified.
  */
 export const TrackedInputRadio = React.forwardRef<HTMLInputElement, Omit<TrackedInputRadioProps, 'Component'>>(
   (props, ref) => (
