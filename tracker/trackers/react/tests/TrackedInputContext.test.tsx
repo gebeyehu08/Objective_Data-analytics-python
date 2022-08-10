@@ -134,30 +134,36 @@ describe('TrackedInputContext', () => {
     );
   });
 
-  it('should allow tracking <select> elements', () => {
+  it('should allow tracking select elements', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext Component={'select'} id={'test-select'} eventHandler={'onChange'} trackValue={true}>
-          <li data-testid={'test-option-1'} value={'option-1'}>
+        <TrackedInputContext
+          Component={'select'}
+          id={'test-select'}
+          data-testid={'test-select'}
+          eventHandler={'onChange'}
+          trackValue={true}
+        >
+          <option data-testid={'test-option-1'} value={'option-1'}>
             option 1
-          </li>
-          <li data-testid={'test-option-2'} value={'option-2'}>
+          </option>
+          <option data-testid={'test-option-2'} value={'option-2'}>
             option 2
-          </li>
-          <li data-testid={'test-option-3'} value={'option-3'}>
+          </option>
+          <option data-testid={'test-option-3'} value={'option-3'}>
             option 3
-          </li>
+          </option>
         </TrackedInputContext>
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-option-2'));
+    fireEvent.change(screen.getByTestId('test-select'), { target: { value: 'option-2' } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
