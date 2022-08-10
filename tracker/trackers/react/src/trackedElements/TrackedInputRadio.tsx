@@ -9,19 +9,13 @@ import { TrackedInputContext, TrackedInputContextProps } from '../trackedContext
  * TrackedInputRadio has the same props of a TrackedInput, except:
  * - `id` is made optional, as we can attempt use the `value` attribute for it.
  * - `type` is set to `radio`.
- * - `eventHandler` is redefined to accept only `onBlur` or `onClick`, since `onChange` doesn't work on radios
- * - The default values of `eventHandler` is set to `onClick`
+ * - The default values of `eventHandler` is set to `onChange`
  */
-export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'id' | 'type' | 'eventHandler'> & {
+export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'id' | 'type'> & {
   /**
    * Optional. Defaults to the `value` attribute.
    */
   id?: string;
-
-  /**
-   * Optional. Defaults to `onClick`. Valid values: 'onBlur' | 'onClick'.
-   */
-  eventHandler?: 'onBlur' | 'onClick';
 };
 
 /**
@@ -34,7 +28,7 @@ export const TrackedInputRadio = React.forwardRef<HTMLInputElement, Omit<Tracked
       id={props.id ?? (props.value ? props.value.toString() : '')}
       Component={'input'}
       type={'radio'}
-      eventHandler={props.eventHandler ?? 'onClick'}
+      eventHandler={props.eventHandler ?? 'onChange'}
       ref={ref}
     />
   )

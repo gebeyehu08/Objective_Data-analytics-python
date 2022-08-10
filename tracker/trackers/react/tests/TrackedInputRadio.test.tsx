@@ -130,6 +130,48 @@ describe('TrackedInputRadio', () => {
     );
   });
 
+  it('should allow tracking on onChange', async () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onChangeSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputRadio
+          id={'input-id-1'}
+          data-testid={'test-radio-1'}
+          value={'value-1'}
+          eventHandler={'onChange'}
+          name={'radios'}
+          onChange={onChangeSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    // NOTE: we trigger click here instead of change, because the latter doesn't actually work
+    fireEvent.click(screen.getByTestId('test-radio-1'));
+
+    // This spy actually confirms that onChange triggered
+    expect(onChangeSpy).toHaveBeenCalledTimes(1);
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id-1',
+          }),
+        ]),
+      })
+    );
+  });
+
   it('should allow disabling id normalization', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');
@@ -227,6 +269,7 @@ describe('TrackedInputRadio', () => {
           value={'value'}
           trackValue={true}
           stateless={true}
+          eventHandler={'onClick'}
         />
       </ObjectivProvider>
     );

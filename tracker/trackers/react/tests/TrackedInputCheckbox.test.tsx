@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
@@ -29,13 +29,13 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox data-testid={'test-radio'} value={'value'} />
+        <TrackedInputCheckbox data-testid={'test-checkbox'} value={'value'} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio'), { target: { checked: false } });
+    fireEvent.click(screen.getByTestId('test-checkbox'), { target: { checked: false } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -63,13 +63,13 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox data-testid={'test-radio'} value={'value'} trackValue={true} />
+        <TrackedInputCheckbox data-testid={'test-checkbox'} value={'value'} trackValue={true} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -108,13 +108,13 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox id={'input-id'} data-testid={'test-radio'} value={'value'} eventHandler={'onBlur'} />
+        <TrackedInputCheckbox id={'input-id'} data-testid={'test-checkbox'} value={'value'} eventHandler={'onBlur'} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.blur(screen.getByTestId('test-radio'));
+    fireEvent.blur(screen.getByTestId('test-checkbox'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -130,6 +130,47 @@ describe('TrackedInputCheckbox', () => {
     );
   });
 
+  it('should allow tracking on onChange', async () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onChangeSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputCheckbox
+          id={'input-id-1'}
+          data-testid={'test-checkbox-1'}
+          value={'value-1'}
+          eventHandler={'onChange'}
+          onChange={onChangeSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    // NOTE: we trigger click here instead of change, because the latter doesn't actually work
+    fireEvent.click(screen.getByTestId('test-checkbox-1'));
+
+    // This spy actually confirms that onChange triggered
+    expect(onChangeSpy).toHaveBeenCalledTimes(1);
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id-1',
+          }),
+        ]),
+      })
+    );
+  });
+
   it('should allow disabling id normalization', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');
@@ -137,15 +178,15 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox id={'Input id 1'} data-testid={'test-radio-1'} value={'test'} />
-        <TrackedInputCheckbox normalizeId={false} data-testid={'test-radio-2'} value={'Input id 2'} />
+        <TrackedInputCheckbox id={'Input id 1'} data-testid={'test-checkbox-1'} value={'test'} />
+        <TrackedInputCheckbox normalizeId={false} data-testid={'test-checkbox-2'} value={'Input id 2'} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio-1'));
-    fireEvent.click(screen.getByTestId('test-radio-2'));
+    fireEvent.click(screen.getByTestId('test-checkbox-1'));
+    fireEvent.click(screen.getByTestId('test-checkbox-2'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(2);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
@@ -221,15 +262,15 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox data-testid={'test-radio'} value={'value'} trackValue={true} />
+        <TrackedInputCheckbox data-testid={'test-checkbox'} value={'value'} trackValue={true} stateless={true} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio'));
-    fireEvent.click(screen.getByTestId('test-radio'));
-    fireEvent.click(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(3);
     const expectedEventPayload = {
