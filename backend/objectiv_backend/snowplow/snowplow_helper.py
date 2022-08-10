@@ -112,9 +112,6 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         application_context = {}
     query_string = urlparse(str(path_context.get('id', ''))).query
 
-    rich_event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
-    rich_event['cookie_id'] = cookie_context.get('id', '')
-
     snowplow_custom_contexts = make_snowplow_custom_contexts(event=event, config=config)
 
     payload = {
@@ -128,7 +125,8 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "eid": event['id'],  # event_id / UUID
             "url": path_context.get('id', ''),  # Page URL
             "cx": snowplow_custom_contexts,  # base64 encoded custom context
-            "aid": application_context.get('id', '')
+            "aid": application_context.get('id', ''),
+            "ttm": str(event['time'])  # User-set exact timestamp
         }]
     }
     return CollectorPayload(
