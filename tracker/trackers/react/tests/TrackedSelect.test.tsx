@@ -30,26 +30,48 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'input-id'} data-testid={'test-select'}>
+        <TrackedSelect id={'input-id-1'} data-testid={'test-select-1'}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
+        </TrackedSelect>
+        <TrackedSelect id={'input-id-2'} data-testid={'test-select-2'}>
+          <option>A</option>
+          <option>B</option>
+          <option>C</option>
         </TrackedSelect>
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.change(screen.getByTestId('test-select'));
+    fireEvent.change(screen.getByTestId('test-select-1'));
+    fireEvent.change(screen.getByTestId('test-select-2'));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
     expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.InputContext,
-            id: 'input-id',
+            id: 'input-id-1',
+          }),
+        ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id-2',
           }),
         ]),
         global_contexts: expect.not.arrayContaining([
@@ -266,6 +288,11 @@ describe('TrackedSelect', () => {
           <option>2</option>
           <option>3</option>
         </TrackedSelect>
+        <TrackedSelect id={'Input id 3'} multiple normalizeId={false} data-testid={'test-select-3'} onChange={jest.fn}>
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+        </TrackedSelect>
       </ObjectivProvider>
     );
 
@@ -273,8 +300,9 @@ describe('TrackedSelect', () => {
 
     fireEvent.change(screen.getByTestId('test-select-1'), { target: { value: '1' } });
     fireEvent.change(screen.getByTestId('test-select-2'));
+    fireEvent.change(screen.getByTestId('test-select-3'));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -299,6 +327,18 @@ describe('TrackedSelect', () => {
         ]),
       })
     );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'Input id 3',
+          }),
+        ]),
+      })
+    );
   });
 
   it('should console.error if an id cannot be automatically generated', () => {
@@ -313,32 +353,48 @@ describe('TrackedSelect', () => {
               <option>2</option>
               <option>3</option>
             </TrackedSelect>
+            <TrackedSelect id={'☹️'} multiple>
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+            </TrackedSelect>
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
     );
 
-    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
-    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      1,
+      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `id` property.'
+    );
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      2,
       '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
   });
 
   it('should allow forwarding refs', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-    const ref = createRef<HTMLSelectElement>();
+    const ref1 = createRef<HTMLSelectElement>();
+    const ref2 = createRef<HTMLSelectElement>();
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'test-id'} ref={ref}>
+        <TrackedSelect id={'test-id-1'} ref={ref1}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
         </TrackedSelect>
+        <TrackedSelect id={'test-id-2'} multiple ref={ref2}>
+          <option>A</option>
+          <option>B</option>
+          <option>C</option>
+        </TrackedSelect>
       </ObjectivProvider>
     );
 
-    expect(ref.current).toMatchInlineSnapshot(`
+    expect(ref1.current).toMatchInlineSnapshot(`
       <select>
         <option>
           1
@@ -348,6 +404,21 @@ describe('TrackedSelect', () => {
         </option>
         <option>
           3
+        </option>
+      </select>
+    `);
+    expect(ref2.current).toMatchInlineSnapshot(`
+      <select
+        multiple=""
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
         </option>
       </select>
     `);
@@ -363,12 +434,25 @@ describe('TrackedSelect', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedSelect
-          id={'test-id'}
+          id={'test-id-1'}
           defaultValue={'1'}
-          data-testid={'test-select'}
+          data-testid={'test-select-1'}
           eventHandler={'onBlur'}
           onBlur={onBlurSpy}
           onChange={jest.fn}
+        >
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+        </TrackedSelect>
+        <TrackedSelect
+          id={'test-id-2'}
+          value={'1'}
+          data-testid={'test-select-2'}
+          eventHandler={'onBlur'}
+          onBlur={onBlurSpy}
+          onChange={jest.fn}
+          multiple
         >
           <option>1</option>
           <option>2</option>
@@ -379,20 +463,35 @@ describe('TrackedSelect', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.blur(screen.getByTestId('test-select'), { target: { value: '2' } });
+    fireEvent.blur(screen.getByTestId('test-select-1'), { target: { value: '2' } });
+    fireEvent.blur(screen.getByTestId('test-select-2'));
 
-    expect(logTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.InputContext,
-            id: 'test-id',
+            id: 'test-id-1',
           }),
         ]),
       })
     );
-    expect(onBlurSpy).toHaveBeenCalled();
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-id-2',
+          }),
+        ]),
+      })
+    );
+    expect(onBlurSpy).toHaveBeenCalledTimes(2);
   });
 
   it('should allow tracking onClick instead of onChange', () => {
@@ -405,9 +504,9 @@ describe('TrackedSelect', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedSelect
-          id={'test-id'}
+          id={'test-id-1'}
           defaultValue={'1'}
-          data-testid={'test-select'}
+          data-testid={'test-select-1'}
           eventHandler={'onClick'}
           onClick={onClickSpy}
         >
@@ -415,24 +514,51 @@ describe('TrackedSelect', () => {
           <option>2</option>
           <option>3</option>
         </TrackedSelect>
+        <TrackedSelect
+          id={'test-id-2'}
+          defaultValue={'1'}
+          data-testid={'test-select-2'}
+          eventHandler={'onClick'}
+          onClick={onClickSpy}
+          multiple
+        >
+          <option>A</option>
+          <option>B</option>
+          <option>C</option>
+        </TrackedSelect>
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-select'), { target: { value: '2' } });
+    fireEvent.click(screen.getByTestId('test-select-1'), { target: { value: '2' } });
+    fireEvent.click(screen.getByTestId('test-select-2'), { target: { value: '2' } });
 
-    expect(logTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.InputContext,
-            id: 'test-id',
+            id: 'test-id-1',
           }),
         ]),
       })
     );
-    expect(onClickSpy).toHaveBeenCalled();
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-id-2',
+          }),
+        ]),
+      })
+    );
+    expect(onClickSpy).toHaveBeenCalledTimes(2);
   });
 });

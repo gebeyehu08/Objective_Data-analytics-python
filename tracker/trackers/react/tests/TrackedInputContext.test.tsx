@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
@@ -232,6 +232,14 @@ describe('TrackedInputContext', () => {
           stateless={true}
           eventHandler={'onClick'}
         />
+        <TrackedInputContext
+          Component={'select'}
+          id={'input-id-4'}
+          data-testid={'test-input-4'}
+          stateless={true}
+          eventHandler={'onClick'}
+          multiple
+        />
       </ObjectivProvider>
     );
 
@@ -262,6 +270,17 @@ describe('TrackedInputContext', () => {
     fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
     fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
     fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-input-4'), { target: { value: 'option' } });
+    fireEvent.click(screen.getByTestId('test-input-4'), { target: { value: 'option' } });
+    fireEvent.click(screen.getByTestId('test-input-4'), { target: { value: 'option' } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
@@ -616,6 +635,13 @@ describe('TrackedInputContext', () => {
           data-testid={'test-input-4'}
         />
         <TrackedInputContext Component={'select'} id={'input-id-5'} forwardId={true} data-testid={'test-input-5'} />
+        <TrackedInputContext
+          Component={'select'}
+          id={'input-id-6'}
+          multiple
+          forwardId={true}
+          data-testid={'test-input-6'}
+        />
       </ObjectivProvider>
     );
 
@@ -624,6 +650,7 @@ describe('TrackedInputContext', () => {
     expect(screen.getByTestId('test-input-3').getAttribute('id')).toBe('input-id-3');
     expect(screen.getByTestId('test-input-4').getAttribute('id')).toBe('input-id-4');
     expect(screen.getByTestId('test-input-5').getAttribute('id')).toBe('input-id-5');
+    expect(screen.getByTestId('test-input-6').getAttribute('id')).toBe('input-id-6');
   });
 
   it('should allow forwarding refs', () => {
