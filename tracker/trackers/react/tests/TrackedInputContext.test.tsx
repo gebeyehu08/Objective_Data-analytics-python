@@ -246,7 +246,7 @@ describe('TrackedInputContext', () => {
     expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
     expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
 
-    jest.resetAllMocks()
+    jest.resetAllMocks();
 
     fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
     fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
@@ -257,7 +257,7 @@ describe('TrackedInputContext', () => {
     expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
     expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
 
-    jest.resetAllMocks()
+    jest.resetAllMocks();
 
     fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
     fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
@@ -615,12 +615,7 @@ describe('TrackedInputContext', () => {
           checked={false}
           data-testid={'test-input-4'}
         />
-        <TrackedInputContext
-          Component={'select'}
-          id={'input-id-5'}
-          forwardId={true}
-          data-testid={'test-input-5'}
-        />
+        <TrackedInputContext Component={'select'} id={'input-id-5'} forwardId={true} data-testid={'test-input-5'} />
       </ObjectivProvider>
     );
 
@@ -681,21 +676,20 @@ describe('TrackedInputContext', () => {
   });
 });
 
-
 describe('normalizeValue', () => {
   it('should normalize booleans to "0" and"1")', () => {
-    expect(normalizeValue(true)).toBe('1')
-    expect(normalizeValue(false)).toBe('0')
-  })
+    expect(normalizeValue(true)).toBe('1');
+    expect(normalizeValue(false)).toBe('0');
+  });
 
   it('should normalize numbers to strings)', () => {
-    expect(normalizeValue(123)).toBe('123')
-    expect(normalizeValue(-123)).toBe('-123')
-    expect(normalizeValue(Infinity)).toBe('Infinity')
-  })
+    expect(normalizeValue(123)).toBe('123');
+    expect(normalizeValue(-123)).toBe('-123');
+    expect(normalizeValue(Infinity)).toBe('Infinity');
+  });
 
   it('should normalize arrays to their JSON string)', () => {
-    expect(normalizeValue([1,2,3])).toBe('[1,2,3]')
-    expect(normalizeValue(['a','b','c'])).toBe('["a","b","c"]')
-  })
-})
+    expect(normalizeValue([1, 2, 3])).toBe('[1,2,3]');
+    expect(normalizeValue(['a', 'b', 'c'])).toBe('["a","b","c"]');
+  });
+});

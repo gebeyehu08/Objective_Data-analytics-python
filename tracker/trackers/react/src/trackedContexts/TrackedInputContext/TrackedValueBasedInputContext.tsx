@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { GlobalContexts, makeIdFromString, makeInputValueContext, } from '@objectiv/tracker-core';
+import { GlobalContexts, makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -47,7 +47,10 @@ export type TrackedValueBasedInputContextProps = TrackedContextProps<HTMLInputEl
 /**
  * Event definition for TrackedValueBasedInputContext
  */
-export type TrackedValueBasedInputContextEvent<T = HTMLInputElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+export type TrackedValueBasedInputContextEvent<T = HTMLInputElement> =
+  | FocusEvent<T>
+  | ChangeEvent<T>
+  | React.MouseEvent<T>;
 
 /**
  * TrackedValueBasedInputContext implementation

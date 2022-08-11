@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { GlobalContexts, LocationStack, makeIdFromString, makeInputValueContext, } from '@objectiv/tracker-core';
+import { GlobalContexts, LocationStack, makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -43,7 +43,10 @@ export type TrackedInputContextCheckboxProps = TrackedContextProps<HTMLInputElem
 /**
  * Event definition for TrackedInputContextCheckbox
  */
-export type TrackedInputContextCheckboxEvent<T = HTMLInputElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+export type TrackedInputContextCheckboxEvent<T = HTMLInputElement> =
+  | FocusEvent<T>
+  | ChangeEvent<T>
+  | React.MouseEvent<T>;
 
 /**
  * TrackedInputContextCheckbox implementation

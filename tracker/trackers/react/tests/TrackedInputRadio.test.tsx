@@ -6,13 +6,7 @@ import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import {
-  ObjectivProvider,
-  ReactTracker,
-  TrackedDiv,
-  TrackedInputRadio,
-  TrackedRootLocationContext
-} from '../src';
+import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputRadio, TrackedRootLocationContext } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -225,9 +219,7 @@ describe('TrackedInputRadio', () => {
     fireEvent.blur(screen.getByTestId('test-radio-1'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
-    expect(logTransport.handle).toHaveBeenCalledWith(
-      expect.objectContaining({ _type: 'InputChangeEvent' })
-    );
+    expect(logTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'InputChangeEvent' }));
   });
 
   it('should allow disabling id normalization', () => {
@@ -341,12 +333,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio
-          value={'some-value'}
-          data-testid={'test-input'}
-          eventHandler={'onBlur'}
-          onBlur={onBlurSpy}
-        />
+        <TrackedInputRadio value={'some-value'} data-testid={'test-input'} eventHandler={'onBlur'} onBlur={onBlurSpy} />
       </ObjectivProvider>
     );
 

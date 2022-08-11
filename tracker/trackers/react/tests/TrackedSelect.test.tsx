@@ -6,13 +6,7 @@ import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import {
-  ObjectivProvider,
-  ReactTracker,
-  TrackedDiv,
-  TrackedSelect,
-  TrackedRootLocationContext
-} from '../src';
+import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedSelect, TrackedRootLocationContext } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -165,7 +159,7 @@ describe('TrackedSelect', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-select'), { target: { value: '1'}});
+    fireEvent.click(screen.getByTestId('test-select'), { target: { value: '1' } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -203,7 +197,7 @@ describe('TrackedSelect', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.change(screen.getByTestId('test-select-1'), { target: { value: '1' }});
+    fireEvent.change(screen.getByTestId('test-select-1'), { target: { value: '1' } });
     fireEvent.change(screen.getByTestId('test-select-2'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(2);

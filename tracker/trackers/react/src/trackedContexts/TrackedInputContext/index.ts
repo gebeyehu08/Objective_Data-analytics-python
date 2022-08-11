@@ -7,21 +7,27 @@ import { ChangeEvent, FocusEvent, MouseEvent, SyntheticEvent } from 'react';
 /**
  * A type guard to determine whether the given event is a blur event
  */
-export function isBlurEvent<T = HTMLInputElement | HTMLSelectElement>(event: SyntheticEvent<T>): event is FocusEvent<T> {
+export function isBlurEvent<T = HTMLInputElement | HTMLSelectElement>(
+  event: SyntheticEvent<T>
+): event is FocusEvent<T> {
   return event.type === 'blur';
 }
 
 /**
  * A type guard to determine whether the given event is a change event
  */
-export function isChangeEvent<T = HTMLInputElement | HTMLSelectElement>(event: SyntheticEvent<T>): event is ChangeEvent<T> {
+export function isChangeEvent<T = HTMLInputElement | HTMLSelectElement>(
+  event: SyntheticEvent<T>
+): event is ChangeEvent<T> {
   return event.type === 'change';
 }
 
 /**
  * A type guard to determine whether the given event is a click event
  */
-export function isClickEvent<T = HTMLInputElement | HTMLSelectElement>(event: SyntheticEvent<T>): event is MouseEvent<T> {
+export function isClickEvent<T = HTMLInputElement | HTMLSelectElement>(
+  event: SyntheticEvent<T>
+): event is MouseEvent<T> {
   return event.type === 'click';
 }
 
@@ -49,4 +55,4 @@ export const normalizeValue = (value?: unknown) => {
   return '';
 };
 
-export * from "./TrackedInputContext";
+export * from './TrackedInputContext';

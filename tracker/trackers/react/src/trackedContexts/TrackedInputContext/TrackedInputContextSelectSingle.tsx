@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { GlobalContexts, LocationStack, makeIdFromString, makeInputValueContext, } from '@objectiv/tracker-core';
+import { GlobalContexts, LocationStack, makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -40,101 +40,105 @@ export type TrackedInputContextSelectSingleProps = TrackedContextProps<HTMLSelec
 /**
  * Event definition for TrackedInputContextSelectSingle
  */
-export type TrackedInputContextSelectSingleEvent<T = HTMLSelectElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+export type TrackedInputContextSelectSingleEvent<T = HTMLSelectElement> =
+  | FocusEvent<T>
+  | ChangeEvent<T>
+  | React.MouseEvent<T>;
 
 /**
  * TrackedInputContextSelectSingle implementation
  */
-export const TrackedInputContextSelectSingle = React.forwardRef<HTMLSelectElement, TrackedInputContextSelectSingleProps>(
-  (props, ref) => {
-    const {
-      id,
-      Component,
-      forwardId = false,
-      normalizeId = true,
-      trackValue = false,
-      stateless = false,
-      eventHandler = 'onChange',
-      ...nativeProps
-    } = props;
+export const TrackedInputContextSelectSingle = React.forwardRef<
+  HTMLSelectElement,
+  TrackedInputContextSelectSingleProps
+>((props, ref) => {
+  const {
+    id,
+    Component,
+    forwardId = false,
+    normalizeId = true,
+    trackValue = false,
+    stateless = false,
+    eventHandler = 'onChange',
+    ...nativeProps
+  } = props;
 
-    const initialValue = props.value ?? props.defaultValue;
-    const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
-    const locationStack = useLocationStack();
+  const initialValue = props.value ?? props.defaultValue;
+  const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
+  const locationStack = useLocationStack();
 
-    console.log('initialValue', initialValue)
+  console.log('initialValue', initialValue);
 
-    let selectId: string | null = id;
-    if (normalizeId) {
-      selectId = makeIdFromString(selectId);
-    }
+  let selectId: string | null = id;
+  if (normalizeId) {
+    selectId = makeIdFromString(selectId);
+  }
 
-    const handleEvent = async (event: TrackedInputContextSelectSingleEvent, trackingContext: TrackingContext) => {
-      const eventTarget = event.target as HTMLSelectElement;
-      const valueToMonitor = normalizeValue(eventTarget.value);
+  const handleEvent = async (event: TrackedInputContextSelectSingleEvent, trackingContext: TrackingContext) => {
+    const eventTarget = event.target as HTMLSelectElement;
+    const valueToMonitor = normalizeValue(eventTarget.value);
 
-      if (stateless || previousValue !== valueToMonitor) {
-        setPreviousValue(valueToMonitor);
+    if (stateless || previousValue !== valueToMonitor) {
+      setPreviousValue(valueToMonitor);
 
-        const eventTrackerParameters: EventTrackerParameters & {
-          globalContexts: GlobalContexts;
-          locationStack: LocationStack;
-        } = {
-          ...trackingContext,
-          globalContexts: [],
-        };
+      const eventTrackerParameters: EventTrackerParameters & {
+        globalContexts: GlobalContexts;
+        locationStack: LocationStack;
+      } = {
+        ...trackingContext,
+        globalContexts: [],
+      };
 
-        // Add InputValueContext if trackValue has been set
-        if (selectId && trackValue) {
-          eventTrackerParameters.globalContexts.push(
-            makeInputValueContext({
-              id: selectId,
-              value: normalizeValue(eventTarget.value),
-            })
-          );
-        }
-
-        trackInputChangeEvent(eventTrackerParameters);
-      }
-
-      if (isBlurEvent(event)) {
-        props.onBlur && props.onBlur(event);
-      }
-
-      if (isChangeEvent(event)) {
-        props.onChange && props.onChange(event);
-      }
-
-      if (isClickEvent(event)) {
-        props.onClick && props.onClick(event);
-      }
-    };
-
-    const componentProps = {
-      ...nativeProps,
-      ...(ref ? { ref } : {}),
-      ...(forwardId ? { id } : {}),
-    };
-
-    if (!selectId) {
-      if (globalThis.objectiv.devTools) {
-        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-        globalThis.objectiv.devTools.TrackerConsole.error(
-          `｢objectiv｣ Could not generate a valid id for InputContext:select @ ${locationPath}. Please provide the \`id\` property.`
+      // Add InputValueContext if trackValue has been set
+      if (selectId && trackValue) {
+        eventTrackerParameters.globalContexts.push(
+          makeInputValueContext({
+            id: selectId,
+            value: normalizeValue(eventTarget.value),
+          })
         );
       }
-      return React.createElement(Component, componentProps);
+
+      trackInputChangeEvent(eventTrackerParameters);
     }
 
-    return (
-      <InputContextWrapper id={selectId}>
-        {(trackingContext) =>
-          React.createElement(Component, {
-            ...componentProps,
-            [eventHandler]: (event: TrackedInputContextSelectSingleEvent) => handleEvent(event, trackingContext),
-          })
-        }
-      </InputContextWrapper>
-    );
+    if (isBlurEvent(event)) {
+      props.onBlur && props.onBlur(event);
+    }
+
+    if (isChangeEvent(event)) {
+      props.onChange && props.onChange(event);
+    }
+
+    if (isClickEvent(event)) {
+      props.onClick && props.onClick(event);
+    }
+  };
+
+  const componentProps = {
+    ...nativeProps,
+    ...(ref ? { ref } : {}),
+    ...(forwardId ? { id } : {}),
+  };
+
+  if (!selectId) {
+    if (globalThis.objectiv.devTools) {
+      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+      globalThis.objectiv.devTools.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for InputContext:select @ ${locationPath}. Please provide the \`id\` property.`
+      );
+    }
+    return React.createElement(Component, componentProps);
   }
-);
+
+  return (
+    <InputContextWrapper id={selectId}>
+      {(trackingContext) =>
+        React.createElement(Component, {
+          ...componentProps,
+          [eventHandler]: (event: TrackedInputContextSelectSingleEvent) => handleEvent(event, trackingContext),
+        })
+      }
+    </InputContextWrapper>
+  );
+});

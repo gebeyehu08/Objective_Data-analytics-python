@@ -53,109 +53,111 @@ export type TrackedInputContextRadioEvent<T = HTMLInputElement> = FocusEvent<T> 
 /**
  * TrackedInputContextRadio implementation
  */
-export const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, TrackedInputContextRadioProps>((props, ref) => {
-  const {
-    id,
-    Component,
-    forwardId = false,
-    normalizeId = true,
-    trackValue = false,
-    stateless = true,
-    eventHandler = 'onChange',
-    ...nativeProps
-  } = props;
+export const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, TrackedInputContextRadioProps>(
+  (props, ref) => {
+    const {
+      id,
+      Component,
+      forwardId = false,
+      normalizeId = true,
+      trackValue = false,
+      stateless = true,
+      eventHandler = 'onChange',
+      ...nativeProps
+    } = props;
 
-  const initialValue = props.checked ?? props.defaultChecked;
-  const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
-  const locationStack = useLocationStack();
+    const initialValue = props.checked ?? props.defaultChecked;
+    const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
+    const locationStack = useLocationStack();
 
-  let inputId: string | null = id;
-  if (normalizeId) {
-    inputId = makeIdFromString(inputId);
-  }
+    let inputId: string | null = id;
+    if (normalizeId) {
+      inputId = makeIdFromString(inputId);
+    }
 
-  const handleEvent = async (event: TrackedInputContextRadioEvent, trackingContext: TrackingContext) => {
-    const eventTarget = event.target as HTMLInputElement;
-    const valueToMonitor = normalizeValue(eventTarget.checked);
+    const handleEvent = async (event: TrackedInputContextRadioEvent, trackingContext: TrackingContext) => {
+      const eventTarget = event.target as HTMLInputElement;
+      const valueToMonitor = normalizeValue(eventTarget.checked);
 
-    if (stateless || previousValue !== valueToMonitor) {
-      setPreviousValue(valueToMonitor);
+      if (stateless || previousValue !== valueToMonitor) {
+        setPreviousValue(valueToMonitor);
 
-      const eventTrackerParameters: EventTrackerParameters & {
-        globalContexts: GlobalContexts;
-        locationStack: LocationStack;
-      } = {
-        ...trackingContext,
-        globalContexts: [],
-      };
+        const eventTrackerParameters: EventTrackerParameters & {
+          globalContexts: GlobalContexts;
+          locationStack: LocationStack;
+        } = {
+          ...trackingContext,
+          globalContexts: [],
+        };
 
-      // Add LocationContext representing the radio group, if the `name` attribute has been set
-      if (eventTarget.name) {
-        const nameContentContextId = makeIdFromString(eventTarget.name);
-        if (nameContentContextId) {
-          const locationStackClone = [...eventTrackerParameters.locationStack];
-          locationStackClone.splice(
-            eventTrackerParameters.locationStack.length - 1,
-            0,
-            makeContentContext({
-              id: nameContentContextId,
+        // Add LocationContext representing the radio group, if the `name` attribute has been set
+        if (eventTarget.name) {
+          const nameContentContextId = makeIdFromString(eventTarget.name);
+          if (nameContentContextId) {
+            const locationStackClone = [...eventTrackerParameters.locationStack];
+            locationStackClone.splice(
+              eventTrackerParameters.locationStack.length - 1,
+              0,
+              makeContentContext({
+                id: nameContentContextId,
+              })
+            );
+            eventTrackerParameters.locationStack = locationStackClone;
+          }
+        }
+
+        // Add InputValueContext if trackValue has been set
+        if (inputId && trackValue) {
+          eventTrackerParameters.globalContexts.push(
+            makeInputValueContext({
+              id: inputId,
+              value: normalizeValue(eventTarget.checked),
             })
           );
-          eventTrackerParameters.locationStack = locationStackClone;
         }
+
+        trackInputChangeEvent(eventTrackerParameters);
       }
 
-      // Add InputValueContext if trackValue has been set
-      if (inputId && trackValue) {
-        eventTrackerParameters.globalContexts.push(
-          makeInputValueContext({
-            id: inputId,
-            value: normalizeValue(eventTarget.checked),
-          })
+      if (isBlurEvent(event)) {
+        props.onBlur && props.onBlur(event);
+      }
+
+      if (isChangeEvent(event)) {
+        props.onChange && props.onChange(event);
+      }
+
+      if (isClickEvent(event)) {
+        props.onClick && props.onClick(event);
+      }
+    };
+
+    const componentProps = {
+      ...nativeProps,
+      ...(ref ? { ref } : {}),
+      ...(forwardId ? { id } : {}),
+    };
+
+    if (!inputId) {
+      if (globalThis.objectiv.devTools) {
+        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+        globalThis.objectiv.devTools.TrackerConsole.error(
+          `｢objectiv｣ Could not generate a valid id for InputContext:radio @ ${locationPath}. Please provide the \`id\` property.`
         );
       }
-
-      trackInputChangeEvent(eventTrackerParameters);
+      return React.createElement(Component, componentProps);
     }
 
-    if (isBlurEvent(event)) {
-      props.onBlur && props.onBlur(event);
-    }
-
-    if (isChangeEvent(event)) {
-      props.onChange && props.onChange(event);
-    }
-
-    if (isClickEvent(event)) {
-      props.onClick && props.onClick(event);
-    }
-  };
-
-  const componentProps = {
-    ...nativeProps,
-    ...(ref ? { ref } : {}),
-    ...(forwardId ? { id } : {}),
-  };
-
-  if (!inputId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate a valid id for InputContext:radio @ ${locationPath}. Please provide the \`id\` property.`
-      );
-    }
-    return React.createElement(Component, componentProps);
+    return (
+      <InputContextWrapper id={inputId}>
+        {(trackingContext) =>
+          React.createElement(Component, {
+            ...componentProps,
+            [eventHandler]: (event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>) =>
+              handleEvent(event, trackingContext),
+          })
+        }
+      </InputContextWrapper>
+    );
   }
-
-  return (
-    <InputContextWrapper id={inputId}>
-      {(trackingContext) =>
-        React.createElement(Component, {
-          ...componentProps,
-          [eventHandler]: (event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>) =>
-            handleEvent(event, trackingContext),
-        })
-      }
-    </InputContextWrapper>
-  );
-});
+);
