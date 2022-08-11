@@ -5,8 +5,14 @@
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
-import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedSelect, TrackedRootLocationContext } from '../src';
+import React, { createRef } from 'react';
+import {
+  ObjectivProvider,
+  ReactTracker,
+  TrackedDiv,
+  TrackedSelect,
+  TrackedRootLocationContext
+} from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -149,7 +155,7 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'input-id'} data-testid={'test-select'} eventHandler={'onClick'}>
+        <TrackedSelect id={'input-id'} data-testid={'test-select'} eventHandler={'onClick'} defaultValue={'2'}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -159,7 +165,7 @@ describe('TrackedSelect', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-select'));
+    fireEvent.click(screen.getByTestId('test-select'), { target: { value: '1'}});
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -182,7 +188,7 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'Input id 1'} data-testid={'test-select-1'}>
+        <TrackedSelect id={'Input id 1'} data-testid={'test-select-1'} value={2} onChange={jest.fn}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -197,7 +203,7 @@ describe('TrackedSelect', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.change(screen.getByTestId('test-select-1'));
+    fireEvent.change(screen.getByTestId('test-select-1'), { target: { value: '1' }});
     fireEvent.change(screen.getByTestId('test-select-2'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(2);
@@ -248,5 +254,117 @@ describe('TrackedSelect', () => {
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
+  });
+
+  it('should allow forwarding refs', () => {
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
+    const ref = createRef<HTMLSelectElement>();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedSelect id={'test-id'} ref={ref}>
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+        </TrackedSelect>
+      </ObjectivProvider>
+    );
+
+    expect(ref.current).toMatchInlineSnapshot(`
+      <select>
+        <option>
+          1
+        </option>
+        <option>
+          2
+        </option>
+        <option>
+          3
+        </option>
+      </select>
+    `);
+  });
+
+  it('should allow tracking onBlur instead of onChange', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onBlurSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedSelect
+          id={'test-id'}
+          defaultValue={'1'}
+          data-testid={'test-select'}
+          eventHandler={'onBlur'}
+          onBlur={onBlurSpy}
+          onChange={jest.fn}
+        >
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+        </TrackedSelect>
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.blur(screen.getByTestId('test-select'), { target: { value: '2' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-id',
+          }),
+        ]),
+      })
+    );
+    expect(onBlurSpy).toHaveBeenCalled();
+  });
+
+  it('should allow tracking onClick instead of onChange', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onClickSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedSelect
+          id={'test-id'}
+          defaultValue={'1'}
+          data-testid={'test-select'}
+          eventHandler={'onClick'}
+          onClick={onClickSpy}
+        >
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+        </TrackedSelect>
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-select'), { target: { value: '2' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-id',
+          }),
+        ]),
+      })
+    );
+    expect(onClickSpy).toHaveBeenCalled();
   });
 });

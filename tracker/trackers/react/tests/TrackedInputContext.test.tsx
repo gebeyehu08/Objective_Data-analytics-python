@@ -225,6 +225,13 @@ describe('TrackedInputContext', () => {
           stateless={true}
           eventHandler={'onClick'}
         />
+        <TrackedInputContext
+          Component={'select'}
+          id={'input-id-3'}
+          data-testid={'test-input-3'}
+          stateless={true}
+          eventHandler={'onClick'}
+        />
       </ObjectivProvider>
     );
 
@@ -244,6 +251,17 @@ describe('TrackedInputContext', () => {
     fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
     fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
     fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
+
+    jest.resetAllMocks()
+
+    fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
+    fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
+    fireEvent.click(screen.getByTestId('test-input-3'), { target: { value: 'option' } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
@@ -597,6 +615,12 @@ describe('TrackedInputContext', () => {
           checked={false}
           data-testid={'test-input-4'}
         />
+        <TrackedInputContext
+          Component={'select'}
+          id={'input-id-5'}
+          forwardId={true}
+          data-testid={'test-input-5'}
+        />
       </ObjectivProvider>
     );
 
@@ -604,6 +628,7 @@ describe('TrackedInputContext', () => {
     expect(screen.getByTestId('test-input-2').getAttribute('id')).toBe('input-id-2');
     expect(screen.getByTestId('test-input-3').getAttribute('id')).toBe('input-id-3');
     expect(screen.getByTestId('test-input-4').getAttribute('id')).toBe('input-id-4');
+    expect(screen.getByTestId('test-input-5').getAttribute('id')).toBe('input-id-5');
   });
 
   it('should allow forwarding refs', () => {
@@ -655,3 +680,22 @@ describe('TrackedInputContext', () => {
     expect(normalizeValue(true)).toStrictEqual('1');
   });
 });
+
+
+describe('normalizeValue', () => {
+  it('should normalize booleans to "0" and"1")', () => {
+    expect(normalizeValue(true)).toBe('1')
+    expect(normalizeValue(false)).toBe('0')
+  })
+
+  it('should normalize numbers to strings)', () => {
+    expect(normalizeValue(123)).toBe('123')
+    expect(normalizeValue(-123)).toBe('-123')
+    expect(normalizeValue(Infinity)).toBe('Infinity')
+  })
+
+  it('should normalize arrays to their JSON string)', () => {
+    expect(normalizeValue([1,2,3])).toBe('[1,2,3]')
+    expect(normalizeValue(['a','b','c'])).toBe('["a","b","c"]')
+  })
+})

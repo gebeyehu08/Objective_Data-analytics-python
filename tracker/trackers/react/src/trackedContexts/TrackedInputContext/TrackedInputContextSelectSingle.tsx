@@ -62,6 +62,8 @@ export const TrackedInputContextSelectSingle = React.forwardRef<HTMLSelectElemen
     const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
     const locationStack = useLocationStack();
 
+    console.log('initialValue', initialValue)
+
     let selectId: string | null = id;
     if (normalizeId) {
       selectId = makeIdFromString(selectId);
