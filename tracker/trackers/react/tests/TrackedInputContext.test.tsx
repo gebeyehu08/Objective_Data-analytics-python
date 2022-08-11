@@ -36,7 +36,7 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext Component={'input'} id={'input-id'} data-testid={'test-input'} />
+        <TrackedInputContext Component={'input'} id={'input-id'} data-testid={'test-input'} value={'test'} />
       </ObjectivProvider>
     );
 
