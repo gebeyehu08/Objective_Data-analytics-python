@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import pandas
 
 from bach import DataFrame
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data
 import pytest
 
@@ -231,10 +231,10 @@ def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
     # But behaviour of Postgres and BigQuery is different. For now we just accept that's the way it is.
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[1:-1]
-    if is_postgres(engine):
+    if is_postgres(engine) or is_athena(engine):
         with pytest.raises(Exception):
-           bts.head()
-    if is_bigquery(engine):
+            bts.to_pandas()
+    elif is_bigquery(engine):
         assert_equals_data(
             bts,
             use_to_pandas=True,
@@ -247,6 +247,8 @@ def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
                 [4, []]
             ]
         )
+    else:
+        raise Exception(f'Test does not support {engine.name}')
 
 
 # tests below are for functions kind of specific to the objectiv (location) stack
