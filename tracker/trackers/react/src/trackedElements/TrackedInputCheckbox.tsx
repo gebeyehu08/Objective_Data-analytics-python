@@ -11,7 +11,7 @@ import { TrackedInputContext, TrackedInputContextProps } from '../trackedContext
  * - The default and only allowed value for `type` is set to `checkbox`.
  * - The default value of `eventHandler` is set to `onChange`
  */
-export type TrackedInputCheckboxProps = Omit<TrackedInputContextProps, 'id'> & {
+export type TrackedInputCheckboxProps = Omit<TrackedInputContextProps, 'Component' | 'id'> & {
   /**
    * Optional. Defaults to the `value` attribute.
    */
@@ -26,23 +26,20 @@ export type TrackedInputCheckboxProps = Omit<TrackedInputContextProps, 'id'> & {
 /**
  * Generates a TrackedInputContext preconfigured with a <input type="checkbox"> Element as Component.
  */
-export const TrackedInputCheckbox = React.forwardRef<HTMLInputElement, Omit<TrackedInputCheckboxProps, 'Component'>>(
-  (props, ref) => {
-    if (globalThis.objectiv.devTools && props.type && props.type !== 'checkbox') {
-      globalThis.objectiv.devTools.TrackerConsole.warn(
-        `｢objectiv｣ TrackedInputCheckbox type attribute can only be set to 'checkbox'.`
-      );
-    }
-
-    return (
-      <TrackedInputContext
-        {...props}
-        id={props.id ?? (props.value ? props.value.toString() : '')}
-        Component={'input'}
-        type={'checkbox'}
-        eventHandler={props.eventHandler ?? 'onChange'}
-        ref={ref}
-      />
+export const TrackedInputCheckbox = React.forwardRef<HTMLInputElement, TrackedInputCheckboxProps>((props, ref) => {
+  if (globalThis.objectiv.devTools && props.type && props.type !== 'checkbox') {
+    globalThis.objectiv.devTools.TrackerConsole.warn(
+      `｢objectiv｣ TrackedInputCheckbox type attribute can only be set to 'checkbox'.`
     );
   }
-);
+
+  return (
+    <TrackedInputContext
+      {...props}
+      id={props.id ?? (props.value ? props.value.toString() : '')}
+      Component={'input'}
+      type={'checkbox'}
+      ref={ref}
+    />
+  );
+});

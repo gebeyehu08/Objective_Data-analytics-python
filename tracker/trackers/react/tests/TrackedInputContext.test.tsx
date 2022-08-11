@@ -51,39 +51,6 @@ describe('TrackedInputContext', () => {
     );
   });
 
-  it('should allow overriding which attribute to monitor and to track and report misconfigurations', () => {
-    const logTransport = new LogTransport();
-    jest.spyOn(logTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext
-          Component={'input'}
-          type={'radio'}
-          id={'test-input-1'}
-          attributeToTrack={'value'}
-          stateless={true}
-          data-testid={'test-input-1'}
-          value={'test'}
-        />
-        <TrackedInputContext
-          Component={'input'}
-          type={'checkbox'}
-          id={'test-input-2'}
-          attributeToMonitor={'value'}
-          data-testid={'test-input-2'}
-        />
-      </ObjectivProvider>
-    );
-
-    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
-    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
-      1,
-      "｢objectiv｣ attributeToMonitor (value) should be set to 'checked' for checkbox inputs."
-    );
-  });
-
   it('should allow disabling id normalization', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');
@@ -203,7 +170,7 @@ describe('TrackedInputContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:text @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
   });
 
