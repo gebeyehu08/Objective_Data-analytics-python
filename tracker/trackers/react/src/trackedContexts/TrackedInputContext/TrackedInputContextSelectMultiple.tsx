@@ -17,7 +17,7 @@ import { TrackedContextProps } from '../../types';
 /**
  * TrackedInputContext implementation for selects.
  */
-export type TrackedInputContextSelectSingleProps = TrackedContextProps<HTMLSelectElement> & {
+export type TrackedInputContextSelectMultipleProps = TrackedContextProps<HTMLSelectElement> & {
   /**
    * Optional. Whether to track the 'value' attribute. Default to false.
    * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
@@ -38,19 +38,19 @@ export type TrackedInputContextSelectSingleProps = TrackedContextProps<HTMLSelec
 };
 
 /**
- * Event definition for TrackedInputContextSelectSingle
+ * Event definition for TrackedInputContextSelectMultiple
  */
-export type TrackedInputContextSelectSingleEvent<T = HTMLSelectElement> =
+export type TrackedInputContextSelectMultipleEvent<T = HTMLSelectElement> =
   | FocusEvent<T>
   | ChangeEvent<T>
   | React.MouseEvent<T>;
 
 /**
- * TrackedInputContextSelectSingle implementation
+ * TrackedInputContextSelectMultiple implementation
  */
-export const TrackedInputContextSelectSingle = React.forwardRef<
+export const TrackedInputContextSelectMultiple = React.forwardRef<
   HTMLSelectElement,
-  TrackedInputContextSelectSingleProps
+  TrackedInputContextSelectMultipleProps
 >((props, ref) => {
   const {
     id,
@@ -72,9 +72,10 @@ export const TrackedInputContextSelectSingle = React.forwardRef<
     selectId = makeIdFromString(selectId);
   }
 
-  const handleEvent = async (event: TrackedInputContextSelectSingleEvent, trackingContext: TrackingContext) => {
+  const handleEvent = async (event: TrackedInputContextSelectMultipleEvent, trackingContext: TrackingContext) => {
     const eventTarget = event.target as HTMLSelectElement;
-    const valueToMonitor = normalizeValue(eventTarget.value);
+    const selectedOptionValues = getSelectOptionValues(eventTarget.selectedOptions);
+    const valueToMonitor = normalizeValue(selectedOptionValues);
 
     if (stateless || previousValue !== valueToMonitor) {
       setPreviousValue(valueToMonitor);
@@ -89,12 +90,14 @@ export const TrackedInputContextSelectSingle = React.forwardRef<
 
       // Add InputValueContext if trackValue has been set
       if (selectId && trackValue) {
-        eventTrackerParameters.globalContexts.push(
-          makeInputValueContext({
-            id: selectId,
-            value: normalizeValue(eventTarget.value),
-          })
-        );
+        selectedOptionValues.map((optionValue) => {
+          eventTrackerParameters.globalContexts.push(
+            makeInputValueContext({
+              id: selectId as string,
+              value: optionValue,
+            })
+          );
+        });
       }
 
       trackInputChangeEvent(eventTrackerParameters);
@@ -134,9 +137,22 @@ export const TrackedInputContextSelectSingle = React.forwardRef<
       {(trackingContext) =>
         React.createElement(Component, {
           ...componentProps,
-          [eventHandler]: (event: TrackedInputContextSelectSingleEvent) => handleEvent(event, trackingContext),
+          [eventHandler]: (event: TrackedInputContextSelectMultipleEvent) => handleEvent(event, trackingContext),
         })
       }
     </InputContextWrapper>
   );
 });
+
+/**
+ * Helper function to convert a HTMLOptionsCollection to string[]
+ */
+const getSelectOptionValues = (options: HTMLCollectionOf<HTMLOptionElement>) => {
+  var selectedOptionValues = [];
+
+  for (let i = 0; i < options.length; i++) {
+    selectedOptionValues.push(options[i].value);
+  }
+
+  return selectedOptionValues;
+};

@@ -1,11 +1,15 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
 import React from 'react';
 import { TrackedContextProps } from '../../types';
 import { TrackedInputContextCheckbox, TrackedInputContextCheckboxProps } from './TrackedInputContextCheckbox';
 import { TrackedInputContextRadio, TrackedInputContextRadioProps } from './TrackedInputContextRadio';
+import {
+  TrackedInputContextSelectMultiple,
+  TrackedInputContextSelectMultipleProps,
+} from './TrackedInputContextSelectMultiple';
 import {
   TrackedInputContextSelectSingle,
   TrackedInputContextSelectSingleProps,
@@ -48,6 +52,15 @@ export const TrackedInputContext = React.forwardRef((props: TrackedInputContextP
     return (
       <TrackedInputContextSelectSingle
         {...(props as TrackedInputContextSelectSingleProps)}
+        ref={ref as React.Ref<HTMLSelectElement>}
+      />
+    );
+  }
+
+  if (props.Component === 'select' && props.multiple) {
+    return (
+      <TrackedInputContextSelectMultiple
+        {...(props as TrackedInputContextSelectMultipleProps)}
         ref={ref as React.Ref<HTMLSelectElement>}
       />
     );
