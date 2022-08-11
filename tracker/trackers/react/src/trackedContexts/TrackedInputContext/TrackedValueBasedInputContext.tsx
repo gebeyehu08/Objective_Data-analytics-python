@@ -75,10 +75,6 @@ export const TrackedValueBasedInputContext = React.forwardRef<HTMLInputElement, 
     }
 
     const handleEvent = async (event: TrackedValueBasedInputContextEvent, trackingContext: TrackingContext) => {
-      if (!inputId) {
-        return;
-      }
-
       const eventTarget = event.target as HTMLInputElement;
       const valueToMonitor = normalizeValue(eventTarget.value);
 
@@ -91,7 +87,7 @@ export const TrackedValueBasedInputContext = React.forwardRef<HTMLInputElement, 
         };
 
         // Add InputValueContext if trackValue has been set
-        if (trackValue) {
+        if (inputId && trackValue) {
           eventTrackerParameters.globalContexts.push(
             makeInputValueContext({
               id: inputId,

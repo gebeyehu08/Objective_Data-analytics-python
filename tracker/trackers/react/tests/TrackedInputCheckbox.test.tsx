@@ -5,7 +5,7 @@
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
+import React, { createRef } from 'react';
 import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputCheckbox, TrackedRootLocationContext } from '../src';
 
 require('@objectiv/developer-tools');
@@ -272,6 +272,115 @@ describe('TrackedInputCheckbox', () => {
       '｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
   });
+
+  it('should not handle events if an id cannot be automatically generated', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputCheckbox value={'☹️'} data-testid={'test-checkbox'} />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-checkbox'));
+
+    expect(logTransport.handle).not.toHaveBeenCalled();
+  });
+
+  it('should allow forwarding refs', () => {
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
+    const ref = createRef<HTMLInputElement>();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputCheckbox value={'test 1'} id={'input-id'} ref={ref} />
+      </ObjectivProvider>
+    );
+
+    expect(ref.current).toMatchInlineSnapshot(`
+      <input
+        type="checkbox"
+        value="test 1"
+      />
+    `);
+  });
+
+  it('should allow tracking onBlur instead of onChange', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onBlurSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputCheckbox
+          value={'some-value'}
+          data-testid={'test-input'}
+          eventHandler={'onBlur'}
+          onBlur={onBlurSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'some-value',
+          }),
+        ]),
+      })
+    );
+    expect(onBlurSpy).toHaveBeenCalled();
+  });
+
+  it('should allow tracking onClick instead of onChange', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onClickSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputCheckbox
+          value={'some-value'}
+          data-testid={'test-input'}
+          eventHandler={'onClick'}
+          onClick={onClickSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'some-value',
+          }),
+        ]),
+      })
+    );
+    expect(onClickSpy).toHaveBeenCalled();
+  });
+
 
   it('should track as many times as interacted, regardless of its value being the same', () => {
     const logTransport = new LogTransport();

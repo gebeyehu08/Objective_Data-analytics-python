@@ -68,10 +68,6 @@ export const TrackedInputContextSelectSingle = React.forwardRef<HTMLSelectElemen
     }
 
     const handleEvent = async (event: TrackedInputContextSelectSingleEvent, trackingContext: TrackingContext) => {
-      if (!selectId) {
-        return;
-      }
-
       const eventTarget = event.target as HTMLSelectElement;
       const valueToMonitor = normalizeValue(eventTarget.value);
 
@@ -87,7 +83,7 @@ export const TrackedInputContextSelectSingle = React.forwardRef<HTMLSelectElemen
         };
 
         // Add InputValueContext if trackValue has been set
-        if (trackValue) {
+        if (selectId && trackValue) {
           eventTrackerParameters.globalContexts.push(
             makeInputValueContext({
               id: selectId,

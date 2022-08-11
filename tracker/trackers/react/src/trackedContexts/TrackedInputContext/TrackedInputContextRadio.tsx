@@ -75,10 +75,6 @@ export const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, Track
   }
 
   const handleEvent = async (event: TrackedInputContextRadioEvent, trackingContext: TrackingContext) => {
-    if (!inputId) {
-      return;
-    }
-
     const eventTarget = event.target as HTMLInputElement;
     const valueToMonitor = normalizeValue(eventTarget.checked);
 
@@ -110,7 +106,7 @@ export const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, Track
       }
 
       // Add InputValueContext if trackValue has been set
-      if (trackValue) {
+      if (inputId && trackValue) {
         eventTrackerParameters.globalContexts.push(
           makeInputValueContext({
             id: inputId,

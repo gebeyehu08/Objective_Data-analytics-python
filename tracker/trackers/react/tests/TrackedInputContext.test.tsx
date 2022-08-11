@@ -547,25 +547,34 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'div'}
+          Component={'input'}
           type={'text'}
           defaultValue={'test 1'}
           id={'input-id-1'}
           data-testid={'test-input-1'}
         />
         <TrackedInputContext
-          Component={'div'}
+          Component={'input'}
           type={'text'}
           defaultValue={'test 2'}
           id={'input-id-2'}
           forwardId={true}
           data-testid={'test-input-2'}
         />
+        <TrackedInputContext
+          Component={'input'}
+          type={'checkbox'}
+          id={'input-id-3'}
+          forwardId={true}
+          checked={false}
+          data-testid={'test-input-3'}
+        />
       </ObjectivProvider>
     );
 
     expect(screen.getByTestId('test-input-1').getAttribute('id')).toBe(null);
     expect(screen.getByTestId('test-input-2').getAttribute('id')).toBe('input-id-2');
+    expect(screen.getByTestId('test-input-3').getAttribute('id')).toBe('input-id-3');
   });
 
   it('should allow forwarding refs', () => {

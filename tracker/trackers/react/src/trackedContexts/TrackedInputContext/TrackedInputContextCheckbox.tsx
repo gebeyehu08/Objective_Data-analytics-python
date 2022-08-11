@@ -71,10 +71,6 @@ export const TrackedInputContextCheckbox = React.forwardRef<HTMLInputElement, Tr
     }
 
     const handleEvent = async (event: TrackedInputContextCheckboxEvent, trackingContext: TrackingContext) => {
-      if (!inputId) {
-        return;
-      }
-
       const eventTarget = event.target as HTMLInputElement;
       const valueToMonitor = normalizeValue(eventTarget.checked);
 
