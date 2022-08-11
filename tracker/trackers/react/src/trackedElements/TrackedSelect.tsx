@@ -9,7 +9,5 @@ import { TrackedInputContext, TrackedInputContextProps } from '../trackedContext
  * Generates a TrackedInputContext preconfigured with a <select> Element as Component.
  */
 export const TrackedSelect = React.forwardRef<HTMLSelectElement, Omit<TrackedInputContextProps, 'Component'>>(
-  (props, ref) => (
-    <TrackedInputContext {...props} Component={'select'} ref={ref} />
-  )
+  (props, ref) => <TrackedInputContext {...props} Component={'select'} ref={ref} />
 );

@@ -37,7 +37,7 @@ export type TrackedInputContextProps = TrackedContextProps & {
 
   /**
    * Optional. Which event handler to use. Default is 'onBlur'.
-   * Valid values: 'onBlur' | 'onChange' | 'onClick'.
+   * Valid values: `onBlur`, `onChange` or `onClick`.
    */
   eventHandler?: 'onBlur' | 'onChange' | 'onClick';
 };
@@ -111,11 +111,13 @@ type TrackedValueBasedInputContextProps = TrackedContextProps<HTMLInputElement> 
 
   /**
    * Optional. Which event handler to use. Default is 'onBlur'.
-   * Valid values: 'onBlur' | 'onChange' | 'onClick'.
+   * Valid values: `onBlur`, `onChange` or `onClick'.
    */
   eventHandler?: 'onBlur' | 'onChange' | 'onClick';
 };
+
 type TrackedValueBasedInputContextEvent<T = HTMLInputElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+
 const TrackedValueBasedInputContext = React.forwardRef<HTMLInputElement, TrackedValueBasedInputContextProps>(
   (props, ref) => {
     const {
@@ -229,11 +231,13 @@ type TrackedInputContextRadioProps = TrackedContextProps<HTMLInputElement> & {
 
   /**
    * Optional. Which event handler to use. Default is 'onChange'.
-   * Valid values: 'onBlur' | 'onChange' | 'onClick'.
+   * Valid values: `onBlur`, `onChange` or `onClick`.
    */
   eventHandler?: 'onBlur' | 'onChange' | 'onClick';
 };
+
 type TrackedInputContextRadioEvent<T = HTMLInputElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+
 const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, TrackedInputContextRadioProps>((props, ref) => {
   const {
     id,
@@ -366,11 +370,13 @@ type TrackedInputContextCheckboxProps = TrackedContextProps<HTMLInputElement> & 
 
   /**
    * Optional. Which event handler to use. Default is 'onChange'.
-   * Valid values: 'onBlur' | 'onChange' | 'onClick'.
+   * Valid values: `onBlur`,  `onChange` or `onClick`.
    */
   eventHandler?: 'onBlur' | 'onChange' | 'onClick';
 };
+
 type TrackedInputContextCheckboxEvent<T = HTMLInputElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+
 const TrackedInputContextCheckbox = React.forwardRef<HTMLInputElement, TrackedInputContextCheckboxProps>(
   (props, ref) => {
     const {
@@ -485,11 +491,13 @@ type TrackedInputContextSelectSingleProps = TrackedContextProps<HTMLSelectElemen
 
   /**
    * Optional. Which event handler to use. Default is 'onChange'.
-   * Valid values: 'onBlur' | 'onChange' | 'onClick'.
+   * Valid values: `onBlur`, `onChange` or `onClick`.
    */
   eventHandler?: 'onBlur' | 'onChange' | 'onClick';
 };
+
 type TrackedInputContextSelectSingleEvent<T = HTMLSelectElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+
 const TrackedInputContextSelectSingle = React.forwardRef<HTMLSelectElement, TrackedInputContextSelectSingleProps>(
   (props, ref) => {
     const {
