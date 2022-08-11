@@ -381,7 +381,6 @@ describe('TrackedInputCheckbox', () => {
     expect(onClickSpy).toHaveBeenCalled();
   });
 
-
   it('should track as many times as interacted, regardless of its value being the same', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');

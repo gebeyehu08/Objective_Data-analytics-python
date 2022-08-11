@@ -12,7 +12,7 @@ import { TrackedInputContext, TrackedInputContextProps } from '../trackedContext
  * - `stateless` is set to `true` and cannot be changed.
  * - The default value of `eventHandler` is set to `onChange`
  */
-export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'Component' | 'id' | 'stateless'> & {
+export type TrackedInputRadioProps = Omit<TrackedInputContextProps, 'Component' | 'id'> & {
   /**
    * Optional. Defaults to the `value` attribute.
    */

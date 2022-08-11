@@ -5,8 +5,14 @@
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
-import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputRadio, TrackedRootLocationContext } from '../src';
+import React, { createRef } from 'react';
+import {
+  ObjectivProvider,
+  ReactTracker,
+  TrackedDiv,
+  TrackedInputRadio,
+  TrackedRootLocationContext
+} from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -194,6 +200,36 @@ describe('TrackedInputRadio', () => {
     );
   });
 
+  it('should allow tracking stateful mode, e.g. blur events with no changes', async () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputRadio
+          id={'input-id-1'}
+          data-testid={'test-radio-1'}
+          value={'value-1'}
+          eventHandler={'onBlur'}
+          stateless={false}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    // NOTE: we trigger click here instead of change, because the latter doesn't actually work
+    fireEvent.blur(screen.getByTestId('test-radio-1'));
+    fireEvent.blur(screen.getByTestId('test-radio-1'));
+    fireEvent.blur(screen.getByTestId('test-radio-1'));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({ _type: 'InputChangeEvent' })
+    );
+  });
+
   it('should allow disabling id normalization', () => {
     const logTransport = new LogTransport();
     jest.spyOn(logTransport, 'handle');
@@ -276,6 +312,96 @@ describe('TrackedInputRadio', () => {
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv｣ Could not generate a valid id for InputContext:radio @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
+  });
+
+  it('should allow forwarding refs', () => {
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
+    const ref = createRef<HTMLInputElement>();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputRadio value={'test 1'} id={'input-id'} ref={ref} />
+      </ObjectivProvider>
+    );
+
+    expect(ref.current).toMatchInlineSnapshot(`
+      <input
+        type="radio"
+        value="test 1"
+      />
+    `);
+  });
+
+  it('should allow tracking onBlur instead of onChange', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onBlurSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputRadio
+          value={'some-value'}
+          data-testid={'test-input'}
+          eventHandler={'onBlur'}
+          onBlur={onBlurSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'some-value',
+          }),
+        ]),
+      })
+    );
+    expect(onBlurSpy).toHaveBeenCalled();
+  });
+
+  it('should allow tracking onClick instead of onChange', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const onClickSpy = jest.fn();
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputRadio
+          value={'some-value'}
+          data-testid={'test-input'}
+          eventHandler={'onClick'}
+          onClick={onClickSpy}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'some-value',
+          }),
+        ]),
+      })
+    );
+    expect(onClickSpy).toHaveBeenCalled();
   });
 
   it('should track as many times as interacted, regardless of its value being the same', () => {

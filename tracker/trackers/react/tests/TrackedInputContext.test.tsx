@@ -211,19 +211,39 @@ describe('TrackedInputContext', () => {
         <TrackedInputContext
           Component={'input'}
           type={'text'}
-          id={'input-id'}
+          id={'input-id-1'}
           defaultValue={'some text'}
-          data-testid={'test-input'}
+          data-testid={'test-input-1'}
           stateless={true}
+        />
+        <TrackedInputContext
+          Component={'input'}
+          type={'radio'}
+          id={'input-id-2'}
+          defaultValue={'some text'}
+          data-testid={'test-input-2'}
+          stateless={true}
+          eventHandler={'onClick'}
         />
       </ObjectivProvider>
     );
 
     jest.spyOn(logTransport, 'handle');
 
-    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
-    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
-    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
+    fireEvent.blur(screen.getByTestId('test-input-1'), { target: { value: 'some text' } });
+    fireEvent.blur(screen.getByTestId('test-input-1'), { target: { value: 'some text' } });
+    fireEvent.blur(screen.getByTestId('test-input-1'), { target: { value: 'some text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
+
+    jest.resetAllMocks()
+
+    fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
+    fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
+    fireEvent.click(screen.getByTestId('test-input-2'), { target: { checked: true } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
@@ -569,12 +589,21 @@ describe('TrackedInputContext', () => {
           checked={false}
           data-testid={'test-input-3'}
         />
+        <TrackedInputContext
+          Component={'input'}
+          type={'radio'}
+          id={'input-id-4'}
+          forwardId={true}
+          checked={false}
+          data-testid={'test-input-4'}
+        />
       </ObjectivProvider>
     );
 
     expect(screen.getByTestId('test-input-1').getAttribute('id')).toBe(null);
     expect(screen.getByTestId('test-input-2').getAttribute('id')).toBe('input-id-2');
     expect(screen.getByTestId('test-input-3').getAttribute('id')).toBe('input-id-3');
+    expect(screen.getByTestId('test-input-4').getAttribute('id')).toBe('input-id-4');
   });
 
   it('should allow forwarding refs', () => {
