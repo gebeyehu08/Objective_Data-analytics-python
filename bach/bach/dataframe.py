@@ -12,7 +12,7 @@ import numpy
 import pandas
 from sqlalchemy.engine import Engine
 
-from bach.expression import Expression, SingleValueExpression, VariableToken
+from bach.expression import Expression, SingleValueExpression, VariableToken, ColumnReferenceToken
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
@@ -713,6 +713,7 @@ class DataFrame:
             converted to the 'string' dtype and loaded accordingly. Other types can only be loaded if
             materialization is 'cte' and the type is supported as Bach Series.
         :param name:
+
             * For 'table' materialization: name of the table that Pandas will write the data to.
             * For 'cte' materialization: name of the node in the underlying SqlModel graph.
         :param materialization: {'cte', 'table'}. How to materialize the data.
@@ -1232,7 +1233,7 @@ class DataFrame:
                 # If a group_by is set on both, they have to match.
                 if key.group_by and key.group_by != self._group_by:
                     raise ValueError('Can not apply aggregated BooleanSeries with non matching group_by.'
-                                     'Please merge() the selector df with thisdf first.')
+                                     'Please merge() the selector df with this df first.')
 
                 if key.group_by is not None and key.expression.has_aggregate_function:
                     # Create a having-condition if the key is aggregated
@@ -3224,7 +3225,6 @@ class DataFrame:
             >>> if with_mean:
             ...     scaled_feature -= mean_feature
 
-
             >>> if with_std:
             ...     scaled_feature /= std_feature
 
@@ -3237,9 +3237,10 @@ class DataFrame:
             Name: feature, dtype: float64
 
         Where:
-            * ``feature`` is the series to be scaled
-            * ``mean_feature`` is the mean of ``feature``
-            * ``std_feature`` is the (population-based) standard deviation of ``feature``
+
+        * ``feature`` is the series to be scaled
+        * ``mean_feature`` is the mean of ``feature``
+        * ``std_feature`` is the (population-based) standard deviation of ``feature``
 
         """
         from bach.preprocessing.scalers import StandardScaler
@@ -3285,10 +3286,11 @@ class DataFrame:
             Name: feature, dtype: float64
 
         Where:
-            * ``feature`` is the series to be scaled
-            * ``feature_min`` is the minimum value of ``feature``
-            * ``feature_max`` is the maximum value of ``feature``
-            * ``range_min, range_max`` = ``feature_range``
+
+        * ``feature`` is the series to be scaled
+        * ``feature_min`` is the minimum value of ``feature``
+        * ``feature_max`` is the maximum value of ``feature``
+        * ``range_min, range_max`` = ``feature_range``
         """
         from bach.preprocessing.scalers import MinMaxScaler
         return MinMaxScaler(training_df=self, feature_range=feature_range).transform()
@@ -3351,9 +3353,7 @@ class DataFrame:
                 new_column_name = f'{column}__{curr_col}'
                 new_columns.append(new_column_name)
 
-                df[new_column_name] = None
-                # previous statement will change dtype to string because value is None
-                df[new_column_name] = df[new_column_name].astype(df[curr_col].dtype)
+                df[new_column_name] = df[curr_col].from_value(base=df, value=None)
                 df.loc[df[index_to_unstack] == column, new_column_name] = df[curr_col]
 
         df = df.groupby(remaining_indexes).aggregate(aggregation)

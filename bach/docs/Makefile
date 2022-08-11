@@ -8,7 +8,9 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
 DOCUSAURUSDIR = docusaurus
+IMGDIR 				= source/img
 DOCSTARGETDIR = ../../../objectiv.io/docs/docs/
+IMGTARGETDIR 	= ../../../objectiv.io/docs/static/img/
 
 # Don't allow modelhub to check online whether a newer version is available while generating docs
 export OBJECTIV_VERSION_CHECK_DISABLE = true
@@ -26,13 +28,19 @@ clean:
 	rm -rf $(SOURCEDIR)/open-model-hub/api-reference/**/modelhub.* # not the index
 	rm -rf $(SOURCEDIR)/open-model-hub/api-reference/**/**/modelhub.* # not the index
 
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) 0$(O)
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 clean-target:
 	rm -rf $(DOCSTARGETDIR)modeling/*
 
+# Also runs the doctest, and does so _after_ docusaurus, so it doesn't interfere with custom directives
+docusaurus:
+	@$(SPHINXBUILD) -M docusaurus "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@$(SPHINXBUILD) -M doctest "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
 copy-target:
 	cp -a $(BUILDDIR)/$(DOCUSAURUSDIR)/* $(DOCSTARGETDIR)modeling/
+	cp -a $(IMGDIR)/* $(IMGTARGETDIR)
 
 .PHONY: help Makefile
 
