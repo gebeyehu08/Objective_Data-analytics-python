@@ -236,7 +236,9 @@ class SeriesJson(Series):
             other_dtypes = ('json_postgres', 'json', 'string')
             fmt_str = f'cast({{}} as jsonb) {comparator} cast({{}} as jsonb)'
         elif is_athena(self.engine):
-            other_dtypes = ('json', 'string')
+            # TODO: support string here to for compatibility with other databases
+            #  https://github.com/objectiv/objectiv-analytics/issues/1142
+            other_dtypes = ('json')
             fmt_str = f'{{}} {comparator} {{}}'
         elif is_bigquery(self.engine):
             other_dtypes = ('json', 'string')
@@ -880,25 +882,25 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
                 filter_array_expr
             )
             return first_element_pos_expr
-        else:
-            # Find the position in the reversed original array, of the last element that matches the filter
-            # criteria. This is the last element that matches the criteria in the original array.
-            element_reverse_pos_expr = Expression.construct(
-                'array_position(reverse({}), element_at({}, -1))',
-                array_expr,
-                filter_array_expr
-            )
-            # We need to translate the location in the reverse array to the position in the actual array.
-            # Formula for this: `(array_length + 1 ) - element_reverse_pos_expr`
-            # Additionally we need to add 1, because for historical reasons the end of a filtering slice
-            # includes the last matched element (unlike a regular slice where the end element is not
-            # included).
-            last_element_pos_expr = Expression.construct(
-                '({} + 2 ) - {}',
-                self.get_array_length(),
-                element_reverse_pos_expr
-            )
-            return last_element_pos_expr
+        # elif not is_start: Find the position in the reversed original array, of the last element that
+        # matches the filter criteria. This is the last element that matches the criteria in the original
+        # array.
+        element_reverse_pos_expr = Expression.construct(
+            'array_position(reverse({}), element_at({}, -1))',
+            array_expr,
+            filter_array_expr
+        )
+        # We need to translate the location in the reverse array to the position in the actual array.
+        # Formula for this: `(array_length + 1 ) - element_reverse_pos_expr`
+        # Additionally we need to add 1, because for historical reasons the end of a filtering slice
+        # includes the last matched element (unlike a regular slice where the end element is not
+        # included).
+        last_element_pos_expr = Expression.construct(
+            '({} + 2 ) - {}',
+            self.get_array_length(),
+            element_reverse_pos_expr
+        )
+        return last_element_pos_expr
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
         """

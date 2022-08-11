@@ -140,6 +140,7 @@ def test_set_const_timedelta(engine):
     check_set_const(engine, constants, SeriesTimedelta)
 
 
+@pytest.mark.athena_supported()
 def test_set_const_json(engine):
     constants = [
         ['a', 'b', 'c'],
