@@ -4,9 +4,9 @@ from typing import List, Dict, Optional, cast, TypeVar
 
 from sqlalchemy.engine import Dialect
 
-from bach import SeriesAbstractMultiLevel, SortColumn
+from bach import SortColumn
 from bach.series import Series
-from bach.expression import Expression, WindowFunctionExpression
+from bach.expression import Expression, WindowFunctionExpression, join_expressions
 from bach.sql_model import BachSqlModel
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
@@ -94,7 +94,7 @@ class GroupBy:
     return a fresh copy.
     """
     def __init__(self, group_by_columns: List[Series]):
-
+        from bach.series import SeriesAbstractMultiLevel
         self._index = {}
 
         for col in group_by_columns:
@@ -327,9 +327,10 @@ class Window(GroupBy):
     which selects the current row itself.
     """
     def __init__(self,
+                 dialect: Dialect,
                  group_by_columns: List['Series'],
                  order_by: List[SortColumn],
-                 nulls_last: bool = False,
+                 na_position: str = 'last',
                  mode: WindowFrameMode = WindowFrameMode.RANGE,
                  start_boundary: Optional[WindowFrameBoundary] = WindowFrameBoundary.PRECEDING,
                  start_value: int = None,
@@ -340,11 +341,16 @@ class Window(GroupBy):
         Define a window on a DataFrame, by giving the partitioning series and the frame definition
         :see: class definition for more info on the frame definition, and GroupBy for more
               info on grouping / partitioning
+        :param na_position: Either 'first' or 'last'. When ordering values, put null values before all other
+            values if 'first', and put null values after all other values if 'last'.
         """
         super().__init__(group_by_columns=group_by_columns)
 
         if mode is None:
             raise ValueError("Mode needs to be defined")
+
+        if na_position not in ['first', 'last']:
+            raise ValueError(f'"{na_position}" is not a valid value for `na_position` param.')
 
         if start_boundary is None and end_boundary is not None:
             raise ValueError("start_boundary needs to be defined if end_boundary is present.")
@@ -381,6 +387,7 @@ class Window(GroupBy):
                         and start_value > end_value:
                     raise ValueError("frame boundaries defined in wrong order.")
 
+        self._dialect = dialect
         self._mode = mode
         self._start_boundary = start_boundary
         self._start_value = start_value
@@ -397,7 +404,7 @@ class Window(GroupBy):
                                 f' AND {end_boundary.frame_clause(end_value)}'
 
         self._order_by = order_by
-        self._nulls_last = nulls_last
+        self._na_position = na_position
 
     @property
     def frame_clause(self) -> str:
@@ -424,28 +431,15 @@ class Window(GroupBy):
         Convenience function to clone this window with new frame parameters
         :see: __init__()
         """
-        return Window(group_by_columns=list(self._index.values()),
-                      order_by=self._order_by,
-                      nulls_last=self._nulls_last,
-                      mode=mode,
-                      start_boundary=start_boundary, start_value=start_value,
-                      end_boundary=end_boundary, end_value=end_value)
-
-    def _get_order_by_expression(self) -> Expression:
-        """
-        Get a properly formatted order by clause based on this df's order_by.
-        Will return an empty string in case ordering in not requested.
-        """
-        if self._order_by:
-            exprs = [sc.expression for sc in self._order_by]
-            nulls_last_stmt = 'nulls last' if self._nulls_last else ''
-            fmtstr = [
-                f"{{}} {'asc' if sc.asc else 'desc'} {nulls_last_stmt}".strip()
-                for sc in self._order_by
-            ]
-            return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
-        else:
-            return Expression.construct('')
+        return Window(
+            dialect=self._dialect,
+            group_by_columns=list(self._index.values()),
+            order_by=self._order_by,
+            na_position=self._na_position,
+            mode=mode,
+            start_boundary=start_boundary, start_value=start_value,
+            end_boundary=end_boundary, end_value=end_value,
+        )
 
     def get_index_expressions(self) -> List[Expression]:
         from bach.series import SeriesAbstractMultiLevel
@@ -465,7 +459,9 @@ class Window(GroupBy):
             {window_func} OVER (PARTITION BY .. ORDER BY ... frame_clause)
         """
         # TODO implement NULLS FIRST / NULLS LAST, probably not here but in the sorting logic.
-        order_by = self._get_order_by_expression()
+        order_by = get_order_by_expression(
+            dialect=self._dialect, order_by=self._order_by, na_position=self._na_position,
+        )
 
         if self.frame_clause is None:
             frame_clause = ''
@@ -498,3 +494,62 @@ class Window(GroupBy):
         On a Window, there is no default group_by clause
         """
         return None
+
+
+def get_order_by_expression(
+    dialect: Dialect, order_by: List['SortColumn'], na_position: str = 'last',
+) -> Expression:
+    """
+    INTERNAL: Convert order_by into an order by expression that is usable inside an aggregation or window
+    function.
+
+    Note: The default ordering mimics the default behaviour of pandas, where nulls are always sorted last.
+
+    :param order_by: List of SortColumns defining the ordering
+    :param na_position: By default (=`last`) the sorting is 'asc null last' and 'desc nulls last'. If
+        `na_position` is `first`, then the sorting is set to 'asc nulls first', 'desc nulls first'
+    :return: An Expression containing a complete order by clause of the form 'order by ...'. Will return
+        an empty Expression if the specified `order_by` list is empty
+    """
+
+    # This logic is partially duplicating DataFrame._get_order_by_clause(), but we can't quite re-use
+    # that as some of the checks there are not applicable, e.g. it's fine to use a column that we are not
+    # grouping on in an aggregate order by.
+    if not order_by:
+        return Expression.construct('')
+
+    if na_position not in ['last', 'first']:
+        raise ValueError(
+            f'"{na_position}" is not a valid value for `na_position` param.'
+        )
+
+    asc_expr = Expression.raw('asc')
+    desc_expr = Expression.raw('desc')
+    if na_position == 'last':
+        nulls_expr = Expression.construct('nulls last')
+    else:
+        nulls_expr = Expression.construct('nulls first')
+
+    expressions: List[Expression] = []
+    for sc in order_by:
+        if sc.expression.has_multi_level_expressions:
+            multi_lvl_exprs = [
+                level_expr for level_expr in sc.expression.data if isinstance(level_expr, Expression)
+            ]
+        else:
+            multi_lvl_exprs = [sc.expression]
+        for level_expr in multi_lvl_exprs:
+            expr = Expression.construct('{} {}', level_expr,  asc_expr if sc.asc else desc_expr)
+            if is_bigquery(dialect):
+                # Big Query does not support NULLS LAST and NULLS FIRST (might generate some errors)
+                # in window order by, therefore we require to simulate it.
+                simulate_nulls_last_expr = Expression.construct(
+                    '({} is null) {}', level_expr, asc_expr if na_position == 'last' else desc_expr
+                )
+                expressions.append(simulate_nulls_last_expr)
+            else:
+                expr = Expression.construct('{} {}', expr, nulls_expr)
+
+            expressions.append(expr)
+
+    return Expression.construct('order by {}', join_expressions(expressions))
