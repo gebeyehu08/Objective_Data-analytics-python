@@ -6,12 +6,12 @@ import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputRadio, TrackedRootLocationContext } from '../src';
+import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputCheckbox, TrackedRootLocationContext } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
-describe('TrackedInputRadio', () => {
+describe('TrackedInputCheckbox', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     globalThis.objectiv.TrackerRepository.trackersMap.clear();
@@ -27,16 +27,16 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio value={'value-1'} />
-        <TrackedInputRadio type={'radio'} value={'value-2'} />
+        <TrackedInputCheckbox value={'value-1'} />
+        <TrackedInputCheckbox type={'checkbox'} value={'value-2'} />
         {/* @ts-ignore silence the warning on the wrong type */}
-        <TrackedInputRadio type={'text'} id={'input-id'} value={'value-3'} />
+        <TrackedInputCheckbox type={'text'} id={'input-id'} value={'value-3'} />
       </ObjectivProvider>
     );
 
     expect(MockConsoleImplementation.warn).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
-      "｢objectiv｣ TrackedInputRadio type attribute can only be set to 'radio'."
+      "｢objectiv｣ TrackedInputCheckbox type attribute can only be set to 'checkbox'."
     );
   });
 
@@ -47,13 +47,13 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} />
+        <TrackedInputCheckbox data-testid={'test-checkbox'} value={'value'} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio'), { target: { value: 'value1' } });
+    fireEvent.click(screen.getByTestId('test-checkbox'), { target: { checked: false } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -62,7 +62,7 @@ describe('TrackedInputRadio', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.InputContext,
-            id: 'input-id',
+            id: 'value',
           }),
         ]),
         global_contexts: expect.not.arrayContaining([
@@ -81,13 +81,13 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio data-testid={'test-radio'} value={'value'} trackValue={true} />
+        <TrackedInputCheckbox data-testid={'test-checkbox'} value={'value'} trackValue={true} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -126,13 +126,13 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} eventHandler={'onBlur'} />
+        <TrackedInputCheckbox id={'input-id'} data-testid={'test-checkbox'} value={'value'} eventHandler={'onBlur'} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.blur(screen.getByTestId('test-radio'));
+    fireEvent.blur(screen.getByTestId('test-checkbox'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(1);
     expect(logTransport.handle).toHaveBeenCalledWith(
@@ -157,12 +157,11 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio
+        <TrackedInputCheckbox
           id={'input-id-1'}
-          data-testid={'test-radio-1'}
+          data-testid={'test-checkbox-1'}
           value={'value-1'}
           eventHandler={'onChange'}
-          name={'radios'}
           onChange={onChangeSpy}
         />
       </ObjectivProvider>
@@ -171,7 +170,7 @@ describe('TrackedInputRadio', () => {
     jest.resetAllMocks();
 
     // NOTE: we trigger click here instead of change, because the latter doesn't actually work
-    fireEvent.click(screen.getByTestId('test-radio-1'));
+    fireEvent.click(screen.getByTestId('test-checkbox-1'));
 
     // This spy actually confirms that onChange triggered
     expect(onChangeSpy).toHaveBeenCalledTimes(1);
@@ -182,44 +181,12 @@ describe('TrackedInputRadio', () => {
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: LocationContextName.ContentContext,
-            id: 'radios',
-          }),
-          expect.objectContaining({
             _type: LocationContextName.InputContext,
             id: 'input-id-1',
           }),
         ]),
       })
     );
-  });
-
-  it('should allow tracking stateful mode, e.g. blur events with no changes', async () => {
-    const logTransport = new LogTransport();
-    jest.spyOn(logTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio
-          id={'input-id-1'}
-          data-testid={'test-radio-1'}
-          value={'value-1'}
-          eventHandler={'onBlur'}
-          stateless={false}
-        />
-      </ObjectivProvider>
-    );
-
-    jest.resetAllMocks();
-
-    // NOTE: we trigger click here instead of change, because the latter doesn't actually work
-    fireEvent.blur(screen.getByTestId('test-radio-1'));
-    fireEvent.blur(screen.getByTestId('test-radio-1'));
-    fireEvent.blur(screen.getByTestId('test-radio-1'));
-
-    expect(logTransport.handle).toHaveBeenCalledTimes(1);
-    expect(logTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'InputChangeEvent' }));
   });
 
   it('should allow disabling id normalization', () => {
@@ -229,15 +196,15 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio id={'Input id 1'} data-testid={'test-radio-1'} value={'text'} />
-        <TrackedInputRadio id={'Input id 2'} normalizeId={false} data-testid={'test-radio-2'} value={'text'} />
+        <TrackedInputCheckbox id={'Input id 1'} data-testid={'test-checkbox-1'} value={'test'} />
+        <TrackedInputCheckbox normalizeId={false} data-testid={'test-checkbox-2'} value={'Input id 2'} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio-1'));
-    fireEvent.click(screen.getByTestId('test-radio-2'));
+    fireEvent.click(screen.getByTestId('test-checkbox-1'));
+    fireEvent.click(screen.getByTestId('test-checkbox-2'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(2);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
@@ -274,7 +241,7 @@ describe('TrackedInputRadio', () => {
       <ObjectivProvider tracker={tracker}>
         <TrackedRootLocationContext Component={'div'} id={'root'}>
           <TrackedDiv id={'content'}>
-            <TrackedInputRadio id={'☹️'} />
+            <TrackedInputCheckbox id={'☹️'} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -282,7 +249,7 @@ describe('TrackedInputRadio', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext:radio @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
   });
 
@@ -294,7 +261,7 @@ describe('TrackedInputRadio', () => {
       <ObjectivProvider tracker={tracker}>
         <TrackedRootLocationContext Component={'div'} id={'root'}>
           <TrackedDiv id={'content'}>
-            <TrackedInputRadio value={''} />
+            <TrackedInputCheckbox value={''} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -302,8 +269,26 @@ describe('TrackedInputRadio', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext:radio @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
+  });
+
+  it('should not handle events if an id cannot be automatically generated', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputCheckbox value={'☹️'} data-testid={'test-checkbox'} />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-checkbox'));
+
+    expect(logTransport.handle).not.toHaveBeenCalled();
   });
 
   it('should allow forwarding refs', () => {
@@ -312,13 +297,13 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio value={'test 1'} id={'input-id'} ref={ref} />
+        <TrackedInputCheckbox value={'test 1'} id={'input-id'} ref={ref} />
       </ObjectivProvider>
     );
 
     expect(ref.current).toMatchInlineSnapshot(`
       <input
-        type="radio"
+        type="checkbox"
         value="test 1"
       />
     `);
@@ -333,7 +318,12 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio value={'some-value'} data-testid={'test-input'} eventHandler={'onBlur'} onBlur={onBlurSpy} />
+        <TrackedInputCheckbox
+          value={'some-value'}
+          data-testid={'test-input'}
+          eventHandler={'onBlur'}
+          onBlur={onBlurSpy}
+        />
       </ObjectivProvider>
     );
 
@@ -364,7 +354,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio
+        <TrackedInputCheckbox
           value={'some-value'}
           data-testid={'test-input'}
           eventHandler={'onClick'}
@@ -398,21 +388,15 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio
-          id={'input-id'}
-          data-testid={'test-radio'}
-          value={'value'}
-          trackValue={true}
-          eventHandler={'onClick'}
-        />
+        <TrackedInputCheckbox data-testid={'test-checkbox'} value={'value'} trackValue={true} stateless={true} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio'));
-    fireEvent.click(screen.getByTestId('test-radio'));
-    fireEvent.click(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
+    fireEvent.click(screen.getByTestId('test-checkbox'));
 
     expect(logTransport.handle).toHaveBeenCalledTimes(3);
     const expectedEventPayload = {
@@ -420,13 +404,13 @@ describe('TrackedInputRadio', () => {
       location_stack: expect.arrayContaining([
         expect.objectContaining({
           _type: LocationContextName.InputContext,
-          id: 'input-id',
+          id: 'value',
         }),
       ]),
       global_contexts: expect.arrayContaining([
         expect.objectContaining({
           _type: GlobalContextName.InputValueContext,
-          id: 'input-id',
+          id: 'value',
           value: expect.stringMatching('0|1'),
         }),
       ]),
