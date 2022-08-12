@@ -69,7 +69,7 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
                 # store script before check, this way we don't wait till the check is finished
                 if check_settings.dump_nb_scripts_dir:
                     script_path = f'{check_settings.dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
-                    store_nb_script(script_path, nb_checker.get_script(engine, is_execution=False))
+                    store_nb_script(script_path, nb_checker.get_script(engine))
 
                 nb_check = nb_checker.check_notebook(engine)
                 checks.append(nb_check)
