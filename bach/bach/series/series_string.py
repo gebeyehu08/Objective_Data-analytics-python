@@ -135,6 +135,26 @@ class StringOperation:
         )
         return self._base.copy_override(expression=expr)
 
+    def upper(self) -> 'SeriesString':
+        """
+        converts string values into uppercase.
+
+        :return: SeriesString with all alphabetic characters in uppercase
+        """
+        return self._base.copy_override(
+            expression=Expression.construct('upper({})', self._base)
+        )
+
+    def lower(self) -> 'SeriesString':
+        """
+        converts string values into lowercase.
+
+        :return: SeriesString with all alphabetic characters in lowercase
+        """
+        return self._base.copy_override(
+            expression=Expression.construct('lower({})', self._base)
+        )
+
 
 class SeriesString(Series):
     """
@@ -157,6 +177,7 @@ class SeriesString(Series):
     **Database support and types**
 
     * Postgres: utilizes the 'text' database type.
+    * Athena: utilizes the 'varchar' database type.
     * BigQuery: utilizes the 'STRING' database type.
     """
 
@@ -164,6 +185,7 @@ class SeriesString(Series):
     dtype_aliases = ('text', str)
     supported_db_dtype = {
         DBDialect.POSTGRES: 'text',
+        DBDialect.ATHENA: 'varchar',
         DBDialect.BIGQUERY: 'STRING'
     }
     supported_value_types = (str, type(None))  # NoneType ends up as a string for now

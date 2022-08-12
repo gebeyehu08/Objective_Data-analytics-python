@@ -4,11 +4,12 @@ Copyright 2021 Objectiv B.V.
 import bach
 from bach.series import Series
 from sql_models.constants import NotSet, not_set
-from typing import cast, List, Union, TYPE_CHECKING, Optional
+from typing import cast, List, Union, TYPE_CHECKING
 
 from sql_models.util import is_bigquery, is_postgres
 
 from modelhub.decorators import use_only_required_objectiv_series
+from modelhub.util import check_groupby
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -25,42 +26,15 @@ class Aggregate:
     def __init__(self, mh: 'ModelHub'):
         self._mh = mh
 
-    def _check_groupby(self,
-                       data: bach.DataFrame,
-                       groupby: Union[List[Union[str, Series]], str, Series],
-                       not_allowed_in_groupby: str = None
-                       ):
-
-        if data.group_by:
-            raise ValueError("can't run model hub models on a grouped DataFrame, please use parameters "
-                             "(ie groupby of the model")
-
-        groupby_list = groupby if isinstance(groupby, list) else [groupby]
-        groupby_list = [] if groupby is None else groupby_list
-
-        if not_allowed_in_groupby is not None and not_allowed_in_groupby not in data.data_columns:
-            raise ValueError(f'{not_allowed_in_groupby} column is required for this model but it is not in '
-                             f'the DataFrame')
-
-        if not_allowed_in_groupby:
-            for key in groupby_list:
-                new_key = data[key] if isinstance(key, str) else key
-                if new_key.equals(data[not_allowed_in_groupby]):
-                    raise KeyError(f'"{not_allowed_in_groupby}" is in groupby but is needed for aggregation: '
-                                   f'not allowed to group on that')
-
-        grouped_data = data.groupby(groupby_list)
-        return grouped_data
-
     def _generic_aggregation(self,
                              data: bach.DataFrame,
                              groupby: Union[List[Union[str, Series]], str, Series],
                              column: str,
                              name: str):
 
-        data = self._check_groupby(data=data,
-                                   groupby=groupby,
-                                   not_allowed_in_groupby=column)
+        data = check_groupby(data=data,
+                             groupby=groupby,
+                             not_allowed_in_groupby=column)
 
         series = data[column].nunique()
         return series.copy_override(name=name)
@@ -147,7 +121,7 @@ class Aggregate:
             new_groupby = groupby
         new_groupby.append(data.session_id.copy_override(name='__session_id'))
 
-        gdata = self._check_groupby(data=data, groupby=new_groupby)
+        gdata = check_groupby(data=data, groupby=new_groupby)
         session_duration = gdata.aggregate({'moment': ['min', 'max']})
         session_duration['session_duration'] = session_duration['moment_max'] - session_duration['moment_min']
 
@@ -500,124 +474,3 @@ class Aggregate:
             plt.show()
 
         return retention_matrix
-
-    @use_only_required_objectiv_series(
-        required_series=['moment', 'location_stack'], include_series_from_params=['groupby']
-    )
-    def get_navigation_paths(
-        self,
-        data: bach.DataFrame,
-        steps: int,
-        groupby: GroupByType = not_set,
-        location_stack: 'SeriesLocationStack' = None,
-    ) -> bach.DataFrame:
-        """
-        Get the navigation paths for each event's location stack.
-        Each navigation path is represented as a row, where each step is defined by
-        the nice name of the considered location.
-
-        For each location stack:
-            - The number of navigation paths to be generated is less than or equal to
-                `steps`.
-            - The locations to be considered as starting steps are those that have
-                an offset between 0 and `steps - 1` in the location stack.
-            - For each path, the rest of steps are defined by the `steps - 1` locations
-                that follow the start location in the location stack.
-
-            For example:
-                Having, `location_stack = ['a', 'b', 'c' , 'd']` and `steps` = 3
-                Will generate the following paths:
-                - `'a', 'b', 'c'`
-                - `'b', 'c', 'd'`
-                - `'c', 'd', None`
-
-        :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param steps: Number of steps/locations to consider in navigation path.
-        :param groupby: sets the column(s) to group by. If groupby is None or not set,
-            then steps are based on the order of events based on the entire dataset.
-        :param location_stack: the location stack
-
-            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
-            - if None - the whole location stack is taken.
-
-        :returns: bach DataFrame containing a new series for each step containing the nice name
-            of the location.
-        """
-        from modelhub.series.series_objectiv import SeriesLocationStack
-        _location_stack = location_stack or data['location_stack']
-        _location_stack = _location_stack.copy_override_type(SeriesLocationStack)
-        partition = None
-        sort_nice_names_by = []
-        if groupby is not None and groupby is not not_set:
-            partition = self._check_groupby(
-                data=data, groupby=groupby, not_allowed_in_groupby='location_stack',
-            )
-            sort_nice_names_by = [data[idx] for idx in partition.index_columns]
-
-        # always sort by moment, since we need to respect the order of the nice names in the data
-        # for getting the correct navigation paths based on event time
-        sort_nice_names_by += [data['moment']]
-
-        nice_name = _location_stack.ls.nice_name.sort_by_series(by=sort_nice_names_by)
-        agg_steps = nice_name.to_json_array(partition=partition)
-        flattened_lc, offset_lc = agg_steps.json.flatten_array()
-
-        # flattening will assume items are still json type, we need to extract the items
-        # as scalar types (string items)
-        if is_bigquery(data.engine):
-            flattened_lc = flattened_lc.copy_override(
-                expression=bach.expression.Expression.construct('JSON_EXTRACT_SCALAR({})', flattened_lc)
-            )
-        elif is_postgres(data.engine):
-            flattened_lc = flattened_lc.copy_override(
-                expression=bach.expression.Expression.construct(
-                    '{} #>> {}',
-                    flattened_lc,
-                    bach.expression.Expression.raw("'{}'")
-                )
-            )
-
-        flattened_lc = flattened_lc.astype('string')
-
-        offset_lc = offset_lc.copy_override(name='__root_step_offset')
-
-        nav_df = flattened_lc.to_frame()
-        nav_df[offset_lc.name] = offset_lc
-
-        nav_df = nav_df.sort_values(
-            by=nav_df.index_columns + [offset_lc.name],
-            # since we are using lag, we should reverse the step order
-            ascending=[True] * len(nav_df.index_columns) + [False],
-        )
-
-        window = nav_df.groupby(by=nav_df.index_columns).window()
-        root_step_series = window[flattened_lc.name]
-
-        all_step_series = {}
-        for step in range(1, steps + 1):
-            step_series_name = f'{flattened_lc.name}_step_{step}'
-            if step == 1:
-                next_step = root_step_series.copy_override(group_by=None)
-            else:
-                next_step = root_step_series.window_lag(offset=step - 1)
-
-            all_step_series[step_series_name] = (
-                next_step.copy_override(name=step_series_name)
-            )
-
-        result = nav_df.copy_override(
-            base_node=window.base_node,
-            series={
-                **all_step_series,
-                offset_lc.name: offset_lc.copy_override(base_node=window.base_node),
-            }
-        )
-        result = result.materialize(node_name='step_extraction')
-
-        # limit rows where initial step is between the requested steps
-        result = result[result[offset_lc.name] < steps]
-
-        # re-order rows
-        result = result.sort_values(by=result.index_columns + [offset_lc.name])
-        result = result.drop(columns=[offset_lc.name])
-        return result

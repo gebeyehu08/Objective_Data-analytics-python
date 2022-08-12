@@ -1,6 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import math
 from abc import ABC
 from typing import cast, Union, TYPE_CHECKING, Optional, List, Tuple
 
@@ -13,7 +14,7 @@ from bach.expression import Expression, AggregateFunctionExpression
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean, SeriesNumericInterval
@@ -55,6 +56,10 @@ class SeriesAbstractNumeric(Series, ABC):
 
         :param decimals: The amount of decimals to round to
         """
+        if is_athena(self.engine):
+            return self.copy_override(
+                expression=Expression.construct(f'round({{}}, {decimals})', self)
+            )
         return self.copy_override(
             expression=Expression.construct(f'round(cast({{}} as numeric), {decimals})', self)
         )
@@ -230,12 +235,14 @@ class SeriesInt64(SeriesAbstractNumeric):
     **Database support and types**
 
     * Postgres: utilizes the 'bigint' database type.
+    * Athena: utilizes the 'bigint' database type.
     * BigQuery: utilizes the 'INT64' database type.
     """
     dtype = 'int64'
     dtype_aliases = ('integer', 'bigint', 'i8', int, numpy.int64, 'int32')
     supported_db_dtype = {
         DBDialect.POSTGRES: 'bigint',
+        DBDialect.ATHENA: 'bigint',
         DBDialect.BIGQUERY: 'INT64'
     }
     supported_value_types = (int, numpy.int64, numpy.int32)
@@ -246,11 +253,12 @@ class SeriesInt64(SeriesAbstractNumeric):
         # to cast all of them for BigQuery. Not casting integer literals greatly improves the readability of
         # the generated SQL.
 
-        if is_postgres(dialect):
+        if is_postgres(dialect) or is_athena(dialect):
             # A stringified integer is a valid integer or bigint literal, depending on the size. We want to
             # consistently get bigints, so always cast the result
-            # See the section on numeric constants in the Postgres documentation
+            # PG: See the section on numeric constants in the Postgres documentation
             # https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
+            # Athena: experimentally established that the integer typing mimicks Postgres's behaviour
             return super().supported_literal_to_expression(dialect=dialect, literal=literal)
         if is_bigquery(dialect):
             # BigQuery has only one integer type, so there is no confusion between 32-bit and 64-bit integers
@@ -293,6 +301,13 @@ class SeriesInt64(SeriesAbstractNumeric):
             # Postgres expects the argument to a bitshift to be a regular int, not bigint.
             return self._arithmetic_operation(other, 'rshift', '({}) >> cast({} as int)',
                                               other_dtypes=tuple(['int64']))
+        if is_athena(self.engine):
+            # Latest version of prestodb supports bitwise_logical_shift_right() [1], but the version that
+            # Athena uses, does not [2]. So we do some hackish thing here
+            # [1] https://prestodb.io/docs/current/functions/bitwise.html
+            # [2] https://prestodb.io/docs/0.217/functions/bitwise.html
+            return self._arithmetic_operation(other, 'rshift', 'cast(({}) / power(2, {}) as bigint)',
+                                              other_dtypes=tuple(['int64']))
         return self._arithmetic_operation(other, 'rshift', '({}) >> ({})', other_dtypes=tuple(['int64']))
 
     def __lshift__(self, other):
@@ -300,6 +315,11 @@ class SeriesInt64(SeriesAbstractNumeric):
             # Postgres expects the argument to a bitshift to be a regular int, not bigint.
             return self._arithmetic_operation(other, 'lshift', '({}) << cast({} as int)',
                                               other_dtypes=tuple(['int64']))
+        if is_athena(self.engine):
+            # hack around missing shift operator
+            return self._arithmetic_operation(other, 'lshift', 'cast(({}) * power(2, {}) as bigint)',
+                                              other_dtypes=tuple(['int64']))
+
         return self._arithmetic_operation(other, 'lshift', '({}) << ({})', other_dtypes=tuple(['int64']))
 
     def sum(self, partition: WrappedPartition = None, skipna: bool = True, min_count: int = None, **kwargs):
@@ -332,12 +352,14 @@ class SeriesFloat64(SeriesAbstractNumeric):
     **Database support and types**
 
     * Postgres: utilizes the 'double precision' database type.
+    * Athena: utilizes the 'double' database type.
     * BigQuery: utilizes the 'FLOAT64' database type.
     """
     dtype = 'float64'
     dtype_aliases = ('float', 'double', 'f8', float, numpy.float64, 'double precision')
     supported_db_dtype = {
         DBDialect.POSTGRES: 'double precision',
+        DBDialect.ATHENA: 'double',
         DBDialect.BIGQUERY: 'FLOAT64'
     }
     supported_value_types = (float, numpy.float64)
@@ -367,6 +389,15 @@ class SeriesFloat64(SeriesAbstractNumeric):
         value: Union[float, numpy.float64],
         dtype: StructuredDtype
     ) -> Expression:
+        if is_athena(dialect) and not math.isfinite(value):
+            # see https://prestodb.io/docs/0.217/functions/math.html, under 'Floating Point functions'
+            if math.isnan(value):
+                return Expression.raw('nan()')
+            if math.isinf(value):
+                if value > 0:
+                    return Expression.raw('infinity()')
+                else:
+                    return Expression.raw('-infinity()')
         return Expression.string_value(str(value))
 
     @classmethod
@@ -405,7 +436,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
         (using materialize()), before adding any columns that reference a column that's created with
         this function.
         """
-        if is_postgres(base.engine):
+        if is_postgres(base.engine) or is_athena(base.engine):
             expr_str = 'random()'
         elif is_bigquery(base.engine):
             expr_str = 'RAND()'
