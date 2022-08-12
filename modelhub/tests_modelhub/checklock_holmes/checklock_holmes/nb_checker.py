@@ -15,6 +15,7 @@ from checklock_holmes.models.nb_checker_models import (
     CellError, CellTiming, NoteBookCheck, NoteBookMetadata
 )
 from checklock_holmes.settings import settings
+from checklock_holmes.utils.cell_tags import CellTags
 from checklock_holmes.utils.constants import (
     NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE
 )
@@ -220,7 +221,20 @@ class NoteBookChecker:
         nb_node.metadata['papermill']['error'] = None
 
         env_cell = nbformat.v4.new_code_cell(source=self._get_env_setup_block(engine))
-        env_cell.metadata['tags'] = [self._ENV_VAR_CELL_TAG]
+        env_cell.metadata['checklock_tags'] = [CellTags.INJECTED_ENGINE_VARIABLES]
+        env_cell.metadata['tags'] = [CellTags.INJECTED_ENGINE_VARIABLES.value]
+
         env_cell.metadata['papermill'] = {}
         nb_node.cells = [env_cell] + nb_node.cells
+        return self._tag_notebook_cells(nb_node)
+
+    def _tag_notebook_cells(self, nb_node: nbformat.NotebookNode) -> nbformat.NotebookNode:
+        for cell in nb_node.cells:
+            if cell.metadata.get('checklock_tag') or cell.cell_type != 'code':
+                continue
+
+            tags = CellTags.get_tags(cell.source)
+
+            cell.metadata['checklock_tag'] = tags
+            cell.metadata['tags'].extend([tag.value for tag in tags])
         return nb_node
