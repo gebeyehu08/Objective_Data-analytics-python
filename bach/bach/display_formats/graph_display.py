@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 import re
 import warnings
-from typing import cast, List
+from typing import cast, List, Dict, Optional
 
 import numpy as np
 
@@ -25,10 +25,13 @@ class SqlModelGraphDisplay:
     def __init__(
         self,
         obj: DataFrameOrSeries,
+        node_attr: Optional[Dict[str, str]] = None,
     ) -> None:
         try:
             from graphviz import Digraph
-            self._graph = Digraph(node_attr=DEFAULT_GRAPH_NODE_FORMAT)
+            self._graph = Digraph(
+                node_attr=node_attr if node_attr is not None else DEFAULT_GRAPH_NODE_FORMAT
+            )
         except ModuleNotFoundError:
             warnings.warn(
                 message='graphviz module is required for displaying SQLModel graphs.',
@@ -207,10 +210,7 @@ def display_sql_as_graph(obj: DataFrameOrSeries) -> None:
     :param obj: DataFrame or Series from where to obtain the generated sql.
 
     .. note::
-        Requires the graphviz package, if not installed the query will be print instead
-
-    .. note::
-        Requires the IPython package, if not installed the graph source will be print instead
+        Requires the graphviz and IPython package, if not installed the query will be print instead
 
     .. warning::
         This functionality is still experimental, graphs for complex SQL models might generate a complex
