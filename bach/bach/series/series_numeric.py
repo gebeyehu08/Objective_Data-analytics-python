@@ -235,6 +235,7 @@ class SeriesInt64(SeriesAbstractNumeric):
     **Database support and types**
 
     * Postgres: utilizes the 'bigint' database type.
+    * Athena: utilizes the 'bigint' database type.
     * BigQuery: utilizes the 'INT64' database type.
     """
     dtype = 'int64'
@@ -351,6 +352,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
     **Database support and types**
 
     * Postgres: utilizes the 'double precision' database type.
+    * Athena: utilizes the 'double' database type.
     * BigQuery: utilizes the 'FLOAT64' database type.
     """
     dtype = 'float64'
@@ -396,7 +398,6 @@ class SeriesFloat64(SeriesAbstractNumeric):
                     return Expression.raw('infinity()')
                 else:
                     return Expression.raw('-infinity()')
-            raise Exception('value is not finite, but not nan or infinite')  # should never happen
         return Expression.string_value(str(value))
 
     @classmethod

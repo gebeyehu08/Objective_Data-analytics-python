@@ -65,7 +65,7 @@ jobs:
           key: pip-${{ matrix.python-version }}-${{ hashFiles('bach/setup.cfg', 'modelhub/setup.cfg') }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install pip==20.0.2
           # These need to be seperate commands else pip confuses the bach flavours.
           pip install -e bach 
           pip install -e modelhub[dev]
