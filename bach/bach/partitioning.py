@@ -341,6 +341,8 @@ class Window(GroupBy):
         Define a window on a DataFrame, by giving the partitioning series and the frame definition
         :see: class definition for more info on the frame definition, and GroupBy for more
               info on grouping / partitioning
+        :param na_position: Either 'first' or 'last'. When ordering values, put null values before all other
+            values if 'first', and put null values after all other values if 'last'.
         """
         super().__init__(group_by_columns=group_by_columns)
 
