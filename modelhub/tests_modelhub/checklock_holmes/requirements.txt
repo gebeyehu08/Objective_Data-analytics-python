@@ -13,4 +13,3 @@ termcolor==1.1.0
 
 # notebooks and bq requirements
 -r ../../../notebooks/requirements.txt
--r ../../../bach/requirements-bigquery.txt
