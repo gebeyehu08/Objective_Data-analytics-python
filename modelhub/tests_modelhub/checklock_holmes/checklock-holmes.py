@@ -47,7 +47,10 @@ from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
 async def _check_notebook_per_engine(
-    nb_path: str, dump_nb_scripts_dir: Optional[str], engines: List[SupportedEngine]
+    nb_path: str,
+    dump_nb_scripts_dir: Optional[str],
+    engines: List[SupportedEngine],
+    github_issues_file_path: str,
 ) -> List[NoteBookCheck]:
     nb_metadata = NoteBookMetadata(path=nb_path)
     nb_checker = NoteBookChecker(metadata=nb_metadata)
@@ -63,7 +66,10 @@ async def _check_notebook_per_engine(
 
     pb = tqdm_asyncio()
     pb.set_description(f'Checking {nb_metadata.name}...')
-    nb_checks = await pb.gather(*tasks, )
+    nb_checks = await pb.gather(*tasks)
+    for nb_check in nb_checks:
+        if nb_check.error:
+            store_github_issue(nb_check, github_issues_file_path)
     return nb_checks
 
 
@@ -82,15 +88,13 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
             _check_notebook_per_engine(
                 nb_path,
                 dump_nb_scripts_dir=check_settings.dump_nb_scripts_dir,
-                engines=check_settings.engines_to_check
+                engines=check_settings.engines_to_check,
+                github_issues_file_path=github_issues_file_path,
             )
             for nb_path in check_settings.notebooks_to_check
         ]
     )
     all_checks = list(itertools.chain.from_iterable(all_checks))
-    for nb_check in all_checks:
-        if nb_check.error:
-            store_github_issue(nb_check, github_issues_file_path)
 
     # display final check report
     display_check_results(
