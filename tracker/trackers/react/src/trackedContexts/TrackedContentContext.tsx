@@ -4,14 +4,60 @@
 
 import { makeIdFromString } from '@objectiv/tracker-core';
 import { ContentContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
-import React from 'react';
-import { TrackedContextProps } from '../types';
+import React, { ComponentProps, createRef, ElementType, ReactHTML } from 'react';
+
+type TrackedContextProps<P> = P & {
+  Component: ElementType | keyof ReactHTML;
+  objectiv: {
+    id: string;
+    normalizeId?: boolean;
+    forwardId?: boolean;
+  }
+};
+
+type TestComponentProps = {
+  abc: string;
+};
+
+const TestComponent = (props: TestComponentProps) => <div>{props.abc}</div>;
+
+export const TestWrapper = () => {
+  const inputRef = createRef<HTMLInputElement>();
+  const selectRef = createRef<HTMLSelectElement>();
+
+  return (
+    <>
+      <TestComponent abc={'test'} />
+      <TrackedContentContext<ComponentProps<'button'>> Component={'input'} objectiv={{ id: 'test' }} />
+      <TrackedContentContext<TestComponentProps, HTMLInputElement>
+        Component={TestComponent}
+        abc={'asd'}
+        objectiv={{ id: 'test' }}
+        ref={inputRef}
+      />
+      <TrackedContentContext<TestComponentProps, HTMLSelectElement>
+        Component={TestComponent}
+        abc={'asd'}
+        objectiv={{ id: 'test' }}
+        ref={selectRef}
+      />
+      <TrackedContentContext id={'test'} Component={TestComponent} abc={123} objectiv={{ id: 'test' }} />
+    </>
+  );
+};
+
+// Redeclare forwardRef as the original declaration is a mess with generics
+declare module 'react' {
+  function forwardRef<T, P = {}>(
+    render: (props: P, ref: React.Ref<T>) => React.ReactElement | null
+  ): (props: P & React.RefAttributes<T>) => React.ReactElement | null;
+}
 
 /**
  * Generates a new React Element already wrapped in a ContentContext.
  */
-export const TrackedContentContext = React.forwardRef<HTMLElement, TrackedContextProps>((props, ref) => {
-  const { id, Component, forwardId = false, normalizeId = true, ...otherProps } = props;
+function TrackedContentContextImplementation<P, R = {}>(props: TrackedContextProps<P>, ref: React.ForwardedRef<R>) {
+  const { Component, objectiv: { id, forwardId = false, normalizeId = true }, ...otherProps } = props;
   const locationStack = useLocationStack();
 
   let contentId: string | null = id;
@@ -32,8 +78,14 @@ export const TrackedContentContext = React.forwardRef<HTMLElement, TrackedContex
         `｢objectiv｣ Could not generate a valid id for ContentContext @ ${locationPath}. Please provide the \`id\` property.`
       );
     }
-    return React.createElement(Component, componentProps);
+    return <Component {...componentProps} />;
   }
 
-  return <ContentContextWrapper id={contentId}>{React.createElement(Component, componentProps)}</ContentContextWrapper>;
-});
+  return (
+    <ContentContextWrapper id={contentId}>
+      <Component {...componentProps} />
+    </ContentContextWrapper>
+  );
+}
+
+export const TrackedContentContext = React.forwardRef(TrackedContentContextImplementation);
