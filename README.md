@@ -33,8 +33,8 @@ pip install objectiv-modelhub
 * **An open model hub** with pre-built product analytics models & operations.
 * **A modeling library** to create reusable models that run on your full dataset.
 
-![objectiv_stack](https://user-images.githubusercontent.com/82152911/184146312-dca08dfc-33b9-4f3a-8356-2f0ff8563b1d.svg#gh-light-mode-only "Objectiv Stack")
-![objectiv_stack_dark](https://user-images.githubusercontent.com/82152911/184146420-92ac1db7-4b09-476c-abc5-c67d5a970c75.svg#gh-dark-mode-only "Objectiv Stack")
+![objectiv_stack](https://user-images.githubusercontent.com/82152911/184355849-ee1c59af-068e-48e0-bcd3-b064633d2fa7.svg#gh-light-mode-only "Objectiv Stack")
+![objectiv_stack_dark](https://user-images.githubusercontent.com/82152911/184355794-4b957f62-210c-4a66-bda6-6405ab8f8a3e.svg#gh-dark-mode-only "Objectiv Stack")
 
 ### The open analytics taxonomy
 
