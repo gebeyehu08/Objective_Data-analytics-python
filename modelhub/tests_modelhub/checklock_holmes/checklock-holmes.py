@@ -24,16 +24,20 @@ BQ_DB__CREDENTIALS_PATH
 
 Copyright 2022 Objectiv B.V.
 """
+import asyncio
+import itertools
+from typing import List, Optional
+
 from docopt import docopt
-from tqdm import tqdm
+from tqdm.asyncio import tqdm_asyncio
 
 from checklock_holmes.models.nb_checker_models import (
-    NoteBookCheckSettings, NoteBookMetadata
+    NoteBookCheck, NoteBookCheckSettings, NoteBookMetadata
 )
 from checklock_holmes.nb_checker import NoteBookChecker
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
-    DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR, NOTEBOOK_EXTENSION
+    DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR
 )
 from checklock_holmes.utils.helpers import (
     display_check_results, get_github_issue_filename, store_github_issue,
@@ -42,7 +46,34 @@ from checklock_holmes.utils.helpers import (
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
-def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -> None:
+async def _check_notebook_per_engine(
+    nb_path: str,
+    dump_nb_scripts_dir: Optional[str],
+    engines: List[SupportedEngine],
+    github_issues_file_path: str,
+) -> List[NoteBookCheck]:
+    nb_metadata = NoteBookMetadata(path=nb_path)
+    nb_checker = NoteBookChecker(metadata=nb_metadata)
+
+    tasks = []
+    for engine in engines:
+        # store script before check, this way we don't wait till the check is finished
+        if dump_nb_scripts_dir:
+            script_path = f'{dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
+            store_nb_script(script_path, nb_checker.get_script(engine))
+
+        tasks.append(nb_checker.async_check_notebook(engine))
+
+    pb = tqdm_asyncio()
+    pb.set_description(f'Checking {nb_metadata.name}...')
+    nb_checks = await pb.gather(*tasks)
+    for nb_check in nb_checks:
+        if nb_check.error:
+            store_github_issue(nb_check, github_issues_file_path)
+    return nb_checks
+
+
+async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -> None:
     if not settings.engine_env_var_mapping:
         print(
             'Cannot run checks, nothing to be done if you do not define '
@@ -50,45 +81,24 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
         )
         return
 
-    checks = []
     github_issues_file_path = f'{check_settings.github_issues_dir}/{get_github_issue_filename()}'
 
-    total_checks = len(check_settings.notebooks_to_check) * len(check_settings.engines_to_check)
-
-    stop_checks = False
-    # progress bar
-    with tqdm(total=total_checks) as pbar:
-        for nb in check_settings.notebooks_to_check:
-            nb_metadata = NoteBookMetadata(path=nb)
-            nb_checker = NoteBookChecker(
-                metadata=nb_metadata, display_cell_timing=check_settings.display_cell_timing,
+    all_checks = await asyncio.gather(
+        *[
+            _check_notebook_per_engine(
+                nb_path,
+                dump_nb_scripts_dir=check_settings.dump_nb_scripts_dir,
+                engines=check_settings.engines_to_check,
+                github_issues_file_path=github_issues_file_path,
             )
-            for engine in check_settings.engines_to_check:
-                pbar.set_description(f'Starting {engine} checks for {nb_metadata.name}.{NOTEBOOK_EXTENSION}...')
-
-                # store script before check, this way we don't wait till the check is finished
-                if check_settings.dump_nb_scripts_dir:
-                    script_path = f'{check_settings.dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
-                    store_nb_script(script_path, nb_checker.get_script(engine))
-
-                nb_check = nb_checker.check_notebook(engine)
-                checks.append(nb_check)
-                # update progress bar after finishing check
-                pbar.update(1)
-
-                # add issue to the file if check ends up with error
-                if nb_check.error:
-                    store_github_issue(nb_check, github_issues_file_path)
-                    if exit_on_fail:
-                        stop_checks = True
-                        break
-
-            if stop_checks:
-                break
+            for nb_path in check_settings.notebooks_to_check
+        ]
+    )
+    all_checks = list(itertools.chain.from_iterable(all_checks))
 
     # display final check report
     display_check_results(
-        nb_checks=checks,
+        nb_checks=all_checks,
         github_files_path=github_issues_file_path,
         display_cell_timings=check_settings.display_cell_timing,
     )
@@ -108,4 +118,6 @@ if __name__ == '__main__':
         notebooks_to_check=arguments['--nb'],
         display_cell_timing=arguments['--timeit']
     )
-    check_notebooks(nb_check_settings, exit_on_fail=arguments['--exitfirst'])
+    asyncio.run(
+        async_check_notebooks(nb_check_settings, exit_on_fail=arguments['--exitfirst'])
+    )
