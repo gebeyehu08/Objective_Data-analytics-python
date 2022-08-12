@@ -6,14 +6,7 @@ import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import {
-  normalizeValue,
-  ObjectivProvider,
-  ReactTracker,
-  TrackedDiv,
-  TrackedInputContext,
-  TrackedRootLocationContext,
-} from '../src';
+import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputContext, TrackedRootLocationContext } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -691,32 +684,5 @@ describe('TrackedInputContext', () => {
     fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some text' } });
 
     expect(blurSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('should normalize attribute values as expected', () => {
-    expect(normalizeValue()).toStrictEqual('');
-    expect(normalizeValue('')).toStrictEqual('');
-    expect(normalizeValue(0)).toStrictEqual('0');
-    expect(normalizeValue(1)).toStrictEqual('1');
-    expect(normalizeValue(false)).toStrictEqual('0');
-    expect(normalizeValue(true)).toStrictEqual('1');
-  });
-});
-
-describe('normalizeValue', () => {
-  it('should normalize booleans to "0" and"1")', () => {
-    expect(normalizeValue(true)).toBe('1');
-    expect(normalizeValue(false)).toBe('0');
-  });
-
-  it('should normalize numbers to strings)', () => {
-    expect(normalizeValue(123)).toBe('123');
-    expect(normalizeValue(-123)).toBe('-123');
-    expect(normalizeValue(Infinity)).toBe('Infinity');
-  });
-
-  it('should normalize arrays to their JSON string)', () => {
-    expect(normalizeValue([1, 2, 3])).toBe('[1,2,3]');
-    expect(normalizeValue(['a', 'b', 'c'])).toBe('["a","b","c"]');
   });
 });

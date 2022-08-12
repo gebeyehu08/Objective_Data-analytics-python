@@ -17,8 +17,8 @@ import {
   useLocationStack,
 } from '@objectiv/tracker-react-core';
 import React, { ChangeEvent, FocusEvent, useState } from 'react';
-import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from '.';
 import { TrackedContextProps } from '../../types';
+import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
  * TrackedInputContext implementation for radio buttons.
