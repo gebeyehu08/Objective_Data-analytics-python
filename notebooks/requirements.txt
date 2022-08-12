@@ -1,5 +1,4 @@
-# install bach and modelhub in edit mode, so local changes are immediately usable
-objectiv-bach
+# install modelhub in edit mode, so local changes are immediately usable
 objectiv-modelhub
 
 # requirements for the notebooks
