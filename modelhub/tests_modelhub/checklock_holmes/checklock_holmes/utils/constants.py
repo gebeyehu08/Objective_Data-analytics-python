@@ -51,3 +51,6 @@ MORE_INFORMATION_MESSAGE = (
     'Dear Watson, for more information about failed checks, please see: '
     f"{colored('{github_issue_file}', 'blue')} file."
 )
+
+
+DATE_FORMAT = '%Y-%m-%d'
