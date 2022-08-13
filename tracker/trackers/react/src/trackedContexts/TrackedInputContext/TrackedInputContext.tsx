@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import React from 'react';
+import React, { Ref } from 'react';
 import { TrackedContextProps } from '../../types';
 import { TrackedInputContextCheckbox, TrackedInputContextCheckboxProps } from './TrackedInputContextCheckbox';
 import { TrackedInputContextRadio, TrackedInputContextRadioProps } from './TrackedInputContextRadio';
@@ -19,7 +19,7 @@ import { TrackedValueBasedInputContext, TrackedValueBasedInputContextProps } fro
 /**
  * TrackedInputContext has a few additional properties to configure it.
  */
-export type TrackedInputContextProps = TrackedContextProps & {
+export type TrackedInputContextProps<T> = TrackedContextProps<T> & {
   /**
    * Optional. Whether to track the 'value' attribute. Default to false.
    * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
@@ -47,47 +47,49 @@ export type TrackedInputContextProps = TrackedContextProps & {
  * If no custom implementation is found for the given Component/type combination, the TrackedValueBasedInputContext
  * is used.
  */
-export const TrackedInputContext = React.forwardRef((props: TrackedInputContextProps, ref) => {
-  if (props.Component === 'select' && !props.multiple) {
+export const TrackedInputContext = React.forwardRef(
+  (
+    props: TrackedInputContextProps<HTMLInputElement | HTMLSelectElement>,
+    ref: Ref<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    if (props.objectiv.Component === 'select' && !props.multiple) {
+      return (
+        <TrackedInputContextSelectSingle
+          {...(props as TrackedInputContextSelectSingleProps)}
+          ref={ref as Ref<HTMLSelectElement>}
+        />
+      );
+    }
+
+    if (props.objectiv.Component === 'select' && props.multiple) {
+      return (
+        <TrackedInputContextSelectMultiple
+          {...(props as TrackedInputContextSelectMultipleProps)}
+          ref={ref as Ref<HTMLSelectElement>}
+        />
+      );
+    }
+
+    if (props.objectiv.Component === 'input' && props.type === 'radio') {
+      return (
+        <TrackedInputContextRadio {...(props as TrackedInputContextRadioProps)} ref={ref as Ref<HTMLInputElement>} />
+      );
+    }
+
+    if (props.objectiv.Component === 'input' && props.type === 'checkbox') {
+      return (
+        <TrackedInputContextCheckbox
+          {...(props as TrackedInputContextCheckboxProps)}
+          ref={ref as Ref<HTMLInputElement>}
+        />
+      );
+    }
+
     return (
-      <TrackedInputContextSelectSingle
-        {...(props as TrackedInputContextSelectSingleProps)}
-        ref={ref as React.Ref<HTMLSelectElement>}
+      <TrackedValueBasedInputContext
+        {...(props as TrackedValueBasedInputContextProps)}
+        ref={ref as Ref<HTMLInputElement>}
       />
     );
   }
-
-  if (props.Component === 'select' && props.multiple) {
-    return (
-      <TrackedInputContextSelectMultiple
-        {...(props as TrackedInputContextSelectMultipleProps)}
-        ref={ref as React.Ref<HTMLSelectElement>}
-      />
-    );
-  }
-
-  if (props.Component === 'input' && props.type === 'radio') {
-    return (
-      <TrackedInputContextRadio
-        {...(props as TrackedInputContextRadioProps)}
-        ref={ref as React.Ref<HTMLInputElement>}
-      />
-    );
-  }
-
-  if (props.Component === 'input' && props.type === 'checkbox') {
-    return (
-      <TrackedInputContextCheckbox
-        {...(props as TrackedInputContextCheckboxProps)}
-        ref={ref as React.Ref<HTMLInputElement>}
-      />
-    );
-  }
-
-  return (
-    <TrackedValueBasedInputContext
-      {...(props as TrackedValueBasedInputContextProps)}
-      ref={ref as React.Ref<HTMLInputElement>}
-    />
-  );
-});
+);

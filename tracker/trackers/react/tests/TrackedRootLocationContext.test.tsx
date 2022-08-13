@@ -34,7 +34,7 @@ describe('TrackedRootLocationContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext objectiv={{ Component: 'div', id:'root-id' }}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root-id' }}>
           <TrackedButton />
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -75,10 +75,10 @@ describe('TrackedRootLocationContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext objectiv={{ Component: 'div', id:'Root id 1' }}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'Root id 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedRootLocationContext>
-        <TrackedRootLocationContext objectiv={{ Component: 'div', id:'Root id 2', normalizeId: false }}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'Root id 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -126,7 +126,7 @@ describe('TrackedRootLocationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext objectiv={{ Component: 'div', id:'☹️' }}/>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: '☹️' }} />
       </ObjectivProvider>
     );
 
@@ -142,7 +142,7 @@ describe('TrackedRootLocationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext ref={ref} objectiv={{ Component: 'div', id:'root-id' }}>
+        <TrackedRootLocationContext ref={ref} objectiv={{ Component: 'div', id: 'root-id' }}>
           test
         </TrackedRootLocationContext>
       </ObjectivProvider>

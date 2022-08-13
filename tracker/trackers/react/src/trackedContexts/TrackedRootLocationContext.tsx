@@ -4,14 +4,14 @@
 
 import { makeIdFromString } from '@objectiv/tracker-core';
 import { RootLocationContextWrapper } from '@objectiv/tracker-react-core';
-import React, { forwardRef, PropsWithRef } from 'react';
+import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { TrackedContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in a RootLocationContext.
  */
 export const TrackedRootLocationContext = forwardRef(
-  <T extends unknown>(props: TrackedContextProps<T>, ref: unknown) => {
+  <T extends unknown>(props: TrackedContextProps<T>, ref: Ref<unknown>) => {
     const {
       objectiv: { Component, id, normalizeId = true },
       ...nativeProps

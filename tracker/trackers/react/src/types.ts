@@ -32,12 +32,12 @@ export type TrackedContextIdProps = {
 /**
  * Base props of all TrackedContexts.
  */
-export type TrackedContextProps<P extends unknown> = P & {
+export type TrackedContextProps<T> = T & {
   objectiv: TrackedContextComponentProp & TrackedContextIdProps;
 };
 
 /**
- * Base props of all TrackedElements. They don't include ComponentAndComponentRefProps props, as we hard-code those.
+ * Base props of all TrackedElements. They don't include ComponentProp, as we hard-code that for these components.
  */
 export type TrackedElementProps<T> = T & {
   objectiv: TrackedContextIdProps;
