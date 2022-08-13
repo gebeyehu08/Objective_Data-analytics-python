@@ -2,37 +2,56 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { AllHTMLAttributes, ComponentType, ReactHTML } from 'react';
+import { ElementType, ReactHTML, Ref } from 'react';
 
 /**
- * Generic enriching the given type with a `Component` property that can be either a React Component or a JSX element.
+ * Props to specify Component and componentRef to a TrackedContext.
  */
-export type WithComponentProp<T> = T & { Component: ComponentType<T> | keyof ReactHTML };
-
-/**
- * The props of all HTMLElement TrackedContexts.
- */
-export type TrackedContextProps<T = HTMLElement> = WithComponentProp<AllHTMLAttributes<T>> & {
+export type ComponentAndComponentRefProps<R> = {
   /**
-   * The unique id of the LocationContext
+   * Either an Element or a JSX tag, such as 'div', 'input', etc.
+   */
+  Component: ElementType | keyof ReactHTML;
+
+  /**
+   * Optional. The ref to forward to the given Component.
+   */
+  componentRef?: Ref<R> | null;
+};
+
+/**
+ * Props to specify tracking id related options to a TrackedContext.
+ */
+export type IdProps = {
+  /**
+   * The identifier of the LocationContext
    */
   id: string;
 
   /**
-   * Whether to forward the given id to the given Component
-   */
-  forwardId?: boolean;
-
-  /**
-   * Whether to normalize the given id, default to true
+   * Optional. Default to `true`. Whether to normalize the given id.
    */
   normalizeId?: boolean;
 };
 
 /**
+ * Base props of all TrackedContexts.
+ */
+export type TrackedContextProps<P, R> = P & {
+  objectiv: ComponentAndComponentRefProps<R> & IdProps;
+};
+
+/**
+ * Base props of all TrackedElements. They don't include ComponentAndComponentRefProps props, as we hard-code those.
+ */
+export type TrackedElementProps<P> = P & {
+  objectiv: IdProps;
+};
+
+/**
  * The props of Contexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedShowableContextProps = TrackedContextProps & {
+export type TrackedShowableContextProps<P, R> = TrackedContextProps<P, R> & {
   /**
    * Whether to track visibility events automatically when this prop changes state.
    */
@@ -42,7 +61,7 @@ export type TrackedShowableContextProps = TrackedContextProps & {
 /**
  * The props of TrackedPressableContext. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedPressableContextProps = Omit<TrackedContextProps, 'id'> & {
+export type TrackedPressableContextProps<P, R> = Omit<TrackedContextProps<P, R>, 'id'> & {
   /**
    * The unique id of the LocationContext. Optional because we will attempt to auto-detect it.
    */
@@ -62,7 +81,7 @@ export type TrackedPressableContextProps = Omit<TrackedContextProps, 'id'> & {
 /**
  * Overrides TrackedContextProps to not require an id, assuming that semantically there should be only one Element
  */
-export type SingletonTrackedElementProps = Omit<TrackedContextProps, 'Component' | 'id'> & {
+export type SingletonTrackedElementProps<P, R> = Omit<TrackedContextProps<P, R>, 'Component' | 'id'> & {
   /**
    * Optional identifier to be provided only in case of uniqueness collisions, defaults to 'footer'
    */
@@ -73,6 +92,7 @@ export type SingletonTrackedElementProps = Omit<TrackedContextProps, 'Component'
  * Some extra options that may be useful for special cases, e.g. anchors without texts or external hrefs.
  * This is mainly used for TrackedContexts and Custom Components.
  *
+ * FIXME: do we need this?
  * TODO switch to this way of setting options, as opposed to the current prop merging
  */
 export type ObjectivTrackingOptions = {
@@ -90,14 +110,4 @@ export type ObjectivTrackingOptions = {
    * Whether to normalize the given id, default to true.
    */
   normalizeId?: boolean;
-};
-
-/**
- * The prop containing Objectiv Tracking Options.
- */
-export type TrackingOptionsProp = {
-  /**
-   * All Objectiv tracking related options reside under this prop.
-   */
-  objectiv?: ObjectivTrackingOptions;
 };

@@ -10,8 +10,11 @@ import { TrackedContextProps } from '../types';
 /**
  * Generates a new React Element already wrapped in a RootLocationContext.
  */
-export const TrackedRootLocationContext = React.forwardRef<HTMLElement, TrackedContextProps>((props, ref) => {
-  const { id, Component, forwardId = false, normalizeId = true, ...otherProps } = props;
+export const TrackedRootLocationContext = <P, R = null>(props: TrackedContextProps<P, R>) => {
+  const {
+    objectiv: { Component, componentRef, id, normalizeId = true },
+    ...nativeProps
+  } = props;
 
   let rootId: string | null = id;
   if (normalizeId) {
@@ -19,9 +22,8 @@ export const TrackedRootLocationContext = React.forwardRef<HTMLElement, TrackedC
   }
 
   const componentProps = {
-    ...otherProps,
-    ...(ref ? { ref } : {}),
-    ...(forwardId ? { id } : {}),
+    ...nativeProps,
+    ...(componentRef ? { ref: componentRef } : {}),
   };
 
   if (!rootId) {
@@ -30,12 +32,13 @@ export const TrackedRootLocationContext = React.forwardRef<HTMLElement, TrackedC
         `｢objectiv｣ Could not generate a valid id for RootLocationContext. Please provide the \`id\` property.`
       );
     }
-    return React.createElement(Component, componentProps);
+
+    return <Component {...componentProps} />;
   }
 
   return (
     <RootLocationContextWrapper id={rootId}>
-      {React.createElement(Component, componentProps)}
+      <Component {...componentProps} />
     </RootLocationContextWrapper>
   );
-});
+};

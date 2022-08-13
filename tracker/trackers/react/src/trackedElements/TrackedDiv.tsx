@@ -2,13 +2,16 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import React from 'react';
+import { TrackedElementProps } from '@objectiv/tracker-react';
+import React, { ComponentProps } from 'react';
 import { TrackedContentContext } from '../trackedContexts/TrackedContentContext';
-import { TrackedContextProps } from '../types';
 
 /**
  * Generates a TrackedContentContext preconfigured with a <div> Element as Component.
  */
-export const TrackedDiv = React.forwardRef<HTMLDivElement, Omit<TrackedContextProps, 'Component'>>((props, ref) => (
-  <TrackedContentContext {...props} Component={'div'} ref={ref} />
-));
+export const TrackedDiv = ({ objectiv, ...otherProps }: TrackedElementProps<ComponentProps<'div'>>) => (
+  <TrackedContentContext<ComponentProps<'div'>, HTMLDivElement>
+    objectiv={{ ...objectiv, Component: 'div' }}
+    {...otherProps}
+  />
+);

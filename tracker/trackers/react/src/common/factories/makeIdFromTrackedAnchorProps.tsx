@@ -17,6 +17,7 @@ export type makeIdFromTrackedAnchorPropsParameters = ObjectivTrackingOptions & {
 };
 
 /**
+ * FIXME: do we need this?
  * Attempts to generate an id by looking at `id`, `title`, `children` and `objectiv.contextId` props.
  */
 export const makeIdFromTrackedAnchorProps = ({
