@@ -5,14 +5,15 @@
 import { makeIdFromString } from '@objectiv/tracker-core';
 import { TrackedContextProps } from '@objectiv/tracker-react';
 import { ContentContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
-import React, { ComponentProps, createRef } from 'react';
+import React, { ComponentProps, createRef, forwardRef, PropsWithRef, Ref } from 'react';
 
 /**
  * Generates a new React Element already wrapped in a ContentContext.
+ * export default TrackedContentContext as <T extends unknown, R extends unknown>(props: Props<T> & { ref: Ref<R> }) => JSX.Element;
  */
-export const TrackedContentContext = <P, R = undefined>(props: TrackedContextProps<P, R>) => {
+export const TrackedContentContext = forwardRef(<P extends unknown>(props: TrackedContextProps<P>, ref: unknown) => {
   const {
-    objectiv: { Component, componentRef, id, normalizeId = true },
+    objectiv: { Component, id, normalizeId = true },
     ...nativeProps
   } = props;
   const locationStack = useLocationStack();
@@ -24,7 +25,7 @@ export const TrackedContentContext = <P, R = undefined>(props: TrackedContextPro
 
   const componentProps = {
     ...nativeProps,
-    ...(componentRef ? { ref: componentRef } : {}),
+    ...(ref ? { ref } : {}),
   };
 
   if (!contentId) {
@@ -42,16 +43,19 @@ export const TrackedContentContext = <P, R = undefined>(props: TrackedContextPro
       <Component {...componentProps} />
     </ContentContextWrapper>
   );
-};
+}) as <T extends unknown>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;
+
 
 type TestComponentProps = {
   abc: string;
 };
 
-const TestComponent = (props: TestComponentProps) => <div>{props.abc}</div>;
+const TestComponent = forwardRef((props: TestComponentProps, ref: Ref<HTMLDivElement>) => <div ref={ref}>{props.abc}</div>);
 
 export const TestWrapper = () => {
   const inputRef = createRef<HTMLInputElement>();
+  //const selectRef = createRef<HTMLSelectElement>();
+  const divRef = createRef<HTMLDivElement>();
 
   return (
     <>
@@ -59,16 +63,16 @@ export const TestWrapper = () => {
       <TestComponent abc={'test'} />
 
       {/* An input component, because we can provide its props type we get autocomplete and TS validation */}
-      <TrackedContentContext<ComponentProps<'input'>> objectiv={{ Component: 'input', id: 'test' }} />
+      <TrackedContentContext<ComponentProps<'input'>> objectiv={{ Component: 'input', id: 'test' }} ref={inputRef} />
 
       {/* Custom component wrapped in TrackedContentContext, this will enrich TestComponent with our tracking logic */}
-      <TrackedContentContext<TestComponentProps, HTMLInputElement>
+      <TrackedContentContext<ComponentProps<typeof TestComponent>>
         abc={'asd'}
         objectiv={{
           id: 'test',
           Component: TestComponent,
-          componentRef: inputRef,
         }}
+        ref={divRef}
       />
     </>
   );

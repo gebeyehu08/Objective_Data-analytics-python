@@ -2,27 +2,22 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ElementType, ReactHTML, Ref } from 'react';
+import { ElementType, ReactHTML } from 'react';
 
 /**
  * Props to specify Component and componentRef to a TrackedContext.
  */
-export type ComponentAndComponentRefProps<R> = {
+export type TrackedContextComponentProp = {
   /**
    * Either an Element or a JSX tag, such as 'div', 'input', etc.
    */
   Component: ElementType | keyof ReactHTML;
-
-  /**
-   * Optional. The ref to forward to the given Component.
-   */
-  componentRef?: Ref<R> | null;
 };
 
 /**
  * Props to specify tracking id related options to a TrackedContext.
  */
-export type IdProps = {
+export type TrackedContextIdProps = {
   /**
    * The identifier of the LocationContext
    */
@@ -37,15 +32,15 @@ export type IdProps = {
 /**
  * Base props of all TrackedContexts.
  */
-export type TrackedContextProps<P, R> = P & {
-  objectiv: ComponentAndComponentRefProps<R> & IdProps;
+export type TrackedContextProps<P extends unknown> = P & {
+  objectiv: TrackedContextComponentProp & TrackedContextIdProps;
 };
 
 /**
  * Base props of all TrackedElements. They don't include ComponentAndComponentRefProps props, as we hard-code those.
  */
 export type TrackedElementProps<P> = P & {
-  objectiv: IdProps;
+  objectiv: TrackedContextIdProps;
 };
 
 /**
