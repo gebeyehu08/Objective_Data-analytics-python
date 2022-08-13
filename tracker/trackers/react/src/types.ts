@@ -39,14 +39,14 @@ export type TrackedContextProps<P extends unknown> = P & {
 /**
  * Base props of all TrackedElements. They don't include ComponentAndComponentRefProps props, as we hard-code those.
  */
-export type TrackedElementProps<P> = P & {
+export type TrackedElementProps<T> = T & {
   objectiv: TrackedContextIdProps;
 };
 
 /**
  * The props of Contexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedShowableContextProps<P, R> = TrackedContextProps<P, R> & {
+export type TrackedShowableContextProps<T> = TrackedContextProps<T> & {
   /**
    * Whether to track visibility events automatically when this prop changes state.
    */
@@ -56,7 +56,7 @@ export type TrackedShowableContextProps<P, R> = TrackedContextProps<P, R> & {
 /**
  * The props of TrackedPressableContext. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedPressableContextProps<P, R> = Omit<TrackedContextProps<P, R>, 'id'> & {
+export type TrackedPressableContextProps<T> = Omit<TrackedContextProps<T>, 'id'> & {
   /**
    * The unique id of the LocationContext. Optional because we will attempt to auto-detect it.
    */
@@ -76,7 +76,7 @@ export type TrackedPressableContextProps<P, R> = Omit<TrackedContextProps<P, R>,
 /**
  * Overrides TrackedContextProps to not require an id, assuming that semantically there should be only one Element
  */
-export type SingletonTrackedElementProps<P, R> = Omit<TrackedContextProps<P, R>, 'Component' | 'id'> & {
+export type SingletonTrackedElementProps<T> = Omit<TrackedContextProps<T>, 'Component' | 'id'> & {
   /**
    * Optional identifier to be provided only in case of uniqueness collisions, defaults to 'footer'
    */

@@ -153,7 +153,7 @@ describe('TrackedContentContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedContentContext objectiv={{ Component: 'div', id: 'content-id'}} ref={ref}>
+        <TrackedContentContext objectiv={{ Component: 'div', id: 'content-id' }} ref={ref}>
           test
         </TrackedContentContext>
       </ObjectivProvider>
