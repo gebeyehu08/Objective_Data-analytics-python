@@ -165,7 +165,9 @@ describe('TrackedLinkContext', () => {
     );
 
     expect(ref.current).toMatchInlineSnapshot(`
-      <a>
+      <a
+        href="/some-url"
+      >
         Press me!
       </a>
     `);

@@ -41,7 +41,7 @@ describe('TrackedNav', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNav>
+        <TrackedNav objectiv={{id: 'nav'}}>
           <TrackedButton />
         </TrackedNav>
       </ObjectivProvider>

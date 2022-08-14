@@ -41,7 +41,7 @@ describe('TrackedMain', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMain>
+        <TrackedMain objectiv={{id: 'main'}}>
           <TrackedButton />
         </TrackedMain>
       </ObjectivProvider>
