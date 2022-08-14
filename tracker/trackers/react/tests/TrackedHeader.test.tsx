@@ -77,7 +77,7 @@ describe('TrackedHeader', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedHeader id={'Header 1'}>
+        <TrackedHeader objectiv={{ id: 'Header 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedHeader>
         <TrackedHeader id={'Header 2'} objectiv={{ normalizeId: false }}>

@@ -211,9 +211,10 @@ describe('TrackedInputContext', () => {
         />
         <TrackedInputContext
           type={'radio'}
-          defaultValue={'some text'}
+          checked={true}
           data-testid={'test-input-2'}
           objectiv={{ Component: 'input', id: 'input-id-2', stateless: true, eventHandler: 'onClick' }}
+          onClick={jest.fn}
         />
         <TrackedInputContext
           data-testid={'test-input-3'}
@@ -223,6 +224,12 @@ describe('TrackedInputContext', () => {
           data-testid={'test-input-4'}
           multiple
           objectiv={{ Component: 'select', id: 'input-id-4', stateless: true, eventHandler: 'onClick' }}
+        />
+        <TrackedInputContext
+          type={'checkbox'}
+          checked={true}
+          data-testid={'test-input-5'}
+          objectiv={{ Component: 'input', id: 'input-id-5', stateless: true, eventHandler: 'onClick' }}
         />
       </ObjectivProvider>
     );
@@ -265,6 +272,17 @@ describe('TrackedInputContext', () => {
     fireEvent.click(screen.getByTestId('test-input-4'), { target: { value: 'option' } });
     fireEvent.click(screen.getByTestId('test-input-4'), { target: { value: 'option' } });
     fireEvent.click(screen.getByTestId('test-input-4'), { target: { value: 'option' } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'InputChangeEvent' }));
+    expect(logTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'InputChangeEvent' }));
+
+    jest.resetAllMocks();
+
+    fireEvent.click(screen.getByTestId('test-input-5'), { target: { checked: true } });
+    fireEvent.click(screen.getByTestId('test-input-5'), { target: { checked: true } });
+    fireEvent.click(screen.getByTestId('test-input-5'), { target: { checked: true } });
 
     expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'InputChangeEvent' }));

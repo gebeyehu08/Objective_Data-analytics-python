@@ -28,8 +28,8 @@ describe('TrackedInputCheckbox', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputCheckbox value={'value-1'} />
+        <TrackedInputCheckbox objectiv={{ id: 'value-1' }} />
         <TrackedInputCheckbox type={'checkbox'} value={'value-2'} />
-        {/* @ts-ignore silence the warning on the wrong type */}
         <TrackedInputCheckbox type={'text'} id={'input-id'} value={'value-3'} />
       </ObjectivProvider>
     );

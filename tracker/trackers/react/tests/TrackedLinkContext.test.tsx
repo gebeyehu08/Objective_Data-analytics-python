@@ -31,15 +31,19 @@ describe('TrackedLinkContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext href={'/some-url'} objectiv={{ Component: 'a', id: 'link-id' }}>
-          Trigger Event
+        <TrackedLinkContext href={'/some-url-1'} objectiv={{ Component: 'a', id: 'link-id-1' }}>
+          Trigger Event 1
+        </TrackedLinkContext>
+        <TrackedLinkContext objectiv={{ Component: 'a', id: 'link-id-2', href: '/some-url-2' }}>
+          Trigger Event 2
         </TrackedLinkContext>
       </ObjectivProvider>
     );
 
-    fireEvent.click(getByText(container, /trigger event/i));
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -53,7 +57,21 @@ describe('TrackedLinkContext', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.LinkContext,
-            id: 'link-id',
+            id: 'link-id-1',
+            href: '/some-url-1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'link-id-2',
+            href: '/some-url-2',
           }),
         ]),
       })

@@ -28,8 +28,8 @@ describe('TrackedInputRadio', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputRadio value={'value-1'} />
+        <TrackedInputRadio objectiv={{ id: 'value-1' }} />
         <TrackedInputRadio type={'radio'} value={'value-2'} />
-        {/* @ts-ignore silence the warning on the wrong type */}
         <TrackedInputRadio type={'text'} id={'input-id'} value={'value-3'} />
       </ObjectivProvider>
     );

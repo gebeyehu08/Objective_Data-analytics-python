@@ -27,22 +27,26 @@ describe('TrackedRootLocationContext', () => {
     jest.spyOn(logTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
-    const TrackedButton = () => {
+    const TrackedButton = ({ text = 'Trigger Event' }: { text?: string }) => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
+      return <div onClick={() => trackPressEvent()}>{text}</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root-id' }}>
-          <TrackedButton />
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root-id-1' }}>
+          <TrackedButton text={'Trigger Event 1'} />
+        </TrackedRootLocationContext>
+        <TrackedRootLocationContext id={'root-id-2'} objectiv={{ Component: 'div' }}>
+          <TrackedButton text={'Trigger Event 2'} />
         </TrackedRootLocationContext>
       </ObjectivProvider>
     );
 
-    fireEvent.click(getByText(container, /trigger event/i));
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -56,7 +60,19 @@ describe('TrackedRootLocationContext', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.RootLocationContext,
-            id: 'root-id',
+            id: 'root-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.RootLocationContext,
+            id: 'root-id-2',
           }),
         ]),
       })

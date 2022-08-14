@@ -18,9 +18,9 @@ import {
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
-const TrackedButton = () => {
+const TrackedButton = ({ text = 'Trigger Event' }: { text?: string }) => {
   const trackPressEvent = usePressEventTracker();
-  return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
+  return <div onClick={() => trackPressEvent()}>{text}</div>;
 };
 
 describe('TrackedExpandableContext', () => {
@@ -41,15 +41,19 @@ describe('TrackedExpandableContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'expandable-id' }}>
-          <TrackedButton />
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'expandable-id-1' }}>
+          <TrackedButton text={'Trigger Event 1'} />
+        </TrackedExpandableContext>
+        <TrackedExpandableContext id={'expandable-id-2'} objectiv={{ Component: 'div' }}>
+          <TrackedButton text={'Trigger Event 2'} />
         </TrackedExpandableContext>
       </ObjectivProvider>
     );
 
-    fireEvent.click(getByText(container, /trigger event/i));
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -63,7 +67,19 @@ describe('TrackedExpandableContext', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.ExpandableContext,
-            id: 'expandable-id',
+            id: 'expandable-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.ExpandableContext,
+            id: 'expandable-id-2',
           }),
         ]),
       })

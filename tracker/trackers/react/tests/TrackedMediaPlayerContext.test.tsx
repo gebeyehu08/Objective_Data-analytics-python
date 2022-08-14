@@ -34,22 +34,26 @@ describe('TrackedMediaPlayerContext', () => {
     jest.spyOn(logTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
-    const TrackedButton = () => {
+    const TrackedButton = ({ text = 'Trigger Event' }: { text?: string }) => {
       const trackPressEvent = usePressEventTracker();
-      return <video onClick={() => trackPressEvent()}>Trigger Event</video>;
+      return <div onClick={() => trackPressEvent()}>{text}</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'video-id' }}>
-          <TrackedButton />
+        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'video-id-1' }}>
+          <TrackedButton text={'Trigger Event 1'} />
+        </TrackedMediaPlayerContext>
+        <TrackedMediaPlayerContext id={'video-id-2'} objectiv={{ Component: 'video' }}>
+          <TrackedButton text={'Trigger Event 2'} />
         </TrackedMediaPlayerContext>
       </ObjectivProvider>
     );
 
-    fireEvent.click(getByText(container, /trigger event/i));
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -63,7 +67,19 @@ describe('TrackedMediaPlayerContext', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.MediaPlayerContext,
-            id: 'video-id',
+            id: 'video-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.MediaPlayerContext,
+            id: 'video-id-2',
           }),
         ]),
       })
