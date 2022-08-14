@@ -23,6 +23,7 @@ export const TrackedLinkContext = forwardRef(
       ...nativeProps
     } = props;
 
+    // Attempt to auto-detect `id` and `href` for LinkContext
     let linkId: string | null = trackingId ?? nativeId ?? title ?? makeTitleFromChildren(props.children);
     if (normalizeId) {
       linkId = makeIdFromString(linkId);

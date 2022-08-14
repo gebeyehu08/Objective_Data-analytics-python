@@ -19,17 +19,15 @@ import { TrackedPressableContextProps } from '../types';
 export const TrackedPressableContext = forwardRef(
   <T extends unknown>(props: TrackedPressableContextProps<T>, ref: Ref<unknown>) => {
     const {
-      objectiv: { Component, id, normalizeId = true },
+      objectiv: { Component, id: trackingId, normalizeId = true },
       id: nativeId,
       title,
       ...nativeProps
     } = props;
     const locationStack = useLocationStack();
 
-    // FIXME check this logic below
-    // Attempt to auto-detect `id` for LinkContext by looking at either the `title` or `children` props.
-    const pressableTitle = title ?? makeTitleFromChildren(props.children);
-    let pressableId: string | null = id ?? nativeId ?? pressableTitle;
+    // Attempt to auto-detect `id` for PressableContext
+    let pressableId: string | null = trackingId ?? nativeId ?? title ?? makeTitleFromChildren(props.children);
     if (normalizeId) {
       pressableId = makeIdFromString(pressableId);
     }
