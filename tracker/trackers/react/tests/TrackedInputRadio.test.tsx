@@ -81,7 +81,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio data-testid={'test-radio'} value={'value'} trackValue={true} />
+        <TrackedInputRadio data-testid={'test-radio'} value={'value'} objectiv={{ trackValue: true }} />
       </ObjectivProvider>
     );
 
@@ -126,7 +126,12 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} eventHandler={'onBlur'} />
+        <TrackedInputRadio
+          id={'input-id'}
+          data-testid={'test-radio'}
+          value={'value'}
+          objectiv={{ eventHandler: 'onBlur' }}
+        />
       </ObjectivProvider>
     );
 
@@ -161,9 +166,9 @@ describe('TrackedInputRadio', () => {
           id={'input-id-1'}
           data-testid={'test-radio-1'}
           value={'value-1'}
-          eventHandler={'onChange'}
           name={'radios'}
           onChange={onChangeSpy}
+          objectiv={{ eventHandler: 'onChange' }}
         />
       </ObjectivProvider>
     );
@@ -205,8 +210,7 @@ describe('TrackedInputRadio', () => {
           id={'input-id-1'}
           data-testid={'test-radio-1'}
           value={'value-1'}
-          eventHandler={'onBlur'}
-          stateless={false}
+          objectiv={{ eventHandler: 'onBlur', stateless: false }}
         />
       </ObjectivProvider>
     );
@@ -230,7 +234,12 @@ describe('TrackedInputRadio', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputRadio id={'Input id 1'} data-testid={'test-radio-1'} value={'text'} />
-        <TrackedInputRadio id={'Input id 2'} normalizeId={false} data-testid={'test-radio-2'} value={'text'} />
+        <TrackedInputRadio
+          id={'Input id 2'}
+          data-testid={'test-radio-2'}
+          value={'text'}
+          objectiv={{ normalizeId: false }}
+        />
       </ObjectivProvider>
     );
 
@@ -272,7 +281,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInputRadio id={'☹️'} />
           </TrackedDiv>
@@ -292,7 +301,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInputRadio value={''} />
           </TrackedDiv>
@@ -312,7 +321,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio value={'test 1'} id={'input-id'} ref={ref} />
+        <TrackedInputRadio value={'test 1'} ref={ref} />
       </ObjectivProvider>
     );
 
@@ -333,7 +342,12 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio value={'some-value'} data-testid={'test-input'} eventHandler={'onBlur'} onBlur={onBlurSpy} />
+        <TrackedInputRadio
+          value={'some-value'}
+          data-testid={'test-input'}
+          onBlur={onBlurSpy}
+          objectiv={{ eventHandler: 'onBlur' }}
+        />
       </ObjectivProvider>
     );
 
@@ -367,8 +381,8 @@ describe('TrackedInputRadio', () => {
         <TrackedInputRadio
           value={'some-value'}
           data-testid={'test-input'}
-          eventHandler={'onClick'}
           onClick={onClickSpy}
+          objectiv={{ eventHandler: 'onChange' }}
         />
       </ObjectivProvider>
     );
@@ -402,8 +416,7 @@ describe('TrackedInputRadio', () => {
           id={'input-id'}
           data-testid={'test-radio'}
           value={'value'}
-          trackValue={true}
-          eventHandler={'onClick'}
+          objectiv={{ eventHandler: 'onClick', trackValue: true }}
         />
       </ObjectivProvider>
     );

@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { makeTitleFromChildren, TrackedLinkContextProps } from '@objectiv/tracker-react';
 import { LinkContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref } from 'react';
@@ -19,11 +19,13 @@ export const TrackedLinkContext = forwardRef(
       ...nativeProps
     } = props;
 
-    // Attempt to auto-detect `id` and `href` for LinkContext
-    let linkId: string | null = id ?? nativeProps.id ?? nativeProps.title ?? makeTitleFromChildren(props.children);
-    if (normalizeId) {
-      linkId = makeIdFromString(linkId);
-    }
+    // Attempt to auto-detect `id`
+    const linkId = makeId(
+      id ?? nativeProps.id ?? nativeProps.title ?? makeTitleFromChildren(props.children),
+      normalizeId
+    );
+
+    // Attempt to auto-detect `href`
     const linkHref = href ?? nativeProps.href;
 
     const componentProps = {

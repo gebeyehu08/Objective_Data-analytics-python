@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { makeTitleFromChildren } from '@objectiv/tracker-react-core';
 import { getPathFromState } from '@react-navigation/native';
 import { TrackedLinkProps } from './TrackedLink';
@@ -15,7 +15,7 @@ export function makeLinkContextProps<ParamList extends ReactNavigation.RootParam
 ) {
   // Either use the given id or attempt to auto-detect `id` for LinkContext by looking at the `children` prop.
   const title = makeTitleFromChildren(props.children);
-  const contextId = props.id ?? makeIdFromString(title);
+  const contextId = props.id ?? makeId(title);
 
   // Use React Navigation `getPathFromState` to generate the `href` prop. Unless it was already a string.
   let contextHref: string;

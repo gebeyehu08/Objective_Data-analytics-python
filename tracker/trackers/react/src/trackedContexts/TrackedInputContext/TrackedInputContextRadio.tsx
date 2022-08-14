@@ -6,7 +6,7 @@ import {
   GlobalContexts,
   LocationStack,
   makeContentContext,
-  makeIdFromString,
+  makeId,
   makeInputValueContext,
 } from '@objectiv/tracker-core';
 import {
@@ -72,7 +72,7 @@ export const TrackedInputContextRadio = forwardRef(
 
     let inputId: string | null | undefined = id ?? nativeProps.id;
     if (inputId && normalizeId) {
-      inputId = makeIdFromString(inputId);
+      inputId = makeId(inputId);
     }
 
     const handleEvent = async (event: TrackedInputContextRadioEvent, trackingContext: TrackingContext) => {
@@ -92,7 +92,7 @@ export const TrackedInputContextRadio = forwardRef(
 
         // Add LocationContext representing the radio group, if the `name` attribute has been set
         if (eventTarget.name) {
-          const nameContentContextId = makeIdFromString(eventTarget.name);
+          const nameContentContextId = makeId(eventTarget.name);
           if (nameContentContextId) {
             const locationStackClone = [...eventTrackerParameters.locationStack];
             locationStackClone.splice(

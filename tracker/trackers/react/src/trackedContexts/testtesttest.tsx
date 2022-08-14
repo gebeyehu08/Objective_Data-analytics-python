@@ -7,6 +7,7 @@ import { TrackedContentContext } from './TrackedContentContext';
 
 // FIXME This is just a playground to test edge cases, delete it when done refactoring
 type TestComponentProps = {
+  id: number;
   abc: string;
 };
 
@@ -22,7 +23,7 @@ export const TestWrapper = () => {
   return (
     <>
       {/* Render our custom component normally. */}
-      <TestComponent abc={'test'} />
+      <TestComponent id={123} abc={'test'} />
 
       {/* It's possible to omit the generic props of TrackedContentContext. Not really recommended, though. */}
       <TrackedContentContext ref={inputRef} objectiv={{ Component: 'input', id: 'test' }} />
@@ -32,6 +33,7 @@ export const TestWrapper = () => {
 
       {/* A custom component gets enriched as well, and we get TS validation for both prop sets */}
       <TrackedContentContext<ComponentProps<typeof TestComponent>>
+        id={123}
         abc={'asd'}
         ref={divRef}
         objectiv={{

@@ -82,14 +82,23 @@ export const waitForPromise = async ({
 export const isValidIndex = (index: number) => Number.isInteger(index) && Number.isFinite(index) && index >= 0;
 
 /**
- * Converts the given text to a standardized format to be used as identifier for Location Contexts.
+ * Converts the given input to a standardized format to be used as identifier for Location Contexts.
  * This may be used, among others, to infer a valid identifier from the title / label of a Button.
+ * If the given input is not a number or a string, or the normalization fails, it returns null.
  */
-export const makeIdFromString = (sourceString: string): string | null => {
-  let id = '';
+export const makeId = (source: unknown, normalize: boolean = true): string | null => {
+  let id = typeof source === 'number' ? source.toString() : source;
 
-  if (typeof sourceString === 'string') {
-    id = sourceString
+  if (typeof id !== 'string') {
+    return null;
+  }
+
+  if(!normalize) {
+    return id;
+  }
+
+  const normalizedId =
+    id
       // Convert to lowercase
       .toLowerCase()
       // Trim it
@@ -106,15 +115,14 @@ export const makeIdFromString = (sourceString: string): string | null => {
       .replace(/^([-_])*|([-_])*$/g, '')
       // Truncate to 64 chars
       .slice(0, 64);
-  }
 
   // Catch empty strings and return null
-  if (!id || !id.length) {
+  if (!normalizedId || !normalizedId.length) {
     return null;
   }
 
-  // Return processed id
-  return id;
+  // Return normalized id
+  return normalizedId;
 };
 
 /**

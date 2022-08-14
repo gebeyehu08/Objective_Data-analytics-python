@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { makeTitleFromChildren } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { ObjectivTrackingOptions } from '../../types';
@@ -30,7 +30,7 @@ export const makeIdFromTrackedAnchorProps = ({
   const resultId = id ?? contextId ?? title ?? makeTitleFromChildren(children);
 
   if (normalizeId) {
-    return makeIdFromString(resultId);
+    return makeId(resultId);
   }
 
   return resultId;

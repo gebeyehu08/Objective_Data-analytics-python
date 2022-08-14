@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { MediaPlayerContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { TrackedContextProps } from '../types';
@@ -18,10 +18,8 @@ export const TrackedMediaPlayerContext = forwardRef(
     } = props;
     const locationStack = useLocationStack();
 
-    let mediaPlayerId: string | null | undefined = id ?? nativeProps.id;
-    if (mediaPlayerId && normalizeId) {
-      mediaPlayerId = makeIdFromString(mediaPlayerId);
-    }
+    // Attempt to auto detect id
+    const mediaPlayerId = makeId(id ?? nativeProps.id, normalizeId);
 
     const componentProps = {
       ...nativeProps,

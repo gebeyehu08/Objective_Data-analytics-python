@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { TrackedContextProps } from '@objectiv/tracker-react';
 import { ContentContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref } from 'react';
@@ -18,10 +18,8 @@ export const TrackedContentContext = forwardRef(
     } = props;
     const locationStack = useLocationStack();
 
-    let contentId: string | null | undefined = id ?? nativeProps.id;
-    if (contentId && normalizeId) {
-      contentId = makeIdFromString(contentId);
-    }
+    // Attempt to auto detect id
+    const contentId = makeId(id ?? nativeProps.id, normalizeId);
 
     const componentProps = {
       ...nativeProps,

@@ -70,7 +70,7 @@ describe('TrackedInputContext', () => {
           id={'input-id'}
           data-testid={'test-input'}
           defaultValue={'text'}
-          trackValue={true}
+          objectiv={{ trackValue: true }}
         />
       </ObjectivProvider>
     );
@@ -120,9 +120,9 @@ describe('TrackedInputContext', () => {
         <TrackedInput
           type={'text'}
           id={'Input id 2'}
-          normalizeId={false}
           data-testid={'test-input-2'}
           defaultValue={'text'}
+          objectiv={{ normalizeId: false }}
         />
       </ObjectivProvider>
     );
@@ -165,7 +165,7 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInput type={'text'} id={'☹️'} />
           </TrackedDiv>
@@ -184,7 +184,7 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInput type={'checkbox'} id={'test-1'} />
             <TrackedInput type={'radio'} id={'test-2'} />

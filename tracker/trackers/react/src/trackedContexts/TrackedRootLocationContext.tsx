@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { RootLocationContextWrapper } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { TrackedContextProps } from '../types';
@@ -17,10 +17,8 @@ export const TrackedRootLocationContext = forwardRef(
       ...nativeProps
     } = props;
 
-    let rootId: string | null | undefined = id ?? nativeProps.id;
-    if (rootId && normalizeId) {
-      rootId = makeIdFromString(rootId);
-    }
+    // Attempt to auto detect id
+    const rootId = makeId(id ?? nativeProps.id, normalizeId);
 
     const componentProps = {
       ...nativeProps,

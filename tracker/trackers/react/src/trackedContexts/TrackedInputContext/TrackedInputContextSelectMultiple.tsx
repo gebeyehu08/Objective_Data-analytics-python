@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { GlobalContexts, LocationStack, makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
+import { GlobalContexts, LocationStack, makeId, makeInputValueContext } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -64,7 +64,7 @@ export const TrackedInputContextSelectMultiple = forwardRef(
 
     let selectId: string | null | undefined = id ?? nativeProps.id;
     if (selectId && normalizeId) {
-      selectId = makeIdFromString(selectId);
+      selectId = makeId(selectId);
     }
 
     const handleEvent = async (event: TrackedInputContextSelectMultipleEvent, trackingContext: TrackingContext) => {

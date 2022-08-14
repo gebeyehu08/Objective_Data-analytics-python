@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { OverlayContextWrapper, trackVisibility, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref, useRef } from 'react';
 import { TrackedShowableContextProps } from '../types';
@@ -20,10 +20,8 @@ export const TrackedOverlayContext = forwardRef(
     const wasVisible = useRef<boolean>(isVisible);
     const locationStack = useLocationStack();
 
-    let overlayId: string | null | undefined = id ?? nativeProps.id;
-    if (overlayId && normalizeId) {
-      overlayId = makeIdFromString(overlayId);
-    }
+    // Attempt to auto detect id
+    const overlayId = makeId(id ?? nativeProps.id, normalizeId);
 
     const componentProps = {
       ...nativeProps,

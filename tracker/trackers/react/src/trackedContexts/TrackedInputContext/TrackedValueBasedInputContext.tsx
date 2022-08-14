@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { GlobalContexts, makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
+import { GlobalContexts, makeId, makeInputValueContext } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -71,7 +71,7 @@ export const TrackedValueBasedInputContext = forwardRef(
 
     let inputId: string | null | undefined = id ?? nativeProps.id;
     if (inputId && normalizeId) {
-      inputId = makeIdFromString(inputId);
+      inputId = makeId(inputId);
     }
 
     const handleEvent = async (event: TrackedValueBasedInputContextEvent, trackingContext: TrackingContext) => {

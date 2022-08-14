@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { PressableContextWrapper, trackPressEvent, useLocationStack } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { Button, ButtonProps } from 'react-native';
@@ -24,7 +24,7 @@ export const TrackedButton = (props: TrackedButtonProps) => {
   const { id, ...buttonProps } = props;
 
   // Either use the given id or attempt to auto-detect `id` for LinkContext by looking at the `title` prop.
-  const contextId = id ?? makeIdFromString(props.title);
+  const contextId = id ?? makeId(props.title);
 
   // If we couldn't generate an `id`, log the issue and return an untracked Component.
   const locationStack = useLocationStack();

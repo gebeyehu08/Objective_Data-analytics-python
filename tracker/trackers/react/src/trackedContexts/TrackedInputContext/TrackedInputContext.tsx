@@ -2,7 +2,11 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackedContextComponentProp, TrackedContextIdProps } from '@objectiv/tracker-react';
+import {
+  TrackedContextComponentProp,
+  TrackedContextIdProps,
+  TrackingContextValueTrackingProps,
+} from '@objectiv/tracker-react';
 import React, { ComponentProps, PropsWithRef, Ref } from 'react';
 import { TrackedInputContextCheckbox } from './TrackedInputContextCheckbox';
 import { TrackedInputContextRadio } from './TrackedInputContextRadio';
@@ -15,33 +19,14 @@ import { TrackedValueBasedInputContext } from './TrackedValueBasedInputContext';
  */
 export type TrackedInputContextProps = (ComponentProps<'input'> | ComponentProps<'select'>) & {
   /**
-   * Type prop needs to be redefined becuse it doesn't overlap between input and select
+   * Type prop needs to be redefined here, because it doesn't overlap between input and select
    */
-  type?: string;
+  type?: unknown;
 
   /**
    * The Objectiv configuration object
    */
-  objectiv: TrackedContextComponentProp &
-    TrackedContextIdProps & {
-      /**
-       * Optional. Whether to track the 'value' attribute. Default to false.
-       * When enabled, an InputValueContext will be pushed into the Global Contexts of the InputChangeEvent.
-       */
-      trackValue?: boolean;
-
-      /**
-       * Optional. Whether to trigger events only when values actually changed. Default to false.
-       * For example, this allows tracking tabbing (e.g. onBlur and value did not change), which is normally prevented.
-       */
-      stateless?: boolean;
-
-      /**
-       * Optional. Which event handler to use. Default is 'onBlur'.
-       * Valid values: `onBlur`, `onChange` or `onClick`.
-       */
-      eventHandler?: 'onBlur' | 'onChange' | 'onClick';
-    };
+  objectiv: TrackedContextComponentProp & TrackedContextIdProps & TrackingContextValueTrackingProps;
 };
 
 /**

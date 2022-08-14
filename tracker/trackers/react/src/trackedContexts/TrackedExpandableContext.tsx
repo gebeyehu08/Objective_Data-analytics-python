@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { ExpandableContextWrapper, trackVisibility, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref, useRef } from 'react';
 import { TrackedShowableContextProps } from '../types';
@@ -20,10 +20,8 @@ export const TrackedExpandableContext = forwardRef(
     const wasVisible = useRef<boolean>(isVisible);
     const locationStack = useLocationStack();
 
-    let expandableId: string | null | undefined = id;
-    if (expandableId && normalizeId) {
-      expandableId = makeIdFromString(expandableId);
-    }
+    // Attempt to auto detect id
+    const expandableId = makeId(id ?? nativeProps.id, normalizeId);
 
     const componentProps = {
       ...nativeProps,

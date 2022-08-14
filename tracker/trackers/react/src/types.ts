@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ElementType, MouseEventHandler, ReactHTML, ReactNode } from 'react';
+import { ComponentProps, ElementType, MouseEventHandler, ReactHTML, ReactNode } from 'react';
 
 /**
  * Props to specify Component and componentRef to a TrackedContext.
@@ -30,11 +30,34 @@ export type TrackedContextIdProps = {
 };
 
 /**
+ * These props allow configuring how values are tracked for TrackedInputContext and derived Tracked Elements.
+ */
+export type TrackingContextValueTrackingProps = {
+  /**
+   * Optional. Whether to track the 'value' attribute. Default to false.
+   * When enabled, an InputValueContext will be pushed into the Global Contexts of the InputChangeEvent.
+   */
+  trackValue?: boolean;
+
+  /**
+   * Optional. Whether to trigger events only when values actually changed. Default to false.
+   * For example, this allows tracking tabbing (e.g. onBlur and value did not change), which is normally prevented.
+   */
+  stateless?: boolean;
+
+  /**
+   * Optional. Which event handler to use. Default is 'onBlur'.
+   * Valid values: `onBlur`, `onChange` or `onClick`.
+   */
+  eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+};
+
+/**
  * These props are common to all TrackedContexts.
  */
 export type CommonProps = {
-  id?: string | undefined;
-  title?: string | undefined;
+  id?: unknown;
+  title?: unknown;
   children?: ReactNode;
 };
 
@@ -108,6 +131,13 @@ export type TrackedLinkContextProps<T> = T &
  */
 export type TrackedElementWithOptionalIdProps<T> = T & {
   objectiv?: TrackedContextIdProps;
+};
+
+/**
+ * Props used for all Tracked Input Elements
+ */
+export type TrackedInputProps = ComponentProps<'input'> & {
+  objectiv?: TrackedContextIdProps & TrackingContextValueTrackingProps;
 };
 
 /**

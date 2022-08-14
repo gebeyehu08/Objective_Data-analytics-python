@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { NavigationContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { TrackedContextProps } from '../types';
@@ -16,13 +16,10 @@ export const TrackedNavigationContext = forwardRef(
       objectiv: { Component, id, normalizeId = true },
       ...nativeProps
     } = props;
-
     const locationStack = useLocationStack();
 
-    let navigationId: string | null | undefined = id ?? nativeProps.id;
-    if (navigationId && normalizeId) {
-      navigationId = makeIdFromString(navigationId);
-    }
+    // Attempt to auto detect id
+    const navigationId = makeId(id ?? nativeProps.id, normalizeId);
 
     const componentProps = {
       ...nativeProps,

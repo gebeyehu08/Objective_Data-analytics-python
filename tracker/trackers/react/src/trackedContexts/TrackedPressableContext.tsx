@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import {
   makeTitleFromChildren,
   PressableContextWrapper,
@@ -24,12 +24,11 @@ export const TrackedPressableContext = forwardRef(
     } = props;
     const locationStack = useLocationStack();
 
-    // Attempt to auto-detect `id` for PressableContext
-    let pressableId: string | null | undefined =
-      id ?? nativeProps.id ?? nativeProps.title ?? makeTitleFromChildren(nativeProps.children);
-    if (pressableId && normalizeId) {
-      pressableId = makeIdFromString(pressableId);
-    }
+    // Attempt to auto detect id
+    const pressableId = makeId(
+      id ?? nativeProps.id ?? nativeProps.title ?? makeTitleFromChildren(nativeProps.children),
+      normalizeId
+    );
 
     // Prepare new Component props
     const componentProps = {
