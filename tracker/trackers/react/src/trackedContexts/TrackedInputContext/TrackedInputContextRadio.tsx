@@ -16,8 +16,8 @@ import {
   trackInputChangeEvent,
   useLocationStack,
 } from '@objectiv/tracker-react-core';
-import React, { ChangeEvent, FocusEvent, useState } from 'react';
-import { TrackedContextProps } from '../../types';
+import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
+import { TrackedContextComponentProp, TrackedContextIdProps, TrackedContextProps } from '../../types';
 import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
@@ -25,44 +25,44 @@ import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './Trac
  * Stateless by default. Tracks InputChangeEvent when the given Component receives an `onChange` SyntheticEvent.
  * Optionally tracks the input's `checked` as InputValueContext.
  */
-export type TrackedInputContextRadioProps = TrackedContextProps<HTMLInputElement> & {
-  /**
-   * Optional. Whether to track the 'value' attribute. Default to false.
-   * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
-   */
-  trackValue?: boolean;
+export type TrackedInputContextRadioProps = ComponentProps<'input'> & {
+  objectiv: TrackedContextComponentProp &
+    TrackedContextIdProps & {
+      /**
+       * Optional. Whether to track the 'value' attribute. Default to false.
+       * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
+       */
+      trackValue?: boolean;
 
-  /**
-   * Optional. Whether to trigger events only when values actually changed. Default to false.
-   * For example, this allows tracking re-selections of the same value (e.g. onBlur), which is normally prevented.
-   */
-  stateless?: boolean;
+      /**
+       * Optional. Whether to trigger events only when values actually changed. Default to false.
+       * For example, this allows tracking re-selections of the same value (e.g. onBlur), which is normally prevented.
+       */
+      stateless?: boolean;
 
-  /**
-   * Optional. Which event handler to use. Default is 'onChange'.
-   * Valid values: `onBlur`, `onChange` or `onClick`.
-   */
-  eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+      /**
+       * Optional. Which event handler to use. Default is 'onChange'.
+       * Valid values: `onBlur`, `onChange` or `onClick`.
+       */
+      eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+    };
 };
 
 /**
  * Event definition for TrackedInputContextRadio
  */
-export type TrackedInputContextRadioEvent<T = HTMLInputElement> = FocusEvent<T> | ChangeEvent<T> | React.MouseEvent<T>;
+export type TrackedInputContextRadioEvent =
+  | FocusEvent<HTMLInputElement>
+  | ChangeEvent<HTMLInputElement>
+  | React.MouseEvent<HTMLInputElement>;
 
 /**
  * TrackedInputContextRadio implementation
  */
-export const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, TrackedInputContextRadioProps>(
-  (props, ref) => {
+export const TrackedInputContextRadio = forwardRef(
+  (props: TrackedInputContextRadioProps, ref: Ref<HTMLInputElement>) => {
     const {
-      id,
-      Component,
-      forwardId = false,
-      normalizeId = true,
-      trackValue = false,
-      stateless = true,
-      eventHandler = 'onChange',
+      objectiv: { Component, id, normalizeId = true, trackValue = false, stateless = true, eventHandler = 'onChange' },
       ...nativeProps
     } = props;
 
@@ -135,7 +135,6 @@ export const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, Track
     const componentProps = {
       ...nativeProps,
       ...(ref ? { ref } : {}),
-      ...(forwardId ? { id } : {}),
     };
 
     if (!inputId) {
@@ -160,4 +159,4 @@ export const TrackedInputContextRadio = React.forwardRef<HTMLInputElement, Track
       </InputContextWrapper>
     );
   }
-);
+) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;

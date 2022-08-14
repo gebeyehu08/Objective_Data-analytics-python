@@ -10,8 +10,8 @@ import {
   trackInputChangeEvent,
   useLocationStack,
 } from '@objectiv/tracker-react-core';
-import React, { ChangeEvent, FocusEvent, useState } from 'react';
-import { TrackedContextProps } from '../../types';
+import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
+import { TrackedContextComponentProp, TrackedContextIdProps, TrackedContextProps } from '../../types';
 import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
@@ -20,47 +20,44 @@ import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './Trac
  * `onChange` and `checked` changed.
  * Optionally tracks the input's `checked` attribute as InputValueContext.
  */
-export type TrackedInputContextCheckboxProps = TrackedContextProps<HTMLInputElement> & {
-  /**
-   * Optional. Whether to track the 'value' attribute. Default to false.
-   * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
-   */
-  trackValue?: boolean;
+export type TrackedInputContextCheckboxProps = ComponentProps<'input'> & {
+  objectiv: TrackedContextComponentProp &
+    TrackedContextIdProps & {
+      /**
+       * Optional. Whether to track the 'value' attribute. Default to false.
+       * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
+       */
+      trackValue?: boolean;
 
-  /**
-   * Optional. Whether to trigger events only when values actually changed. Default to false.
-   * For example, this allows tracking re-selections of the same value (e.g. onBlur), which is normally prevented.
-   */
-  stateless?: boolean;
+      /**
+       * Optional. Whether to trigger events only when values actually changed. Default to false.
+       * For example, this allows tracking re-selections of the same value (e.g. onBlur), which is normally prevented.
+       */
+      stateless?: boolean;
 
-  /**
-   * Optional. Which event handler to use. Default is 'onChange'.
-   * Valid values: `onBlur`,  `onChange` or `onClick`.
-   */
-  eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+      /**
+       * Optional. Which event handler to use. Default is 'onChange'.
+       * Valid values: `onBlur`,  `onChange` or `onClick`.
+       */
+      eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+    };
 };
 
 /**
  * Event definition for TrackedInputContextCheckbox
  */
-export type TrackedInputContextCheckboxEvent<T = HTMLInputElement> =
-  | FocusEvent<T>
-  | ChangeEvent<T>
-  | React.MouseEvent<T>;
+export type TrackedInputContextCheckboxEvent =
+  | FocusEvent<HTMLInputElement>
+  | ChangeEvent<HTMLInputElement>
+  | React.MouseEvent<HTMLInputElement>;
 
 /**
  * TrackedInputContextCheckbox implementation
  */
-export const TrackedInputContextCheckbox = React.forwardRef<HTMLInputElement, TrackedInputContextCheckboxProps>(
-  (props, ref) => {
+export const TrackedInputContextCheckbox = forwardRef(
+  (props: TrackedInputContextCheckboxProps, ref: Ref<HTMLInputElement>) => {
     const {
-      id,
-      Component,
-      forwardId = false,
-      normalizeId = true,
-      trackValue = false,
-      stateless = false,
-      eventHandler = 'onChange',
+      objectiv: { Component, id, normalizeId = true, trackValue = false, stateless = false, eventHandler = 'onChange' },
       ...nativeProps
     } = props;
 
@@ -117,7 +114,6 @@ export const TrackedInputContextCheckbox = React.forwardRef<HTMLInputElement, Tr
     const componentProps = {
       ...nativeProps,
       ...(ref ? { ref } : {}),
-      ...(forwardId ? { id } : {}),
     };
 
     if (!inputId) {
@@ -141,4 +137,4 @@ export const TrackedInputContextCheckbox = React.forwardRef<HTMLInputElement, Tr
       </InputContextWrapper>
     );
   }
-);
+) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;

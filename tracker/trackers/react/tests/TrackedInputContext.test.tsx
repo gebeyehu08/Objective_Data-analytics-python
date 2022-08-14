@@ -29,7 +29,11 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext Component={'input'} id={'input-id'} data-testid={'test-input'} value={'test'} />
+        <TrackedInputContext
+          data-testid={'test-input'}
+          value={'test'}
+          objectiv={{ Component: 'input', id: 'input-id' }}
+        />
       </ObjectivProvider>
     );
 
@@ -51,13 +55,15 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext Component={'input'} type={'text'} id={'Input id 1'} data-testid={'test-input-1'} />
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
-          id={'Input id 2'}
-          normalizeId={false}
+          data-testid={'test-input-1'}
+          objectiv={{ Component: 'input', id: 'Input id 1' }}
+        />
+        <TrackedInputContext
+          type={'text'}
           data-testid={'test-input-2'}
+          objectiv={{ Component: 'input', id: 'Input id 2', normalizeId: false }}
         />
       </ObjectivProvider>
     );
@@ -102,11 +108,8 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'select'}
-          id={'test-select'}
           data-testid={'test-select'}
-          eventHandler={'onChange'}
-          trackValue={true}
+          objectiv={{ Component: 'select', id: 'test-select', eventHandler: 'onChange', trackValue: true }}
         >
           <option data-testid={'test-option-1'} value={'option-1'}>
             option 1
@@ -153,9 +156,9 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedInputContext Component={'input'} type={'text'} id={'☹️'} />
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedInputContext type={'text'} objectiv={{ Component: 'input', id: '☹️' }} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -175,11 +178,10 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
-          id={'input-id'}
           defaultValue={'some text'}
           data-testid={'test-input'}
+          objectiv={{ Component: 'input', id: 'input-id' }}
         />
       </ObjectivProvider>
     );
@@ -202,36 +204,25 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
-          id={'input-id-1'}
           defaultValue={'some text'}
           data-testid={'test-input-1'}
-          stateless={true}
+          objectiv={{ Component: 'input', id: 'input-id-1', stateless: true }}
         />
         <TrackedInputContext
-          Component={'input'}
           type={'radio'}
-          id={'input-id-2'}
           defaultValue={'some text'}
           data-testid={'test-input-2'}
-          stateless={true}
-          eventHandler={'onClick'}
+          objectiv={{ Component: 'input', id: 'input-id-2', stateless: true, eventHandler: 'onClick' }}
         />
         <TrackedInputContext
-          Component={'select'}
-          id={'input-id-3'}
           data-testid={'test-input-3'}
-          stateless={true}
-          eventHandler={'onClick'}
+          objectiv={{ Component: 'select', id: 'input-id-3', stateless: true, eventHandler: 'onClick' }}
         />
         <TrackedInputContext
-          Component={'select'}
-          id={'input-id-4'}
           data-testid={'test-input-4'}
-          stateless={true}
-          eventHandler={'onClick'}
           multiple
+          objectiv={{ Component: 'select', id: 'input-id-4', stateless: true, eventHandler: 'onClick' }}
         />
       </ObjectivProvider>
     );
@@ -288,14 +279,10 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'checkbox'}
-          id={'checkbox-id'}
           value={'123'}
           data-testid={'test-checkbox'}
-          stateless={true}
-          trackValue={true}
-          eventHandler={'onClick'}
+          objectiv={{ Component: 'input', id: 'checkbox-id', stateless: true, trackValue: true, eventHandler: 'onClick' }}
         />
       </ObjectivProvider>
     );
@@ -374,11 +361,10 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
-          id={'input-id'}
           defaultValue={'some text'}
           data-testid={'test-input'}
+          objectiv={{ Component: 'input', id: 'input-id' }}
         />
       </ObjectivProvider>
     );
@@ -422,12 +408,10 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
-          id={'input-id'}
           defaultValue={'some text'}
           data-testid={'test-input'}
-          trackValue={true}
+          objectiv={{ Component: 'input', id: 'input-id', trackValue: true }}
         />
       </ObjectivProvider>
     );
@@ -466,16 +450,13 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
-          id={'input-id'}
           defaultValue={'some text'}
           data-testid={'test-input'}
-          trackValue={true}
-          eventHandler={'onChange'}
           onBlur={onBlurSpy}
           onChange={onChangeSpy}
           onClick={onClickSpy}
+          objectiv={{ Component: 'input', id: 'input-id', trackValue: true, eventHandler: 'onChange' }}
         />
       </ObjectivProvider>
     );
@@ -534,16 +515,13 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
-          id={'input-id'}
           defaultValue={'some text'}
           data-testid={'test-input'}
-          trackValue={true}
-          eventHandler={'onClick'}
           onBlur={onBlurSpy}
           onChange={onChangeSpy}
           onClick={onClickSpy}
+          objectiv={{ Component: 'input', id: 'input-id', trackValue: true, eventHandler: 'onClick' }}
         />
       </ObjectivProvider>
     );
@@ -591,68 +569,14 @@ describe('TrackedInputContext', () => {
     expect(onClickSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext
-          Component={'input'}
-          type={'text'}
-          defaultValue={'test 1'}
-          id={'input-id-1'}
-          data-testid={'test-input-1'}
-        />
-        <TrackedInputContext
-          Component={'input'}
-          type={'text'}
-          defaultValue={'test 2'}
-          id={'input-id-2'}
-          forwardId={true}
-          data-testid={'test-input-2'}
-        />
-        <TrackedInputContext
-          Component={'input'}
-          type={'checkbox'}
-          id={'input-id-3'}
-          forwardId={true}
-          checked={false}
-          data-testid={'test-input-3'}
-        />
-        <TrackedInputContext
-          Component={'input'}
-          type={'radio'}
-          id={'input-id-4'}
-          forwardId={true}
-          checked={false}
-          data-testid={'test-input-4'}
-        />
-        <TrackedInputContext Component={'select'} id={'input-id-5'} forwardId={true} data-testid={'test-input-5'} />
-        <TrackedInputContext
-          Component={'select'}
-          id={'input-id-6'}
-          multiple
-          forwardId={true}
-          data-testid={'test-input-6'}
-        />
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-input-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-input-2').getAttribute('id')).toBe('input-id-2');
-    expect(screen.getByTestId('test-input-3').getAttribute('id')).toBe('input-id-3');
-    expect(screen.getByTestId('test-input-4').getAttribute('id')).toBe('input-id-4');
-    expect(screen.getByTestId('test-input-5').getAttribute('id')).toBe('input-id-5');
-    expect(screen.getByTestId('test-input-6').getAttribute('id')).toBe('input-id-6');
-  });
-
   it('should allow forwarding refs', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
     const ref = createRef<HTMLInputElement>();
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext Component={'input'} type={'text'} defaultValue={'test 1'} id={'input-id'} ref={ref} />
+        <TrackedInputContext type={'text'} defaultValue={'test 1'} ref={ref} objectiv={{ Component: 'input', id: 'input-id' }}
+        />
       </ObjectivProvider>
     );
 
@@ -671,12 +595,12 @@ describe('TrackedInputContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputContext
-          Component={'input'}
           type={'text'}
           defaultValue={''}
-          id={'input-id'}
           onBlur={blurSpy}
           data-testid={'test-input'}
+                    objectiv={{ Component: 'input', id: 'input-id' }}
+
         />
       </ObjectivProvider>
     );

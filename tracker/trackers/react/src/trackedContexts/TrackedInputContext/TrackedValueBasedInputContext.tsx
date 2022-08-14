@@ -10,8 +10,8 @@ import {
   trackInputChangeEvent,
   useLocationStack,
 } from '@objectiv/tracker-react-core';
-import React, { ChangeEvent, FocusEvent, useState } from 'react';
-import { TrackedContextProps } from '../../types';
+import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
+import { TrackedContextComponentProp, TrackedContextIdProps, TrackedContextProps } from '../../types';
 import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
@@ -24,47 +24,44 @@ import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './Trac
  *
  * Optionally tracks the input's `value` attribute as InputValueContext.
  */
-export type TrackedValueBasedInputContextProps = TrackedContextProps<HTMLInputElement> & {
-  /**
-   * Optional. Whether to track the 'value' attribute. Default to false.
-   * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
-   */
-  trackValue?: boolean;
+export type TrackedValueBasedInputContextProps = ComponentProps<'input'> & {
+  objectiv: TrackedContextComponentProp &
+    TrackedContextIdProps & {
+      /**
+       * Optional. Whether to track the 'value' attribute. Default to false.
+       * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
+       */
+      trackValue?: boolean;
 
-  /**
-   * Optional. Whether to trigger events only when values actually changed. Default to false.
-   * For example, this allows tracking tabbing (e.g. onBlur and value did not change), which is normally prevented.
-   */
-  stateless?: boolean;
+      /**
+       * Optional. Whether to trigger events only when values actually changed. Default to false.
+       * For example, this allows tracking tabbing (e.g. onBlur and value did not change), which is normally prevented.
+       */
+      stateless?: boolean;
 
-  /**
-   * Optional. Which event handler to use. Default is 'onBlur'.
-   * Valid values: `onBlur`, `onChange` or `onClick'.
-   */
-  eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+      /**
+       * Optional. Which event handler to use. Default is 'onBlur'.
+       * Valid values: `onBlur`, `onChange` or `onClick'.
+       */
+      eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+    };
 };
 
 /**
  * Event definition for TrackedValueBasedInputContext
  */
-export type TrackedValueBasedInputContextEvent<T = HTMLInputElement> =
-  | FocusEvent<T>
-  | ChangeEvent<T>
-  | React.MouseEvent<T>;
+export type TrackedValueBasedInputContextEvent =
+  | FocusEvent<HTMLInputElement>
+  | ChangeEvent<HTMLInputElement>
+  | React.MouseEvent<HTMLInputElement>;
 
 /**
  * TrackedValueBasedInputContext implementation
  */
-export const TrackedValueBasedInputContext = React.forwardRef<HTMLInputElement, TrackedValueBasedInputContextProps>(
-  (props, ref) => {
+export const TrackedValueBasedInputContext = forwardRef(
+  (props: TrackedValueBasedInputContextProps, ref: Ref<HTMLInputElement>) => {
     const {
-      id,
-      Component,
-      forwardId = false,
-      normalizeId = true,
-      trackValue = false,
-      stateless = false,
-      eventHandler = 'onBlur',
+      objectiv: { Component, id, normalizeId = true, trackValue = false, stateless = false, eventHandler = 'onBlur' },
       ...nativeProps
     } = props;
 
@@ -118,7 +115,6 @@ export const TrackedValueBasedInputContext = React.forwardRef<HTMLInputElement, 
     const componentProps = {
       ...nativeProps,
       ...(ref ? { ref } : {}),
-      ...(forwardId ? { id } : {}),
     };
 
     if (!inputId) {
@@ -142,4 +138,4 @@ export const TrackedValueBasedInputContext = React.forwardRef<HTMLInputElement, 
       </InputContextWrapper>
     );
   }
-);
+) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;
