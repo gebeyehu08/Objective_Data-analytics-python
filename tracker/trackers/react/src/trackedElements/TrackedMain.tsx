@@ -2,13 +2,19 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import React from 'react';
+import React, { ComponentProps, forwardRef, Ref } from 'react';
 import { TrackedContentContext } from '../trackedContexts/TrackedContentContext';
-import { SingletonTrackedElementProps } from '../types';
+import { TrackedElementWithOptionalIdProps } from '../types';
 
 /**
  * Generates a TrackedContentContext preconfigured with a <main> Element as Component.
  */
-export const TrackedMain = React.forwardRef<HTMLDivElement, SingletonTrackedElementProps>((props, ref) => (
-  <TrackedContentContext {...props} id={props.id ?? 'main'} Component={'main'} ref={ref} />
-));
+export const TrackedMain = forwardRef(
+  ({ objectiv, ...nativeProps }: TrackedElementWithOptionalIdProps<ComponentProps<'main'>>, ref: Ref<HTMLElement>) => (
+    <TrackedContentContext
+      objectiv={{ ...objectiv, Component: 'main', id: objectiv?.id ?? nativeProps.id }}
+      {...nativeProps}
+      ref={ref}
+    />
+  )
+);

@@ -2,13 +2,19 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import React from 'react';
+import React, { ComponentProps, forwardRef, Ref } from 'react';
 import { TrackedContentContext } from '../trackedContexts/TrackedContentContext';
-import { TrackedContextProps } from '../types';
+import { TrackedElementProps } from '../types';
 
 /**
  * Generates a TrackedContentContext preconfigured with a <section> Element as Component.
  */
-export const TrackedSection = React.forwardRef<HTMLDivElement, Omit<TrackedContextProps, 'Component'>>((props, ref) => (
-  <TrackedContentContext {...props} Component={'section'} ref={ref} />
-));
+export const TrackedSection = forwardRef(
+  ({ objectiv, ...nativeProps }: TrackedElementProps<ComponentProps<'section'>>, ref: Ref<HTMLElement>) => (
+    <TrackedContentContext
+      objectiv={{ ...objectiv, Component: 'section', id: objectiv?.id ?? nativeProps.id }}
+      {...nativeProps}
+      ref={ref}
+    />
+  )
+);

@@ -21,7 +21,7 @@ export type TrackedContextIdProps = {
   /**
    * The identifier of the LocationContext
    */
-  id: string;
+  id?: string;
 
   /**
    * Optional. Default to `true`. Whether to normalize the given id.
@@ -38,9 +38,10 @@ export type TrackedContextProps<T> = T & {
 
 /**
  * Base props of all TrackedElements. They don't include ComponentProp, as we hard-code that for these components.
+ * We also try to auto-detect the identifier from the native `id` property, if present
  */
 export type TrackedElementProps<T> = T & {
-  objectiv: TrackedContextIdProps;
+  objectiv?: TrackedContextIdProps;
 };
 
 /**
@@ -71,7 +72,7 @@ export type PressableCommonProps = {
  */
 export type TrackedPressableContextProps<T> = T &
   PressableCommonProps & {
-    objectiv: TrackedContextComponentProp & Partial<TrackedContextIdProps>;
+    objectiv: TrackedContextComponentProp & TrackedContextIdProps;
   };
 
 /**
@@ -80,7 +81,7 @@ export type TrackedPressableContextProps<T> = T &
 export type TrackedLinkContextProps<T> = T &
   PressableCommonProps & {
     objectiv: TrackedContextComponentProp &
-      Partial<TrackedContextIdProps> & {
+      TrackedContextIdProps & {
         /**
          * The destination of this link, required by LinkContext
          */
@@ -98,7 +99,7 @@ export type TrackedLinkContextProps<T> = T &
  * Overrides TrackedContextProps to make the objectiv prop and all of its attributes optional.
  */
 export type TrackedElementWithOptionalIdProps<T> = T & {
-  objectiv?: Partial<TrackedContextIdProps>
+  objectiv?: TrackedContextIdProps;
 };
 
 /**

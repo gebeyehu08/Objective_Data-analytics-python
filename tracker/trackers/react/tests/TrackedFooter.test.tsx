@@ -124,20 +124,22 @@ describe('TrackedFooter', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext objectiv={{Component: 'div', id: 'root'}}>
-          <TrackedDiv objectiv={{id: 'content'}}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
             <TrackedFooter id={'☹️'} />
-            <TrackedFooter objectiv={{ id: '☹️' }}/>
+            <TrackedFooter objectiv={{ id: '☹️' }} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
     );
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
-    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(1,
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      1,
       '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
-    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(2,
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      2,
       '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });

@@ -80,7 +80,7 @@ describe('TrackedMain', () => {
         <TrackedMain id={'Main 1'}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedMain>
-        <TrackedMain id={'Main 2'} normalizeId={false}>
+        <TrackedMain id={'Main 2'} objectiv={{ normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedMain>
       </ObjectivProvider>
@@ -124,8 +124,8 @@ describe('TrackedMain', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
             <TrackedMain id={'☹️'} />
           </TrackedDiv>
         </TrackedRootLocationContext>
