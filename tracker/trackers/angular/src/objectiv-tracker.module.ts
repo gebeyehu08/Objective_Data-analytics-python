@@ -5,7 +5,7 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { BrowserTrackerConfig } from '@objectiv/tracker-browser';
 import { ObjectivTrackerDirective } from './objectiv-tracker.directive';
-import { makeId } from './objectiv-tracker.filter';
+import { MakeId } from './objectiv-tracker.filter';
 import { OBJECTIV_TRACKER_INITIALIZER_PROVIDER } from './objectiv-tracker.initializer';
 import { OBJECTIV_TRACKER_CONFIG_TOKEN } from './objectiv-tracker.token';
 
@@ -15,8 +15,8 @@ import { OBJECTIV_TRACKER_CONFIG_TOKEN } from './objectiv-tracker.token';
  */
 @NgModule({
   imports: [],
-  declarations: [ObjectivTrackerDirective, makeId],
-  exports: [ObjectivTrackerDirective, makeId],
+  declarations: [ObjectivTrackerDirective, MakeId],
+  exports: [ObjectivTrackerDirective, MakeId],
 })
 export class ObjectivTrackerModule {
   static forRoot(trackerConfig: BrowserTrackerConfig): ModuleWithProviders<ObjectivTrackerModule> {

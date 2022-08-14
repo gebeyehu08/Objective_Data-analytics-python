@@ -2,65 +2,51 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import {
-  LinkContextWrapper,
-  makeAnchorClickHandler,
-  makeIdFromTrackedAnchorProps,
-  useLocationStack,
-} from '@objectiv/tracker-react';
-import React from 'react';
+import { PressableCommonProps, TrackedContextIdProps, TrackedLinkContext } from '@objectiv/tracker-react';
+import React, { ComponentProps, forwardRef, Ref } from 'react';
 import { NavLink, NavLinkProps, useHref } from 'react-router-dom';
-import { ReactRouterTrackingOptionsProp } from './types';
 
 /**
- * Wrapped NavLink will accept all NavLinkProps and, optionally, ReactRouterTrackingOptionsProp.
+ * An overridden version of TrackedLinkProps:
+ * - The objectiv props, and the object itself, are entirely optional
+ * - No Component prop, as it's hard-coded to NavLink
  */
-export type TrackedNavLinkProps = NavLinkProps & ReactRouterTrackingOptionsProp;
+export type TrackedNavLinkProps = NavLinkProps &
+  PressableCommonProps & {
+    objectiv?: TrackedContextIdProps & {
+      // FIXME move this in its own type
+      /**
+       * The destination of this link, required by LinkContext
+       */
+      href?: string;
+
+      /**
+       * Whether to block and wait for the Tracker having sent the event. Eg: a button redirecting to a new location.
+       */
+      waitUntilTracked?: boolean;
+    };
+    href?: string | undefined;
+  };
 
 /**
  * Wraps NavLink in a LinkContext and automatically instruments tracking PressEvent on click.
  */
-export const TrackedNavLink = React.forwardRef<HTMLAnchorElement, TrackedNavLinkProps>((props, ref) => {
-  const { objectiv, children, ...otherProps } = props;
+export const TrackedNavLink = forwardRef(
+  ({ objectiv, ...nativeProps }: TrackedNavLinkProps, ref: Ref<HTMLAnchorElement>) => {
+    // Use ReactRouter hooks to generate the `href` prop.
+    const linkContextHref = useHref(nativeProps.to);
 
-  // Use ReactRouter hooks to generate the `href` prop.
-  const linkContextHref = useHref(props.to);
-
-  // Attempt to generate an id for LinkContext by looking at `id`, `title`, `children` and `objectiv.contextId` props.
-  const linkContextId = makeIdFromTrackedAnchorProps({ ...props, ...objectiv });
-
-  // If we couldn't generate an `id`, log the issue and return a regular Link component.
-  const locationStack = useLocationStack();
-  if (!linkContextId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate id for LinkContext @ ${locationPath}. Either add the \`title\` prop or specify an id manually via the  \`id\` option of the \`objectiv\` prop.`
-      );
-    }
     return (
-      <NavLink {...otherProps} ref={ref}>
-        {children}
-      </NavLink>
+      <TrackedLinkContext<ComponentProps<typeof NavLink>>
+        {...nativeProps}
+        ref={ref}
+        objectiv={{
+          Component: NavLink,
+          id: objectiv?.id,
+          href: linkContextHref,
+          waitUntilTracked: objectiv?.waitUntilTracked ?? nativeProps.reloadDocument,
+        }}
+      />
     );
   }
-
-  return (
-    <LinkContextWrapper id={linkContextId} href={linkContextHref}>
-      {(trackingContext) => (
-        <NavLink
-          {...otherProps}
-          ref={ref}
-          onClick={makeAnchorClickHandler({
-            trackingContext,
-            anchorHref: linkContextHref,
-            waitUntilTracked: props.reloadDocument,
-            onClick: props.onClick,
-          })}
-        >
-          {children}
-        </NavLink>
-      )}
-    </LinkContextWrapper>
-  );
-});
+);

@@ -11,7 +11,7 @@ import { makeId } from '@objectiv/tracker-browser';
 @Pipe({
   name: 'makeId',
 })
-export class makeId implements PipeTransform {
+export class MakeId implements PipeTransform {
   transform(inputString: string): string | null {
     return makeId(inputString);
   }
