@@ -47,10 +47,13 @@ export type TrackedElementProps<T> = T & {
  * The props of Contexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
  */
 export type TrackedShowableContextProps<T> = TrackedContextProps<T> & {
-  /**
-   * Whether to track visibility events automatically when this prop changes state.
-   */
-  isVisible?: boolean;
+  objectiv: TrackedContextComponentProp &
+    TrackedContextIdProps & {
+      /**
+       * Whether to track visibility events automatically when this prop changes state.
+       */
+      isVisible?: boolean;
+    };
 };
 
 /**

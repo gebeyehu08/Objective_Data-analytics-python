@@ -6,8 +6,8 @@ import { TrackedContextComponentProp, TrackedContextIdProps } from '@objectiv/tr
 import React, { ComponentProps, PropsWithRef, Ref } from 'react';
 import { TrackedInputContextCheckbox } from './TrackedInputContextCheckbox';
 import { TrackedInputContextRadio } from './TrackedInputContextRadio';
-import { TrackedInputContextSelectMultiple, } from './TrackedInputContextSelectMultiple';
-import { TrackedInputContextSelectSingle, } from './TrackedInputContextSelectSingle';
+import { TrackedInputContextSelectMultiple } from './TrackedInputContextSelectMultiple';
+import { TrackedInputContextSelectSingle } from './TrackedInputContextSelectSingle';
 import { TrackedValueBasedInputContext } from './TrackedValueBasedInputContext';
 
 /**

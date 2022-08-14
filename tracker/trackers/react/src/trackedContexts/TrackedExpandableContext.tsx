@@ -4,48 +4,55 @@
 
 import { makeIdFromString } from '@objectiv/tracker-core';
 import { ExpandableContextWrapper, trackVisibility, useLocationStack } from '@objectiv/tracker-react-core';
-import React, { useRef } from 'react';
+import React, { forwardRef, PropsWithRef, Ref, useRef } from 'react';
 import { TrackedShowableContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in an ExpandableContext.
  * Automatically tracks HiddenEvent and VisibleEvent based on the given `isVisible` prop.
  */
-export const TrackedExpandableContext = React.forwardRef<HTMLElement, TrackedShowableContextProps>((props, ref) => {
-  const { id, Component, forwardId = false, isVisible = false, normalizeId = true, ...otherProps } = props;
-  const wasVisible = useRef<boolean>(isVisible);
-  const locationStack = useLocationStack();
+export const TrackedExpandableContext = forwardRef(
+  <T extends unknown>(props: TrackedShowableContextProps<T>, ref: Ref<unknown>) => {
+    const {
+      objectiv: { id, Component, isVisible = false, normalizeId = true },
+      ...nativeProps
+    } = props;
 
-  let expandableId: string | null = id;
-  if (normalizeId) {
-    expandableId = makeIdFromString(expandableId);
-  }
+    const wasVisible = useRef<boolean>(isVisible);
+    const locationStack = useLocationStack();
 
-  const componentProps = {
-    ...otherProps,
-    ...(ref ? { ref } : {}),
-    ...(forwardId ? { id } : {}),
-  };
-
-  if (!expandableId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate a valid id for ExpandableContext @ ${locationPath}. Please provide the \`id\` property.`
-      );
+    let expandableId: string | null = id;
+    if (normalizeId) {
+      expandableId = makeIdFromString(expandableId);
     }
-    return React.createElement(Component, componentProps);
-  }
 
-  return (
-    <ExpandableContextWrapper id={expandableId}>
-      {(trackingContext) => {
-        if ((wasVisible.current && !isVisible) || (!wasVisible.current && isVisible)) {
-          wasVisible.current = isVisible;
-          trackVisibility({ isVisible, ...trackingContext });
-        }
-        return React.createElement(Component, componentProps);
-      }}
-    </ExpandableContextWrapper>
-  );
-});
+    const componentProps = {
+      ...nativeProps,
+      ...(ref ? { ref } : {}),
+    };
+
+    if (!expandableId) {
+      if (globalThis.objectiv.devTools) {
+        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+        globalThis.objectiv.devTools.TrackerConsole.error(
+          `｢objectiv｣ Could not generate a valid id for ExpandableContext @ ${locationPath}. Please provide the \`id\` property.`
+        );
+      }
+
+      return <Component {...componentProps} />;
+    }
+
+    return (
+      <ExpandableContextWrapper id={expandableId}>
+        {(trackingContext) => {
+          if ((wasVisible.current && !isVisible) || (!wasVisible.current && isVisible)) {
+            wasVisible.current = isVisible;
+            trackVisibility({ isVisible, ...trackingContext });
+          }
+
+          return <Component {...componentProps} />;
+        }}
+      </ExpandableContextWrapper>
+    );
+  }
+) as <T>(props: PropsWithRef<TrackedShowableContextProps<T>>) => JSX.Element;

@@ -282,7 +282,13 @@ describe('TrackedInputContext', () => {
           type={'checkbox'}
           value={'123'}
           data-testid={'test-checkbox'}
-          objectiv={{ Component: 'input', id: 'checkbox-id', stateless: true, trackValue: true, eventHandler: 'onClick' }}
+          objectiv={{
+            Component: 'input',
+            id: 'checkbox-id',
+            stateless: true,
+            trackValue: true,
+            eventHandler: 'onClick',
+          }}
         />
       </ObjectivProvider>
     );
@@ -575,7 +581,11 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputContext type={'text'} defaultValue={'test 1'} ref={ref} objectiv={{ Component: 'input', id: 'input-id' }}
+        <TrackedInputContext
+          type={'text'}
+          defaultValue={'test 1'}
+          ref={ref}
+          objectiv={{ Component: 'input', id: 'input-id' }}
         />
       </ObjectivProvider>
     );
@@ -599,8 +609,7 @@ describe('TrackedInputContext', () => {
           defaultValue={''}
           onBlur={blurSpy}
           data-testid={'test-input'}
-                    objectiv={{ Component: 'input', id: 'input-id' }}
-
+          objectiv={{ Component: 'input', id: 'input-id' }}
         />
       </ObjectivProvider>
     );
