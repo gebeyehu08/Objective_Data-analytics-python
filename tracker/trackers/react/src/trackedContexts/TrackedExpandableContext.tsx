@@ -17,7 +17,6 @@ export const TrackedExpandableContext = forwardRef(
       objectiv: { id, Component, isVisible = false, normalizeId = true },
       ...nativeProps
     } = props;
-
     const wasVisible = useRef<boolean>(isVisible);
     const locationStack = useLocationStack();
 

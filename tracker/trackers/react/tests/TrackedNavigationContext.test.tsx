@@ -41,7 +41,7 @@ describe('TrackedNavigationContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNavigationContext objectiv={{ Component: 'nav', id: 'nav-id'}}>
+        <TrackedNavigationContext objectiv={{ Component: 'nav', id: 'nav-id' }}>
           <TrackedButton />
         </TrackedNavigationContext>
       </ObjectivProvider>
@@ -82,10 +82,10 @@ describe('TrackedNavigationContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNavigationContext objectiv={{ Component: 'nav', id:'Nav 1'}}>
+        <TrackedNavigationContext objectiv={{ Component: 'nav', id: 'Nav 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedNavigationContext>
-        <TrackedNavigationContext objectiv={{ Component: 'nav', id:'Nav 2', normalizeId: false}}>
+        <TrackedNavigationContext objectiv={{ Component: 'nav', id: 'Nav 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedNavigationContext>
       </ObjectivProvider>
@@ -129,9 +129,9 @@ describe('TrackedNavigationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext objectiv={{ Component: 'div', id:'root'}}>
-          <TrackedDiv objectiv={{ id:'content'}}>
-            <TrackedNavigationContext objectiv={{ Component: 'nav', id:'☹️'}}/>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedNavigationContext objectiv={{ Component: 'nav', id: '☹️' }} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -149,7 +149,7 @@ describe('TrackedNavigationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNavigationContext<ComponentProps<'nav'>> ref={ref} objectiv={{ Component: 'nav', id:'nav-id'}}>
+        <TrackedNavigationContext<ComponentProps<'nav'>> ref={ref} objectiv={{ Component: 'nav', id: 'nav-id' }}>
           test
         </TrackedNavigationContext>
       </ObjectivProvider>

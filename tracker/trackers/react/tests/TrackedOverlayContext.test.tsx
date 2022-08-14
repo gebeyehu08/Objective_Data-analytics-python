@@ -2,10 +2,10 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen } from '@testing-library/react';
-import React, { createRef } from 'react';
+import { fireEvent, getByText, render } from '@testing-library/react';
+import React, { ComponentProps, createRef } from 'react';
 import {
   ObjectivProvider,
   ReactTracker,
@@ -41,7 +41,7 @@ describe('TrackedOverlayContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'modal-id'}>
+        <TrackedOverlayContext objectiv={{ Component: 'div', id: 'modal-id' }}>
           <TrackedButton />
         </TrackedOverlayContext>
       </ObjectivProvider>
@@ -82,10 +82,10 @@ describe('TrackedOverlayContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'Modal id 1'}>
+        <TrackedOverlayContext objectiv={{ Component: 'div', id: 'Modal id 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedOverlayContext>
-        <TrackedOverlayContext Component={'div'} id={'Modal id 2'} normalizeId={false}>
+        <TrackedOverlayContext objectiv={{ Component: 'div', id: 'Modal id 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedOverlayContext>
       </ObjectivProvider>
@@ -133,9 +133,9 @@ describe('TrackedOverlayContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedOverlayContext Component={'div'} id={'☹️'} />
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedOverlayContext objectiv={{ Component: 'div', id: '☹️' }} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -154,7 +154,7 @@ describe('TrackedOverlayContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'modal-id'} isVisible={false}>
+        <TrackedOverlayContext objectiv={{ Component: 'div', id: 'modal-id', isVisible: false }}>
           <TrackedButton />
         </TrackedOverlayContext>
       </ObjectivProvider>
@@ -174,7 +174,7 @@ describe('TrackedOverlayContext', () => {
 
     const { rerender } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'modal-id'} isVisible={false}>
+        <TrackedOverlayContext objectiv={{ Component: 'div', id: 'modal-id', isVisible: false }}>
           <TrackedButton />
         </TrackedOverlayContext>
       </ObjectivProvider>
@@ -190,7 +190,7 @@ describe('TrackedOverlayContext', () => {
 
     rerender(
       <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'modal-id'} isVisible={true}>
+        <TrackedOverlayContext objectiv={{ Component: 'div', id: 'modal-id', isVisible: true }}>
           <TrackedButton />
         </TrackedOverlayContext>
       </ObjectivProvider>
@@ -207,7 +207,7 @@ describe('TrackedOverlayContext', () => {
 
     rerender(
       <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'modal-id'} isVisible={false}>
+        <TrackedOverlayContext objectiv={{ Component: 'div', id: 'modal-id', isVisible: false }}>
           <TrackedButton />
         </TrackedOverlayContext>
       </ObjectivProvider>
@@ -221,31 +221,13 @@ describe('TrackedOverlayContext', () => {
     );
   });
 
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'modal-id-1'} data-testid={'test-overlay-1'}>
-          test
-        </TrackedOverlayContext>
-        <TrackedOverlayContext Component={'div'} id={'modal-id-2'} forwardId={true} data-testid={'test-overlay-2'}>
-          test
-        </TrackedOverlayContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-overlay-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-overlay-2').getAttribute('id')).toBe('modal-id-2');
-  });
-
   it('should allow forwarding refs', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
     const ref = createRef<HTMLDivElement>();
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedOverlayContext Component={'div'} id={'modal-id'} ref={ref}>
+        <TrackedOverlayContext<ComponentProps<'div'>> ref={ref} objectiv={{ Component: 'div', id: 'modal-id' }}>
           Modal content
         </TrackedOverlayContext>
       </ObjectivProvider>
