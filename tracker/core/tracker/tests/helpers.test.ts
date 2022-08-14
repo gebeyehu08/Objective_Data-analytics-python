@@ -38,7 +38,7 @@ describe('helpers', () => {
   });
 
   describe('makeId', () => {
-    const testCases: [input: unknown, normalize:boolean, output: string | null][] = [
+    const testCases: [input: unknown, normalize: boolean, output: string | null][] = [
       [undefined, true, null],
       [null, true, null],
       [false, true, null],
@@ -64,7 +64,7 @@ describe('helpers', () => {
     ];
 
     testCases.forEach(([input, normalize, output]) =>
-      it(`${JSON.stringify(input)} (normalize: ${normalize? 'yes' : 'no'}) -> ${JSON.stringify(output)}`, () => {
+      it(`${JSON.stringify(input)} (normalize: ${normalize ? 'yes' : 'no'}) -> ${JSON.stringify(output)}`, () => {
         expect(makeId(input, normalize)).toBe(output);
       })
     );

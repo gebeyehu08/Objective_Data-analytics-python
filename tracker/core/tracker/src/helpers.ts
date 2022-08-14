@@ -93,28 +93,27 @@ export const makeId = (source: unknown, normalize: boolean = true): string | nul
     return null;
   }
 
-  if(!normalize) {
+  if (!normalize) {
     return id;
   }
 
-  const normalizedId =
-    id
-      // Convert to lowercase
-      .toLowerCase()
-      // Trim it
-      .trim()
-      // Replace spaces with dashes
-      .replace(/[\s]+/g, '-')
-      // Remove non-alphanumeric characters except dashes and underscores
-      .replace(/[^a-zA-Z0-9_-]+/g, '')
-      // Get rid of duplicated dashes
-      .replace(/-+/g, '-')
-      // Get rid of duplicated underscores
-      .replace(/_+/g, '_')
-      // Get rid of leading or trailing underscores and dashes
-      .replace(/^([-_])*|([-_])*$/g, '')
-      // Truncate to 64 chars
-      .slice(0, 64);
+  const normalizedId = id
+    // Convert to lowercase
+    .toLowerCase()
+    // Trim it
+    .trim()
+    // Replace spaces with dashes
+    .replace(/[\s]+/g, '-')
+    // Remove non-alphanumeric characters except dashes and underscores
+    .replace(/[^a-zA-Z0-9_-]+/g, '')
+    // Get rid of duplicated dashes
+    .replace(/-+/g, '-')
+    // Get rid of duplicated underscores
+    .replace(/_+/g, '_')
+    // Get rid of leading or trailing underscores and dashes
+    .replace(/^([-_])*|([-_])*$/g, '')
+    // Truncate to 64 chars
+    .slice(0, 64);
 
   // Catch empty strings and return null
   if (!normalizedId || !normalizedId.length) {
