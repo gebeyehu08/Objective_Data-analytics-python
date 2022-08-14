@@ -58,12 +58,12 @@ export const TrackedInputContextSelectSingle = forwardRef(
       ...nativeProps
     } = props;
 
-    const initialValue = props.value ?? props.defaultValue;
+    const initialValue = nativeProps.value ?? nativeProps.defaultValue;
     const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
     const locationStack = useLocationStack();
 
-    let selectId: string | null = id;
-    if (normalizeId) {
+    let selectId: string | null | undefined = id ?? nativeProps.id;
+    if (selectId && normalizeId) {
       selectId = makeIdFromString(selectId);
     }
 
@@ -96,15 +96,15 @@ export const TrackedInputContextSelectSingle = forwardRef(
       }
 
       if (isBlurEvent(event)) {
-        props.onBlur && props.onBlur(event);
+        nativeProps.onBlur && nativeProps.onBlur(event);
       }
 
       if (isChangeEvent(event)) {
-        props.onChange && props.onChange(event);
+        nativeProps.onChange && nativeProps.onChange(event);
       }
 
       if (isClickEvent(event)) {
-        props.onClick && props.onClick(event);
+        nativeProps.onClick && nativeProps.onClick(event);
       }
     };
 

@@ -58,7 +58,7 @@ describe('TrackedButton', () => {
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
         <TrackedButton>Trigger Event 1</TrackedButton>
-        <TrackedButton normalizeId={false}>Trigger Event 2</TrackedButton>
+        <TrackedButton objectiv={{normalizeId: false}}>Trigger Event 2</TrackedButton>
       </ObjectivProvider>
     );
 

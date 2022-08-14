@@ -18,8 +18,8 @@ export const TrackedMediaPlayerContext = forwardRef(
     } = props;
     const locationStack = useLocationStack();
 
-    let mediaPlayerId: string | null = id;
-    if (normalizeId) {
+    let mediaPlayerId: string | null | undefined = id ?? nativeProps.id;
+    if (mediaPlayerId && normalizeId) {
       mediaPlayerId = makeIdFromString(mediaPlayerId);
     }
 

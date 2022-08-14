@@ -20,8 +20,8 @@ export const TrackedExpandableContext = forwardRef(
     const wasVisible = useRef<boolean>(isVisible);
     const locationStack = useLocationStack();
 
-    let expandableId: string | null = id;
-    if (normalizeId) {
+    let expandableId: string | null | undefined = id;
+    if (expandableId && normalizeId) {
       expandableId = makeIdFromString(expandableId);
     }
 

@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import React, { ElementType, ReactHTML, ReactNode } from 'react';
+import { ElementType, MouseEventHandler, ReactHTML, ReactNode } from 'react';
 
 /**
  * Props to specify Component and componentRef to a TrackedContext.
@@ -30,11 +30,21 @@ export type TrackedContextIdProps = {
 };
 
 /**
+ * These props are common to all TrackedContexts.
+ */
+export type CommonProps = {
+  id?: string | undefined;
+  title?: string | undefined;
+  children?: ReactNode;
+};
+
+/**
  * Base props of all TrackedContexts.
  */
-export type TrackedContextProps<T> = T & {
-  objectiv: TrackedContextComponentProp & TrackedContextIdProps;
-};
+export type TrackedContextProps<T> = T &
+  CommonProps & {
+    objectiv: TrackedContextComponentProp & TrackedContextIdProps;
+  };
 
 /**
  * Base props of all TrackedElements. They don't include ComponentProp, as we hard-code that for these components.
@@ -47,24 +57,22 @@ export type TrackedElementProps<T> = T & {
 /**
  * The props of Contexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedShowableContextProps<T> = T & {
-  objectiv: TrackedContextComponentProp &
-    TrackedContextIdProps & {
-      /**
-       * Whether to track visibility events automatically when this prop changes state.
-       */
-      isVisible?: boolean;
-    };
-};
+export type TrackedShowableContextProps<T> = T &
+  CommonProps & {
+    objectiv: TrackedContextComponentProp &
+      TrackedContextIdProps & {
+        /**
+         * Whether to track visibility events automatically when this prop changes state.
+         */
+        isVisible?: boolean;
+      };
+  };
 
 /**
  * These props are common to all pressables, e.g. button and anchors.
  */
-export type PressableCommonProps = {
-  id?: string | undefined;
-  title?: string | undefined;
-  children?: ReactNode;
-  onClick?: (event: React.MouseEvent) => void;
+export type PressableCommonProps = CommonProps & {
+  onClick?: MouseEventHandler;
 };
 
 /**

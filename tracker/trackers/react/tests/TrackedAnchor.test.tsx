@@ -60,7 +60,7 @@ describe('TrackedAnchor', () => {
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
         <TrackedAnchor href={'/some-url'}>Trigger Event 1</TrackedAnchor>
-        <TrackedAnchor href={'/some-url'} normalizeId={false}>
+        <TrackedAnchor href={'/some-url'} objectiv={{ normalizeId: false }}>
           Trigger Event 2
         </TrackedAnchor>
       </ObjectivProvider>
@@ -105,7 +105,7 @@ describe('TrackedAnchor', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedAnchor href={'/some-url'} id={'test'}>
+        <TrackedAnchor href={'/some-url'} objectiv={{id: 'test'}}>
           Trigger Event
         </TrackedAnchor>
       </ObjectivProvider>

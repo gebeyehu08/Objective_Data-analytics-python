@@ -18,8 +18,8 @@ export const TrackedContentContext = forwardRef(
     } = props;
     const locationStack = useLocationStack();
 
-    let contentId: string | null = id;
-    if (normalizeId) {
+    let contentId: string | null | undefined = id ?? nativeProps.id;
+    if (contentId && normalizeId) {
       contentId = makeIdFromString(contentId);
     }
 

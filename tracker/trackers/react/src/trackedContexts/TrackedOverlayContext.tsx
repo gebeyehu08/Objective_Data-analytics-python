@@ -20,8 +20,8 @@ export const TrackedOverlayContext = forwardRef(
     const wasVisible = useRef<boolean>(isVisible);
     const locationStack = useLocationStack();
 
-    let overlayId: string | null = id;
-    if (normalizeId) {
+    let overlayId: string | null | undefined = id ?? nativeProps.id;
+    if (overlayId && normalizeId) {
       overlayId = makeIdFromString(overlayId);
     }
 

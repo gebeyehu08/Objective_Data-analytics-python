@@ -11,10 +11,6 @@ import { TrackedElementProps } from '../types';
  */
 export const TrackedSection = forwardRef(
   ({ objectiv, ...nativeProps }: TrackedElementProps<ComponentProps<'section'>>, ref: Ref<HTMLElement>) => (
-    <TrackedContentContext
-      objectiv={{ ...objectiv, Component: 'section', id: objectiv?.id ?? nativeProps.id }}
-      {...nativeProps}
-      ref={ref}
-    />
+    <TrackedContentContext objectiv={{ ...objectiv, Component: 'section' }} {...nativeProps} ref={ref} />
   )
 );

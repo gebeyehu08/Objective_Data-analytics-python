@@ -17,8 +17,8 @@ export const TrackedRootLocationContext = forwardRef(
       ...nativeProps
     } = props;
 
-    let rootId: string | null = id;
-    if (normalizeId) {
+    let rootId: string | null | undefined = id ?? nativeProps.id;
+    if (rootId && normalizeId) {
       rootId = makeIdFromString(rootId);
     }
 

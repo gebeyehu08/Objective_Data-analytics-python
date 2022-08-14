@@ -19,16 +19,15 @@ import { TrackedPressableContextProps } from '../types';
 export const TrackedPressableContext = forwardRef(
   <T extends unknown>(props: TrackedPressableContextProps<T>, ref: Ref<unknown>) => {
     const {
-      objectiv: { Component, id: trackingId, normalizeId = true },
-      id: nativeId,
-      title,
+      objectiv: { Component, id, normalizeId = true },
       ...nativeProps
     } = props;
     const locationStack = useLocationStack();
 
     // Attempt to auto-detect `id` for PressableContext
-    let pressableId: string | null = trackingId ?? nativeId ?? title ?? makeTitleFromChildren(props.children);
-    if (normalizeId) {
+    let pressableId: string | null | undefined =
+      id ?? nativeProps.id ?? nativeProps.title ?? makeTitleFromChildren(nativeProps.children);
+    if (pressableId && normalizeId) {
       pressableId = makeIdFromString(pressableId);
     }
 

@@ -15,20 +15,16 @@ import { makeAnchorClickHandler } from '../common/factories/makeAnchorClickHandl
 export const TrackedLinkContext = forwardRef(
   <T extends unknown>(props: TrackedLinkContextProps<T>, ref: Ref<unknown>) => {
     const {
-      objectiv: { Component, id: trackingId, href: trackingHref, normalizeId = true, waitUntilTracked = false },
-      id: nativeId,
-      title,
-      href: nativeHref,
-      onClick,
+      objectiv: { Component, id, href, normalizeId = true, waitUntilTracked = false },
       ...nativeProps
     } = props;
 
     // Attempt to auto-detect `id` and `href` for LinkContext
-    let linkId: string | null = trackingId ?? nativeId ?? title ?? makeTitleFromChildren(props.children);
+    let linkId: string | null = id ?? nativeProps.id ?? nativeProps.title ?? makeTitleFromChildren(props.children);
     if (normalizeId) {
       linkId = makeIdFromString(linkId);
     }
-    const href = trackingHref ?? nativeHref;
+    const linkHref = href ?? nativeProps.href;
 
     const componentProps = {
       ...nativeProps,
@@ -36,7 +32,7 @@ export const TrackedLinkContext = forwardRef(
     };
 
     const locationStack = useLocationStack();
-    if (!linkId || !href) {
+    if (!linkId || !linkHref) {
       if (globalThis.objectiv.devTools) {
         const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
 
@@ -46,7 +42,7 @@ export const TrackedLinkContext = forwardRef(
           );
         }
 
-        if (!href) {
+        if (!linkHref) {
           globalThis.objectiv.devTools.TrackerConsole.error(
             `｢objectiv｣ Could not generate a valid href for LinkContext @ ${locationPath}. Please provide the \`objectiv.href\` property manually.`
           );
@@ -57,15 +53,15 @@ export const TrackedLinkContext = forwardRef(
     }
 
     return (
-      <LinkContextWrapper id={linkId} href={href}>
+      <LinkContextWrapper id={linkId} href={linkHref}>
         {(trackingContext) =>
           React.createElement(Component, {
             ...componentProps,
             onClick: makeAnchorClickHandler({
               trackingContext,
-              anchorHref: href,
+              anchorHref: linkHref,
               waitUntilTracked,
-              onClick,
+              onClick: nativeProps.onClick,
             }),
           })
         }

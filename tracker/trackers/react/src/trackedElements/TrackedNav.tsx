@@ -11,10 +11,6 @@ import { TrackedElementWithOptionalIdProps } from '../types';
  */
 export const TrackedNav = forwardRef(
   ({ objectiv, ...nativeProps }: TrackedElementWithOptionalIdProps<ComponentProps<'nav'>>, ref: Ref<HTMLElement>) => (
-    <TrackedNavigationContext
-      objectiv={{ ...objectiv, Component: 'nav', id: objectiv?.id ?? nativeProps.id }}
-      {...nativeProps}
-      ref={ref}
-    />
+    <TrackedNavigationContext objectiv={{ ...objectiv, Component: 'nav' }} {...nativeProps} ref={ref} />
   )
 );

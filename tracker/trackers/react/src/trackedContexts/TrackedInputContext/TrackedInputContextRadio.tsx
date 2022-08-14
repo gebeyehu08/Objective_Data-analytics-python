@@ -66,12 +66,12 @@ export const TrackedInputContextRadio = forwardRef(
       ...nativeProps
     } = props;
 
-    const initialValue = props.checked ?? props.defaultChecked;
+    const initialValue = nativeProps.checked ?? nativeProps.defaultChecked;
     const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
     const locationStack = useLocationStack();
 
-    let inputId: string | null = id;
-    if (normalizeId) {
+    let inputId: string | null | undefined = id ?? nativeProps.id;
+    if (inputId && normalizeId) {
       inputId = makeIdFromString(inputId);
     }
 
@@ -120,15 +120,15 @@ export const TrackedInputContextRadio = forwardRef(
       }
 
       if (isBlurEvent(event)) {
-        props.onBlur && props.onBlur(event);
+        nativeProps.onBlur && nativeProps.onBlur(event);
       }
 
       if (isChangeEvent(event)) {
-        props.onChange && props.onChange(event);
+        nativeProps.onChange && nativeProps.onChange(event);
       }
 
       if (isClickEvent(event)) {
-        props.onClick && props.onClick(event);
+        nativeProps.onClick && nativeProps.onClick(event);
       }
     };
 

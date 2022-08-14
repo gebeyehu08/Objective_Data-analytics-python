@@ -19,8 +19,8 @@ export const TrackedNavigationContext = forwardRef(
 
     const locationStack = useLocationStack();
 
-    let navigationId: string | null = id;
-    if (normalizeId) {
+    let navigationId: string | null | undefined = id ?? nativeProps.id;
+    if (navigationId && normalizeId) {
       navigationId = makeIdFromString(navigationId);
     }
 
