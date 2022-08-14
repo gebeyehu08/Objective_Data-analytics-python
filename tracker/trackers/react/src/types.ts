@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ElementType, ReactHTML } from 'react';
+import { ElementType, MouseEventHandler, ReactHTML, ReactNode } from 'react';
 
 /**
  * Props to specify Component and componentRef to a TrackedContext.
@@ -57,12 +57,16 @@ export type TrackedShowableContextProps<T> = T & {
 };
 
 /**
- * The props of TrackedPressableContext. Extends TrackedContextProps with then `isVisible` property.
+ * The props of TrackedPressableContext. Extends TrackedContextProps with extra button/anchor related properties.
  */
 export type TrackedPressableContextProps<T> = T & {
   objectiv: TrackedContextComponentProp & Partial<TrackedContextIdProps>;
+  title?: string | undefined;
+  children?: ReactNode;
+  onClick?: MouseEventHandler<T>;
 };
 
+// FIXME we probably don't needed these types below anymore
 /**
  * Overrides TrackedContextProps to not require an id, assuming that semantically there should be only one Element
  */
