@@ -139,27 +139,3 @@ export type TrackedElementWithOptionalIdProps<T> = T & {
 export type TrackedInputProps = ComponentProps<'input'> & {
   objectiv?: TrackedContextIdProps & TrackingContextValueTrackingProps;
 };
-
-/**
- * Some extra options that may be useful for special cases, e.g. anchors without texts or external hrefs.
- * This is mainly used for TrackedContexts and Custom Components.
- *
- * FIXME: do we need this?
- * TODO switch to this way of setting options, as opposed to the current prop merging
- */
-export type ObjectivTrackingOptions = {
-  /**
-   * Whether to block and wait for the Tracker having sent the event, e.g. an external or a full page refresh link.
-   */
-  waitUntilTracked?: boolean;
-
-  /**
-   * The unique id of the LinkContext. Required for links without any title nor text.
-   */
-  contextId?: string;
-
-  /**
-   * Whether to normalize the given id, default to true.
-   */
-  normalizeId?: boolean;
-};
