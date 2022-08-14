@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ElementType, MouseEventHandler, ReactHTML, ReactNode } from 'react';
+import React, { ElementType, ReactHTML, ReactNode } from 'react';
 
 /**
  * Props to specify Component and componentRef to a TrackedContext.
@@ -57,14 +57,42 @@ export type TrackedShowableContextProps<T> = T & {
 };
 
 /**
- * The props of TrackedPressableContext. Extends TrackedContextProps with extra button/anchor related properties.
+ * These props are common to all pressables, e.g. button and anchors.
  */
-export type TrackedPressableContextProps<T> = T & {
-  objectiv: TrackedContextComponentProp & Partial<TrackedContextIdProps>;
+export type PressableCommonProps = {
+  id?: string | undefined;
   title?: string | undefined;
   children?: ReactNode;
-  onClick?: MouseEventHandler<T>;
+  onClick?: (event: React.MouseEvent) => void;
 };
+
+/**
+ * The props of TrackedPressableContext. Extends TrackedContextProps with extra pressable related properties.
+ */
+export type TrackedPressableContextProps<T> = T &
+  PressableCommonProps & {
+    objectiv: TrackedContextComponentProp & Partial<TrackedContextIdProps>;
+  };
+
+/**
+ * The props of TrackedLinkContext. Extends TrackedContextProps with LinkContext specific properties.
+ */
+export type TrackedLinkContextProps<T> = T &
+  PressableCommonProps & {
+    objectiv: TrackedContextComponentProp &
+      Partial<TrackedContextIdProps> & {
+        /**
+         * The destination of this link, required by LinkContext
+         */
+        href?: string;
+
+        /**
+         * Whether to block and wait for the Tracker having sent the event. Eg: a button redirecting to a new location.
+         */
+        waitUntilTracked?: boolean;
+      };
+    href?: string | undefined;
+  };
 
 // FIXME we probably don't needed these types below anymore
 /**

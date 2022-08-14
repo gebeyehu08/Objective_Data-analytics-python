@@ -117,7 +117,7 @@ export const TrackedInputContextSelectSingle = forwardRef(
       if (globalThis.objectiv.devTools) {
         const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
         globalThis.objectiv.devTools.TrackerConsole.error(
-          `｢objectiv｣ Could not generate a valid id for InputContext:select @ ${locationPath}. Please provide the \`id\` property.`
+          `｢objectiv｣ Could not generate a valid id for InputContext:select @ ${locationPath}. Please provide the \`objectiv.id\` property.`
         );
       }
       return React.createElement(Component, componentProps);

@@ -132,7 +132,7 @@ describe('TrackedRootLocationContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for RootLocationContext. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for RootLocationContext. Please provide the `objectiv.id` property.'
     );
   });
 

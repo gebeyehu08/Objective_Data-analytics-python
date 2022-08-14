@@ -143,7 +143,7 @@ describe('TrackedOverlayContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for OverlayContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for OverlayContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 

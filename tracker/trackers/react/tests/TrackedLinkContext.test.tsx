@@ -2,9 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, getByText, render, waitFor } from '@testing-library/react';
 import React, { createRef } from 'react';
 import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedLinkContext, TrackedRootLocationContext } from '../src';
 
@@ -31,7 +31,7 @@ describe('TrackedLinkContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} id={'link-id'} href={'/some-url'}>
+        <TrackedLinkContext href={'/some-url'} objectiv={{ Component: 'a', id: 'link-id' }}>
           Trigger Event
         </TrackedLinkContext>
       </ObjectivProvider>
@@ -67,10 +67,10 @@ describe('TrackedLinkContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} id={'Link Id 1'} href={'/some-url'}>
+        <TrackedLinkContext href={'/some-url'} objectiv={{ Component: 'a', id: 'Link Id 1' }}>
           Trigger Event 1
         </TrackedLinkContext>
-        <TrackedLinkContext Component={'a'} id={'Link Id 2'} normalizeId={false} href={'/some-url'}>
+        <TrackedLinkContext href={'/some-url'} objectiv={{ Component: 'a', id: 'Link Id 2', normalizeId: false }}>
           Trigger Event 2
         </TrackedLinkContext>
       </ObjectivProvider>
@@ -112,38 +112,14 @@ describe('TrackedLinkContext', () => {
     );
   });
 
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} id={'link-id-1'} href={'/some-url'} data-testid={'test-link-1'}>
-          test
-        </TrackedLinkContext>
-        <TrackedLinkContext
-          Component={'a'}
-          id={'link-id-2'}
-          href={'/some-url'}
-          forwardId={true}
-          data-testid={'test-link-2'}
-        >
-          test
-        </TrackedLinkContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-link-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-link-2').getAttribute('id')).toBe('link-id-2');
-  });
-
   it('should console.error if an id cannot be automatically generated', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedLinkContext Component={'a'} href={'/some-url'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedLinkContext href={'/some-url'} objectiv={{ Component: 'a' }}>
               {/* nothing to see here */}
             </TrackedLinkContext>
           </TrackedDiv>
@@ -153,57 +129,27 @@ describe('TrackedLinkContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for LinkContext @ RootLocation:root / Content:content. Please provide either the `title` or the `id` property manually.'
+      '｢objectiv｣ Could not generate a valid id for LinkContext @ RootLocation:root / Content:content. Please provide either the `title` or the `objectiv.id` property manually.'
     );
   });
 
-  it('should allow forwarding the title property', () => {
+  it('should console.error if an href cannot be retrieved', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext
-          Component={'a'}
-          id={'link-id-1'}
-          href={'/some-url'}
-          title={'Press me'}
-          data-testid={'test-link-1'}
-        >
-          test
-        </TrackedLinkContext>
-        <TrackedLinkContext
-          Component={'a'}
-          id={'link-id-2'}
-          href={'/some-url'}
-          title={'Press me'}
-          forwardTitle={true}
-          data-testid={'test-link-2'}
-        >
-          test
-        </TrackedLinkContext>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedLinkContext objectiv={{ Component: 'a' }}>Press Me!</TrackedLinkContext>
+          </TrackedDiv>
+        </TrackedRootLocationContext>
       </ObjectivProvider>
     );
 
-    expect(screen.getByTestId('test-link-1').getAttribute('title')).toBe(null);
-    expect(screen.getByTestId('test-link-2').getAttribute('title')).toBe('Press me');
-  });
-
-  it('should allow forwarding the href property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} href={'/some-url'} data-testid={'test-link-1'}>
-          test 1
-        </TrackedLinkContext>
-        <TrackedLinkContext Component={'a'} href={'/some-url'} forwardHref={true} data-testid={'test-link-2'}>
-          test 2
-        </TrackedLinkContext>
-      </ObjectivProvider>
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv｣ Could not generate a valid href for LinkContext @ RootLocation:root / Content:content. Please provide the `objectiv.href` property manually.'
     );
-
-    expect(screen.getByTestId('test-link-1').getAttribute('href')).toBe(null);
-    expect(screen.getByTestId('test-link-2').getAttribute('href')).toBe('/some-url');
   });
 
   it('should allow forwarding refs', () => {
@@ -212,7 +158,7 @@ describe('TrackedLinkContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} href={'/some-url'} ref={ref}>
+        <TrackedLinkContext href={'/some-url'} ref={ref} objectiv={{ Component: 'a' }}>
           Press me!
         </TrackedLinkContext>
       </ObjectivProvider>
@@ -231,7 +177,7 @@ describe('TrackedLinkContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} id={'link-id'} href={'/some-url'} onClick={clickSpy}>
+        <TrackedLinkContext href={'/some-url'} onClick={clickSpy} objectiv={{ Component: 'a', id: 'link-id' }}>
           Press me
         </TrackedLinkContext>
       </ObjectivProvider>
@@ -252,7 +198,12 @@ describe('TrackedLinkContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} href={'/some-url'} waitUntilTracked={false} onClick={clickSpy}>
+        <TrackedLinkContext
+          href={'/some-url'}
+          waitUntilTracked={false}
+          onClick={clickSpy}
+          objectiv={{ Component: 'a', waitUntilTracked: false }}
+        >
           Press me
         </TrackedLinkContext>
       </ObjectivProvider>
@@ -278,7 +229,7 @@ describe('TrackedLinkContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedLinkContext Component={'a'} href={'/some-url'} waitUntilTracked={true} onClick={clickSpy}>
+        <TrackedLinkContext href={'/some-url'} onClick={clickSpy} objectiv={{ Component: 'a', waitUntilTracked: true }}>
           Press me
         </TrackedLinkContext>
       </ObjectivProvider>

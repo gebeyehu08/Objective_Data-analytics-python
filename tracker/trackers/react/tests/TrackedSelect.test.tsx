@@ -366,11 +366,11 @@ describe('TrackedSelect', () => {
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       1,
-      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       2,
-      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
