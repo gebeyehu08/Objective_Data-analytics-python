@@ -41,7 +41,7 @@ describe('TrackedMediaPlayerContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext objectiv={{Component: 'video', id: 'video-id'}}>
+        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'video-id' }}>
           <TrackedButton />
         </TrackedMediaPlayerContext>
       </ObjectivProvider>
@@ -82,10 +82,10 @@ describe('TrackedMediaPlayerContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext objectiv={{Component: 'video', id: 'Video id 1'}}>
+        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'Video id 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedMediaPlayerContext>
-        <TrackedMediaPlayerContext  objectiv={{Component: 'video', id: 'Video id 2', normalizeId: false}} >
+        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'Video id 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedMediaPlayerContext>
       </ObjectivProvider>
@@ -133,9 +133,9 @@ describe('TrackedMediaPlayerContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext objectiv={{Component: 'div', id: 'root'}}>
-          <TrackedDiv objectiv={{id: 'content'}}>
-            <TrackedMediaPlayerContext  objectiv={{Component: 'video', id: '☹️'}}/>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: '☹️' }} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -153,7 +153,7 @@ describe('TrackedMediaPlayerContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext<ComponentProps<'video'>> ref={ref} objectiv={{Component: 'video', id: 'video-id'}}>
+        <TrackedMediaPlayerContext<ComponentProps<'video'>> ref={ref} objectiv={{ Component: 'video', id: 'video-id' }}>
           test
         </TrackedMediaPlayerContext>
       </ObjectivProvider>

@@ -4,40 +4,45 @@
 
 import { makeIdFromString } from '@objectiv/tracker-core';
 import { NavigationContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
-import React from 'react';
+import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { TrackedContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in a NavigationContext.
  */
-export const TrackedNavigationContext = React.forwardRef<HTMLElement, TrackedContextProps>((props, ref) => {
-  const { id, Component, forwardId = false, normalizeId = true, ...otherProps } = props;
-  const locationStack = useLocationStack();
+export const TrackedNavigationContext = forwardRef(
+  <T extends unknown>(props: TrackedContextProps<T>, ref: Ref<unknown>) => {
+    const {
+      objectiv: { Component, id, normalizeId = true },
+      ...nativeProps
+    } = props;
 
-  let navigationId: string | null = id;
-  if (normalizeId) {
-    navigationId = makeIdFromString(navigationId);
-  }
+    const locationStack = useLocationStack();
 
-  const componentProps = {
-    ...otherProps,
-    ...(ref ? { ref } : {}),
-    ...(forwardId ? { id } : {}),
-  };
-
-  if (!navigationId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate a valid id for NavigationContext @ ${locationPath}. Please provide the \`id\` property.`
-      );
+    let navigationId: string | null = id;
+    if (normalizeId) {
+      navigationId = makeIdFromString(navigationId);
     }
-    return React.createElement(Component, componentProps);
-  }
 
-  return (
-    <NavigationContextWrapper id={navigationId}>
-      {React.createElement(Component, componentProps)}
-    </NavigationContextWrapper>
-  );
-});
+    const componentProps = {
+      ...nativeProps,
+      ...(ref ? { ref } : {}),
+    };
+
+    if (!navigationId) {
+      if (globalThis.objectiv.devTools) {
+        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+        globalThis.objectiv.devTools.TrackerConsole.error(
+          `｢objectiv｣ Could not generate a valid id for NavigationContext @ ${locationPath}. Please provide the \`id\` property.`
+        );
+      }
+      return <Component {...componentProps} />;
+    }
+
+    return (
+      <NavigationContextWrapper id={navigationId}>
+        <Component {...componentProps} />
+      </NavigationContextWrapper>
+    );
+  }
+) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;
