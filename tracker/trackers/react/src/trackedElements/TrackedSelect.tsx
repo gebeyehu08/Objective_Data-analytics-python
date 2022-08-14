@@ -2,9 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackedContextIdProps, TrackingContextValueTrackingProps } from '@objectiv/tracker-react';
 import React, { ComponentProps, forwardRef, Ref } from 'react';
 import { TrackedInputContext } from '../trackedContexts/TrackedInputContext';
+import { TrackedContextIdProps, TrackingContextValueTrackingProps } from '../types';
 
 /**
  * Props used for TrackedSelect

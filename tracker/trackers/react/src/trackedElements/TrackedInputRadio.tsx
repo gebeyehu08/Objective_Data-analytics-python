@@ -2,9 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackedInputProps } from '@objectiv/tracker-react';
 import React, { forwardRef, Ref } from 'react';
 import { TrackedInputContext } from '../trackedContexts/TrackedInputContext';
+import { TrackedInputProps } from '../types';
 
 /**
  * Generates a TrackedInputContext preconfigured with a <input type="radio"> Element as Component.

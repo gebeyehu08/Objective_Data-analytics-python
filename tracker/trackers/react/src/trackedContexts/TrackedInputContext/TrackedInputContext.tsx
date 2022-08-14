@@ -2,12 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import {
-  TrackedContextComponentProp,
-  TrackedContextIdProps,
-  TrackingContextValueTrackingProps,
-} from '@objectiv/tracker-react';
 import React, { ComponentProps, PropsWithRef, Ref } from 'react';
+import { TrackedContextComponentProp, TrackedContextIdProps, TrackingContextValueTrackingProps } from '../../types';
 import { TrackedInputContextCheckbox } from './TrackedInputContextCheckbox';
 import { TrackedInputContextRadio } from './TrackedInputContextRadio';
 import { TrackedInputContextSelectMultiple } from './TrackedInputContextSelectMultiple';

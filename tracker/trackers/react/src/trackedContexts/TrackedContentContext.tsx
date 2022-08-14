@@ -3,9 +3,9 @@
  */
 
 import { makeId } from '@objectiv/tracker-core';
-import { TrackedContextProps } from '@objectiv/tracker-react';
 import { ContentContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref } from 'react';
+import { TrackedContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in a ContentContext.

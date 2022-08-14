@@ -3,10 +3,10 @@
  */
 
 import { makeId } from '@objectiv/tracker-core';
-import { makeTitleFromChildren, TrackedLinkContextProps } from '@objectiv/tracker-react';
-import { LinkContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
+import { LinkContextWrapper, makeTitleFromChildren, useLocationStack } from '@objectiv/tracker-react-core';
 import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { makeAnchorClickHandler } from '../common/factories/makeAnchorClickHandler';
+import { TrackedLinkContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in an LinkContext.
