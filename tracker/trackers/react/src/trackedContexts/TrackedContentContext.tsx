@@ -5,7 +5,7 @@
 import { makeIdFromString } from '@objectiv/tracker-core';
 import { TrackedContextProps } from '@objectiv/tracker-react';
 import { ContentContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
-import React, { ComponentProps, createRef, forwardRef, PropsWithRef, Ref } from 'react';
+import React, { forwardRef, PropsWithRef, Ref } from 'react';
 
 /**
  * Generates a new React Element already wrapped in a ContentContext.
@@ -45,40 +45,3 @@ export const TrackedContentContext = forwardRef(
     );
   }
 ) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;
-
-type TestComponentProps = {
-  abc: string;
-};
-
-const TestComponent = forwardRef((props: TestComponentProps, ref: Ref<HTMLDivElement>) => (
-  <div ref={ref}>{props.abc}</div>
-));
-
-export const TestWrapper = () => {
-  const inputRef = createRef<HTMLInputElement>();
-  //const selectRef = createRef<HTMLSelectElement>();
-  const divRef = createRef<HTMLDivElement>();
-
-  return (
-    <>
-      {/* Render our custom component normally. */}
-      <TestComponent abc={'test'} />
-
-      {/* It's possible to omit the generic props of TrackedContentContext. Not really recommended, though. */}
-      <TrackedContentContext ref={inputRef} objectiv={{ Component: 'input', id: 'test' }} />
-
-      {/* An input component gets enriched with our objectiv prop. We get autocomplete for an input in this case. */}
-      <TrackedContentContext<ComponentProps<'input'>> ref={inputRef} objectiv={{ Component: 'input', id: 'test' }} />
-
-      {/* A custom component gets enriched as well, and we get TS validation for both prop sets */}
-      <TrackedContentContext<ComponentProps<typeof TestComponent>>
-        abc={'asd'}
-        ref={divRef}
-        objectiv={{
-          id: 'test',
-          Component: TestComponent,
-        }}
-      />
-    </>
-  );
-};

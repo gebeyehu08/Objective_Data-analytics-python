@@ -2,10 +2,10 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen } from '@testing-library/react';
-import React, { createRef } from 'react';
+import { fireEvent, getByText, render } from '@testing-library/react';
+import React, { ComponentProps, createRef } from 'react';
 import {
   ObjectivProvider,
   ReactTracker,
@@ -41,7 +41,7 @@ describe('TrackedMediaPlayerContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id'}>
+        <TrackedMediaPlayerContext objectiv={{Component: 'video', id: 'video-id'}}>
           <TrackedButton />
         </TrackedMediaPlayerContext>
       </ObjectivProvider>
@@ -82,10 +82,10 @@ describe('TrackedMediaPlayerContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'Video id 1'}>
+        <TrackedMediaPlayerContext objectiv={{Component: 'video', id: 'Video id 1'}}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedMediaPlayerContext>
-        <TrackedMediaPlayerContext Component={'video'} id={'Video id 2'} normalizeId={false}>
+        <TrackedMediaPlayerContext  objectiv={{Component: 'video', id: 'Video id 2', normalizeId: false}} >
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedMediaPlayerContext>
       </ObjectivProvider>
@@ -133,9 +133,9 @@ describe('TrackedMediaPlayerContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedMediaPlayerContext Component={'video'} id={'☹️'} />
+        <TrackedRootLocationContext objectiv={{Component: 'div', id: 'root'}}>
+          <TrackedDiv objectiv={{id: 'content'}}>
+            <TrackedMediaPlayerContext  objectiv={{Component: 'video', id: '☹️'}}/>
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -147,31 +147,13 @@ describe('TrackedMediaPlayerContext', () => {
     );
   });
 
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id-1'} data-testid={'test-video-1'}>
-          test
-        </TrackedMediaPlayerContext>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id-2'} forwardId={true} data-testid={'test-video-2'}>
-          test
-        </TrackedMediaPlayerContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-video-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-video-2').getAttribute('id')).toBe('video-id-2');
-  });
-
   it('should allow forwarding refs', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-    const ref = createRef<HTMLDivElement>();
+    const ref = createRef<HTMLVideoElement>();
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id'} ref={ref}>
+        <TrackedMediaPlayerContext<ComponentProps<'video'>> ref={ref} objectiv={{Component: 'video', id: 'video-id'}}>
           test
         </TrackedMediaPlayerContext>
       </ObjectivProvider>

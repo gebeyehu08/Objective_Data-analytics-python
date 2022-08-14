@@ -46,7 +46,7 @@ export type TrackedElementProps<T> = T & {
 /**
  * The props of Contexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedShowableContextProps<T> = TrackedContextProps<T> & {
+export type TrackedShowableContextProps<T> = T & {
   objectiv: TrackedContextComponentProp &
     TrackedContextIdProps & {
       /**
@@ -59,32 +59,14 @@ export type TrackedShowableContextProps<T> = TrackedContextProps<T> & {
 /**
  * The props of TrackedPressableContext. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedPressableContextProps<T> = Omit<TrackedContextProps<T>, 'id'> & {
-  /**
-   * The unique id of the LocationContext. Optional because we will attempt to auto-detect it.
-   */
-  id?: string;
-
-  /**
-   * The title is used to generate a unique identifier. Optional because we will attempt to auto-detect it.
-   */
-  title?: string;
-
-  /**
-   * Whether to forward the given title to the given Component.
-   */
-  forwardTitle?: boolean;
+export type TrackedPressableContextProps<T> = T & {
+  objectiv: TrackedContextComponentProp & Partial<TrackedContextIdProps>;
 };
 
 /**
  * Overrides TrackedContextProps to not require an id, assuming that semantically there should be only one Element
  */
-export type SingletonTrackedElementProps<T> = Omit<TrackedContextProps<T>, 'Component' | 'id'> & {
-  /**
-   * Optional identifier to be provided only in case of uniqueness collisions, defaults to 'footer'
-   */
-  id?: string;
-};
+export type SingletonTrackedElementProps<T> = T & Partial<TrackedContextIdProps>;
 
 /**
  * Some extra options that may be useful for special cases, e.g. anchors without texts or external hrefs.

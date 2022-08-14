@@ -134,7 +134,7 @@ describe('TrackedExpandableContext', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
-          <TrackedDiv objectiv={{id: 'content'}}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
             <TrackedExpandableContext objectiv={{ Component: 'div', id: '☹️' }}>
               {/* nothing to see here */}
             </TrackedExpandableContext>
