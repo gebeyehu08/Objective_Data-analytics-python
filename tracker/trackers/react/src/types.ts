@@ -94,11 +94,12 @@ export type TrackedLinkContextProps<T> = T &
     href?: string | undefined;
   };
 
-// FIXME we probably don't needed these types below anymore
 /**
- * Overrides TrackedContextProps to not require an id, assuming that semantically there should be only one Element
+ * Overrides TrackedContextProps to make the objectiv prop and all of its attributes optional.
  */
-export type SingletonTrackedElementProps<T> = T & Partial<TrackedContextIdProps>;
+export type TrackedElementWithOptionalIdProps<T> = T & {
+  objectiv?: Partial<TrackedContextIdProps>
+};
 
 /**
  * Some extra options that may be useful for special cases, e.g. anchors without texts or external hrefs.
