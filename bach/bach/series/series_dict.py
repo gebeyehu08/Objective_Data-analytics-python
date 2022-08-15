@@ -49,6 +49,9 @@ class SeriesDict(Series):
     }
     supported_value_types = (dict, )
 
+    # This series does not support casting from other dtypes
+    supported_dtypes_to_cast: Tuple[str, ...] = tuple()
+
     @classmethod
     def supported_value_to_literal(
             cls,
