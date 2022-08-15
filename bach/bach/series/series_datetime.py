@@ -13,13 +13,13 @@ from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
-from bach.expression import Expression, join_expressions
+from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code
 from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
 
 class DatePart(str, Enum):
@@ -147,24 +147,27 @@ class DateTimeOperation:
 
         engine = self._series.engine
 
+        # Truncating Postgres date type will include timezone in final value
+        # therefore we should cast it into TIMESTAMP WITHOUT TIMEZONE
+        _td_series = self._series.astype(SeriesTimestamp.dtype)
         if is_postgres(engine):
             expression = Expression.construct(
                 'date_trunc({}, {})',
                 Expression.string_value(date_part),
-                self._series,
+                _td_series,
             )
         elif is_bigquery(engine):
             if date_part == 'week':
                 date_part = 'week(monday)'
             expression = Expression.construct(
                 'timestamp_trunc({}, {})',
-                self._series,
+                _td_series,
                 Expression.raw(date_part),
             )
         else:
             raise DatabaseNotSupportedException(engine)
 
-        return self._series.copy_override(expression=expression)
+        return _td_series.copy_override(expression=expression)
 
 
 class TimedeltaOperation(DateTimeOperation):
@@ -366,6 +369,7 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'timestamp without time zone',
         DBDialect.BIGQUERY: 'TIMESTAMP',
+        DBDialect.ATHENA: 'timestamp',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
@@ -409,17 +413,40 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         return Expression.string_value(str_value)
 
     @classmethod
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        if not is_athena(dialect):
+            return super().supported_literal_to_expression(dialect, literal)
+
+        # Athena will raise exceptions if literal has incorrect timestamp format
+        return Expression.construct("date_parse({}, '%Y-%m-%d %H:%i:%S.%f')", literal)
+
+    @classmethod
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'timestamp':
             return expression
-        else:
-            if source_dtype not in ['string', 'date']:
-                raise ValueError(f'cannot convert {source_dtype} to timestamp')
+
+        if source_dtype not in ['string', 'date']:
+            raise ValueError(f'cannot convert {source_dtype} to timestamp')
+
+        if not expression.is_constant or source_dtype != 'string':
             return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
+        # check if value literal has correct format
+        literal_expr_tokens = []
+        for token in expression.data:
+            if not isinstance(token, StringValueToken):
+                literal_expr_tokens.append(token)
+                continue
+
+            val = token.value if token.value != 'NULL' else None
+            val_to_lit_expr = cls.supported_value_to_literal(dialect, val, cls.dtype)
+            literal_expr_tokens.append(val_to_lit_expr)
+        return cls.supported_literal_to_expression(dialect, Expression(literal_expr_tokens))
+
     def to_pandas_info(self) -> Optional['ToPandasInfo']:
-        if is_postgres(self.engine):
+        if is_postgres(self.engine) or is_athena(self.engine):
             return ToPandasInfo('datetime64[ns]', None)
+
         if is_bigquery(self.engine):
             return ToPandasInfo('datetime64[ns, UTC]', dt_strip_timezone)
         return None
@@ -435,6 +462,16 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         return self._arithmetic_operation(other, 'sub', '({}) - ({})',
                                           other_dtypes=tuple(type_mapping.keys()),
                                           dtype=type_mapping)
+
+    def _comparator_operation(
+        self, other, comparator, other_dtypes=('timestamp', 'date', 'time', 'string')
+    ) -> 'SeriesBoolean':
+        from bach import SeriesBoolean
+        other = value_to_series(base=self, value=other)
+        self_modified, other = self._get_supported(f"comparator '{comparator}'", other_dtypes, other)
+        other = other.astype(self.dtype)
+        expression = Expression.construct(f'({{}}) {comparator} ({{}})', self_modified, other)
+        return self_modified.copy_override_type(SeriesBoolean).copy_override(expression=expression)
 
 
 class SeriesDate(SeriesAbstractDateTime):
