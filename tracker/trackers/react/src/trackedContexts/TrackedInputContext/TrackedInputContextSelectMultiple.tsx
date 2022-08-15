@@ -11,33 +11,19 @@ import {
   useLocationStack,
 } from '@objectiv/tracker-react-core';
 import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
-import { TrackedContextComponentProp, TrackedContextIdProps, TrackedContextProps } from '../../types';
+import {
+  TrackedContextComponentProp,
+  TrackedContextIdProps,
+  TrackedContextProps,
+  TrackingContextValueTrackingProps,
+} from '../../types';
 import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
  * TrackedInputContext implementation for selects.
  */
 export type TrackedInputContextSelectMultipleProps = ComponentProps<'select'> & {
-  objectiv: TrackedContextComponentProp &
-    TrackedContextIdProps & {
-      /**
-       * Optional. Whether to track the 'value' attribute. Default to false.
-       * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
-       */
-      trackValue?: boolean;
-
-      /**
-       * Optional. Whether to trigger events only when values actually changed. Default to false.
-       * For example, this allows tracking re-selections of the same value, which is normally prevented.
-       */
-      stateless?: boolean;
-
-      /**
-       * Optional. Which event handler to use. Default is 'onChange'.
-       * Valid values: `onBlur`, `onChange` or `onClick`.
-       */
-      eventHandler?: 'onBlur' | 'onChange' | 'onClick';
-    };
+  objectiv: TrackedContextComponentProp & TrackedContextIdProps & TrackingContextValueTrackingProps;
 };
 
 /**
