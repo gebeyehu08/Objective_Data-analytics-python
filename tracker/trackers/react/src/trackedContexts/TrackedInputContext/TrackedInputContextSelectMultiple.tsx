@@ -123,17 +123,19 @@ export const TrackedInputContextSelectMultiple = forwardRef(
           `｢objectiv｣ Could not generate a valid id for InputContext:select @ ${locationPath}. Please provide the \`objectiv.id\` property.`
         );
       }
-      return React.createElement(Component, componentProps);
+      return <Component {...componentProps} />;
     }
 
     return (
       <InputContextWrapper id={selectId}>
-        {(trackingContext) =>
-          React.createElement(Component, {
-            ...componentProps,
-            [eventHandler]: (event: TrackedInputContextSelectMultipleEvent) => handleEvent(event, trackingContext),
-          })
-        }
+        {(trackingContext) => (
+          <Component
+            {...componentProps}
+            {...{
+              [eventHandler]: (event: TrackedInputContextSelectMultipleEvent) => handleEvent(event, trackingContext),
+            }}
+          />
+        )}
       </InputContextWrapper>
     );
   }

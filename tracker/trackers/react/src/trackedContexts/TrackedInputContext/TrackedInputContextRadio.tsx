@@ -144,18 +144,21 @@ export const TrackedInputContextRadio = forwardRef(
           `｢objectiv｣ Could not generate a valid id for InputContext:radio @ ${locationPath}. Please provide the \`objectiv.id\` property.`
         );
       }
-      return React.createElement(Component, componentProps);
+
+      return <Component {...componentProps} />;
     }
 
     return (
       <InputContextWrapper id={inputId}>
-        {(trackingContext) =>
-          React.createElement(Component, {
-            ...componentProps,
-            [eventHandler]: (event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>) =>
-              handleEvent(event, trackingContext),
-          })
-        }
+        {(trackingContext) => (
+          <Component
+            {...componentProps}
+            {...{
+              [eventHandler]: (event: FocusEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement>) =>
+                handleEvent(event, trackingContext),
+            }}
+          />
+        )}
       </InputContextWrapper>
     );
   }

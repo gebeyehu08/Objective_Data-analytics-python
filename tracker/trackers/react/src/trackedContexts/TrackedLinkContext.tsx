@@ -51,22 +51,22 @@ export const TrackedLinkContext = forwardRef(
         }
       }
 
-      return React.createElement(Component, componentProps);
+      return <Component {...componentProps} />;
     }
 
     return (
       <LinkContextWrapper id={linkId} href={linkHref}>
-        {(trackingContext) =>
-          React.createElement(Component, {
-            ...componentProps,
-            onClick: makeAnchorClickHandler({
+        {(trackingContext) => (
+          <Component
+            {...componentProps}
+            onClick={makeAnchorClickHandler({
               trackingContext,
               anchorHref: linkHref,
               waitUntilTracked,
               onClick: nativeProps.onClick,
-            }),
-          })
-        }
+            })}
+          />
+        )}
       </LinkContextWrapper>
     );
   }
