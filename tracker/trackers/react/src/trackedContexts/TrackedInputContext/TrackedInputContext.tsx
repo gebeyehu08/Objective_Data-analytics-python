@@ -3,7 +3,7 @@
  */
 
 import React, { ComponentProps, PropsWithRef, Ref } from 'react';
-import { TrackedContextComponentProp, TrackedContextIdProps, TrackingContextValueTrackingProps } from '../../types';
+import { ObjectivComponentProp, ObjectivIdProps, ObjectivValueTrackingProps } from '../../types';
 import { TrackedInputContextCheckbox } from './TrackedInputContextCheckbox';
 import { TrackedInputContextRadio } from './TrackedInputContextRadio';
 import { TrackedInputContextSelectMultiple } from './TrackedInputContextSelectMultiple';
@@ -22,7 +22,7 @@ export type TrackedInputContextProps = (ComponentProps<'input'> | ComponentProps
   /**
    * The Objectiv configuration object
    */
-  objectiv: TrackedContextComponentProp & TrackedContextIdProps & TrackingContextValueTrackingProps;
+  objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
 };
 
 /**

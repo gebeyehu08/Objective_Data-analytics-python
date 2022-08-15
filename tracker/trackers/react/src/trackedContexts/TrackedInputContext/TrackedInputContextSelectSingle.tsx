@@ -11,19 +11,14 @@ import {
   useLocationStack,
 } from '@objectiv/tracker-react-core';
 import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
-import {
-  TrackedContextComponentProp,
-  TrackedContextIdProps,
-  TrackedContextProps,
-  TrackingContextValueTrackingProps,
-} from '../../types';
+import { ObjectivComponentProp, ObjectivIdProps, TrackedContextProps, ObjectivValueTrackingProps } from '../../types';
 import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
  * TrackedInputContext implementation for selects.
  */
 export type TrackedInputContextSelectSingleProps = ComponentProps<'select'> & {
-  objectiv: TrackedContextComponentProp & TrackedContextIdProps & TrackingContextValueTrackingProps;
+  objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
 };
 
 /**

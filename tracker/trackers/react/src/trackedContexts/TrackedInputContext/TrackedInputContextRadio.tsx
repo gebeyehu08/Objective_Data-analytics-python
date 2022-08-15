@@ -17,12 +17,7 @@ import {
   useLocationStack,
 } from '@objectiv/tracker-react-core';
 import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
-import {
-  TrackedContextComponentProp,
-  TrackedContextIdProps,
-  TrackedContextProps,
-  TrackingContextValueTrackingProps,
-} from '../../types';
+import { ObjectivComponentProp, ObjectivIdProps, TrackedContextProps, ObjectivValueTrackingProps } from '../../types';
 import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
@@ -31,7 +26,7 @@ import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './Trac
  * Optionally tracks the input's `checked` as InputValueContext.
  */
 export type TrackedInputContextRadioProps = ComponentProps<'input'> & {
-  objectiv: TrackedContextComponentProp & TrackedContextIdProps & TrackingContextValueTrackingProps;
+  objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
 };
 
 /**

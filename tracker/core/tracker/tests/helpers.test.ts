@@ -38,7 +38,7 @@ describe('helpers', () => {
   });
 
   describe('makeId', () => {
-    const testCases: [input: unknown, normalize: boolean, output: string | null][] = [
+    const testCases: [input: unknown, normalize: boolean | undefined, output: string | null][] = [
       [undefined, true, null],
       [null, true, null],
       [false, true, null],
@@ -61,6 +61,7 @@ describe('helpers', () => {
       ['Quite a "LONG" sentence! (annoying uh?)', true, 'quite-a-long-sentence-annoying-uh'],
       ['Quite a "LONG" sentence! (annoying uh?)', false, 'Quite a "LONG" sentence! (annoying uh?)'],
       [12345, false, '12345'],
+      [12345, undefined, '12345'],
     ];
 
     testCases.forEach(([input, normalize, output]) =>

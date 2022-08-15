@@ -2,12 +2,12 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ComponentProps, ElementType, MouseEventHandler, ReactHTML, ReactNode } from 'react';
+import { ComponentProps, ElementType, MouseEventHandler, PropsWithChildren, ReactHTML } from 'react';
 
 /**
  * Props to specify Component and componentRef to a TrackedContext.
  */
-export type TrackedContextComponentProp = {
+export type ObjectivComponentProp = {
   /**
    * Either an Element or a JSX tag, such as 'div', 'input', etc.
    */
@@ -17,7 +17,7 @@ export type TrackedContextComponentProp = {
 /**
  * Props to specify tracking id related options to a TrackedContext.
  */
-export type TrackedContextIdProps = {
+export type ObjectivIdProps = {
   /**
    * The identifier of the LocationContext
    */
@@ -30,9 +30,34 @@ export type TrackedContextIdProps = {
 };
 
 /**
+ * Props to specify tracking visibility related options to a TrackedContext.
+ */
+export type ObjectivVisibilityProps = {
+  /**
+   * Whether to track visibility events automatically when this prop changes state.
+   */
+  isVisible?: boolean;
+};
+
+/**
+ * Props to specify tracking link related options to a LinkContext.
+ */
+export type ObjectivLinkContextProps = {
+  /**
+   * The destination of this link, required by LinkContext
+   */
+  href?: string;
+
+  /**
+   * Whether to block and wait for the Tracker having sent the event. Eg: a button redirecting to a new location.
+   */
+  waitUntilTracked?: boolean;
+};
+
+/**
  * These props allow configuring how values are tracked for TrackedInputContext and derived Tracked Elements.
  */
-export type TrackingContextValueTrackingProps = {
+export type ObjectivValueTrackingProps = {
   /**
    * Optional. Whether to track the 'value' attribute. Default to false.
    * When enabled, an InputValueContext will be pushed into the Global Contexts of the InputChangeEvent.
@@ -55,18 +80,50 @@ export type TrackingContextValueTrackingProps = {
 /**
  * These props are common to all TrackedContexts.
  */
-export type CommonProps = {
-  id?: unknown;
-  title?: unknown;
-  children?: ReactNode;
+export type NativeCommonProps = PropsWithChildren<Partial<Pick<HTMLElement, 'id' | 'title'>>>;
+
+/**
+ * These props are common to all pressables, e.g. button and anchors.
+ */
+export type NativePressableCommonProps = NativeCommonProps & {
+  onClick?: MouseEventHandler;
 };
+
+/**
+ * These props are common to all links, e.g. anchors.
+ */
+export type NativeLinkCommonProps = NativePressableCommonProps & Partial<Pick<HTMLAnchorElement, 'href'>>;
+
+/**
+ * The props of TrackedLinkContext. Extends TrackedContextProps with LinkContext specific properties.
+ */
+export type TrackedLinkContextProps<T> = T &
+  NativeLinkCommonProps & {
+    objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivLinkContextProps;
+  };
 
 /**
  * Base props of all TrackedContexts.
  */
 export type TrackedContextProps<T> = T &
-  CommonProps & {
-    objectiv: TrackedContextComponentProp & TrackedContextIdProps;
+  NativeCommonProps & {
+    objectiv: ObjectivComponentProp & ObjectivIdProps;
+  };
+
+/**
+ * The props of TrackedContexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
+ */
+export type TrackedShowableContextProps<T> = T &
+  NativeCommonProps & {
+    objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivVisibilityProps;
+  };
+
+/**
+ * The props of TrackedPressableContext. Extends TrackedContextProps with extra pressable related properties.
+ */
+export type TrackedPressableContextProps<T> = T &
+  NativePressableCommonProps & {
+    objectiv: ObjectivComponentProp & ObjectivIdProps;
   };
 
 /**
@@ -74,68 +131,26 @@ export type TrackedContextProps<T> = T &
  * We also try to auto-detect the identifier from the native `id` property, if present
  */
 export type TrackedElementProps<T> = T & {
-  objectiv?: TrackedContextIdProps;
+  objectiv?: ObjectivIdProps;
 };
-
-/**
- * The props of Contexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
- */
-export type TrackedShowableContextProps<T> = T &
-  CommonProps & {
-    objectiv: TrackedContextComponentProp &
-      TrackedContextIdProps & {
-        /**
-         * Whether to track visibility events automatically when this prop changes state.
-         */
-        isVisible?: boolean;
-      };
-  };
-
-/**
- * These props are common to all pressables, e.g. button and anchors.
- */
-export type PressableCommonProps = CommonProps & {
-  onClick?: MouseEventHandler;
-};
-
-/**
- * The props of TrackedPressableContext. Extends TrackedContextProps with extra pressable related properties.
- */
-export type TrackedPressableContextProps<T> = T &
-  PressableCommonProps & {
-    objectiv: TrackedContextComponentProp & TrackedContextIdProps;
-  };
-
-/**
- * The props of TrackedLinkContext. Extends TrackedContextProps with LinkContext specific properties.
- */
-export type TrackedLinkContextProps<T> = T &
-  PressableCommonProps & {
-    objectiv: TrackedContextComponentProp &
-      TrackedContextIdProps & {
-        /**
-         * The destination of this link, required by LinkContext
-         */
-        href?: string;
-
-        /**
-         * Whether to block and wait for the Tracker having sent the event. Eg: a button redirecting to a new location.
-         */
-        waitUntilTracked?: boolean;
-      };
-    href?: string | undefined;
-  };
 
 /**
  * Overrides TrackedContextProps to make the objectiv prop and all of its attributes optional.
  */
 export type TrackedElementWithOptionalIdProps<T> = T & {
-  objectiv?: TrackedContextIdProps;
+  objectiv?: ObjectivIdProps;
 };
 
 /**
- * Props used for all Tracked Input Elements
+ * Props used for TrackedInputs
  */
 export type TrackedInputProps = ComponentProps<'input'> & {
-  objectiv?: TrackedContextIdProps & TrackingContextValueTrackingProps;
+  objectiv?: ObjectivIdProps & ObjectivValueTrackingProps;
+};
+
+/**
+ * Props used for TrackedSelect
+ */
+export type TrackedSelectProps = ComponentProps<'select'> & {
+  objectiv?: ObjectivIdProps & ObjectivValueTrackingProps;
 };
