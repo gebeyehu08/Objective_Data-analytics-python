@@ -12,7 +12,7 @@ import { makeId } from '@objectiv/tracker-browser';
   name: 'makeId',
 })
 export class MakeId implements PipeTransform {
-  transform(inputString: string, normalize: boolean = true): string | null {
-    return makeId(inputString, normalize);
+  transform(input: string | number, normalize: boolean = true): string | null {
+    return makeId(input, normalize);
   }
 }
