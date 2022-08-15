@@ -117,6 +117,14 @@ class Series(ABC):
     by :meth:`supported_value_to_literal()`.
     """
 
+    supported_dtypes_to_cast: Tuple[str, ...] = tuple()
+    """
+    INTERNAL: List of dtypes that can be casted into this Series dtype.
+    For example a SeriesString can be casted into a SeriesTimestamp. e.g `x.astype('timestamp')`.
+
+    Subclasses can override this value to indicate which dtypes they can handle for casting.
+    """
+
     def __init__(
         self,
         engine: Engine,
