@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import pandas
 
 from bach import DataFrame
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data
 import pytest
 
@@ -14,7 +14,10 @@ import pytest
 # operations. Therefore, we also have the 'dtype' argument. On all other databases than postgres we skip
 # the tests for dtype 'jsonb' as those databases only support 'json'
 
-pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True)]
+pytestmark = [
+    pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True),
+    pytest.mark.athena_supported()
+]
 
 
 @pytest.fixture()
@@ -224,14 +227,15 @@ def test_json_getitem_slice(engine, dtype):
 
 
 def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
-    # slices only work on columns with only lists
-    # But behaviour of Postgres and BigQuery is different. For now we just accept that's the way it is.
+    # Slices only work on columns with only lists
+    # But behaviour of Postgres and Athena is different from BigQuery. For now we just accept that's the
+    # way it is.
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[1:-1]
-    if is_postgres(engine):
+    if is_postgres(engine) or is_athena(engine):
         with pytest.raises(Exception):
-           bts.head()
-    if is_bigquery(engine):
+            bts.to_pandas()
+    elif is_bigquery(engine):
         assert_equals_data(
             bts,
             use_to_pandas=True,
@@ -244,6 +248,8 @@ def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
                 [4, []]
             ]
         )
+    else:
+        raise Exception(f'Test does not support {engine.name}')
 
 
 # tests below are for functions kind of specific to the objectiv (location) stack
