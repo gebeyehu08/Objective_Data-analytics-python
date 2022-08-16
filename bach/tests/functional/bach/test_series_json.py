@@ -70,6 +70,23 @@ def test_json_get_single_value(engine, dtype):
     assert a == {'a': 'b', 'c': {'a': 'c'}}
 
 
+def test_json_equals(engine, dtype):
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    df['j2j_dict'] = df['dict_column'] == df['dict_column']
+    df['j2literal'] = df['list_column'] == '[{"a": "b"}, {"c": "d"}]'
+    assert_equals_data(
+        df[['j2j_dict', 'j2literal']],
+        expected_columns=['_index_row', 'j2j_dict', 'j2literal'],
+        expected_data=[
+            [0, True, True],
+            [1, True, False],
+            [2, True, False],
+            [3, True, False],
+            [4, None, None]
+        ]
+    )
+
+
 def test_json_array_contains(engine, dtype):
     # Setting up custom test data
     # The data from `get_df_with_json_data` only contains one row with an array with scalars, so we use this

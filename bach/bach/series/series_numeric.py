@@ -39,8 +39,9 @@ class SeriesAbstractNumeric(Series, ABC):
                               other_dtypes=('int64', 'float64'), dtype=None):
         return super()._arithmetic_operation(other, operation, fmt_str, other_dtypes, dtype)
 
-    def _comparator_operation(self, other, comparator, other_dtypes=('int64', 'float64')) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes)
+    def _comparator_operation(self, other, comparator, other_dtypes=('int64', 'float64'),
+                              strict_other_dtypes=tuple()) -> 'SeriesBoolean':
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def exp(self) -> 'SeriesAbstractNumeric':
         """
