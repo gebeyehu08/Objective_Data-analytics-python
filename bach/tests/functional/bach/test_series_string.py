@@ -209,9 +209,9 @@ def test_to_json_array_sorting_null(engine):
         use_to_pandas=True,
         expected_columns=['no_sorting', 'descending', 'index_asc', 'index_desc', 'group_index'],
         expected_data=[[
-            [None, 'aa', 'aa', 'bb', 'cc', 'dd', 'ee'],
+            ['aa', 'aa', 'bb', 'cc', 'dd', 'ee', None],
             ['ee', 'dd', 'cc', 'bb', 'aa', 'aa', None],
-            ['cc', 'aa', 'bb', 'dd', None, 'ee', 'aa'],
+            ['aa', 'bb', 'dd', None, 'ee', 'aa', 'cc'],
             ['aa', 'ee', None, 'dd', 'bb', 'aa', 'cc'],
             ['bb', 'aa', 'aa', None, 'dd', 'cc', 'ee']
         ]]

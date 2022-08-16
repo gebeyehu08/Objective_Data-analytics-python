@@ -2,12 +2,13 @@
 Copyright 2021 Objectiv B.V.
 """
 import re
-from typing import Union, TYPE_CHECKING, Optional, Pattern, List
+from typing import Union, TYPE_CHECKING, Optional, Pattern
 
 from sqlalchemy.engine import Dialect
 
+from bach.partitioning import get_order_by_expression
 from bach.series import Series
-from bach.expression import Expression, AggregateFunctionExpression, join_expressions, get_variable_tokens
+from bach.expression import Expression, AggregateFunctionExpression, get_variable_tokens
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
@@ -177,6 +178,7 @@ class SeriesString(Series):
     **Database support and types**
 
     * Postgres: utilizes the 'text' database type.
+    * Athena: utilizes the 'varchar' database type.
     * BigQuery: utilizes the 'STRING' database type.
     """
 
@@ -265,9 +267,8 @@ class SeriesString(Series):
 
         The order of the values in the array will be based of the order of the values in this Series. If
         this Series does not have a deterministic sorting, then the values are additionally sorted by the
-        values themselves. A difference in sorting can occur between the resulting array and the values in a
-        Series when the Series contains None/NULL values. Null values will be sorted first when sorting
-        ascending, contrary to sorting inside a DataFrame or a Series where they come last.
+        values themselves. Null values will always be sorted last when aggregating all values, following
+        default sorting behavior for DataFrame/Series.
 
         :param partition: The partition to apply, optional.
         :return: SeriesJson containing an array of strings on each row.
@@ -278,7 +279,9 @@ class SeriesString(Series):
         from bach import SortColumn
         order_by += [SortColumn(expression=self.expression, asc=True)]
 
-        order_by_expr = self._get_order_by_expression(order_by)
+        order_by_expr = get_order_by_expression(
+            dialect=self.engine.dialect, order_by=order_by, na_position='last',
+        )
         array_agg_expression = AggregateFunctionExpression.construct('array_agg({} {})', self, order_by_expr)
         if is_postgres(self.engine):
             expression = Expression.construct('to_jsonb({})', array_agg_expression)
@@ -290,34 +293,3 @@ class SeriesString(Series):
         result = self._derived_agg_func(partition, expression)
         from bach import SeriesJson
         return result.copy_override_type(SeriesJson)
-
-    @staticmethod
-    def _get_order_by_expression(order_by: List['SortColumn']) -> Expression:
-        """
-        Internal helper function: Convert order_by into an order by expression that is usable inside an
-        array_agg() function
-
-        Note: ordering is slightly different from regular ordering of rows inside a DataFrame or Series, as
-        BigQuery does not support 'asc nulls last' inside aggregations. So we sort 'asc nulls first'.
-        """
-
-        # This logic is partially duplicating DataFrame._get_order_by_clause(), but we can't quite re-use
-        # that as some of the checks there are not applicable (e.g. it's fine to use a column that we are not
-        # grouping on), and the sorting of null values is slightly different.
-        if not order_by:
-            raise ValueError('order_by is empty')
-
-        expressions: List[Expression] = []
-        for sc in order_by:
-            if sc.expression.has_multi_level_expressions:
-                multi_lvl_exprs = [
-                    level_expr for level_expr in sc.expression.data if isinstance(level_expr, Expression)
-                ]
-            else:
-                multi_lvl_exprs = [sc.expression]
-            for level_expr in multi_lvl_exprs:
-                asc_expr = Expression.construct(f"{'asc nulls first' if sc.asc else 'desc nulls last'}")
-                expr = Expression.construct('{} {}', level_expr, asc_expr)
-                expressions.append(expr)
-
-        return Expression.construct('order by {}', join_expressions(expressions))

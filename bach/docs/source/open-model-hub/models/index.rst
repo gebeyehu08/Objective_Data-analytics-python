@@ -8,8 +8,8 @@
 Models
 ======
 
-The open model hub is  toolkit that contains functions and models that can be applied on data collected
-with Objectiv’s Tracker. There are three types of functions/models:
+The open model hub is a toolkit that contains functions and models that can be applied on data collected
+with Objectiv's Tracker. The following types of functions/models are available:
 1. :doc:`Helper functions <helper-functions/index>`: Simplify manipulating and analyzing the data.
 2. :doc:`Aggregation models <aggregation/index>`: Enable running some of the more common data 
 analyses and product analytics metrics.
