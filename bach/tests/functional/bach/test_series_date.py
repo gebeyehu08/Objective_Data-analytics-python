@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from bach import SeriesDate, DataFrame
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
@@ -126,6 +126,7 @@ def test_date_format_all_supported_pg_codes(engine):
     pd.testing.assert_frame_equal(pdf, df.to_pandas(), check_dtype=False)
 
 
+@pytest.mark.athena_supported()
 def test_date_trunc(engine):
     mt = get_df_with_food_data(engine)
     mt['date'] = mt['date'].astype('date')
@@ -201,6 +202,10 @@ def test_date_trunc(engine):
 
     with pytest.raises(ValueError, match='some_wrong_format format is not available.'):
         mt.date.dt.date_trunc('some_wrong_format')
+
+    if is_athena(engine):
+        # TODO: support SeriesTime for athena
+        return
 
     # not supported series type
     mt['time'] = datetime.time(21, 10, 5)

@@ -160,7 +160,7 @@ class DateTimeOperation:
         # Truncating Postgres date type will include timezone in final value
         # therefore we should cast it into TIMESTAMP WITHOUT TIMEZONE
         _td_series = self._series.astype(SeriesTimestamp.dtype)
-        if is_postgres(engine):
+        if is_postgres(engine) or is_athena(engine):
             expression = Expression.construct(
                 'date_trunc({}, {})',
                 Expression.string_value(date_part),
