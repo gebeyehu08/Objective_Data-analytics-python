@@ -15,6 +15,7 @@ from tests.functional.bach.test_series_timestamp import types_plus_min
 from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES
 
 
+@pytest.mark.athena_supported()
 @pytest.mark.parametrize("asstring", [True, False])
 def test_date_comparator(asstring: bool, engine):
     mt = get_df_with_food_data(engine)[['date']]
@@ -30,53 +31,25 @@ def test_date_comparator(asstring: bool, engine):
     if asstring:
         dt = str(dt)
 
-    result = mt[mt['date'] == dt]
-    assert_equals_data(
-        result,
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 5, 3)]
-        ]
-    )
-    assert_equals_data(
-        mt[mt['date'] >= dt],
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 5, 3)],
-            [2, date(2021, 5, 4)],
-            [4, date(2022, 5, 3)]
-        ]
-    )
-
-    assert_equals_data(
-        mt[mt['date'] > dt],
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [2, date(2021, 5, 4)],
-            [4, date(2022, 5, 3)]
-        ]
-    )
+    mt['eq'] = mt['date'] == dt
+    mt['gte'] = mt['date'] >= dt
+    mt['gt'] = mt['date'] > dt
 
     dt = date(2022, 5, 3)
     if asstring:
         dt = str(dt)
 
-    assert_equals_data(
-        mt[mt['date'] <= dt],
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 5, 3)],
-            [2, date(2021, 5, 4,)],
-            [4, date(2022, 5, 3)]
-        ]
-    )
+    mt['lte'] = mt['date'] <= dt
+    mt['lt'] = mt['date'] < dt
 
+    result = mt[['eq', 'gte', 'gt', 'lte', 'lt']]
     assert_equals_data(
-        mt[mt['date'] < dt],
-        expected_columns=['_index_skating_order', 'date'],
+        result,
+        expected_columns=['_index_skating_order', 'eq', 'gte', 'gt', 'lte', 'lt'],
         expected_data=[
-            [1, date(2021, 5, 3)],
-            [2, date(2021, 5, 4)]
+            [1, True, True, False, True, True],
+            [2, False, True, True, True, True],
+            [4, False, True, True, True, False]
         ]
     )
 

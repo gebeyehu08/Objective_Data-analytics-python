@@ -354,9 +354,15 @@ class SeriesAbstractDateTime(Series, ABC):
 
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
-    def _comparator_operation(self, other, comparator,
-                              other_dtypes=('timestamp', 'date', 'time', 'string')) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes)
+    def _comparator_operation(
+        self, other, comparator, other_dtypes=('timestamp', 'date', 'time', 'string')
+    ) -> 'SeriesBoolean':
+        from bach import SeriesBoolean
+        other = value_to_series(base=self, value=other)
+        self_modified, other = self._get_supported(f"comparator '{comparator}'", other_dtypes, other)
+        other = other.astype(self.dtype)
+        expression = Expression.construct(f'({{}}) {comparator} ({{}})', self_modified, other)
+        return self_modified.copy_override_type(SeriesBoolean).copy_override(expression=expression)
 
     @classmethod
     def _cast_to_date_if_dtype_date(cls, series: 'Series') -> 'Series':
@@ -504,16 +510,6 @@ class SeriesTimestamp(SeriesAbstractDateTime):
                                           other_dtypes=tuple(type_mapping.keys()),
                                           dtype=type_mapping)
 
-    def _comparator_operation(
-        self, other, comparator, other_dtypes=('timestamp', 'date', 'time', 'string')
-    ) -> 'SeriesBoolean':
-        from bach import SeriesBoolean
-        other = value_to_series(base=self, value=other)
-        self_modified, other = self._get_supported(f"comparator '{comparator}'", other_dtypes, other)
-        other = other.astype(self.dtype)
-        expression = Expression.construct(f'({{}}) {comparator} ({{}})', self_modified, other)
-        return self_modified.copy_override_type(SeriesBoolean).copy_override(expression=expression)
-
 
 class SeriesDate(SeriesAbstractDateTime):
     """
@@ -529,6 +525,7 @@ class SeriesDate(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'date',
         DBDialect.BIGQUERY: 'DATE',
+        DBDialect.ATHENA: 'date',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
