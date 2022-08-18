@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Callable
 
 import base64
 import json
@@ -20,6 +20,8 @@ snowplow_config = get_collector_config().output.snowplow
 if snowplow_config.gcp_enabled:
     from google.cloud import pubsub_v1
     from google.api_core.exceptions import NotFound
+
+    gcp_publisher = pubsub_v1.PublisherClient()
 
 if snowplow_config.aws_enabled:
     import boto3
@@ -50,10 +52,11 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
         data = filter_dict(context, blocked)
         self_describing_contexts.append(make_snowplow_context(schema, data))
 
-    # add location_stack
+    # add location_stack, but only if there's at least 1 item in it
     schema = config.schema_objectiv_location_stack
     location_stack = {'location_stack': [filter_dict(v, ['_types']) for i, v in enumerate(event['location_stack'])]}
-    self_describing_contexts.append(make_snowplow_context(schema, location_stack))
+    if len(location_stack['location_stack']) > 0:
+        self_describing_contexts.append(make_snowplow_context(schema, location_stack))
 
     # # original format
     # schema = config.schema_objectiv_taxonomy
@@ -113,6 +116,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     query_string = urlparse(str(path_context.get('id', ''))).query
 
     snowplow_custom_contexts = make_snowplow_custom_contexts(event=event, config=config)
+    collector_tstamp = event['collector_time']
 
 # see: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/snowplow-tracker-protocol/
 
@@ -126,15 +130,19 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "se_ca": event['_type'],  # structured event category
             "eid": event['id'],  # event_id / UUID
             "url": path_context.get('id', ''),  # Page URL
+            "refr": http_context.get('referrer', ''),  # HTTP Referrer URL
             "cx": snowplow_custom_contexts,  # base64 encoded custom context
-            "aid": application_context.get('id', ''),
+            "aid": application_context.get('id', ''),  # application id
+            "ip": http_context.get('remote_address', ''),  # IP address
+            "dtm": str(event['corrected_time']),  # Timestamp when event occurred, as recorded by client device
+            "stm": str(event['transport_time']),  # Timestamp when event was sent by client device to collector
             "ttm": str(event['time'])  # User-set exact timestamp
         }]
     }
     return CollectorPayload(
         schema=snowplow_collector_payload_schema,
         ipAddress=http_context.get('remote_address', ''),
-        timestamp=int(datetime.now().timestamp() * 1000),
+        timestamp=collector_tstamp,
         encoding='UTF-8',
         collector='objectiv_collector',
         userAgent=http_context.get('user_agent', ''),
@@ -218,8 +226,7 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
                 # Timestamp at which the failure occurred --> 2022-03-11T09:37:47.093932Z
                 "timestamp": datetime.now().strftime(ts_format),
                 # List of failure messages associated with the tracker protocol violations
-                "messages": [
-                    {
+                "messages": [{
                     "schemaKey": config.schema_objectiv_taxonomy,
                     "error": {
                         "error": "ValidationError",
@@ -301,7 +308,7 @@ def prepare_event_for_snowplow_pipeline(event: EventData,
 
 
 def write_data_to_gcp_pubsub(events: EventDataList, config: SnowplowConfig, good: bool = True,
-                             event_errors: List[EventError] = None) -> None:
+                             event_errors: List[EventError] = None) -> List:
     """
     Write provided list of events to the Snowplow GCP pipeline, using GCP PubSub
     :param events: EventDataList - List of EventData
@@ -319,16 +326,20 @@ def write_data_to_gcp_pubsub(events: EventDataList, config: SnowplowConfig, good
         # not ok events get sent to the bad topic
         topic = config.gcp_pubsub_topic_bad
 
-    publisher = pubsub_v1.PublisherClient()
     topic_path = f'projects/{project}/topics/{topic}'
 
+    pubsub_futures = []
     for event in events:
         data = prepare_event_for_snowplow_pipeline(event=event, good=good, event_errors=event_errors, config=config)
 
         try:
-            publisher.publish(topic_path, data=data)
+            pubsub_future = gcp_publisher.publish(topic_path, data=data)
+            pubsub_futures.append(pubsub_future)
+
         except NotFound as e:
             print(f'PubSub topic {topic} could not be found! {e}')
+
+    return pubsub_futures
 
 
 def write_data_to_aws_pipeline(events: EventDataList, config: SnowplowConfig,

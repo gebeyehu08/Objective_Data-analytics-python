@@ -36,6 +36,9 @@ CLICK_EVENT_JSON = '''
                 }
             ],
             "time":1630049334860,
+            "transport_time":1630049335313,
+            "corrected_time":1630049335313,
+            "collector_time":1630049335313,
             "id":"d8b0f1ca-4ebe-45b6-b7fb-7858cf46082a"
         }
     ],
