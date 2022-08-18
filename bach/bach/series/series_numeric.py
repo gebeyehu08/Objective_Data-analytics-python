@@ -282,7 +282,7 @@ class SeriesInt64(SeriesAbstractNumeric):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'int64':
             return expression
-        if source_dtype not in cls.supported_dtypes_to_cast:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to int64')
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
@@ -406,7 +406,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'float64':
             return expression
-        if source_dtype not in cls.supported_dtypes_to_cast:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to float64')
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 

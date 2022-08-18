@@ -72,7 +72,7 @@ class SeriesUuid(Series):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'uuid':
             return expression
-        if source_dtype in cls.supported_dtypes_to_cast:
+        if source_dtype in cls.supported_source_dtypes:
             if is_postgres(dialect):
                 # If the format is wrong, then this will give an error later on, but there is not much we can
                 # do about that here.

@@ -66,7 +66,7 @@ class SeriesBoolean(Series, ABC):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'bool':
             return expression
-        if source_dtype not in cls.supported_dtypes_to_cast:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to bool')
         if is_postgres(dialect):
             # Postgres cannot directly cast a bigint to bool.
