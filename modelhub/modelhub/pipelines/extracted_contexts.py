@@ -5,7 +5,7 @@ import operator
 from functools import reduce
 
 import bach
-from typing import Optional, Any, Mapping, Dict, NamedTuple
+from typing import Optional, Any, Mapping, Dict, NamedTuple, List
 
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
@@ -96,11 +96,12 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         },
     }
 
-    def __init__(self, engine: Engine, table_name: str):
+    def __init__(self, engine: Engine, table_name: str, global_contexts: List[str]):
         super().__init__()
         self._engine = engine
         self._table_name = table_name
         self._taxonomy_column = _get_taxonomy_column_definition(engine)
+        self._global_contexts = global_contexts
 
         # check if table has all required columns for pipeline
         dtypes = bach.from_database.get_dtypes_from_table(
@@ -123,9 +124,10 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         context_df = self._convert_dtypes(df=context_df)
         context_df = self._apply_date_filter(df=context_df, **kwargs)
-
-        context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
-        context_df = context_df[context_columns]
+        print(context_df.view_sql())
+        # TODO: Do not remove out-of-bounds columns for now. Decide what to do with this
+        # context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        # context_df = context_df[context_columns]
         return context_df.materialize(node_name='context_data')
 
     @property
@@ -187,6 +189,12 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
             df_cp[key] = taxonomy_col
 
+        # Extract the requested global contexts
+        for gc in self._global_contexts:
+            context_name = gc.capitalize() + "Context"
+            print(f"extracting {gc} as {context_name}")
+            df_cp[gc] = taxonomy_series.elements[context_name].astype('json')
+
         # rename series to objectiv supported
         df_cp = df_cp.rename(
             columns={
@@ -195,7 +203,6 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
             },
         )
-
         return df_cp
 
     def _apply_extra_processing(self, df: bach.DataFrame) -> bach.DataFrame:
@@ -247,6 +254,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             check_dtypes=True,
             infer_identity_resolution=False,
         )
+
 
     def _apply_date_filter(
         self,
