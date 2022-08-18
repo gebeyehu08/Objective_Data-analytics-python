@@ -5,6 +5,7 @@
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
 import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
+  generateGUID,
   GlobalContextName,
   TrackerEvent,
   TrackerPlugins,
@@ -71,6 +72,7 @@ describe('ReactNativeTracker', () => {
       batchDelayMs: 1000,
       batchSize: 10,
       concurrency: 4,
+      firstBatchSuccessfullySent: false,
       lastRunTimestamp: 0,
       running: false,
       processFunction: expect.any(Function),
@@ -182,7 +184,7 @@ describe('ReactNativeTracker', () => {
 
     it('should auto-track Application Context by default', async () => {
       const testTracker = new ReactNativeTracker({ applicationId: 'app-id', transport: new DebugTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
 

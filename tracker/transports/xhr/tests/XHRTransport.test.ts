@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
 import xhrMock from 'xhr-mock';
 import { XHRTransport } from '../src';
 
@@ -27,6 +27,8 @@ describe('XHRTransport', () => {
 
   const testEvent = new TrackerEvent({
     _type: 'test-event',
+    id: generateGUID(),
+    time: Date.now(),
   });
 
   it('should send using `xhr` with the default xhr function', async () => {
@@ -41,6 +43,7 @@ describe('XHRTransport', () => {
       expect(req.body()).toEqual(
         JSON.stringify({
           events: [testEvent],
+          client_session_id: globalThis.objectiv.clientSessionId,
           transport_time: Date.now(),
         })
       );

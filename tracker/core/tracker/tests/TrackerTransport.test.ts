@@ -10,7 +10,7 @@ import {
 } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
-  generateUUID,
+  generateGUID,
   makeTransportSendError,
   Tracker,
   TrackerEvent,
@@ -22,10 +22,10 @@ import {
 
 const testEventName = 'test-event';
 const testContexts: ContextsConfig = {
-  location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
-  global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
+  location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'test' }],
+  global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'test' }],
 };
-const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
+const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts, id: generateGUID(), time: Date.now() });
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -380,30 +380,17 @@ describe('TrackerTransportRetry', () => {
   });
 
   it('should stop retrying if we reached maxRetryMs', async () => {
-    const slowFailingTransport = {
-      transportName: 'SlowFailingTransport',
-      handle: async () => new Promise((_, reject) => setTimeout(() => reject(makeTransportSendError()), 100)),
-      isUsable: () => true,
-    };
-    jest.spyOn(slowFailingTransport, 'handle');
-    const retryTransport = new TrackerTransportRetry({
-      transport: slowFailingTransport,
-      minTimeoutMs: 1,
-      maxTimeoutMs: 1,
-      retryFactor: 1,
-      maxRetryMs: 1,
-    });
+    const logTransport = new LogTransport();
+    const retryTransport = new TrackerTransportRetry({ transport: logTransport, maxRetryMs: 1 });
     const retryTransportAttempt = new TrackerTransportRetryAttempt(retryTransport, [testEvent]);
-    jest.spyOn(retryTransportAttempt, 'retry');
+
+    // @ts-ignore Set the start time to yesterday
+    retryTransportAttempt.startTime = Date.now() - 1000;
 
     await expect(retryTransportAttempt.run()).rejects.toEqual(
       expect.arrayContaining([new Error('maxRetryMs reached')])
     );
 
-    expect(retryTransportAttempt.retry).toHaveBeenCalledTimes(1);
-    expect(slowFailingTransport.handle).toHaveBeenCalledTimes(1);
     expect(retryTransportAttempt.errors[0]).toStrictEqual(new Error('maxRetryMs reached'));
   });
-
-  // TODO write test to verify everything works as expected also when wrapped in a concurrency > 1 Queue
 });

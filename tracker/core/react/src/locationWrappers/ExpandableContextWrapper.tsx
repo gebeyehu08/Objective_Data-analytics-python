@@ -8,14 +8,9 @@ import { ContentContextWrapperProps } from './ContentContextWrapper';
 import { LocationContextWrapper } from './LocationContextWrapper';
 
 /**
- * The props of ExpandableContextWrapper. No extra attributes, same as ContentContextWrapper.
- */
-export type ExpandableContextWrapperProps = ContentContextWrapperProps;
-
-/**
  * Wraps its children in an ExpandableContext.
  */
-export const ExpandableContextWrapper = ({ children, id }: ExpandableContextWrapperProps) => (
+export const ExpandableContextWrapper = ({ children, id }: ContentContextWrapperProps) => (
   <LocationContextWrapper locationContext={makeExpandableContext({ id })}>
     {(trackingContext) => (typeof children === 'function' ? children(trackingContext) : children)}
   </LocationContextWrapper>

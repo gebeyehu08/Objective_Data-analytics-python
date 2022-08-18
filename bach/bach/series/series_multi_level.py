@@ -9,8 +9,6 @@ from typing import Union, List, Optional, Dict, Any, cast, TypeVar, Tuple, Type,
 
 from bach import DataFrameOrSeries, SortColumn
 from bach.series.series import Series
-from bach.series.series_numeric import SeriesAbstractNumeric, SeriesFloat64, SeriesInt64
-from bach.series.series_string import SeriesString
 
 
 import pandas
@@ -26,7 +24,7 @@ T = TypeVar('T', bound='SeriesAbstractMultiLevel')
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy
-    from bach.series import SeriesBoolean
+    from bach.series import SeriesBoolean, SeriesAbstractNumeric, SeriesFloat64, SeriesInt64, SeriesString
     from bach.dataframe import DataFrame
 
 
@@ -191,7 +189,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         cls: Type[T],
         base: DataFrameOrSeries,
         value: Any,
-        name: str,
+        name: str = 'new_series',
         dtype: Optional[StructuredDtype] = None
     ) -> T:
         """
@@ -222,7 +220,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
             }
         else:
             levels = {
-                level_name: value_to_series(base=base, value=None).astype(dtypes[0])
+                level_name: get_series_type_from_dtype(dtypes[0]).from_value(
+                    base=base, value=None, name=level_name)
                 for level_name, dtypes in cls.get_supported_level_dtypes().items()
             }
         result = cls.get_class_instance(
@@ -426,9 +425,9 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
         kwargs['expression'] = Expression.construct('')
         super().__init__(**kwargs)
 
-        self._lower = cast(SeriesAbstractNumeric, self._parse_level_value(level_name='lower', value=lower))
-        self._upper = cast(SeriesAbstractNumeric, self._parse_level_value(level_name='upper', value=upper))
-        self._bounds = cast(SeriesString, self._parse_level_value(level_name='bounds', value=bounds))
+        self._lower = cast('SeriesAbstractNumeric', self._parse_level_value(level_name='lower', value=lower))
+        self._upper = cast('SeriesAbstractNumeric', self._parse_level_value(level_name='upper', value=upper))
+        self._bounds = cast('SeriesString', self._parse_level_value(level_name='bounds', value=bounds))
 
     @property
     def lower(self) -> 'SeriesAbstractNumeric':
@@ -444,6 +443,7 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
 
     @classmethod
     def get_supported_level_dtypes(cls) -> Dict[str, Tuple[str, ...]]:
+        from bach.series import SeriesFloat64, SeriesInt64, SeriesString
         return {
             'lower': (SeriesFloat64.dtype, SeriesInt64.dtype),
             'upper': (SeriesFloat64.dtype, SeriesInt64.dtype),

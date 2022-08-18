@@ -138,8 +138,9 @@ class BaseLocIndex(object):
         level_0_index = self.obj.index_columns[0]
 
         numbered_df = self.obj.copy()
+        dialect = self.obj.engine.dialect
         numbered_df['position'] = numbered_df.all_series[level_0_index].window_row_number(
-            window=Window([], mode=WindowFrameMode.ROWS, order_by=self.obj.order_by),
+            window=Window(dialect, [], mode=WindowFrameMode.ROWS, order_by=self.obj.order_by),
         )
 
         return numbered_df.materialize('numbered_index')
