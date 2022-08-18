@@ -2,13 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import {
-  GlobalContexts,
-  LocationStack,
-  makeContentContext,
-  makeId,
-  makeInputValueContext,
-} from '@objectiv/tracker-core';
+import { GlobalContexts, LocationStack, makeId, makeInputValueContext } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
@@ -17,7 +11,7 @@ import {
   useLocationStack,
 } from '@objectiv/tracker-react-core';
 import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
-import { ObjectivComponentProp, ObjectivIdProps, TrackedContextProps, ObjectivValueTrackingProps } from '../../types';
+import { ObjectivComponentProp, ObjectivIdProps, ObjectivValueTrackingProps, TrackedContextProps } from '../../types';
 import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
@@ -51,7 +45,10 @@ export const TrackedInputContextRadio = forwardRef(
     const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
     const locationStack = useLocationStack();
 
-    let inputId: string | null | undefined = id ?? nativeProps.id;
+    // Use the given `id` or the native `id` or attempt to automatically generate one with either `name` or `value`
+    const nameAttribute: string | null = nativeProps.name ? nativeProps.name : null;
+    const valueAttribute: string | null = nativeProps.value ? nativeProps.value.toString() : null;
+    let inputId: string | null = id ?? nativeProps.id ?? nameAttribute ?? valueAttribute;
     if (inputId && normalizeId) {
       inputId = makeId(inputId);
     }
@@ -70,22 +67,6 @@ export const TrackedInputContextRadio = forwardRef(
           ...trackingContext,
           globalContexts: [],
         };
-
-        // Add LocationContext representing the radio group, if the `name` attribute has been set
-        if (eventTarget.name) {
-          const nameContentContextId = makeId(eventTarget.name);
-          if (nameContentContextId) {
-            const locationStackClone = [...eventTrackerParameters.locationStack];
-            locationStackClone.splice(
-              eventTrackerParameters.locationStack.length - 1,
-              0,
-              makeContentContext({
-                id: nameContentContextId,
-              })
-            );
-            eventTrackerParameters.locationStack = locationStackClone;
-          }
-        }
 
         // Add InputValueContext if trackValue has been set
         if (inputId && trackValue) {

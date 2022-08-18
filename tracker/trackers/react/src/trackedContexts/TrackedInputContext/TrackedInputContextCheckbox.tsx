@@ -46,7 +46,10 @@ export const TrackedInputContextCheckbox = forwardRef(
     const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
     const locationStack = useLocationStack();
 
-    let inputId: string | null | undefined = id ?? nativeProps.id;
+    // Use the given `id` or the native `id` or attempt to automatically generate one with either `name` or `value`
+    const nameAttribute: string | null = nativeProps.name ? nativeProps.name : null;
+    const valueAttribute: string | null = nativeProps.value ? nativeProps.value.toString() : null;
+    let inputId: string | null = id ?? nativeProps.id ?? nameAttribute ?? valueAttribute;
     if (inputId && normalizeId) {
       inputId = makeId(inputId);
     }

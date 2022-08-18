@@ -9,8 +9,6 @@ from typing import Union, List, Optional, Dict, Any, cast, TypeVar, Tuple, Type,
 
 from bach import DataFrameOrSeries, SortColumn
 from bach.series.series import Series
-from bach.series.series_numeric import SeriesAbstractNumeric, SeriesFloat64, SeriesInt64
-from bach.series.series_string import SeriesString
 
 
 import pandas
@@ -26,7 +24,7 @@ T = TypeVar('T', bound='SeriesAbstractMultiLevel')
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy
-    from bach.series import SeriesBoolean
+    from bach.series import SeriesBoolean, SeriesAbstractNumeric, SeriesFloat64, SeriesInt64, SeriesString
     from bach.dataframe import DataFrame
 
 
@@ -427,9 +425,9 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
         kwargs['expression'] = Expression.construct('')
         super().__init__(**kwargs)
 
-        self._lower = cast(SeriesAbstractNumeric, self._parse_level_value(level_name='lower', value=lower))
-        self._upper = cast(SeriesAbstractNumeric, self._parse_level_value(level_name='upper', value=upper))
-        self._bounds = cast(SeriesString, self._parse_level_value(level_name='bounds', value=bounds))
+        self._lower = cast('SeriesAbstractNumeric', self._parse_level_value(level_name='lower', value=lower))
+        self._upper = cast('SeriesAbstractNumeric', self._parse_level_value(level_name='upper', value=upper))
+        self._bounds = cast('SeriesString', self._parse_level_value(level_name='bounds', value=bounds))
 
     @property
     def lower(self) -> 'SeriesAbstractNumeric':
@@ -445,6 +443,7 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
 
     @classmethod
     def get_supported_level_dtypes(cls) -> Dict[str, Tuple[str, ...]]:
+        from bach.series import SeriesFloat64, SeriesInt64, SeriesString
         return {
             'lower': (SeriesFloat64.dtype, SeriesInt64.dtype),
             'upper': (SeriesFloat64.dtype, SeriesInt64.dtype),

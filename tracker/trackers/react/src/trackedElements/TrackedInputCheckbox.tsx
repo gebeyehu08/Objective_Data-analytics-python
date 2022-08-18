@@ -22,7 +22,6 @@ export const TrackedInputCheckbox = forwardRef(
         objectiv={{
           ...objectiv,
           Component: 'input',
-          id: objectiv?.id ?? nativeProps.id ?? (nativeProps.value ? nativeProps.value.toString() : ''),
         }}
         type={'checkbox'}
         {...nativeProps}

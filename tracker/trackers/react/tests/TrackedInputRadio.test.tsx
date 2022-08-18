@@ -81,16 +81,47 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio data-testid={'test-radio'} value={'value'} objectiv={{ trackValue: true }} />
+        <TrackedInputRadio data-testid={'test-radio-1'} name={'name'} objectiv={{ trackValue: true }} />
+        <TrackedInputRadio data-testid={'test-radio-2'} value={'value'} objectiv={{ trackValue: true }} />
       </ObjectivProvider>
     );
 
     jest.resetAllMocks();
 
-    fireEvent.click(screen.getByTestId('test-radio'));
+    fireEvent.click(screen.getByTestId('test-radio-1'));
+    fireEvent.click(screen.getByTestId('test-radio-2'));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(1);
-    expect(logTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'name',
+          }),
+        ]),
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.ApplicationContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.PathContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.HttpContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'name',
+            value: '1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
@@ -186,10 +217,6 @@ describe('TrackedInputRadio', () => {
       expect.objectContaining({
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
-          expect.objectContaining({
-            _type: LocationContextName.ContentContext,
-            id: 'radios',
-          }),
           expect.objectContaining({
             _type: LocationContextName.InputContext,
             id: 'input-id-1',

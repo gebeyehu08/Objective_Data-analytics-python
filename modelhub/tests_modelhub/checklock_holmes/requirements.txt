@@ -1,3 +1,6 @@
+papermill
+asyncio
+
 # dev and styling
 pydantic==1.9.1
 python-dotenv
@@ -11,4 +14,3 @@ termcolor==1.1.0
 
 # notebooks and bq requirements
 -r ../../../notebooks/requirements.txt
--r ../../../bach/requirements-bigquery.txt

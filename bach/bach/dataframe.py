@@ -713,6 +713,7 @@ class DataFrame:
             converted to the 'string' dtype and loaded accordingly. Other types can only be loaded if
             materialization is 'cte' and the type is supported as Bach Series.
         :param name:
+
             * For 'table' materialization: name of the table that Pandas will write the data to.
             * For 'cte' materialization: name of the node in the underlying SqlModel graph.
         :param materialization: {'cte', 'table'}. How to materialize the data.
@@ -1740,9 +1741,12 @@ class DataFrame:
         # TODO Better argument typing, needs fancy import logic
         from bach.partitioning import Window
         index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(group_by_columns=index,
-                          order_by=self._order_by,
-                          **frame_args)
+        group_by = Window(
+            dialect=self.engine.dialect,
+            group_by_columns=index,
+            order_by=self._order_by,
+            **frame_args,
+        )
         return DataFrame._groupby_to_frame(self, group_by)
 
     def cube(self,
@@ -1825,12 +1829,15 @@ class DataFrame:
             end_boundary = WindowFrameBoundary.FOLLOWING
 
         index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(group_by_columns=index,
-                          order_by=self._order_by,
-                          mode=mode,
-                          start_boundary=start_boundary, start_value=start_value,
-                          end_boundary=end_boundary, end_value=end_value,
-                          min_values=min_periods)
+        group_by = Window(
+            dialect=self.engine.dialect,
+            group_by_columns=index,
+            order_by=self._order_by,
+            mode=mode,
+            start_boundary=start_boundary, start_value=start_value,
+            end_boundary=end_boundary, end_value=end_value,
+            min_values=min_periods,
+        )
         return DataFrame._groupby_to_frame(self, group_by)
 
     def expanding(self,
@@ -1861,12 +1868,15 @@ class DataFrame:
         end_value = None
 
         index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(group_by_columns=index,
-                          order_by=self._order_by,
-                          mode=mode,
-                          start_boundary=start_boundary, start_value=start_value,
-                          end_boundary=end_boundary, end_value=end_value,
-                          min_values=min_periods)
+        group_by = Window(
+            dialect=self.engine.dialect,
+            group_by_columns=index,
+            order_by=self._order_by,
+            mode=mode,
+            start_boundary=start_boundary, start_value=start_value,
+            end_boundary=end_boundary, end_value=end_value,
+            min_values=min_periods
+        )
 
         return DataFrame._groupby_to_frame(self, group_by)
 
@@ -3236,9 +3246,10 @@ class DataFrame:
             Name: feature, dtype: float64
 
         Where:
-            * ``feature`` is the series to be scaled
-            * ``mean_feature`` is the mean of ``feature``
-            * ``std_feature`` is the (population-based) standard deviation of ``feature``
+
+        * ``feature`` is the series to be scaled
+        * ``mean_feature`` is the mean of ``feature``
+        * ``std_feature`` is the (population-based) standard deviation of ``feature``
 
         """
         from bach.preprocessing.scalers import StandardScaler
@@ -3284,10 +3295,11 @@ class DataFrame:
             Name: feature, dtype: float64
 
         Where:
-            * ``feature`` is the series to be scaled
-            * ``feature_min`` is the minimum value of ``feature``
-            * ``feature_max`` is the maximum value of ``feature``
-            * ``range_min, range_max`` = ``feature_range``
+
+        * ``feature`` is the series to be scaled
+        * ``feature_min`` is the minimum value of ``feature``
+        * ``feature_max`` is the maximum value of ``feature``
+        * ``range_min, range_max`` = ``feature_range``
         """
         from bach.preprocessing.scalers import MinMaxScaler
         return MinMaxScaler(training_df=self, feature_range=feature_range).transform()

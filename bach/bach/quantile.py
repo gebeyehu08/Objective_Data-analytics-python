@@ -29,6 +29,7 @@ def calculate_quantiles(
         if partition:
             group_by = partition if isinstance(partition, GroupBy) else partition.group_by
         window = Window(
+            dialect=series.engine.dialect,
             group_by_columns=list(group_by.index.values()) if group_by else [],
             order_by=[],
             start_boundary=None,
