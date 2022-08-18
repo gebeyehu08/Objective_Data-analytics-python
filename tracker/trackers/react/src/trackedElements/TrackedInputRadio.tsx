@@ -34,13 +34,10 @@ export const TrackedInputRadio = React.forwardRef<HTMLInputElement, TrackedInput
     );
   }
 
-  return (
-    <TrackedInputContext
-      {...props}
-      id={props.id ?? (props.value ? props.value.toString() : '')}
-      Component={'input'}
-      type={'radio'}
-      ref={ref}
-    />
-  );
+  // Use the given `id` or attempt to automatically generate one with either `name` or `value`
+  const nameAttribute: string | null = props.name ? props.name : null;
+  const valueAttribute: string | null = props.value ? props.value.toString() : null;
+  const id: string = props.id ?? nameAttribute ?? valueAttribute ?? '';
+
+  return <TrackedInputContext {...props} id={id} Component={'input'} type={'radio'} ref={ref} />;
 });
