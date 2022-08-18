@@ -194,6 +194,57 @@ class FunnelDiscovery:
         result_df = result_df.dropna(subset=[conv_step_num_column])
         return result_df
 
+    def _construct_source_target_df(
+            self,
+            steps_df: bach.DataFrame,
+            n_top_examples: int = None,
+    ) -> bach.DataFrame:
+        """
+        Out of `steps_df` Bach dataframe we construct a new Bach dataframe with the following structure:
+
+        - `'source', 'target', 'value'`
+        - `'step1', 'step2', 'val1'`
+        - `'step2', 'step3', 'val2'`
+        - `'...', '...', '...'`
+
+        The navigation steps are our nodes (source and target), the value shows
+        how many source -> target links we have.
+
+        :param steps_df: the dataframe from `FunnelDiscovery.get_navigation_paths`.
+        :param n_top_examples: number of top navigation paths.
+
+        :returns: Bach DataFrame with `source`, `target` and `value` columns.
+        """
+
+        # count navigation paths
+        columns = [i for i in steps_df.data_columns
+                   if i != self.CONVERSTION_STEP_COLUMN]
+        steps_counter_df = steps_df[columns].value_counts().reset_index()
+
+        steps_counter_df = steps_counter_df.materialize(limit=n_top_examples)
+
+        # get the number of steps
+        n_steps = max([int(i.split('_')[-1])
+                       for i in steps_counter_df.data_columns
+                       if i != 'value_counts'])
+
+        step_size = 1  # we want steps' pairs
+        all_dfs = []
+        for i_step in range(1, n_steps - step_size + 1):
+            step1 = f'location_stack_step_{i_step}'
+            step2 = f'location_stack_step_{i_step + step_size}'
+
+            column_names = {step1: 'source', step2: 'target'}
+            _df = steps_counter_df[[step1, step2, 'value_counts']].rename(columns=column_names)
+            all_dfs.append(_df.dropna())
+
+        from bach.operations.concat import DataFrameConcatOperation
+        result = DataFrameConcatOperation(objects=all_dfs, ignore_index=True)()
+        links_df = result.groupby(['source', 'target']).agg('sum').reset_index().rename(
+            columns={'value_counts_sum': 'value'}).sort_values('value', ascending=False)
+
+        return links_df
+
     def get_navigation_paths(
         self,
         data: bach.DataFrame,
@@ -403,15 +454,14 @@ class FunnelDiscovery:
     def plot_sankey_diagram(
             self,
             steps_df: bach.DataFrame,
-            n_top_examples: int = 15,
-            max_n_top_examples: int = 50) -> None:
+            n_top_examples: int = None
+    ) -> bach.DataFrame:
         """
         Plot a Sankey Diagram of the Funnel with Plotly.
 
-        Tihs method requires the dataframe from `FunnelDiscovery.get_navigation_paths`.
-        In this function we convert this Bach dataframe to a Pandas dataframe, and
-        in order to plot the sankey diagram, we construct a new `df_links` pandas dataframe
-        out of it, with `df_links`:
+        This method requires the dataframe from `FunnelDiscovery.get_navigation_paths`: `steps_df`.
+        Out of `steps_df` Bach dataframe we construct a new Bach dataframe (in order
+        to plot the sankey diagram), which has the following structure:
 
         - `'source', 'target', 'value'`
         - `'step1', 'step2', 'val1'`
@@ -421,78 +471,43 @@ class FunnelDiscovery:
         The navigation steps are our nodes (source and target), the value shows
         how many source -> target links we have.
 
-        :param steps_df: the dataframe which we get from `FunnelDiscovery.get_navigation_paths` method.
-        :param n_top_examples: number of top examples to plot.
-        :param max_n_top_examples: if we have too many examples to plot it can slow down
-            the browser, so you can limit to plot only the `max_n_top_examples` examples.
+        :param steps_df: the dataframe which we get from `FunnelDiscovery.get_navigation_paths`.
+        :param n_top_examples: number of top examples to plot (if we have
+            too many examples to plot it can slow down the browser).
+
+        :returns: Bach DataFrame with `source`, `target` and `value` columns.
         """
 
-        # count navigation paths
-        columns = [i for i in steps_df.data_columns
-                   if i != self.CONVERSTION_STEP_COLUMN]
-        steps_counter_df = steps_df[columns].value_counts().to_frame()
+        links_df = self._construct_source_target_df(steps_df, n_top_examples)
 
-        _steps_counter_df = steps_counter_df.reset_index().to_pandas()
-        if n_top_examples is None:
-            n_top_examples = len(_steps_counter_df)
-        n_top_examples = min(n_top_examples, max_n_top_examples)
-        print(f'Showing {n_top_examples} examples out of {len(_steps_counter_df)}')
+        links_df_pd = links_df.to_pandas()
+        if not links_df_pd.empty:
+            # source and target in sankey's diagram must be numeric and not text
+            import pandas as pd
+            unique_nodes = list(pd.unique(links_df_pd[['source', 'target']].values.ravel()))
 
-        _counter = _steps_counter_df.head(n_top_examples).values.tolist()
+            mapping_dict = {k: v for v, k in enumerate(unique_nodes)}
+            links_df_pd['source'] = links_df_pd['source'].map(mapping_dict)
+            links_df_pd['target'] = links_df_pd['target'].map(mapping_dict)
 
-        def func_ngram(data, n): return [data[i: i + n] for i in range(len(data) - n + 1)]
-
-        source, target, value = [], [], []
-        for elem in _counter:
-            # node
-            _steps = elem[:-1]
-
-            # we remove 'single' steps
-            _steps = [i for i in _steps if i is not None]
-            if len(_steps) < 2:
-                continue
-
-            # link
-            source_target_list = func_ngram(_steps, 2)
-            source.extend([i[0] for i in source_target_list])
-            target.extend([i[1] for i in source_target_list])
-            # weight
-            weight = elem[-1]
-            value.extend([weight for i in range(len(source_target_list))])
-
-        import pandas as pd
-        df_links = pd.DataFrame({'source': source, 'target': target, 'value': value})
-
-        unique_source_target = list(pd.unique(df_links[['source', 'target']].values.ravel()))
-        mapping_dict = {k: v for v, k in enumerate(unique_source_target)}
-        df_links['source'] = df_links['source'].map(mapping_dict)
-        df_links['target'] = df_links['target'].map(mapping_dict)
-
-        # summing up loops - we want one link for a loop
-        df_links["value"] = df_links.groupby(['source', 'target'])['value'].transform('sum')
-        # after summing, we neet to drop the rest
-        df_links = df_links.drop_duplicates(subset=['source', 'target'])
-
-        if not df_links.empty:
-            links_dict = df_links.to_dict(orient='list')
+            links_dict = links_df_pd.to_dict(orient='list')
 
             import plotly.graph_objects as go
             fig = go.Figure(data=[go.Sankey(
-                # textfont=dict(color="rgba(0,0,0,0)", size=1), # make node text invisible
                 orientation='h',  # use 'v' for vertical orientation,
                 node=dict(
                     pad=25,
                     thickness=15,
                     line=dict(color="black", width=0.5),
-                    label=[f'{i[:20]}...' for i in unique_source_target],
-                    customdata=unique_source_target,
+                    label=[f'{i[:20]}...' for i in unique_nodes],
+                    customdata=unique_nodes,
                     hovertemplate='NODE: %{customdata}',
                 ),
                 link=dict(
                     source=links_dict["source"],
                     target=links_dict["target"],
                     value=links_dict["value"],
-                    customdata=unique_source_target,
+                    customdata=unique_nodes,
                     hovertemplate='SOURCE: %{source.customdata}<br />' +
                                   'TARGET: %{target.customdata}<br />'
                 ),
@@ -509,3 +524,9 @@ class FunnelDiscovery:
             fig.show()
         else:
             print("There is no data to plot.")
+
+        # return all the data without limiting to n_top_examples
+        if n_top_examples is not None:
+            links_df = self._construct_source_target_df(steps_df)
+
+        return links_df
