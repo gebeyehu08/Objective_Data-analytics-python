@@ -9,9 +9,9 @@ import { EffectDestructor } from '../types';
  * A side effect that runs only once on unmount.
  */
 export const useOnUnmount = (destructor: EffectDestructor) => {
-  let latestDestructorRef = useRef(destructor);
+  let latestDestructorRef = useRef<EffectDestructor>(destructor);
 
   latestDestructorRef.current = destructor;
 
-  useEffect(() => () => latestDestructorRef.current(), []);
+  useEffect(() => () => latestDestructorRef.current && latestDestructorRef.current(), []);
 };

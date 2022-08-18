@@ -8,14 +8,9 @@ import { ContentContextWrapperProps } from './ContentContextWrapper';
 import { LocationContextWrapper } from './LocationContextWrapper';
 
 /**
- * The props of InputContextWrapper. No extra attributes, same as ContentContextWrapper.
- */
-export type InputContextWrapperProps = ContentContextWrapperProps;
-
-/**
  * Wraps its children in a InputContext.
  */
-export const InputContextWrapper = ({ children, id }: InputContextWrapperProps) => (
+export const InputContextWrapper = ({ children, id }: ContentContextWrapperProps) => (
   <LocationContextWrapper locationContext={makeInputContext({ id })}>
     {(trackingContext) => (typeof children === 'function' ? children(trackingContext) : children)}
   </LocationContextWrapper>
