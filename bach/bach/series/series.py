@@ -1631,7 +1631,7 @@ class Series(ABC):
         if not checked_window.order_by:
             raise ValueError(
                 (
-                    f'Window must me sorted when applying {agg_function.value}, '
+                    f'Window must be sorted when applying {agg_function.value}, '
                     'otherwise results might be non-deterministic or an exception will be raised '
                     'depending on the engine been used. '
                     'Please create a new instance by calling any of the following:\n'

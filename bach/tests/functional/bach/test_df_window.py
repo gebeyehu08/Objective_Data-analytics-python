@@ -172,22 +172,25 @@ def test_windowing_windows(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     bt = bt.sort_index()
 
-    # no sorting, no partition
+    # no partition
     p0 = bt.window()
 
-    # no sorting, simple partition
+    # simple partition
     p1 = bt.groupby('municipality').window()
 
-    # no sorting, multi field partition
+    # multi field partition
     p2 = bt.groupby(['municipality', 'city']).window()
 
-    # no sorting, expression partition
+    # expression partition
     p3 = bt.groupby(['municipality', bt['inhabitants'] < 10000]).window()
 
-    for w in [p0,p1,p2,p3]:
-        bt.inhabitants.window_row_number(window=w).to_pandas()
+    for idx, w in enumerate([p0, p1, p2, p3]):
+        bt[f'window_{idx}'] = bt.inhabitants.window_row_number(window=w)
 
-    with pytest.raises(ValueError, match=r'Window must me sorted when applying'):
+    # just check if no errors are raised
+    bt.to_pandas()
+
+    with pytest.raises(ValueError, match=r'Window must be sorted when applying'):
         # exception should be raised as sorting is required when calling any Series.window_* function
         bt.inhabitants.window_row_number(window=bt.sort_values(by=[]).groupby().window())
 
