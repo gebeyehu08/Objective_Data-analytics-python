@@ -17,7 +17,7 @@ from checklock_holmes.models.nb_checker_models import (
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.cell_tags import CellTags
 from checklock_holmes.utils.constants import (
-    NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE
+    NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE, DATE_FORMAT
 )
 from checklock_holmes.utils.helpers import CuriousIncident
 from checklock_holmes.utils.supported_engines import SupportedEngine
@@ -229,12 +229,45 @@ class NoteBookChecker:
         return self._tag_notebook_cells(nb_node)
 
     def _tag_notebook_cells(self, nb_node: nbformat.NotebookNode) -> nbformat.NotebookNode:
+        _GET_OBJECTIV_DF_REGEX = re.compile(r'get_objectiv_dataframe\((?P<params>.*)\)', re.MULTILINE)
+
+        default_obj_params = []
+
+        if self.metadata.start_date:
+            default_obj_params.append(f'start_date="{self.metadata.start_date.strftime(DATE_FORMAT)}"')
+
+        if self.metadata.end_date:
+            default_obj_params.append(f'end_date="{self.metadata.end_date.strftime(DATE_FORMAT)}"')
+
         for cell in nb_node.cells:
-            if cell.metadata.get('checklock_tag') or cell.cell_type != 'code':
+            if cell.metadata.get('checklock_tags') or cell.cell_type != 'code':
                 continue
 
             tags = CellTags.get_tags(cell.source)
 
-            cell.metadata['checklock_tag'] = tags
+            cell.metadata['checklock_tags'] = tags
             cell.metadata['tags'].extend([tag.value for tag in tags])
+
+            if (
+                CellTags.GET_OBJECTIV_DATAFRAME in tags
+                and (self.metadata.start_date or self.metadata.end_date)
+            ):
+                match = _GET_OBJECTIV_DF_REGEX.search(cell.source)
+                params = match.group('params').split(',') if match else []
+
+                new_params = default_obj_params.copy()
+                for param in params:
+
+                    if 'start_date' in param and self.metadata.start_date:
+                        continue
+
+                    if 'end_date' in param and self.metadata.end_date:
+                        continue
+
+                    new_params.append(param.strip())
+
+                cell.source = _GET_OBJECTIV_DF_REGEX.sub(
+                    f'get_objectiv_dataframe({", ".join(new_params)})', cell.source
+                )
+
         return nb_node
