@@ -22,7 +22,7 @@
     "deploy:verdaccio": "yarn registry:verdaccio && turbo run deploy:verdaccio --force && yarn registry:npm",
     "generate": "turbo run generate && turbo run prettify && turbo run tsc",
     "list": "yarn workspaces list",
-    "pre-deploy": "turbo run pre-deploy",
+    "pre-deploy": "yarn && turbo run pre-deploy",
     "prettify": "turbo run prettify",
     "registry:npm": "shx rm -f .npmrc",
     "registry:verdaccio": "shx cp ./verdaccio/.npmrc .npmrc ",
