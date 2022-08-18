@@ -246,7 +246,7 @@ class SeriesInt64(SeriesAbstractNumeric):
         DBDialect.BIGQUERY: 'INT64'
     }
     supported_value_types = (int, numpy.int64, numpy.int32)
-    supported_dtypes_to_cast = ('float64', 'bool', 'string')
+    supported_source_dtypes = ('float64', 'bool', 'string')
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
@@ -364,7 +364,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
         DBDialect.BIGQUERY: 'FLOAT64'
     }
     supported_value_types = (float, numpy.float64)
-    supported_dtypes_to_cast = ('int64', 'string')
+    supported_source_dtypes = ('int64', 'string')
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():
     #

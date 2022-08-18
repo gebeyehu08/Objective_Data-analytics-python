@@ -47,7 +47,7 @@ class SeriesBoolean(Series, ABC):
         DBDialect.BIGQUERY: 'BOOL',
     }
     supported_value_types = (bool, )
-    supported_dtypes_to_cast = ('int64', 'string', )
+    supported_source_dtypes = ('int64', 'string',)
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():
     # 'True' and 'False' are valid boolean literals in Postgres

@@ -37,7 +37,7 @@ class SeriesUuid(Series):
     }
 
     supported_value_types = (UUID, str)
-    supported_dtypes_to_cast = ('string', )
+    supported_source_dtypes = ('string',)
 
     @classmethod
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:

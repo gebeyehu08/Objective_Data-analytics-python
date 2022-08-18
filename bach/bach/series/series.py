@@ -117,7 +117,7 @@ class Series(ABC):
     by :meth:`supported_value_to_literal()`.
     """
 
-    supported_dtypes_to_cast: Tuple[str, ...] = tuple()
+    supported_source_dtypes: Tuple[str, ...] = tuple()
     """
     INTERNAL: List of dtypes that can be casted into this Series dtype.
     For example a SeriesString can be casted into a SeriesTimestamp. e.g `x.astype('timestamp')`.
