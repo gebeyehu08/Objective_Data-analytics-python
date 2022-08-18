@@ -690,3 +690,65 @@ def test_melt_steps(db_params) -> None:
         use_to_pandas=True
     )
 
+
+def test_construct_source_target_df(db_params) -> None:
+    df, modelhub = get_objectiv_dataframe_test(db_params)
+    funnel = modelhub.get_funnel_discovery()
+
+    # steps_df = funnel.get_navigation_paths(data=df, steps=4, n_examples=3)
+    # bts = funnel._construct_source_target_df(steps_df, n_top_examples=None)
+    #
+    # assert_equals_data(
+    #         bts,
+    #         expected_columns=['source', 'target', 'value'],
+    #         expected_data=[
+    #             [
+    #                 'Link: cta-docs-location-stack located at Web Document: #document => Section: main => Section: location-stack',
+    #                 'Link: cta-repo-button located at Web Document: #document => Section: header',
+    #                 1
+    #             ],
+    #             [
+    #                 'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy',
+    #                 'Link: logo located at Web Document: #document => Section: navbar-top',
+    #                 1
+    #             ],
+    #             [
+    #                 'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
+    #                 'Link: cta-docs-location-stack located at Web Document: #document => Section: main => Section: location-stack',
+    #                 2
+    #             ],
+    #             [
+    #                 'Link: logo located at Web Document: #document => Section: navbar-top',
+    #                 'Link: notebook-product-analytics located at Web Document: #document',
+    #                 2
+    #             ],
+    #             [
+    #                 'Link: notebook-product-analytics located at Web Document: #document',
+    #                 'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
+    #                 3
+    #             ],
+    #         ],
+    #         order_by=['value', 'source'],
+    #         use_to_pandas=True
+    #  )
+
+    # with n_top_examples
+    steps = 3
+    steps_df = funnel.get_navigation_paths(data=df, steps=steps, n_examples=None)
+
+    for i in range(1, steps + 1):
+        steps_df[f'location_stack_step_{i}'] = steps_df[f'location_stack_step_{i}'].str[:4]
+
+    bts = funnel._construct_source_target_df(steps_df, n_top_examples=3)
+
+    assert_equals_data(
+        bts,
+        expected_columns=['source', 'target', 'value'],
+        expected_data=[
+            ['Link', 'Expa', 1],
+            ['Expa', 'Link', 2],
+            ['Link', 'Link', 15],
+        ],
+        order_by=['value'],
+        use_to_pandas=True
+    )
