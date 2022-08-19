@@ -76,7 +76,7 @@ def get_objectiv_data(
         check_dtypes=True,
         infer_identity_resolution=identity_resolution is not None,
     )
-    data = data[columns_to_check]
+    data = data[columns_to_check + global_contexts]
 
     if set_index:
         data = data.set_index(keys=ObjectivSupportedColumns.get_index_columns())

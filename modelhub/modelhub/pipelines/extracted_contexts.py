@@ -124,10 +124,10 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         context_df = self._convert_dtypes(df=context_df)
         context_df = self._apply_date_filter(df=context_df, **kwargs)
-        print(context_df.view_sql())
-        # TODO: Do not remove out-of-bounds columns for now. Decide what to do with this
-        # context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
-        # context_df = context_df[context_columns]
+
+        context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        context_df = context_df[context_columns + self._global_contexts]
+
         return context_df.materialize(node_name='context_data')
 
     @property
@@ -189,11 +189,11 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
             df_cp[key] = taxonomy_col
 
+        gc_series = df_cp['global_contexts'].astype('objectiv_global_contexts')
         # Extract the requested global contexts
         for gc in self._global_contexts:
             context_name = gc.capitalize() + "Context"
-            print(f"extracting {gc} as {context_name}")
-            df_cp[gc] = taxonomy_series.elements[context_name].astype('json')
+            df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
 
         # rename series to objectiv supported
         df_cp = df_cp.rename(
@@ -215,8 +215,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if is_postgres(self._engine):
             return df_cp
 
-        # remove taxonomy column, no longer needed
-        df_cp = df_cp.drop(columns=[self._taxonomy_column.name])
+        # remove taxonomy columns that are no longer needed
+        df_cp = df_cp.drop(columns=[self._taxonomy_column.name, 'global_contexts'])
 
         # this materialization is to generate a readable query
         df_cp = df_cp.materialize(node_name='bq_extra_processing')
@@ -243,14 +243,14 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         return df_cp
 
-    @classmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+    def validate_pipeline_result(self, result: bach.DataFrame) -> None:
         """
         Checks if we are returning ALL expected context series with proper dtype.
         """
         check_objectiv_dataframe(
             result,
             columns_to_check=ObjectivSupportedColumns.get_extracted_context_columns(),
+            global_contexts_to_check=self._global_contexts,
             check_dtypes=True,
             infer_identity_resolution=False,
         )

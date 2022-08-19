@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
+import modelhub
 from bach.series import Series
 
 from enum import Enum
@@ -33,7 +34,7 @@ class ObjectivSupportedColumns(Enum):
     _INDEX_SERIES = (EVENT_ID, )
 
     _EXTRACTED_CONTEXT_COLUMNS = (
-        EVENT_ID, DAY, MOMENT, USER_ID, GLOBAL_CONTEXTS, LOCATION_STACK, EVENT_TYPE, STACK_EVENT_TYPES,
+        EVENT_ID, DAY, MOMENT, USER_ID, LOCATION_STACK, EVENT_TYPE, STACK_EVENT_TYPES,
     )
 
     _SESSIONIZED_COLUMNS = (
@@ -88,6 +89,7 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE = {
 
 def get_supported_dtypes_per_objectiv_column(
     with_md_dtypes: bool = False, with_identity_resolution: bool = True,
+    global_contexts: List[str] = []
 ) -> Dict[str, str]:
     """
     Helper function that returns mapping between Objectiv series name and dtype
@@ -102,12 +104,17 @@ def get_supported_dtypes_per_objectiv_column(
     if with_identity_resolution:
         supported_dtypes.update({ObjectivSupportedColumns.USER_ID: bach.SeriesString.dtype})
 
-    return {col.value: dtype for col, dtype in supported_dtypes.items()}
+    return {
+        **{col.value: dtype for col, dtype in supported_dtypes.items()},
+        **{gc: modelhub.SeriesGlobalContext for gc in global_contexts}
+    }
+
 
 
 def check_objectiv_dataframe(
     df: bach.DataFrame,
     columns_to_check: List[str] = None,
+    global_contexts_to_check: List[str] = [],
     check_index: bool = False,
     check_dtypes: bool = False,
     with_md_dtypes: bool = False,
@@ -139,7 +146,9 @@ def check_objectiv_dataframe(
             with_identity_resolution = True
 
     supported_dtypes = get_supported_dtypes_per_objectiv_column(
-        with_md_dtypes=with_md_dtypes, with_identity_resolution=with_identity_resolution,
+        with_md_dtypes=with_md_dtypes,
+        with_identity_resolution=with_identity_resolution,
+        global_contexts=global_contexts_to_check
     )
 
     for col in columns:

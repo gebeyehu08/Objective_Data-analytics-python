@@ -26,7 +26,7 @@ def patch_extracted_contexts_validations(monkeypatch):
 def test_get_base_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name)
+    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
     result = pipeline._get_base_dtypes()
 
     if is_postgres(engine):
@@ -45,7 +45,6 @@ def test_get_base_dtypes(db_params) -> None:
                     'cookie_id': 'uuid',
                     '_type': 'string',
                     '_types': 'json',
-                    'global_contexts': 'json',
                     'location_stack': 'json',
                     'time': 'int64',
                 }
@@ -61,7 +60,7 @@ def test_get_base_dtypes(db_params) -> None:
 def test_convert_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name)
+    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
 
     event = get_parsed_objectiv_data(engine)[0]
     pdf = pd.DataFrame(

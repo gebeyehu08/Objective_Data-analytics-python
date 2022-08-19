@@ -29,7 +29,7 @@ def test_get_supported_types_per_objectiv_column() -> None:
     assert expected == result
 
     result = get_supported_dtypes_per_objectiv_column(with_md_dtypes=True)
-    assert result['global_contexts'] == 'objectiv_global_context'
+    assert result['global_contexts'] == 'objectiv_global_contexts'
     assert result['location_stack'] == 'objectiv_location_stack'
 
     result = get_supported_dtypes_per_objectiv_column(with_identity_resolution=True)

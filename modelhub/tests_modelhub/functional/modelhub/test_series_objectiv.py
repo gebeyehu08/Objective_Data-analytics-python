@@ -27,7 +27,7 @@ def test_get_real_data(db_params: DBParams):
 def test_objectiv_stack_type(db_params):
     bt = get_df_with_json_data_real(db_params)
 
-    bt['a'] = bt.global_contexts.astype('objectiv_global_context')
+    bt['a'] = bt.global_contexts.astype('objectiv_global_contexts')
     bts = bt.a.objectiv.get_from_context_with_type_series("CookieIdContext", "cookie_id")
     assert_equals_data(
         bts,
@@ -46,8 +46,8 @@ def test_objectiv_stack_type(db_params):
 def test_objectiv_stack_type2(db_params):
     bt = get_df_with_json_data_real(db_params)
 
-    bt['a'] = bt.global_contexts.astype('objectiv_global_context')
-    bts = bt.a.global_contexts.user_agent
+    bt['a'] = bt.global_contexts.astype('objectiv_global_contexts')
+    bts = bt.a.obj.get_contexts('http').user_agent
     assert_equals_data(
         bts,
         expected_columns=['_index_event_id', 'a'],

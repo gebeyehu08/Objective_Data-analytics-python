@@ -3,6 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 import datetime
 import json
+from typing import List
 
 import bach
 import pandas as pd
@@ -18,7 +19,6 @@ _EXPECTED_CONTEXT_COLUMNS = [
     'day',
     'moment',
     'user_id',
-    'global_contexts',
     'location_stack',
     'event_type',
     'stack_event_types',
@@ -53,8 +53,27 @@ def _get_parsed_test_data_pandas_df(engine) -> pd.DataFrame:
     return pd.DataFrame(bq_data)
 
 
-def get_expected_context_pandas_df(engine) -> pd.DataFrame:
-    pdf = pd.DataFrame(get_parsed_objectiv_data(engine))
+def get_expected_context_pandas_df(engine, global_contexts: List[str] = []) -> pd.DataFrame:
+
+    field_name_mapping = {}
+    for context_name in global_contexts:
+        capitalized_name = context_name.capitalize()+'Context'
+        field_name_mapping[capitalized_name] = context_name
+
+    data = get_parsed_objectiv_data(engine)
+
+    # Append requested global contexts, and remove the all containing one
+    for i, row in enumerate(data):
+        # create one column for every requested context, for every row
+        row_context_data = {c: [] for c in field_name_mapping.values()}
+        for row_context_item in row['value']['global_contexts']:
+            if row_context_item['_type'] in field_name_mapping:
+                toplevel_field_name = field_name_mapping[row_context_item['_type']]
+                row_context_data[toplevel_field_name].append(row_context_item)
+        row['value'] = {**row['value'], **row_context_data}
+        del(row['value']['global_contexts'])
+
+    pdf = pd.DataFrame(data)
     context_pdf = pdf['value'].apply(pd.Series)
 
     context_pdf['event_id'] = pdf['event_id']
@@ -68,20 +87,21 @@ def get_expected_context_pandas_df(engine) -> pd.DataFrame:
         }
     )
 
-    return context_pdf[_EXPECTED_CONTEXT_COLUMNS]
+    return context_pdf[_EXPECTED_CONTEXT_COLUMNS + global_contexts]
 
 
-def _get_extracted_contexts_pipeline(db_params) -> ExtractedContextsPipeline:
+def _get_extracted_contexts_pipeline(db_params, global_contexts=[]) -> ExtractedContextsPipeline:
     engine = create_engine_from_db_params(db_params)
-    return ExtractedContextsPipeline(engine=engine, table_name=db_params.table_name)
+    return ExtractedContextsPipeline(engine=engine, table_name=db_params.table_name,
+                                     global_contexts=global_contexts)
 
 
 def test_get_pipeline_result(db_params) -> None:
-    context_pipeline = _get_extracted_contexts_pipeline(db_params)
+    context_pipeline = _get_extracted_contexts_pipeline(db_params, global_contexts=['identity'])
     engine = context_pipeline._engine
 
     result = context_pipeline().sort_values(by='event_id').to_pandas()
-    expected = get_expected_context_pandas_df(engine)
+    expected = get_expected_context_pandas_df(engine, global_contexts=['identity'])
     pd.testing.assert_frame_equal(expected, result)
 
 
@@ -128,7 +148,7 @@ def test_process_taxonomy_data(db_params) -> None:
     result = context_pipeline._process_taxonomy_data(df).reset_index(drop=True)
 
     expected_series = [
-        'user_id', 'event_type', 'stack_event_types', 'location_stack', 'global_contexts', 'event_id', 'day', 'moment',
+        'user_id', 'event_type', 'stack_event_types', 'location_stack', 'event_id', 'day', 'moment',
     ]
     if is_bigquery(engine):
         # day and moment are parsed after processing base data

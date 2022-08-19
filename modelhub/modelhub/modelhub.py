@@ -166,8 +166,6 @@ class ModelHub:
         )
 
         # get_objectiv_data returns both series as bach.SeriesJson.
-        # TODO, do something with global contexts?
-        data['global_contexts'] = data.global_contexts.astype('objectiv_global_context')
         data['location_stack'] = data.location_stack.astype('objectiv_location_stack')
         return data
 

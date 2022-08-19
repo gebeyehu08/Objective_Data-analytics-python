@@ -150,7 +150,8 @@ class Aggregate:
         return frequency.user_id_nunique
 
     @use_only_required_objectiv_series(
-        required_series=['global_contexts', 'location_stack', 'user_id', 'stack_event_types', 'event_type'],
+        required_series=['location_stack', 'user_id', 'stack_event_types', 'event_type'],
+        required_global_contexts=['application']
     )
     def top_product_features(self,
                              data: bach.DataFrame,
@@ -171,7 +172,7 @@ class Aggregate:
         data = data.copy()
 
         # the following columns have to be in the data
-        data['__application'] = data.global_contexts.gc.application
+        data['__application'] = data.application.id
 
         if location_stack is not None:
             data['__feature_nice_name'] = location_stack.ls.nice_name
@@ -199,10 +200,11 @@ class Aggregate:
 
     @use_only_required_objectiv_series(
         required_series=[
-            'global_contexts', 'location_stack', 'user_id', 'stack_event_types',
+            'location_stack', 'user_id', 'stack_event_types',
             # required by Map.conversions_in_time and Map.conversions_counter
             'session_id', 'moment', 'event_type',
         ],
+        required_global_contexts=['application']
     )
     def top_product_features_before_conversion(self,
                                                data: bach.DataFrame,
@@ -254,7 +256,7 @@ class Aggregate:
 
         # merge with filtered conversion interactive events
         converted_users_filtered = data.merge(conversions_df, on='event_id')
-        converted_users_filtered['__application'] = converted_users_filtered.global_contexts.gc.application
+        converted_users_filtered['__application'] = converted_users_filtered.application.id
 
         if location_stack is not None:
             converted_users_filtered['__feature_nice_name'] = location_stack.ls.nice_name
