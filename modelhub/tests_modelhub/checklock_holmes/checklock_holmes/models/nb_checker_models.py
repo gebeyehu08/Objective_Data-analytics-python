@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-
+import datetime
 import glob
 import os
 import re
@@ -37,6 +37,8 @@ class NoteBookCheckSettings(BaseModel):
     github_issues_dir: str
     dump_nb_scripts_dir: Optional[str] = None
     display_cell_timing: bool = False
+    start_date: Optional[datetime.date] = None
+    end_date: Optional[datetime.date] = None
 
     @validator('engines_to_check')
     def _process_engines_to_check(cls, engines_to_check: List[str]) -> List[SupportedEngine]:
@@ -82,6 +84,8 @@ class NoteBookCheckSettings(BaseModel):
 class NoteBookMetadata(BaseModel):
     path: str
     name: str = ''
+    start_date: Optional[datetime.date] = None
+    end_date: Optional[datetime.date] = None
 
     @validator('name', always=True)
     def _process_name(cls, val: Optional[str], values: Dict[str, str]) -> str:
