@@ -48,6 +48,7 @@ def collect(anonymous_mode: bool = False) -> Response:
         return _get_collector_response(error_count=1, event_count=-1, data_error=exc.__str__())
 
     # check for SessionContext to get client session id
+    client_session_id = None
     for event in events:
         session_context = get_optional_context(event, 'SessionContext')
         if session_context:
