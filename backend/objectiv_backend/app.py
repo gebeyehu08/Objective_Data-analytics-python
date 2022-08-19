@@ -16,6 +16,7 @@ def create_app() -> Flask:
     flask_app.add_url_rule(rule='/schema', view_func=schema.schema, methods=['GET'])
     flask_app.add_url_rule(rule='/jsonschema', view_func=schema.json_schema, methods=['GET'])
     flask_app.add_url_rule(rule='/', view_func=collector.collect, methods=['POST'])
+    flask_app.add_url_rule(rule='/anonymous', view_func=collector.anonymous, methods=['POST'])
     init_cors(flask_app)
     return flask_app
 
