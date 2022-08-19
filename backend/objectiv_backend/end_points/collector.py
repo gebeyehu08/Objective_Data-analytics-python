@@ -45,7 +45,9 @@ def collect(anonymous_mode: bool = False) -> Response:
         transport_time: int = event_data['transport_time']
     except ValueError as exc:
         print(f'Data problem: {exc}')  # todo: real error logging
-        return _get_collector_response(error_count=1, event_count=-1, data_error=exc.__str__())
+        print(flask.request.data)
+        return _get_collector_response(error_count=1, event_count=-1, data_error=exc.__str__(),
+                                       anonymous_mode=anonymous_mode)
 
     # check for SessionContext to get client session id
     client_session_id = None
