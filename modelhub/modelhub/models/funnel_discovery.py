@@ -221,6 +221,8 @@ class FunnelDiscovery:
                    if i != self.CONVERSTION_STEP_COLUMN]
         steps_counter_df = steps_df[columns].value_counts().reset_index()
 
+        steps_counter_df = steps_counter_df.sort_values(['value_counts'] + columns,
+                                                        ascending=False)
         steps_counter_df = steps_counter_df.materialize(limit=n_top_examples)
 
         # get the number of steps
