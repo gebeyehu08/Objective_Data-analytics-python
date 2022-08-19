@@ -252,11 +252,10 @@ def test_filter_navigation_paths_conversion(db_params) -> None:
 
     df = df[['moment', 'location_stack', 'global_contexts']]
 
-    '''
     with pytest.raises(ValueError, match='The is_conversion_event column '
                                          'is missing in the dataframe.'):
         funnel.get_navigation_paths(data=df, steps=3, only_converted_paths=True)
-    '''
+
     # add conversion events
     df['application'] = df.global_contexts.gc.application
 
@@ -334,28 +333,28 @@ def test_get_navigation_paths_start_from_end(db_params):
         ],
         expected_data=[
             [
-                'Link: Cookies located at Web Document: #document => Section: footer',
                 'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
+                'Link: Cookies located at Web Document: #document => Section: footer',
                 'Link: About Us located at Web Document: #document => Section: navbar-top',
                 'Link: Docs located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
             ],
             [
                 'Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                'Link: Cookies located at Web Document: #document => Section: footer',
                 'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
+                'Link: Cookies located at Web Document: #document => Section: footer',
                 'Link: About Us located at Web Document: #document => Section: navbar-top',
             ],
             [
                 'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
                 'Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                'Link: Cookies located at Web Document: #document => Section: footer',
                 'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
+                'Link: Cookies located at Web Document: #document => Section: footer',
             ],
             [
                 'Link: cta-repo-button located at Web Document: #document => Section: header',
                 'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
                 'Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                'Link: Cookies located at Web Document: #document => Section: footer',
+                'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
             ],
             [
                 'Link: cta-docs-location-stack located at Web Document: #document => Section: main => Section: location-stack',
@@ -396,298 +395,8 @@ def test_get_navigation_paths_start_from_end(db_params):
             [
                 None, None,
                 'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy',
-                'Link: logo located at Web Document: #document => Section: navbar-top'],
+                'Link: logo located at Web Document: #document => Section: navbar-top'
+            ],
         ],
         use_to_pandas=True,
     )
-
-
-def test_tag_step(db_params) -> None:
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    funnel = modelhub.get_funnel_discovery()
-
-    steps_df = funnel.get_navigation_paths(data=df, steps=3, n_examples=3)
-
-    tagged_steps = [funnel._tag_step(step_series)
-                    for step_series in steps_df.data.values()]
-
-    assert len(tagged_steps) == 3
-
-    # 1st step
-    assert_equals_data(
-        tagged_steps[0],
-        expected_columns=[funnel.STEP_TAG_COLUMN, 'location_stack_step_1'],
-        expected_data=[
-            [
-                1,
-                'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy',
-            ],
-            [
-                1,
-                'Link: logo located at Web Document: #document => Section: navbar-top',
-            ],
-            [
-                1,
-                'Link: notebook-product-analytics located at Web Document: #document'
-            ]
-        ],
-        order_by=['location_stack_step_1']
-    )
-
-    # 2nd step
-    assert_equals_data(
-        tagged_steps[1],
-        expected_columns=[funnel.STEP_TAG_COLUMN, 'location_stack_step_2'],
-        expected_data=[
-            [
-                2,
-                'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                2,
-                'Link: logo located at Web Document: #document => Section: navbar-top',
-            ],
-            [
-                2,
-                'Link: notebook-product-analytics located at Web Document: #document'
-            ]
-        ],
-        order_by=['location_stack_step_2']
-    )
-
-    # 3rd step
-    last_step = tagged_steps[2].reset_index()
-    last_step['sort_str'] = last_step.location_stack_step_3.str[-8:]
-
-    assert_equals_data(
-        last_step,
-        expected_columns=[funnel.STEP_TAG_COLUMN, 'location_stack_step_3', 'sort_str'],
-        expected_data=[
-            [
-                3,
-                'Link: notebook-product-analytics located at Web Document: #document',
-                'document'
-            ],
-            [
-                3,
-                'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                'ger-menu'
-            ],
-            [
-                3,
-                'Link: cta-docs-location-stack located at Web Document: #document => Section: main => Section: location-stack',
-                'on-stack'
-            ],
-        ],
-        order_by=['sort_str']
-    )
-
-
-def test_tag_step_with_by(db_params) -> None:
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    funnel = modelhub.get_funnel_discovery()
-
-    steps_df = funnel.get_navigation_paths(data=df, steps=2, by='user_id', n_examples=2)
-
-    tagged_steps = [funnel._tag_step(step_series)
-                    for step_series in steps_df.data.values()]
-
-    assert len(tagged_steps) == 2
-
-    from uuid import UUID
-    # 1st step
-    assert_equals_data(
-        tagged_steps[0],
-        expected_columns=['user_id', funnel.STEP_TAG_COLUMN, 'location_stack_step_1'],
-        expected_data=[
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'),
-                1,
-                'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'),
-                1,
-                'Link: notebook-product-analytics located at Web Document: #document'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'),
-                1,
-                'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'),
-                1,
-                'Link: logo located at Web Document: #document => Section: navbar-top'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'),
-                1,
-                'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'),
-                1,
-                'Link: Cookies located at Web Document: #document => Section: footer'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b4'),
-                1,
-                'Link: Docs located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'
-            ],
-        ],
-        order_by=['user_id', 'location_stack_step_1'],
-        use_to_pandas=True
-    )
-
-    # 2nd step
-    assert_equals_data(
-        tagged_steps[1],
-        expected_columns=['user_id', funnel.STEP_TAG_COLUMN, 'location_stack_step_2'],
-        expected_data=[
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'),
-                2,
-                'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'),
-                2,
-                'Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'),
-                2,
-                'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'),
-                2,
-                'Link: logo located at Web Document: #document => Section: navbar-top'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'),
-                2,
-                'Link: About Us located at Web Document: #document => Section: navbar-top'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'),
-                2,
-                'Link: Cookies located at Web Document: #document => Section: footer'
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b4'),
-                2,
-                None],
-        ],
-        order_by=['user_id', 'location_stack_step_2'],
-        use_to_pandas=True
-    )
-
-
-def test_melt_steps(db_params) -> None:
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    funnel = modelhub.get_funnel_discovery()
-
-    by = 'user_id'
-    df = df[[by, 'moment', 'location_stack', 'global_contexts']]
-
-    steps_df = funnel.get_navigation_paths(data=df, steps=2, by=by, n_examples=2)
-    bts = funnel._melt_steps(steps_df)
-
-    from uuid import UUID
-    assert_equals_data(
-        bts,
-        expected_columns=['user_id', funnel.STEP_TAG_COLUMN, 'step_value'],
-        expected_data=[
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), 1,
-                'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), 1,
-                'Link: notebook-product-analytics located at Web Document: #document',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), 1,
-                'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), 1,
-                'Link: logo located at Web Document: #document => Section: navbar-top',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), 1,
-                'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), 1,
-                'Link: Cookies located at Web Document: #document => Section: footer',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b4'), 1,
-                'Link: Docs located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), 2,
-                'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), 2,
-                'Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), 2,
-                'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), 2,
-                'Link: logo located at Web Document: #document => Section: navbar-top',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), 2,
-                'Link: About Us located at Web Document: #document => Section: navbar-top',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), 2,
-                'Link: Cookies located at Web Document: #document => Section: footer',
-            ],
-            [
-                UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b4'), 2, None
-            ]
-        ],
-        order_by=[funnel.STEP_TAG_COLUMN, 'user_id', 'step_value'],
-        use_to_pandas=True
-    )
-
-    # without default 'by' value in get_navigation_paths
-    steps_df = funnel.get_navigation_paths(data=df, steps=3, n_examples=2)
-    bts = funnel._melt_steps(steps_df)
-
-    assert_equals_data(
-        bts,
-        expected_columns=[funnel.STEP_TAG_COLUMN, 'step_value'],
-        expected_data=[
-            [
-                1, 'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy',
-            ],
-            [
-                1, 'Link: logo located at Web Document: #document => Section: navbar-top',
-            ],
-            [
-                2, 'Link: logo located at Web Document: #document => Section: navbar-top',
-            ],
-            [
-                2, 'Link: notebook-product-analytics located at Web Document: #document',
-            ],
-            [
-                3, 'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-            ],
-            [
-                3, 'Link: notebook-product-analytics located at Web Document: #document',
-            ]
-        ],
-        order_by=[funnel.STEP_TAG_COLUMN, 'step_value'],
-        use_to_pandas=True
-    )
-
