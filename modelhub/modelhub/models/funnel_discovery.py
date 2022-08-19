@@ -5,10 +5,11 @@ Copyright 2022 Objectiv B.V.
 import bach
 from bach.series import Series
 from sql_models.constants import NotSet, not_set
-from typing import cast, List, Union, TYPE_CHECKING
+from typing import cast, List, Union, TYPE_CHECKING, Optional
 
 from sql_models.util import is_bigquery, is_postgres
 
+from modelhub.decorators import use_only_required_objectiv_series
 from modelhub.util import check_groupby
 
 if TYPE_CHECKING:
@@ -31,6 +32,9 @@ class FunnelDiscovery:
 
     CONVERSTION_STEP_COLUMN = '_first_conversion_step_number'
     STEP_TAG_COLUMN = '_step_tag'
+
+    FEATURE_NICE_NAME_SERIES = '__feature_nice_name'
+    STEP_OFFSET_SERIES = '__root_step_offset'
 
     @staticmethod
     def _tag_step(step_series: bach.Series) -> bach.Series:
@@ -309,105 +313,33 @@ class FunnelDiscovery:
         :returns: Bach DataFrame containing a new Series for each step containing the nice name
             of the location.
         """
-
-        from modelhub.util import check_objectiv_dataframe
-        check_objectiv_dataframe(df=data,
-                                 columns_to_check=['location_stack', 'moment'])
-
-        data = data.copy()
+        if (add_conversion_step_column or only_converted_paths) and 'is_conversion_event' not in data.columns:
+            raise ValueError('The is_conversion_event column is missing in the dataframe.')
 
         from modelhub.series.series_objectiv import SeriesLocationStack
         _location_stack = location_stack or data['location_stack']
         _location_stack = _location_stack.copy_override_type(SeriesLocationStack)
-        partition = None
-        sort_nice_names_by = []
 
-        if by is not None and by is not not_set:
-            partition = check_groupby(
-                data=data, groupby=by, not_allowed_in_groupby='location_stack',
-            )
-            sort_nice_names_by = [data[idx] for idx in partition.index_columns]
-
-        # always sort by moment, since we need to respect the order of the nice names in the data
-        # for getting the correct navigation paths based on event time
-        sort_nice_names_by += [data['moment']]
-
-        ascending = True
-        if start_from_end:
-            ascending = False
-        nice_name = _location_stack.ls.nice_name.sort_by_series(by=sort_nice_names_by,
-                                                                ascending=ascending)
-
-        agg_steps = nice_name.to_json_array(partition=partition)
-        flattened_lc, offset_lc = agg_steps.json.flatten_array()
-
-        # flattening will assume items are still json type, we need to extract the items
-        # as scalar types (string items)
-        if is_bigquery(data.engine):
-            flattened_lc = flattened_lc.copy_override(
-                expression=bach.expression.Expression.construct('JSON_EXTRACT_SCALAR({})',
-                                                                flattened_lc)
-            )
-        elif is_postgres(data.engine):
-            flattened_lc = flattened_lc.copy_override(
-                expression=bach.expression.Expression.construct(
-                    '{} #>> {}',
-                    flattened_lc,
-                    bach.expression.Expression.raw("'{}'")
-                )
-            )
-
-        flattened_lc = flattened_lc.astype('string')
-
-        offset_lc = offset_lc.copy_override(name='__root_step_offset')
-
-        nav_df = flattened_lc.to_frame()
-        nav_df[offset_lc.name] = offset_lc
-
-        nav_df = nav_df.sort_values(
-            by=nav_df.index_columns + [offset_lc.name],
-            ascending=[True if start_from_end else False] * len(nav_df.index_columns) + [False]
+        result = self._extract_steps(
+            data=data,
+            steps=steps,
+            by=by,
+            location_stack=_location_stack,
+            start_from_end=start_from_end,
         )
-
-        window = nav_df.groupby(by=nav_df.index_columns).window()
-        root_step_series = window[flattened_lc.name]
-
-        all_step_series = {}
-        for step in range(1, steps + 1):
-            step_series_name = f'{flattened_lc.name}_step_{step}'
-            if step == 1:
-                next_step = root_step_series.copy_override(group_by=None)
-            else:
-                next_step = root_step_series.window_lag(offset=step - 1)
-
-            all_step_series[step_series_name] = (
-                next_step.copy_override(name=step_series_name)
-            )
-
-        result = nav_df.copy_override(
-            base_node=window.base_node,
-            series={
-                **all_step_series,
-                offset_lc.name: offset_lc.copy_override(base_node=window.base_node),
-            }
-        )
-        result = result.materialize(node_name='step_extraction')
 
         # limit rows
         if n_examples is not None:
-            result = result[result[offset_lc.name] < n_examples]
+            result = result[result[self.STEP_OFFSET_SERIES] < n_examples]
 
         # removing the last step with nulls
         if steps > 2:
-            mask = (result['__root_step_offset'] != 0) & (result[f'{flattened_lc.name}_step_2'].isnull())
-            result.loc[mask, f'{flattened_lc.name}_step_1'] = None
-            result = result.dropna(subset=[f'{flattened_lc.name}_step_1'])
+            mask = (result[self.STEP_OFFSET_SERIES] != 0) & (result[f'{_location_stack.name}_step_2'].isnull())
+            result.loc[mask, f'{_location_stack.name}_step_1'] = None
+            result = result.dropna(subset=[f'{_location_stack.name}_step_1'])
 
         # re-order rows
-        result = result.sort_values(by=result.index_columns + [offset_lc.name])
-
-        # drop offset column
-        result = result.drop(columns=[offset_lc.name])
+        result = result.sort_values(by=result.index_columns + [self.STEP_OFFSET_SERIES])
 
         if start_from_end:
             # need to reverse column order
@@ -433,12 +365,16 @@ class FunnelDiscovery:
                 new_columns_name[old] = new
             result = result.rename(columns=new_columns_name)[column_old_order]
 
+        all_steps_series = [
+            f'{_location_stack.name}_step_{i_step}' for i_step in range(1, steps + 1)
+        ]
+
         # conversion part
         if not (add_conversion_step_column or only_converted_paths):
+            # drop offset column
+            result = result[all_steps_series]
             return result
 
-        if 'feature_nice_name' not in data.data_columns:
-            data['feature_nice_name'] = data.location_stack.ls.nice_name
         result = self._add_first_conversion_step_number_column(result, data)
 
         if not only_converted_paths:
@@ -450,6 +386,55 @@ class FunnelDiscovery:
             result = result.drop(columns=[self.CONVERSTION_STEP_COLUMN])
 
         return result
+
+    def _extract_steps(
+        self,
+        data: bach.DataFrame,
+        steps: int,
+        by: GroupByType,
+        location_stack: 'SeriesLocationStack',
+        start_from_end: bool,
+    ) -> bach.DataFrame:
+        from modelhub.util import check_objectiv_dataframe
+        check_objectiv_dataframe(df=data, columns_to_check=['location_stack', 'moment'])
+        data = data.copy()
+
+        gb_series_names = []
+        if by is not None and by is not not_set:
+            valid_gb = check_groupby(data=data, groupby=by, not_allowed_in_groupby=location_stack.name)
+            gb_series_names = valid_gb.index_columns
+
+        # extract the nice name per event
+        data[self.FEATURE_NICE_NAME_SERIES] = location_stack.ls.nice_name
+
+        # calculate the offset of each nice name
+
+        # always sort by moment, since we need to respect the order of the nice names in the data
+        # for getting the correct navigation paths based on event time
+        offset_window = (
+            data.groupby(by=gb_series_names)
+            .sort_values(gb_series_names + ['moment', self.FEATURE_NICE_NAME_SERIES])
+            .window()
+        )
+        data[self.STEP_OFFSET_SERIES] = data[location_stack.name].window_row_number(window=offset_window) - 1
+
+        data = data.materialize(node_name='pre_step_extraction')
+        data = data.sort_values(
+            by=gb_series_names + [self.STEP_OFFSET_SERIES],
+            ascending=[True if start_from_end else False] * len(gb_series_names) + [False]
+        )
+        step_window = data.groupby(by=gb_series_names).window()
+
+        root_step_series = data[self.FEATURE_NICE_NAME_SERIES]
+        for step in range(1, steps + 1):
+            step_series_name = f'{location_stack.name}_step_{step}'
+            if step == 1:
+                data[step_series_name] = root_step_series.copy()
+            else:
+                data[step_series_name] = root_step_series.window_lag(window=step_window, offset=step - 1)
+
+        data = data.materialize(node_name='step_extraction')
+        return data
 
     def plot_sankey_diagram(
             self,
