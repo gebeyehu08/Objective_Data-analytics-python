@@ -6,8 +6,7 @@ import bach
 from bach.series import Series
 from bach.expression import Expression, join_expressions
 from sql_models.constants import NotSet, not_set
-from typing import List, Union, TYPE_CHECKING
-
+from typing import List, Union, TYPE_CHECKING, cast
 
 from modelhub.util import check_groupby
 
@@ -191,7 +190,10 @@ class FunnelDiscovery:
         from modelhub.series.series_objectiv import SeriesLocationStack
 
         # check all parameters are correct
-        if add_conversion_step_column or only_converted_paths and 'is_conversion_event' not in data.data_columns:
+        if (
+            (add_conversion_step_column or only_converted_paths)
+            and 'is_conversion_event' not in data.data_columns
+        ):
             raise ValueError('The is_conversion_event column is missing in the dataframe.')
 
         check_objectiv_dataframe(df=data, columns_to_check=['location_stack', 'moment'])
@@ -266,7 +268,9 @@ class FunnelDiscovery:
 
         root_step_series = data[self.FEATURE_NICE_NAME_SERIES]
         root_step_series = root_step_series.copy_override(name=f'{location_stack.name}_step')
-        data = self._generate_steps_based_on_series(data, step_window, steps_to_add, root_series=root_step_series)
+        data = self._generate_steps_based_on_series(
+            data, step_window, steps_to_add, root_series=root_step_series,
+        )
 
         if add_first_conversion_column:
             data = self._generate_steps_based_on_series(
