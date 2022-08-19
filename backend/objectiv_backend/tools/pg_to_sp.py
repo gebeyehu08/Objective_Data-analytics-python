@@ -11,6 +11,11 @@ as target. The basic process:
 2. iterate over batch of rows, and add some timestamp information
 3. call gcp and/or aws methods if enabled.
 
+NOTE: as PG has a primary key on event_id, this means there are no duplicate events in PG, and as such duplicate events
+will not be migrated. In normal operation, this is not the case.
+
+NOTE: This only migrates "good" events, it does not process the `nok_data` table.
+
 Timestamps:
 
 For this migration, we use the event['time'] parameter for all timestamps, as that is the only one we have. By setting
@@ -24,7 +29,7 @@ Collector):
 - dvce_sent_tstamp
 - derived_tstamp
 - true_tstamp
-- loaded_tstamp 
+- load_tstamp 
 
 However, there is a column that we cannot set from here: `etl_tstamp`, this is set by the enrich process to the current
 time, which means the moment of the migration.
@@ -39,9 +44,6 @@ on the specifics of timestamps in Snowplow data.
 config = get_collector_config().output
 snowplow_config: SnowplowConfig = config.snowplow
 
-# name of table in PG containing Objectiv events
-table = 'data'
-
 # first get all events
 try:
     if not config.postgres:
@@ -51,9 +53,9 @@ try:
     with conn:
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Query all events since 2022-03-01, we use this cut-off to avoid importing broken events
+        # Query all events since 2022-03-01, we use this cut-off to avoid importing broken/invalid events
         # due to breaking schema changes before this date. (Last one was february)
-        query = f"SELECT value FROM {table} WHERE day >= '2022-03-01'"
+        query = f"SELECT value FROM data WHERE day >= '2022-03-01'"
         cur.execute(query)
 
         count = 0
@@ -83,11 +85,13 @@ try:
             # show some progress on the console after finishing a batch
             print('.', end='')
 
-        print(f'done ({count} rows)')
-        print('waiting')
+        print(f'done processing ({count} rows)')
+
         # wait for all PubSub futures to complete before exiting
+        print('waiting for futures to complete....', end='')
         futures.wait(pubsub_futures, return_when=futures.ALL_COMPLETED)
-        print('ready')
+        print('done')
 
 except psycopg2.DatabaseError as oe:
     print(f'Error occurred in postgres: {oe}')
+    exit(1)

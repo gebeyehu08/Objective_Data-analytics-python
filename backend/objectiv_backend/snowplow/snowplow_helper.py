@@ -118,7 +118,45 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     snowplow_custom_contexts = make_snowplow_custom_contexts(event=event, config=config)
     collector_tstamp = event['collector_time']
 
-# see: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/snowplow-tracker-protocol/
+    """
+    Mapping of Objectiv data to Snowplow
+    
+    
+    ## Timestamps, set by collector (as event properties)
+    time            -> ttm       -> true_tstamp, derived_tstamp
+    transport_time  -> stm      -> dvce_sent_tstamp
+    corrected_time  -> dtm      -> dvce_created_tstamp
+    collector_time  -> payload  -> collector_tstamp
+    
+    Additional time fields in Snowplow data are:
+    etl_tstamp: timestamp for when the event was validated and enriched
+    load_tstamp: timestamp for when the event was loaded by the loader
+    
+    ## Event properties
+    event_id        -> eid      -> event_id
+    _type           -> se_ca    -> se_category
+    
+    ## Global context properties
+    ApplicationContext.id       -> aid      -> app_id
+    CookieIdContext.id          -> payload  -> network_userid 
+    HttpContext.referrer        -> refr     -> page_referrer
+    HttpContext.remote_address  -> ip       -> user_ipaddress
+    PathContext.id              -> url      -> page_url
+    
+    Furthermore all global contexts are mapped as individual custom contexts, resulting in a separate column per
+    global context type.
+    
+    The location_stack is mapped as a separate custom context, preserving the original location contexts, and the 
+    order they were in when the event was constructed
+    
+    for more info on the Snowplow tracker format, and db fields:
+    https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/snowplow-tracker-protocol/
+    https://docs.snowplowanalytics.com/docs/understanding-your-pipeline/canonical-event/#Date_time_fields
+    https://snowplowanalytics.com/blog/2015/09/15/improving-snowplows-understanding-of-time/
+    
+    Objectiv taxonomy reference:
+    https://objectiv.io/docs/taxonomy/reference
+    """
 
     payload = {
         "schema": snowplow_payload_data_schema,
