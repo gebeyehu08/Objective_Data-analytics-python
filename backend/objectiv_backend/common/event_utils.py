@@ -34,6 +34,23 @@ def get_contexts(event: EventData, context_type: ContextType) -> List[ContextDat
     return result
 
 
+def remove_global_contexts(event: EventData, context_type: ContextType):
+    """
+    Remove all instances of context_Type from global contexts
+    :param event:  EventData
+    :param context_type: name of context to remove
+    :return: copy of event with context removed
+    """
+    # new_event = {k: v for k, v in event.items() if k != 'global_contexts'}
+
+    # new_event['global_contexts'] = []
+
+    for index, context in enumerate(event['global_contexts']):
+        if context.get('_type') == context_type:
+            del event['global_contexts'][index]
+    return event
+
+
 def get_global_contexts(event: EventData) -> List[ContextData]:
     """ Given an event, return all global contexts (if any)."""
     return event.get("global_contexts", [])

@@ -1,19 +1,19 @@
 import json
-import urllib.parse
 from datetime import datetime
 
 import flask
 import time
 from urllib.parse import urlparse, parse_qs
 from typing import List
-
+import hashlib
 import psycopg2
 from flask import Response, Request
 
 from objectiv_backend.common.config import get_collector_config
 from objectiv_backend.common.types import EventData, EventDataList, EventList
 from objectiv_backend.common.db import get_db_connection
-from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
+from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts, get_context, \
+    remove_global_contexts, get_optional_context
 from objectiv_backend.end_points.common import get_json_response, get_cookie_id
 from objectiv_backend.end_points.extra_output import events_to_json, write_data_to_fs_if_configured, \
     write_data_to_s3_if_configured, write_data_to_snowplow_if_configured
@@ -30,7 +30,11 @@ DATA_MAX_SIZE_BYTES = 1_000_000
 DATA_MAX_EVENT_COUNT = 1_000
 
 
-def collect() -> Response:
+def anonymous() -> Response:
+    return collect(anonymous_mode=True)
+
+
+def collect(anonymous_mode: bool = False) -> Response:
     """
     Endpoint that accepts event data from the tracker and stores it for further processing.
     """
@@ -43,19 +47,37 @@ def collect() -> Response:
         print(f'Data problem: {exc}')  # todo: real error logging
         return _get_collector_response(error_count=1, event_count=-1, data_error=exc.__str__())
 
+    # check for SessionContext to get client session id
+    for event in events:
+        session_context = get_optional_context(event, 'SessionContext')
+        if session_context:
+            client_session_id = str(session_context.get('id'))
+            break
+
     # Do all the enrichment steps that can only be done in this phase
     add_enriched_contexts(events)
 
     set_time_in_events(events, current_millis, transport_time)
 
+    config = get_collector_config()
+    if anonymous_mode:
+        # in anonymous mode we hash certain properties, as defined in config.anonymous_mode.to_hash
+        for event in events:
+            for context_type in config.anonymous_mode.to_hash:
+                for context in get_contexts(event, context_type):
+                    for context_property in config.anonymous_mode.to_hash[context_type]:
+                        context[context_property] = hashlib.md5(str(context[context_property]).encode()).hexdigest()
+
     if not get_collector_config().async_mode:
         ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
         print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
         write_sync_events(ok_events=ok_events, nok_events=nok_events, event_errors=event_errors)
-        return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors)
+        return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors,
+                                       anonymous_mode=anonymous_mode, client_session_id=client_session_id)
     else:
         write_async_events(events=events)
-        return _get_collector_response(error_count=0, event_count=len(events))
+        return _get_collector_response(error_count=0, event_count=len(events),
+                                       client_session_id=client_session_id)
 
 
 def _get_event_data(request: Request) -> EventList:
@@ -94,8 +116,12 @@ def _get_event_data(request: Request) -> EventList:
     return event_data
 
 
-def _get_collector_response(
-        error_count: int, event_count: int, event_errors: List[EventError] = None, data_error: str = '') -> Response:
+def _get_collector_response(error_count: int,
+                            event_count: int,
+                            event_errors: List[EventError] = None,
+                            data_error: str = '',
+                            anonymous_mode: bool = False,
+                            client_session_id: str = None) -> Response:
     """
     Create a Response object, with a json message with event counts, and a cookie set if needed.
     """
@@ -117,7 +143,7 @@ def _get_collector_response(
     })
     # we always return a HTTP 200 status code, so we can handle any errors
     # on the application layer.
-    return get_json_response(status=200, msg=msg)
+    return get_json_response(status=200, msg=msg, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
 
 def add_enriched_contexts(events: EventDataList):
@@ -131,17 +157,32 @@ def add_enriched_contexts(events: EventDataList):
         add_marketing_context_to_event(event=event)
 
 
-def add_cookie_id_contexts(events: EventDataList):
+def add_cookie_id_contexts(events: EventDataList, anonymous_mode: bool = False):
     """
     Modify the given list of events: Add the CookieIdContext to each event, if cookies are enabled.
     """
     cookie_config = get_collector_config().cookie
     if not cookie_config:
         return
-    cookie_id = get_cookie_id()
-    cookie_id_context = CookieIdContext(id=cookie_id, cookie_id=cookie_id)
-    for event in events:
-        add_global_context_to_event(event, cookie_id_context)
+    if anonymous_mode:
+        for event in events:
+
+            session_context = get_optional_context(event, context_type='SessionContext')
+            if session_context:
+                # try to retrieve client session id from SessionContext
+                # if there is one:
+                # - create CookieIdContext, and add id
+                # - remove the original SessionContext
+                cookie_id = str(session_context['id'])
+                cookie_id_context = CookieIdContext(id=cookie_id, cookie_id=cookie_id)
+                add_global_context_to_event(event, cookie_id_context)
+                remove_global_contexts(event, 'SessionContext')
+
+    else:
+        cookie_id = get_cookie_id()
+        cookie_id_context = CookieIdContext(id=cookie_id, cookie_id=cookie_id)
+        for event in events:
+            add_global_context_to_event(event, cookie_id_context)
 
 
 def set_time_in_events(events: EventDataList, current_millis: int, client_millis: int):
@@ -152,7 +193,7 @@ def set_time_in_events(events: EventDataList, current_millis: int, client_millis
     then correct `event.time` using this offset and set it in `event.time`
     :param events: List of events to modify
     :param current_millis: time in milliseconds since epoch UTC, when this request was received.
-    :param client_millis: time sent by client
+    :param client_millis: time sent by client.
     """
 
     if not client_millis:

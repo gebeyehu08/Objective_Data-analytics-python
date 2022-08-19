@@ -75,6 +75,10 @@ WORKER_BATCH_SIZE = 200
 WORKER_SLEEP_SECONDS = 5
 
 
+class AnonymousModeConfig(NamedTuple):
+    to_hash: dict
+
+
 class AwsOutputConfig(NamedTuple):
     access_key_id: str
     secret_access_key: str
@@ -137,11 +141,23 @@ class TimestampValidationConfig(NamedTuple):
 
 class CollectorConfig(NamedTuple):
     async_mode: bool
+    anonymous_mode: AnonymousModeConfig
     cookie: Optional[CookieConfig]
     error_reporting: bool
     output: OutputConfig
     event_schema: EventSchema
     event_list_schema: EventListSchema
+
+
+def get_config_anonynous_mode() -> AnonymousModeConfig:
+    return AnonymousModeConfig({
+        'to_hash': {
+            'HttpContext': {
+                'remote_address',
+                'user_agent'
+            }
+        }
+    })
 
 
 def get_config_output_aws() -> Optional[AwsOutputConfig]:
@@ -265,6 +281,7 @@ def init_collector_config():
     global _CACHED_COLLECTOR_CONFIG
     _CACHED_COLLECTOR_CONFIG = CollectorConfig(
         async_mode=_ASYNC_MODE,
+        anonymous_mode=get_config_anonynous_mode(),
         cookie=get_config_cookie(),
         error_reporting=SCHEMA_VALIDATION_ERROR_REPORTING,
         output=get_config_output(),

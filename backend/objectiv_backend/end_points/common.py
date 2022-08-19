@@ -7,20 +7,28 @@ from flask import Response
 from objectiv_backend.common.config import get_collector_config
 
 
-def get_json_response(status: int, msg: str) -> Response:
+def get_json_response(status: int, msg: str, anonymous_mode: bool = False, client_session_id: str = None) -> Response:
     """
     Create a Response object, with json content, and a cookie set if needed.
     :param status: http status code
     :param msg: valid json string
+    :param anonymous_mode: bool
+    :param client_session_id: str
     """
     response = Response(mimetype='application/json', status=status, response=msg)
 
-    cookie_config = get_collector_config().cookie
-    if cookie_config:
-        cookie_id = get_cookie_id()
-        response.set_cookie(key=cookie_config.name, value=f'{cookie_id}',
-                            max_age=cookie_config.duration, samesite=cookie_config.samesite,
-                            secure=cookie_config.secure)
+    # No cookies if in anonymous mode
+    if not anonymous_mode:
+        cookie_config = get_collector_config().cookie
+        if cookie_config:
+            if client_session_id:
+                cookie_id = client_session_id
+            else:
+                # only try to get one, if none was provided
+                cookie_id = get_cookie_id()
+            response.set_cookie(key=cookie_config.name, value=f'{cookie_id}',
+                                max_age=cookie_config.duration, samesite=cookie_config.samesite,
+                                secure=cookie_config.secure)
     return response
 
 
