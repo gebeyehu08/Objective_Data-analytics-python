@@ -106,9 +106,8 @@ def get_supported_dtypes_per_objectiv_column(
 
     return {
         **{col.value: dtype for col, dtype in supported_dtypes.items()},
-        **{gc: modelhub.SeriesGlobalContext for gc in global_contexts}
+        **{gc: modelhub.SeriesGlobalContext.dtype for gc in global_contexts}
     }
-
 
 
 def check_objectiv_dataframe(

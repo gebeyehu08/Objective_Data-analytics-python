@@ -104,6 +104,8 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
         )
         return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
 
+    def _bigquery_get_contexts_with_type(self, type: str):
+        raise Exception("Not implemented yet")
 
 @register_dtype(value_types=[], override_registered_types=True)
 class SeriesGlobalContexts(SeriesJson):

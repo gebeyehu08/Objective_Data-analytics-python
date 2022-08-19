@@ -52,7 +52,7 @@ class ModelHub:
     """
     def __init__(self,
                  time_aggregation: str = TIME_DEFAULT_FORMAT,
-                 global_contexts: Optional[List[str]] = []):
+                 global_contexts: List[str] = []):
         """
         Constructor
 

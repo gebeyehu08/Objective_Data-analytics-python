@@ -24,7 +24,7 @@ class ModelFunctionType(Protocol):
 
 def use_only_required_objectiv_series(
     required_series: Optional[List[str]] = None,
-    required_global_contexts: Optional[List[str]] = [],
+    required_global_contexts: List[str] = [],
     include_series_from_params: Optional[List[str]] = None,
 ):
     """
@@ -32,6 +32,7 @@ def use_only_required_objectiv_series(
     to generate new aggregated series based on supported objectiv columns.
 
     :param required_series: A list of objectiv series names that the DataFrame must have
+    :param required_global_contexts: A list of objectiv_global_context series that the DataFrame must have
     :param include_series_from_params: A list of parameters containing series names to be considered
     in the dataframe.
 

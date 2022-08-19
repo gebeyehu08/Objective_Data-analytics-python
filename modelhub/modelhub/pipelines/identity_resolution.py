@@ -4,6 +4,7 @@ Copyright 2022 Objectiv B.V.
 from typing import Dict, Optional
 
 import bach
+import modelhub
 from modelhub.pipelines.base_pipeline import BaseDataPipeline
 from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
@@ -149,7 +150,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             user-id is the user_id series from the provided `df` DataFrame
             identity_user_id is the new user_id in the format {id}|{name}
         """
-        identity_context_series = df['identity']
+        identity_context_series = df['identity'].copy_override_type(modelhub.SeriesJson) # help mypy
 
         user_id_series_name = ObjectivSupportedColumns.USER_ID.value
         moment_series_name = ObjectivSupportedColumns.MOMENT.value
