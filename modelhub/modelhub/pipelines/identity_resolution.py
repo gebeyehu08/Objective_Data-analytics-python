@@ -150,7 +150,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             user-id is the user_id series from the provided `df` DataFrame
             identity_user_id is the new user_id in the format {id}|{name}
         """
-        identity_context_series = df['identity'].copy_override_type(modelhub.SeriesJson) # help mypy
+        identity_context_series = df['identity'].copy_override_type(modelhub.SeriesJson)
 
         user_id_series_name = ObjectivSupportedColumns.USER_ID.value
         moment_series_name = ObjectivSupportedColumns.MOMENT.value

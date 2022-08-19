@@ -46,6 +46,7 @@ def test_get_base_dtypes(db_params) -> None:
                     '_type': 'string',
                     '_types': 'json',
                     'location_stack': 'json',
+                    'global_contexts': 'json',
                     'time': 'int64',
                 }
             ],

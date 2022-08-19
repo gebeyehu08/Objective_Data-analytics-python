@@ -105,7 +105,21 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
         return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
 
     def _bigquery_get_contexts_with_type(self, type: str):
-        raise Exception("Not implemented yet")
+        # This is quite ugly, but we need to convert to JSON (pre GA), and back to string because
+        # there is no nicer way to otherwise generate the JSON array that we need (as a string for now)
+        # This should be revisited when we implement BQ JSON through that datatype.
+        expression = Expression.construct(
+            '''
+            to_json_string(array(
+                select ctx
+                from unnest(json_query_array(parse_json({}), '$')) as ctx with offset as pos
+                where json_value(ctx, '$."_type"') = {}
+            ))''',
+            self._series_object,
+            Expression.string_value(type)
+        )
+        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
+
 
 @register_dtype(value_types=[], override_registered_types=True)
 class SeriesGlobalContexts(SeriesJson):

@@ -110,7 +110,8 @@ class ModelHub:
         with_sessionized_data: bool = True,
         session_gap_seconds: int = SESSION_GAP_DEFAULT_SECONDS,
         identity_resolution: Optional[str] = None,
-        anonymize_unidentified_users: bool = True):
+        anonymize_unidentified_users: bool = True
+    ):
         """
         Sets data from sql table into an :py:class:`bach.DataFrame` object.
 

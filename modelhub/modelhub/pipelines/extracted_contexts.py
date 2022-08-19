@@ -195,6 +195,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             context_name = gc.capitalize() + "Context"
             df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
 
+        df_cp = df_cp.drop(columns=['global_contexts'])
+
         # rename series to objectiv supported
         df_cp = df_cp.rename(
             columns={
@@ -203,6 +205,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
             },
         )
+
         return df_cp
 
     def _apply_extra_processing(self, df: bach.DataFrame) -> bach.DataFrame:
@@ -216,7 +219,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             return df_cp
 
         # remove taxonomy columns that are no longer needed
-        df_cp = df_cp.drop(columns=[self._taxonomy_column.name, 'global_contexts'])
+        df_cp = df_cp.drop(columns=[self._taxonomy_column.name])
 
         # this materialization is to generate a readable query
         df_cp = df_cp.materialize(node_name='bq_extra_processing')
@@ -254,7 +257,6 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             check_dtypes=True,
             infer_identity_resolution=False,
         )
-
 
     def _apply_date_filter(
         self,
