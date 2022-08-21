@@ -168,7 +168,6 @@ class SeriesGlobalContext(SeriesJson):
         def __init__(self, series: 'SeriesGlobalContext'):
             self._series = series
 
-
         def __getattr__(self, name) -> 'SeriesString':
             """
             By default, any attribute requested will be given the matching field from the first instance
@@ -183,7 +182,6 @@ class SeriesGlobalContext(SeriesJson):
     @property
     def context(self):
         return self.GlobalContext(self)
-
 
 
 @register_dtype([], override_registered_types=True)
