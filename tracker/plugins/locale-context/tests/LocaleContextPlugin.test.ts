@@ -3,7 +3,7 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { LocaleContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -25,7 +25,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should console error if the plugin was not initialized correctly', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     //@ts-ignore
     new LocaleContextPlugin().enrich(testEvent);
 
@@ -36,7 +36,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should console error if the given factory does not return a value - idFactoryFunction', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ idFactoryFunction: () => null }).enrich(testEvent);
 
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
@@ -46,7 +46,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should console error if the given factory does not return a value - languageFactoryFunction', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ languageFactoryFunction: () => null }).enrich(testEvent);
 
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
@@ -56,7 +56,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should console error if the given languageFactoryFunction returns an invalid code', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ languageFactoryFunction: () => 'nope' }).enrich(testEvent);
 
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
@@ -66,7 +66,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should console error if the given countryFactoryFunction returns an invalid code', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ countryFactoryFunction: () => 'nope' }).enrich(testEvent);
 
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
@@ -76,7 +76,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should console error if the given factory does not return a value - countryFactoryFunction', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ countryFactoryFunction: () => null }).enrich(testEvent);
 
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
@@ -86,7 +86,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should generate an identifier from language', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ languageFactoryFunction: () => 'en' }).enrich(testEvent);
     expect(testEvent.global_contexts).toEqual([
       expect.objectContaining({
@@ -99,7 +99,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should generate an identifier from country', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ countryFactoryFunction: () => 'US' }).enrich(testEvent);
     expect(testEvent.global_contexts).toEqual([
       expect.objectContaining({
@@ -112,7 +112,7 @@ describe('LocaleContextPlugin', () => {
   });
 
   it('enrich should generate an identifier from language and country', async () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     new LocaleContextPlugin({ countryFactoryFunction: () => 'FR', languageFactoryFunction: () => 'en' }).enrich(
       testEvent
     );
@@ -143,7 +143,7 @@ describe('LocaleContextPlugin', () => {
       ],
     });
 
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.global_contexts).toHaveLength(0);
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
@@ -169,7 +169,7 @@ describe('LocaleContextPlugin', () => {
       ],
     });
 
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.global_contexts).toHaveLength(1);
     expect(trackedEvent.global_contexts).toEqual(

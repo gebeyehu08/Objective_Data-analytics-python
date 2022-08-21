@@ -1,6 +1,5 @@
 {
   "$schema": "https://turborepo.org/schema.json",
-  "baseBranch": "origin/main",
   "pipeline": {
     "build": {
       "dependsOn": ["^build"]
@@ -42,7 +41,7 @@
       "outputs": ["generated/**"]
     },
     "pre-deploy": {
-      "dependsOn": ["depcheck", "tsc", "build", "test"]
+      "dependsOn": ["prettify", "depcheck", "tsc", "build", "test"]
     },
     "deploy:verdaccio": {
       "dependsOn": ["pre-deploy", "^deploy:verdaccio"]

@@ -4,8 +4,12 @@
 
 module.exports = {
   preset: 'ts-jest',
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+    },
+  },
   testEnvironment: 'jsdom',
-  reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**/*.{ts,tsx}'],
   moduleNameMapper: {
     '@objectiv/developer-tools': '<rootDir>../../core/developer-tools/src',
@@ -17,5 +21,4 @@ module.exports = {
     '@objectiv/tracker-core': '<rootDir>../../core/tracker/src',
     '@objectiv/tracker-react': '<rootDir>../../trackers/react/src',
   },
-  setupFilesAfterEnv: ['jest-extended/all'],
 };

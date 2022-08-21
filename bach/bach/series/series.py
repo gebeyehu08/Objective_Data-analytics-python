@@ -1632,6 +1632,18 @@ class Series(ABC):
         from bach.partitioning import Window
         checked_window = cast(Window, self._check_unwrap_groupby(window, isin=(Window, )))
 
+        if not checked_window.order_by:
+            raise ValueError(
+                (
+                    f'Window must be sorted when applying {agg_function.value}, '
+                    'otherwise results might be non-deterministic or an exception will be raised '
+                    'depending on the engine been used. '
+                    'Please create a new instance by calling any of the following:\n'
+                    '`DataFrame.sort_values(by=...).window()`, `DataFrame.sort_index().window()` '
+                    'or `Window(order_by=[], ...)` and try again.'
+                )
+            )
+
         if not agg_function.supports_window_frame_clause(dialect=self.engine.dialect):
             # remove boundaries if the functions does not support window frame clause
             return checked_window.set_frame_clause(start_boundary=None, end_boundary=None)
