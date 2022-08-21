@@ -164,12 +164,26 @@ class SeriesGlobalContext(SeriesJson):
     """
     dtype = 'objectiv_global_context'
 
-    def __getattr__(self, name) -> 'SeriesString':
-        """
-        By default, any attribute requested will be given the matching field from the first instance
-        of this context, if any.
-        """
-        return self.json[0].json.get_value(name, as_str=True)
+    class GlobalContext:
+        def __init__(self, series: 'SeriesGlobalContext'):
+            self._series = series
+
+
+        def __getattr__(self, name) -> 'SeriesString':
+            """
+            By default, any attribute requested will be given the matching field from the first instance
+            of this context, if any.
+            """
+            return self._series.json[0].json.get_value(name, as_str=True)
+
+    @property
+    def c(self):
+        return self.GlobalContext(self)
+
+    @property
+    def context(self):
+        return self.GlobalContext(self)
+
 
 
 @register_dtype([], override_registered_types=True)

@@ -258,7 +258,7 @@ def test_filter_navigation_paths_conversion(db_params) -> None:
 
     df['is_conversion_event'] = False
     # define which data to use as conversion events
-    df.loc[df.application.id == 'objectiv-website', 'is_conversion_event'] = True
+    df.loc[df.application.context.id == 'objectiv-website', 'is_conversion_event'] = True
 
     # add_conversion_step_column
     bts = funnel.get_navigation_paths(df, steps=3, add_conversion_step_column=True, n_examples=3)

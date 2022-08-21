@@ -47,7 +47,7 @@ def test_objectiv_stack_type2(db_params):
     bt = get_df_with_json_data_real(db_params)
 
     bt['a'] = bt.global_contexts.astype('objectiv_global_contexts')
-    bts = bt.a.obj.get_contexts('http').user_agent
+    bts = bt.a.obj.get_contexts('http').context.user_agent
     assert_equals_data(
         bts,
         expected_columns=['_index_event_id', 'a'],

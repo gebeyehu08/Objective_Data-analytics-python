@@ -172,7 +172,7 @@ class Aggregate:
         data = data.copy()
 
         # the following columns have to be in the data
-        data['__application'] = data.application.id
+        data['__application'] = data.application.context.id
 
         if location_stack is not None:
             data['__feature_nice_name'] = location_stack.ls.nice_name
@@ -256,7 +256,7 @@ class Aggregate:
 
         # merge with filtered conversion interactive events
         converted_users_filtered = data.merge(conversions_df, on='event_id')
-        converted_users_filtered['__application'] = converted_users_filtered.application.id
+        converted_users_filtered['__application'] = converted_users_filtered.application.context.id
 
         if location_stack is not None:
             converted_users_filtered['__feature_nice_name'] = location_stack.ls.nice_name
