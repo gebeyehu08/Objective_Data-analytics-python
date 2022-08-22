@@ -134,7 +134,8 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     
     ## Event properties
     event_id        -> eid      -> event_id
-    _type           -> se_ca    -> se_category
+    _type           -> se_ac    -> se_action
+    _types          -> se_ca    -> se_category
     
     ## Global context properties
     ApplicationContext.id       -> aid      -> app_id
@@ -165,7 +166,8 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "p": "web",  # mandatory: platform
             "tv": "0.0.5",  # mandatory: tracker version
             "tna": "objectiv-tracker",  # tracker name
-            "se_ca": event['_type'],  # structured event category
+            "se_ac": event['_type'],  # structured event action -> event_type
+            "se_ca": json.dumps(event.get('_types', [])),  # structured event category -> event_types
             "eid": event['id'],  # event_id / UUID
             "url": path_context.get('id', ''),  # Page URL
             "refr": http_context.get('referrer', ''),  # HTTP Referrer URL
