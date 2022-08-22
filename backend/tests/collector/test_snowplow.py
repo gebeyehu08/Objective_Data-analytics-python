@@ -1,6 +1,7 @@
 import json
 import jsonschema
 import base64
+import re
 from objectiv_backend.snowplow.schema.ttypes import CollectorPayload
 from objectiv_backend.snowplow.snowplow_helper import make_snowplow_custom_contexts, \
     objectiv_event_to_snowplow_payload, snowplow_schema_violation_json
@@ -44,14 +45,18 @@ def test_make_snowplow_custom_context():
     # check that this is in fact a context conforming to the contexts schema we set
     assert context['schema'] == config.schema_contexts
 
-    assert context['data'][0]
-    context_data = context['data'][0]
-    # check we can find the original objectiv event inside of it
-    assert context_data['schema'] == f'{config.schema_objectiv_contexts_base}/ApplicationContext/jsonschema/{config.schema_objectiv_contexts_version}'
+    sp_global_context_data = context['data']
 
-    # check to see the data is still the same as the original event
-    # we remove '_type' as that is not in the snowplow global contexts, as they are typed in the db/column
-    assert context_data['data'] == {k: v for k, v in get_context(event, 'ApplicationContext').items() if k != '_type'}
+    pattern = re.compile(f'^(.*?)/([a-zA-Z]+)?/jsonschema/{config.schema_objectiv_contexts_version}$')
+    for gc_data in sp_global_context_data:
+
+        matches = pattern.match(gc_data['schema'])
+
+        if matches and matches[1] == config.schema_objectiv_contexts_base:
+            context_type = matches[2]
+            # check to see the data is still the same as the original event
+            # we remove '_type' as that is not in the snowplow global contexts, as they are typed in the db/column
+            assert gc_data['data'] == {k: v for k, v in get_context(event, context_type).items() if k != '_type'}
 
 
 def test_objectiv_event_to_snowplow_payload():
@@ -69,6 +74,26 @@ def test_objectiv_event_to_snowplow_payload():
 
     # check if we can deserialize the encoded custom context properly
     assert json.loads(base64.b64decode(body['data'][0]['cx']))
+
+
+def test_objectiv_event_to_snowplow_mapping():
+    collector_payload = objectiv_event_to_snowplow_payload(event=event, config=config)
+
+    body = json.loads(collector_payload.body)
+    data = body['data'][0]
+
+    mapping = {
+        '_type': 'se_ac',
+        'time': 'ttm',
+        'transport_time': 'stm',
+        'corrected_time': 'dtm'
+    }
+
+    for obj, sp in mapping.items():
+        assert str(event[obj]) == data[sp]
+
+    # check _types
+    assert event['_types'] == json.loads(data['se_ca'])
 
 
 def test_snowplow_failed_event():

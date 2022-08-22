@@ -35,6 +35,11 @@ CLICK_EVENT_JSON = '''
                     "id":"http://localhost:3000/"
                 }
             ],
+            "_types": [
+                "PressEvent",
+                "InteractiveEvent",
+                "AbstractEvent"
+            ],
             "time":1630049334860,
             "transport_time":1630049335313,
             "corrected_time":1630049335313,
