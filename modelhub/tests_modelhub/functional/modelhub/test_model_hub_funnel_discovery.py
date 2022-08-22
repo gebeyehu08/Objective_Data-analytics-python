@@ -416,6 +416,7 @@ def test_get_navigation_paths_start_from_end(db_params):
         use_to_pandas=True,
     )
 
+
 def test_construct_source_target_df(db_params) -> None:
     df, modelhub = get_objectiv_dataframe_test(db_params)
     funnel = modelhub.get_funnel_discovery()
@@ -476,3 +477,13 @@ def test_construct_source_target_df(db_params) -> None:
         order_by=['value'],
         use_to_pandas=True
     )
+
+    # test exceptions
+    steps_df['some_column'] = steps_df['location_stack_step_1']
+    with pytest.raises(ValueError, match='Couldn\'t find any navigation path.'):
+        funnel._construct_source_target_df(steps_df[['some_column']])
+
+    steps_df['some_step_1'] = steps_df['location_stack_step_1']
+    with pytest.raises(ValueError, match='Provided DataFrame contains navigation paths from multiple base series,'
+                                         ' e.g. x_step_1, y_step_1, ... x_step_n, y_step_n'):
+        funnel._construct_source_target_df(steps_df)

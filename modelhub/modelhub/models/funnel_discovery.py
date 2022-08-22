@@ -90,8 +90,6 @@ class FunnelDiscovery:
         :returns: Bach DataFrame with `source`, `target` and `value` columns.
         """
 
-        columns = [i for i in steps_df.data_columns
-                   if i != self.CONVERSTION_STEP_COLUMN]
         import re
         from collections import defaultdict
         _IS_STEP_SERIES_REGEX = re.compile(r'(?P<root_series_name>.+)_step_(?P<step_number>\d+)')
@@ -99,7 +97,7 @@ class FunnelDiscovery:
 
         # dataframe can contain steps from different roots, for now lets raise an error if
         # that is the case
-        for series_name in columns:
+        for series_name in steps_df.data_columns:
             match = _IS_STEP_SERIES_REGEX.match(series_name)
             if not match:
                 continue
@@ -107,11 +105,18 @@ class FunnelDiscovery:
             r_series_name, step_number = match.groups()
             root_series_x_steps[r_series_name].append(int(step_number))
 
+        if len(root_series_x_steps) == 0:
+            raise ValueError('Couldn\'t find any navigation path.')
+
         if len(root_series_x_steps) > 1:
             raise ValueError(
-                'Provided DataFrame contains navigation paths from multiple base series.'
-                '(eg. x_step_1, y_step_1, ... x_step_n, y_step_n)'
+                'Provided DataFrame contains navigation paths from multiple base series,'
+                ' e.g. x_step_1, y_step_1, ... x_step_n, y_step_n.'
             )
+
+        step_root_name = list(root_series_x_steps.keys())[0]
+        step_numbers = root_series_x_steps[step_root_name]
+        columns = [f'{step_root_name}_step_{i}' for i in step_numbers]
 
         # count navigation paths
         steps_counter_df = steps_df[columns].value_counts().reset_index()
@@ -121,14 +126,9 @@ class FunnelDiscovery:
                                                         ascending=False)
         steps_counter_df = steps_counter_df.materialize(limit=n_top_examples)
 
-        # get the number of steps
-        n_steps = max([int(i.split('_')[-1])
-                       for i in steps_counter_df.data_columns
-                       if i != 'value_counts'])
-
         step_size = 1  # we want steps' pairs
         all_dfs = []
-        for i_step in range(1, n_steps - step_size + 1):
+        for i_step in range(1, max(step_numbers) - step_size + 1):
             step1 = f'location_stack_step_{i_step}'
             step2 = f'location_stack_step_{i_step + step_size}'
 
