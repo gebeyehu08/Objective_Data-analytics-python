@@ -217,8 +217,10 @@ class FunnelDiscovery:
         """
 
         # count navigation paths
+        import re
+        regexp = re.compile(r'_\d+$')  # ends with '_' and digit number(s)
         columns = [i for i in steps_df.data_columns
-                   if i != self.CONVERSTION_STEP_COLUMN]
+                   if i != self.CONVERSTION_STEP_COLUMN and regexp.search(i)]
         steps_counter_df = steps_df[columns].value_counts().reset_index()
 
         steps_counter_df = cast(bach.DataFrame, steps_counter_df)  # help mypy
