@@ -216,11 +216,30 @@ class FunnelDiscovery:
         :returns: Bach DataFrame with `source`, `target` and `value` columns.
         """
 
-        # count navigation paths
-        import re
-        regexp = re.compile(r'_\d+$')  # ends with '_' and digit number(s)
         columns = [i for i in steps_df.data_columns
-                   if i != self.CONVERSTION_STEP_COLUMN and regexp.search(i)]
+                   if i != self.CONVERSTION_STEP_COLUMN]
+        import re
+        from collections import defaultdict
+        _IS_STEP_SERIES_REGEX = re.compile(r'(?P<root_series_name>.+)_step_(?P<step_number>\d+)')
+        root_series_x_steps = defaultdict(list)
+
+        # dataframe can contain steps from different roots, for now lets raise an error if
+        # that is the case
+        for series_name in columns:
+            match = _IS_STEP_SERIES_REGEX.match(series_name)
+            if not match:
+                continue
+
+            r_series_name, step_number = match.groups()
+            root_series_x_steps[r_series_name].append(int(step_number))
+
+        if len(root_series_x_steps) > 1:
+            raise ValueError(
+                'Provided DataFrame contains navigation paths from multiple base series.'
+                '(eg. x_step_1, y_step_1, ... x_step_n, y_step_n)'
+            )
+
+        # count navigation paths
         steps_counter_df = steps_df[columns].value_counts().reset_index()
 
         steps_counter_df = cast(bach.DataFrame, steps_counter_df)  # help mypy
