@@ -1,8 +1,21 @@
+import bach
 import pytest
+from bach import SortColumn
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 
+
+def _add_root_offset_sorting(df: bach.DataFrame, asc: bool = True) -> bach.DataFrame:
+    if '__root_step_offset' in df.base_node.columns:
+        df._order_by.append(
+            SortColumn(
+                expression=bach.expression.Expression.identifier('__root_step_offset'),
+                asc=asc,
+            )
+        )
+
+    return df
 
 def test_get_navigation_paths(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
@@ -36,6 +49,7 @@ def test_get_navigation_paths(db_params):
     )
 
     bts = funnel.get_navigation_paths(data=df, steps=4)
+    bts = _add_root_offset_sorting(bts)
     assert_equals_data(
         bts,
         expected_columns=[
@@ -167,7 +181,7 @@ def test_get_navigation_paths_grouped(db_params) -> None:
     )
 
     bts = funnel.get_navigation_paths(data=df, steps=3, by=['session_id'])
-
+    bts = _add_root_offset_sorting(bts)
     assert_equals_data(
         bts,
         expected_columns=['session_id', 'location_stack_step_1', 'location_stack_step_2', 'location_stack_step_3'],
@@ -230,7 +244,6 @@ def test_get_navigation_paths_filtered(db_params) -> None:
     bts = funnel.get_navigation_paths(data=df, steps=3).materialize()
     step = 'Link: logo located at Web Document: #document => Section: navbar-top'
     bts = bts[bts['location_stack_step_1'] == step]
-
     assert_equals_data(
         bts,
         expected_columns=[
@@ -265,7 +278,7 @@ def test_filter_navigation_paths_conversion(db_params) -> None:
 
     # add_conversion_step_column
     bts = funnel.get_navigation_paths(df, steps=3, add_conversion_step_column=True, n_examples=3)
-
+    bts = _add_root_offset_sorting(bts)
     assert_equals_data(
         bts,
         expected_columns=[
@@ -298,6 +311,7 @@ def test_filter_navigation_paths_conversion(db_params) -> None:
 
     # only_converted_paths
     bts = funnel.get_navigation_paths(df, steps=3, only_converted_paths=True, n_examples=3)
+    bts = _add_root_offset_sorting(bts)
     assert_equals_data(
         bts,
         expected_columns=[
@@ -326,6 +340,7 @@ def test_get_navigation_paths_start_from_end(db_params):
     funnel = modelhub.get_funnel_discovery()
 
     bts = funnel.get_navigation_paths(data=df, steps=4, start_from_end=True)
+    bts = _add_root_offset_sorting(bts, asc=False)
     assert_equals_data(
         bts,
         expected_columns=[

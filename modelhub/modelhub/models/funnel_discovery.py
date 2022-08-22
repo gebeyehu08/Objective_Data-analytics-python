@@ -220,10 +220,7 @@ class FunnelDiscovery:
 
         # re-order rows
         result = result.set_index(gb_series_names, drop=True)
-        result = result.sort_values(
-            by=result.index_columns + [self.STEP_OFFSET_SERIES],
-            ascending=not start_from_end,
-        )
+        result = result.sort_index()
 
         final_result_series = [
             f'{_location_stack.name}_step_{i_step}' for i_step in range(1, steps + 1)
