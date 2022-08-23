@@ -504,6 +504,7 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         _self = self.copy()
         fmt_str = '({}) + ({})'
         if is_athena(self.engine):
+            # convert timestamp to unixtime and cast result back to timestamp
             _self = self.copy_override(
                 expression=Expression.construct('to_unixtime({})', self)
             )
@@ -687,15 +688,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             return ToPandasInfo(dtype='object', function=self._parse_interval_bigquery)
 
         if is_athena(self.engine):
-            return ToPandasInfo(dtype='object', function=self._parse_interval_athena)
+            return ToPandasInfo(dtype='object', function=lambda value: pandas.Timedelta(seconds=value))
 
         return None
-
-    def _parse_interval_athena(self, value: Optional[Any]) -> Optional[pandas.Timedelta]:
-        if value is None:
-            return None
-
-        return pandas.Timedelta(seconds=value)
 
     def _parse_interval_bigquery(self, value: Optional[Any]) -> Optional[pandas.Timedelta]:
         if value is None:
