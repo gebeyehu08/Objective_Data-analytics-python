@@ -325,9 +325,12 @@ class SeriesAbstractDateTime(Series, ABC):
     On any of the subtypes, you can access date operations through the `dt` accessor.
     """
 
+    # list of formats used for parsing string literals to date object supported by Series
     _VALID_DATE_TIME_FORMATS = [
         '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d'
     ]
+
+    # format used for all literals when casting them to this Series
     _FINAL_DATE_TIME_FORMAT = ''
 
     @property
@@ -346,7 +349,7 @@ class SeriesAbstractDateTime(Series, ABC):
         if source_dtype == cls.dtype:
             return expression
 
-        if source_dtype not in cls.supported_dtypes_to_cast:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to {cls.dtype}')
 
         if expression.is_constant and source_dtype == 'string':
@@ -354,15 +357,12 @@ class SeriesAbstractDateTime(Series, ABC):
 
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
-    def _comparator_operation(
-        self, other, comparator, other_dtypes=('timestamp', 'date', 'time', 'string')
-    ) -> 'SeriesBoolean':
-        from bach import SeriesBoolean
-        other = value_to_series(base=self, value=other)
-        self_modified, other = self._get_supported(f"comparator '{comparator}'", other_dtypes, other)
-        other = other.astype(self.dtype)
-        expression = Expression.construct(f'({{}}) {comparator} ({{}})', self_modified, other)
-        return self_modified.copy_override_type(SeriesBoolean).copy_override(expression=expression)
+    def _comparator_operation(self, other, comparator,
+                              other_dtypes=('timestamp', 'date', 'time', 'string'),
+                              strict_other_dtypes=tuple()) -> 'SeriesBoolean':
+        return super()._comparator_operation(
+            other, comparator, other_dtypes, strict_other_dtypes=tuple(self.dtype)
+        )
 
     @classmethod
     def _cast_to_date_if_dtype_date(cls, series: 'Series') -> 'Series':
@@ -479,7 +479,8 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         DBDialect.ATHENA: 'timestamp',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
-    supported_dtypes_to_cast = ('string', 'date', )
+
+    supported_source_dtypes = ('string', 'date',)
     _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
     @classmethod
@@ -529,7 +530,7 @@ class SeriesDate(SeriesAbstractDateTime):
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
-    supported_dtypes_to_cast = ('string', 'timestamp',)
+    supported_source_dtypes = ('string', 'timestamp',)
     _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d'
 
     def __add__(self, other) -> 'Series':
@@ -577,7 +578,7 @@ class SeriesTime(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'TIME',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.time, str)
-    supported_dtypes_to_cast = ('string', 'timestamp, ')
+    supported_source_dtypes = ('string', 'timestamp, ')
 
     _VALID_DATE_TIME_FORMATS = SeriesAbstractDateTime._VALID_DATE_TIME_FORMATS + ['%H:%M:%S', '%H:%M:%S.%f']
     _FINAL_DATE_TIME_FORMAT = '%H:%M:%S.%f'
@@ -602,7 +603,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'INTERVAL',
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
-    supported_dtypes_to_cast = ('string',)
+    supported_source_dtypes = ('string',)
 
     @classmethod
     def supported_value_to_literal(
@@ -646,8 +647,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         )
 
     def _comparator_operation(self, other, comparator,
-                              other_dtypes=('timedelta', 'string')) -> SeriesBoolean:
-        return super()._comparator_operation(other, comparator, other_dtypes)
+                              other_dtypes=('timedelta', 'string'),
+                              strict_other_dtypes=tuple()) -> SeriesBoolean:
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def __add__(self, other) -> 'Series':
         type_mapping = {

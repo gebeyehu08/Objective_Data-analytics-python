@@ -26,6 +26,7 @@
       "url": "https://github.com/sdirosa"
     }
   ],
+  "type": "module",
   "files": [
     "dist"
   ],
@@ -39,7 +40,7 @@
   "typings": "./dist/objectiv-tracker-angular.d.ts",
   "metadata": "./dist/objectiv-tracker-angular.metadata.json",
   "scripts": {
-    "build": "ng-packagr -p ng-package.json",
+    "build": "node build.js",
     "deploy:verdaccio": "npm publish",
     "prettify": "prettier --write .",
     "tsc": "tsc --noEmit"
@@ -54,11 +55,11 @@
     "@angular/compiler-cli": "~9.1.13",
     "@angular/core": "~9.1.13",
     "@objectiv/tracker-browser": "^0.0.24",
-    "ng-packagr": "^9.0.0",
-    "prettier": "^2.5.1",
-    "rxjs": "~6.5.4",
-    "tslib": "^1.10.0",
+    "ng-packagr": "^9.1.5",
+    "prettier": "^2.7.1",
+    "rxjs": "~6.5.5",
+    "tslib": "^2.4.0",
     "typescript": "~3.8.3",
-    "zone.js": "~0.10.2"
+    "zone.js": "~0.11.7"
   }
 }

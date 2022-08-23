@@ -1,6 +1,12 @@
-<img src="https://user-images.githubusercontent.com/82152911/159266790-19e0e3d4-0d10-4c58-9da7-16edde9ec05a.svg#gh-light-mode-only" alt="objectiv_logo_light" title="Objectiv Logo">
-<img src="https://user-images.githubusercontent.com/82152911/159266895-39f52604-83c1-438d-96bd-9a6d66e74b08.svg#gh-dark-mode-only" alt="objectiv_logo_dark" title="Objectiv Logo">
+<a href="https://objectiv.io">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/82152911/159266895-39f52604-83c1-438d-96bd-9a6d66e74b08.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/82152911/159266790-19e0e3d4-0d10-4c58-9da7-16edde9ec05a.svg">
+  <img alt="Objectiv logo" src="https://user-images.githubusercontent.com/82152911/159266790-19e0e3d4-0d10-4c58-9da7-16edde9ec05a.svg">
+</picture>
+
+</a>
 
 [Objectiv](https://objectiv.io/) is an integrated set of data collection and modeling tools to quickly build & run models for any product analytics use case.
 
@@ -33,8 +39,15 @@ pip install objectiv-modelhub
 * **An open model hub** with pre-built product analytics models & operations.
 * **A modeling library** to create reusable models that run on your full dataset.
 
-![objectiv_stack](https://user-images.githubusercontent.com/82152911/184146312-dca08dfc-33b9-4f3a-8356-2f0ff8563b1d.svg#gh-light-mode-only "Objectiv Stack")
-![objectiv_stack_dark](https://user-images.githubusercontent.com/82152911/184146420-92ac1db7-4b09-476c-abc5-c67d5a970c75.svg#gh-dark-mode-only "Objectiv Stack")
+<a href="https://objectiv.io">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/82152911/184355794-4b957f62-210c-4a66-bda6-6405ab8f8a3e.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/82152911/184355849-ee1c59af-068e-48e0-bcd3-b064633d2fa7.svg">
+  <img alt="Objectiv stack" src="https://user-images.githubusercontent.com/82152911/184355849-ee1c59af-068e-48e0-bcd3-b064633d2fa7.svg">
+</picture>
+
+</a>
 
 ### The open analytics taxonomy
 

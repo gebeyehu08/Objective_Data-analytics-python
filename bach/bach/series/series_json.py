@@ -149,7 +149,7 @@ class SeriesJson(Series):
     }
     supported_value_types = (dict, list, str, float, int, bool)
 
-    supported_dtypes_to_cast = ('json', 'json_postgres', 'string')
+    supported_source_dtypes = ('json', 'json_postgres', 'string')
 
     @property
     def json(self) -> 'JsonAccessor':
@@ -232,26 +232,24 @@ class SeriesJson(Series):
         self,
         other: Union['Series', AllSupportedLiteralTypes],
         comparator: str,
-        other_dtypes=tuple()
+        other_dtypes=tuple(),
+        strict_other_dtypes=tuple()
     ) -> 'SeriesBoolean':
         if is_postgres(self.engine):
             other_dtypes = ('json_postgres', 'json', 'string')
-            fmt_str = f'cast({{}} as jsonb) {comparator} cast({{}} as jsonb)'
+            strict_other_dtypes = tuple(['json_postgres'])
         elif is_athena(self.engine):
-            # TODO: support string here to for compatibility with other databases
-            #  https://github.com/objectiv/objectiv-analytics/issues/1142
-            other_dtypes = ('json')
-            fmt_str = f'{{}} {comparator} {{}}'
+            other_dtypes = ('json', 'string')
+            strict_other_dtypes = tuple(['json'])
         elif is_bigquery(self.engine):
             other_dtypes = ('json', 'string')
-            fmt_str = f'{{}} {comparator} {{}}'
         else:
             raise DatabaseNotSupportedException(self.engine)
 
         result = self._binary_operation(
             other, operation=f"comparator '{comparator}'",
-            fmt_str=fmt_str,
-            other_dtypes=other_dtypes, dtype='bool'
+            fmt_str=f'{{}} {comparator} {{}}',
+            other_dtypes=other_dtypes, dtype='bool', strict_other_dtypes=strict_other_dtypes
         )
         return cast('SeriesBoolean', result)  # we told _binary_operation to return dtype='bool'
 

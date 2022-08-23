@@ -1,7 +1,8 @@
 /*
  * Copyright 2021-2022 Objectiv B.V.
  */
-import { v4 as uuid } from 'uuid';
+
+import { uuidv4 } from './uuidv4';
 
 /**
  * A TypeScript friendly Object.keys
@@ -14,6 +15,11 @@ export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<
 export type NonEmptyArray<T> = [T, ...T[]];
 
 /**
+ * A TypeScript utility type to make one specific property optional
+ */
+export type Optional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
+
+/**
  * A TypeScript NonEmptyArray guard
  */
 export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
@@ -23,7 +29,7 @@ export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
 /**
  * A UUID v4 generator
  */
-export const generateUUID = () => uuid();
+export const generateGUID = () => uuidv4();
 
 /**
  * Executes the given predicate every `intervalMs` for a maximum of `timeoutMs`.
