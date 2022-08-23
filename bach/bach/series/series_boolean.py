@@ -76,8 +76,9 @@ class SeriesBoolean(Series, ABC):
         # Default case: do a regular cast
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
-    def _comparator_operation(self, other, comparator, other_dtypes=tuple(['bool'])) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes)
+    def _comparator_operation(self, other, comparator, other_dtypes=tuple(['bool']),
+                              strict_other_dtypes=tuple()) -> 'SeriesBoolean':
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def _boolean_operator(self, other, operator: str, other_dtypes=tuple(['bool'])) -> 'SeriesBoolean':
         fmt_str = f'({{}}) {operator} ({{}})'

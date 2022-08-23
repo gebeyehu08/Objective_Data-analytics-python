@@ -358,8 +358,9 @@ class SeriesAbstractDateTime(Series, ABC):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def _comparator_operation(self, other, comparator,
-                              other_dtypes=('timestamp', 'date', 'time', 'string')) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes)
+                              other_dtypes=('timestamp', 'date', 'time', 'string'),
+                              strict_other_dtypes=tuple()) -> 'SeriesBoolean':
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     @classmethod
     def _cast_to_date_if_dtype_date(cls, series: 'Series') -> 'Series':
@@ -509,14 +510,12 @@ class SeriesTimestamp(SeriesAbstractDateTime):
                                           dtype=type_mapping)
 
     def _comparator_operation(
-        self, other, comparator, other_dtypes=('timestamp', 'date', 'time', 'string')
+        self, other, comparator, other_dtypes=('timestamp', 'date', 'time', 'string'),
+        strict_other_dtypes=tuple()
     ) -> 'SeriesBoolean':
-        from bach import SeriesBoolean
-        other = value_to_series(base=self, value=other)
-        self_modified, other = self._get_supported(f"comparator '{comparator}'", other_dtypes, other)
-        other = other.astype(self.dtype)
-        expression = Expression.construct(f'({{}}) {comparator} ({{}})', self_modified, other)
-        return self_modified.copy_override_type(SeriesBoolean).copy_override(expression=expression)
+        # only comparison between timestamp and timestamp, force cast via strict_other_dtypes
+        return Series._comparator_operation(self, other, comparator, other_dtypes,
+                                            strict_other_dtypes=tuple('timestamp'))
 
 
 class SeriesDate(SeriesAbstractDateTime):
@@ -653,8 +652,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         )
 
     def _comparator_operation(self, other, comparator,
-                              other_dtypes=('timedelta', 'string')) -> SeriesBoolean:
-        return super()._comparator_operation(other, comparator, other_dtypes)
+                              other_dtypes=('timedelta', 'string'),
+                              strict_other_dtypes=tuple()) -> SeriesBoolean:
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def __add__(self, other) -> 'Series':
         type_mapping = {
