@@ -24,7 +24,7 @@ class ModelFunctionType(Protocol):
 
 def use_only_required_objectiv_series(
     required_series: Optional[List[str]] = None,
-    required_global_contexts: List[str] = [],
+    required_global_contexts: Optional[List[str]] = None,
     include_series_from_params: Optional[List[str]] = None,
 ):
     """
@@ -69,7 +69,7 @@ def use_only_required_objectiv_series(
             )
             series_to_include = (
                 set(required_series or ObjectivSupportedColumns.get_data_columns())
-                | set(required_global_contexts)
+                | set(required_global_contexts or [])
                 | set(extra_series)
             )
             data = data[[s for s in data.data_columns if s in series_to_include]]

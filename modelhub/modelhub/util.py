@@ -6,7 +6,7 @@ import modelhub
 from bach.series import Series
 
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 from modelhub.series import series_objectiv
 
@@ -89,7 +89,7 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE = {
 
 def get_supported_dtypes_per_objectiv_column(
     with_md_dtypes: bool = False, with_identity_resolution: bool = True,
-    global_contexts: List[str] = []
+    global_contexts: Optional[List[str]] = None
 ) -> Dict[str, str]:
     """
     Helper function that returns mapping between Objectiv series name and dtype
@@ -106,14 +106,14 @@ def get_supported_dtypes_per_objectiv_column(
 
     return {
         **{col.value: dtype for col, dtype in supported_dtypes.items()},
-        **{gc: modelhub.SeriesGlobalContext.dtype for gc in global_contexts}
+        **{gc: modelhub.SeriesGlobalContext.dtype for gc in global_contexts or []}
     }
 
 
 def check_objectiv_dataframe(
     df: bach.DataFrame,
     columns_to_check: List[str] = None,
-    global_contexts_to_check: List[str] = [],
+    global_contexts_to_check: List[str] = None,
     check_index: bool = False,
     check_dtypes: bool = False,
     with_md_dtypes: bool = False,
@@ -124,6 +124,7 @@ def check_objectiv_dataframe(
     :param df: bach DataFrame to be checked
     :param columns_to_check: list of columns to verify,
         if not provided, all expected objectiv columns will be used instead.
+    :param global_contexts_to_check: list of columns to verify as global_contexts
     :param check_index: if true, will check if dataframe has expected index series
     :param check_dtypes: if true, will check if each series has expected dtypes
     :param with_md_dtypes: if true, will check if series has expected modelhub dtype

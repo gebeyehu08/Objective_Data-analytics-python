@@ -52,7 +52,7 @@ class ModelHub:
     """
     def __init__(self,
                  time_aggregation: str = TIME_DEFAULT_FORMAT,
-                 global_contexts: List[str] = []):
+                 global_contexts: Optional[List[str]] = None):
         """
         Constructor
 
@@ -62,7 +62,7 @@ class ModelHub:
 
         self._time_aggregation = time_aggregation
         self._conversion_events = cast(Dict[str, ConversionEventDefinitionType], {})
-        self._global_contexts = global_contexts
+        self._global_contexts = global_contexts or []
 
         # init metabase
         self._metabase = None

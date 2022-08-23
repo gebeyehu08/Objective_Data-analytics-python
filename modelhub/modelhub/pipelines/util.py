@@ -18,7 +18,7 @@ def get_objectiv_data(
     with_sessionized_data: bool = True,
     identity_resolution: Optional[str] = None,
     anonymize_unidentified_users: bool = True,
-    global_contexts: List[str] = []
+    global_contexts: Optional[List[str]] = None
 ) -> bach.DataFrame:
     """
         :param engine: db_connection
@@ -43,6 +43,7 @@ def get_objectiv_data(
         ExtractedContextsPipeline, SessionizedDataPipeline, IdentityResolutionPipeline
     )
 
+    global_contexts = global_contexts or []
     if identity_resolution and 'identity' not in global_contexts:
         global_contexts.append('identity')
 

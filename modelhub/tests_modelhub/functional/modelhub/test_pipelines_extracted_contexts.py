@@ -53,10 +53,10 @@ def _get_parsed_test_data_pandas_df(engine) -> pd.DataFrame:
     return pd.DataFrame(bq_data)
 
 
-def get_expected_context_pandas_df(engine, global_contexts: List[str] = []) -> pd.DataFrame:
+def get_expected_context_pandas_df(engine, global_contexts: List[str] = None) -> pd.DataFrame:
 
     field_name_mapping = {}
-    for context_name in global_contexts:
+    for context_name in global_contexts or []:
         capitalized_name = context_name.capitalize()+'Context'
         field_name_mapping[capitalized_name] = context_name
 
