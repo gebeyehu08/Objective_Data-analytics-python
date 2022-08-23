@@ -293,7 +293,11 @@ class TimedeltaOperation(DateTimeOperation):
     def total_seconds(self) -> SeriesFloat64:
         """
         returns the total amount of seconds in the interval
+
+        .. note::
+            Since Athena does not support interval types, series values are actually the total seconds.
         """
+        expression = self._series.expression
         if is_postgres(self._series.engine):
             # extract(epoch from source) returns the total number of seconds in the interval
             expression = Expression.construct(f'extract(epoch from {{}})', self._series)
@@ -306,8 +310,6 @@ class TimedeltaOperation(DateTimeOperation):
                 ),
                 self._series,
             )
-        else:
-            expression = self._series.expression
 
         return (
             self._series
@@ -499,7 +501,15 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         return None
 
     def __add__(self, other) -> 'Series':
-        return self._arithmetic_operation(other, 'add', '({}) + ({})', other_dtypes=tuple(['timedelta']))
+        _self = self.copy()
+        fmt_str = '({}) + ({})'
+        if is_athena(self.engine):
+            _self = self.copy_override(
+                expression=Expression.construct('to_unixtime({})', self)
+            )
+            fmt_str = f'from_unixtime({fmt_str})'
+
+        return _self._arithmetic_operation(other, 'add', fmt_str, other_dtypes=tuple(['timedelta']))
 
     def __sub__(self, other) -> 'Series':
         type_mapping = {
@@ -512,6 +522,7 @@ class SeriesTimestamp(SeriesAbstractDateTime):
 
         fmt_str = '({}) - ({})'
         if is_athena(self.engine):
+            # since we represent intervals with float values, we should consider unix time values instead
             _self = self.copy_override(
                 expression=Expression.construct('to_unixtime({})', self)
             )
