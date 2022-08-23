@@ -62,11 +62,11 @@ def test_supported_value_to_literal(dialect):
 
 def test_supported_value_to_literal_str_non_happy_path(dialect):
     dtype = 'timestamp'
-    with pytest.raises(ValueError, match='Not a valid timestamp string literal'):
+    with pytest.raises(ValueError, match=r'Not a valid string literal: .* for timestamp'):
         SeriesTimestamp.supported_value_to_literal(dialect, '2022-01-03 aa:bb', dtype)
 
-    with pytest.raises(ValueError, match='Not a valid timestamp string literal'):
+    with pytest.raises(ValueError, match=r'Not a valid string literal: .* for timestamp'):
         SeriesTimestamp.supported_value_to_literal(dialect, '01/03/99 12:13:00', dtype)
 
-    with pytest.raises(ValueError, match='Not a valid timestamp string literal'):
+    with pytest.raises(ValueError, match=r'Not a valid string literal: .* for timestamp'):
         SeriesTimestamp.supported_value_to_literal(dialect, '01/03/99 12:13:00', dtype)
