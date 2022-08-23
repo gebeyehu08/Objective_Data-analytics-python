@@ -244,17 +244,16 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
             "value": value[:512]
         })
 
-    # look for our custom context, so we can fill the enrich section
-    event = {}
-    if 'cx' in data:
-        context_container_encoded = data['cx']
-        context_container_decoded = json.loads(base64.b64decode(context_container_encoded).decode('utf-8'))
-        contexts = context_container_decoded['data']
-        for context in contexts:
-            if 'schema' in context and context['schema'] == config.schema_objectiv_taxonomy and 'data' in context:
-                event = context['data']
-                # we pick the first
-                break
+    # map properties in data to enrich.badrow properties
+    mapping = {
+        'cx': 'contexts',
+        'aid': 'app_id',
+        'se_ac': 'se_action',
+        'se_ca': 'se_category',
+        'eid': 'event_id',
+        'url': 'page_url',
+        'ip': 'user_ipaddress'
+    }
 
     ts_format = '%Y-%m-%dT%H:%M:%S.%fZ'
     return {
@@ -299,10 +298,7 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
                     "useragent": payload.userAgent,
                     "userId": payload.networkUserId
                 },
-                "enrich": {
-                    "event_id": event.get('id'),
-                    "context": context_container_encoded
-                }
+                "enrich": {m: data.get(k, '') for k, m in mapping.items()}
             },
             # Information about the piece of software responsible for the creation of schema violations
             "processor": {
