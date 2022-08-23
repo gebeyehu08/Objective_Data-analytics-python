@@ -149,6 +149,8 @@ class SeriesJson(Series):
     }
     supported_value_types = (dict, list, str, float, int, bool)
 
+    supported_source_dtypes = ('json', 'json_postgres', 'string')
+
     @property
     def json(self) -> 'JsonAccessor':
         """
