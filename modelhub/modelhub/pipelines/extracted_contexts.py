@@ -189,13 +189,12 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
             df_cp[key] = taxonomy_col
 
-        gc_series = df_cp['global_contexts'].astype('objectiv_global_contexts')
+        gc_series = df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
         # Extract the requested global contexts
         for gc in self._global_contexts:
-            context_name = gc.capitalize() + "Context"
             df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
 
-        df_cp = df_cp.drop(columns=['global_contexts'])
+        df_cp = df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
 
         # rename series to objectiv supported
         df_cp = df_cp.rename(
