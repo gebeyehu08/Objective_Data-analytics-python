@@ -87,7 +87,7 @@ def get_expected_context_pandas_df(engine, global_contexts: List[str] = None) ->
         }
     )
 
-    return context_pdf[_EXPECTED_CONTEXT_COLUMNS + global_contexts]
+    return context_pdf[_EXPECTED_CONTEXT_COLUMNS + (global_contexts or [])]
 
 
 def _get_extracted_contexts_pipeline(db_params, global_contexts=[]) -> ExtractedContextsPipeline:
