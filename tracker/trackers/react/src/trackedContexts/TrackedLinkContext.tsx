@@ -42,10 +42,11 @@ export const TrackedLinkContext = React.forwardRef<HTMLElement, TrackedLinkConte
     forwardTitle = false,
     forwardHref = false,
     waitUntilTracked = false,
+    normalizeId = true,
     ...otherProps
   } = props;
 
-  const linkId = makeIdFromTrackedAnchorProps(props);
+  const linkId = makeIdFromTrackedAnchorProps({ ...props, normalizeId });
 
   const componentProps = {
     ...otherProps,

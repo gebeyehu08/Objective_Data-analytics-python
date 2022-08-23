@@ -325,9 +325,12 @@ class SeriesAbstractDateTime(Series, ABC):
     On any of the subtypes, you can access date operations through the `dt` accessor.
     """
 
+    # list of formats used for parsing string literals to date object supported by Series
     _VALID_DATE_TIME_FORMATS = [
         '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d'
     ]
+
+    # format used for all literals when casting them to this Series
     _FINAL_DATE_TIME_FORMAT = ''
 
     @property
@@ -346,7 +349,7 @@ class SeriesAbstractDateTime(Series, ABC):
         if source_dtype == cls.dtype:
             return expression
 
-        if source_dtype not in cls.supported_dtypes_to_cast:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to {cls.dtype}')
 
         if expression.is_constant and source_dtype == 'string':
@@ -473,7 +476,8 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         DBDialect.ATHENA: 'timestamp',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
-    supported_dtypes_to_cast = ('string', 'date', )
+
+    supported_source_dtypes = ('string', 'date',)
     _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
     @classmethod
@@ -532,7 +536,7 @@ class SeriesDate(SeriesAbstractDateTime):
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
-    supported_dtypes_to_cast = ('string', 'timestamp',)
+    supported_source_dtypes = ('string', 'timestamp',)
     _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d'
 
     def __add__(self, other) -> 'Series':
@@ -580,7 +584,7 @@ class SeriesTime(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'TIME',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.time, str)
-    supported_dtypes_to_cast = ('string', 'timestamp, ')
+    supported_source_dtypes = ('string', 'timestamp, ')
 
     _VALID_DATE_TIME_FORMATS = SeriesAbstractDateTime._VALID_DATE_TIME_FORMATS + ['%H:%M:%S', '%H:%M:%S.%f']
     _FINAL_DATE_TIME_FORMAT = '%H:%M:%S.%f'
@@ -605,7 +609,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'INTERVAL',
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
-    supported_dtypes_to_cast = ('string',)
+    supported_source_dtypes = ('string',)
 
     @classmethod
     def supported_value_to_literal(

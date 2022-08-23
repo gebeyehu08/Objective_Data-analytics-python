@@ -117,7 +117,7 @@ class Series(ABC):
     by :meth:`supported_value_to_literal()`.
     """
 
-    supported_dtypes_to_cast: Tuple[str, ...] = tuple()
+    supported_source_dtypes: Tuple[str, ...] = tuple()
     """
     INTERNAL: List of dtypes that can be casted into this Series dtype.
     For example a SeriesString can be casted into a SeriesTimestamp. e.g `x.astype('timestamp')`.
@@ -1639,6 +1639,18 @@ class Series(ABC):
         """
         from bach.partitioning import Window
         checked_window = cast(Window, self._check_unwrap_groupby(window, isin=(Window, )))
+
+        if not checked_window.order_by:
+            raise ValueError(
+                (
+                    f'Window must be sorted when applying {agg_function.value}, '
+                    'otherwise results might be non-deterministic or an exception will be raised '
+                    'depending on the engine been used. '
+                    'Please create a new instance by calling any of the following:\n'
+                    '`DataFrame.sort_values(by=...).window()`, `DataFrame.sort_index().window()` '
+                    'or `Window(order_by=[], ...)` and try again.'
+                )
+            )
 
         if not agg_function.supports_window_frame_clause(dialect=self.engine.dialect):
             # remove boundaries if the functions does not support window frame clause

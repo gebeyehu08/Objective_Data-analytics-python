@@ -28,14 +28,15 @@ The open model hub is a growing collection of open-source, free to use data mode
 combine and run for product analysis and exploration. It includes models for a wide range of typical product
 analytics use cases. The source is available for all models and you're free to make any changes to them.
 
-The model hub has three types of functions/models:
-1. :doc:`Helper functions <../open-model-hub/models/helper-functions/index>`. These helper functions
-simplify manipulating and
+The model hub has the following types of functions/models:
+1. :doc:`Helper functions <../open-model-hub/models/helper-functions/index>`: Simplify manipulating and 
 analyzing the data.
-2. :doc:`Aggregation models <../open-model-hub/models/aggregation/index>`. These models consist of a
-combination of Bach
-instructions that run some of the more common data analyses or product analytics metrics.
-3. :doc:`Machine learning models <../open-model-hub/models/machine-learning/index>`.
+2. :doc:`Aggregation models <../open-model-hub/models/aggregation/index>`: Enable running some of the more 
+common data analyses and product analytics metrics.
+3. :doc:`Machine learning models <../open-model-hub/models/machine-learning/index>`: ML models such as 
+logistic regression.
+4. :doc:`Funnels <../open-model-hub/models/funnels/index>`: To analyze Funnels, e.g. discover all the (top) 
+user journeys that lead to conversion or drop-off.
 
 Helper functions always return a series with the same shape and index as the
 :class:`DataFrame <bach.DataFrame>` they are applied to. This ensures they can be added as a column to that

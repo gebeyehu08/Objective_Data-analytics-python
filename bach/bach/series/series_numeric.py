@@ -246,7 +246,7 @@ class SeriesInt64(SeriesAbstractNumeric):
         DBDialect.BIGQUERY: 'INT64'
     }
     supported_value_types = (int, numpy.int64, numpy.int32)
-    supported_dtypes_to_cast = ('float64', 'bool', 'string')
+    supported_source_dtypes = ('float64', 'bool', 'string')
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
@@ -282,7 +282,7 @@ class SeriesInt64(SeriesAbstractNumeric):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'int64':
             return expression
-        if source_dtype not in cls.supported_dtypes_to_cast:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to int64')
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
@@ -364,7 +364,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
         DBDialect.BIGQUERY: 'FLOAT64'
     }
     supported_value_types = (float, numpy.float64)
-    supported_dtypes_to_cast = ('int64', 'string')
+    supported_source_dtypes = ('int64', 'string')
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():
     #
@@ -406,7 +406,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'float64':
             return expression
-        if source_dtype not in cls.supported_dtypes_to_cast:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to float64')
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 

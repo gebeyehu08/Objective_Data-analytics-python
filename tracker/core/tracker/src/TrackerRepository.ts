@@ -9,7 +9,7 @@ import { TrackerRepositoryInterface } from './TrackerRepositoryInterface';
  * TrackerRepository allows developers to create and use multiple Tracker instances in the same Application.
  */
 globalThis.objectiv = {
-  ...(globalThis.objectiv ?? {}),
+  ...globalThis.objectiv,
   TrackerRepository: new (class<T extends Tracker> implements TrackerRepositoryInterface<T> {
     trackersMap = new Map<string, T>();
     defaultTracker?: T;
