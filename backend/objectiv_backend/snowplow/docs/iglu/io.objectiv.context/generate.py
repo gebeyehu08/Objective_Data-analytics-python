@@ -21,7 +21,7 @@ def get_sp_schema(schema, context_name):
     if 'properties' in context:
         for property_name in context['properties']:
             property_type = ['string']
-            if 'optional' not in context['properties'][property_name] or context['properties'][property_name]['optional'] == False:
+            if 'optional' not in context['properties'][property_name] or not context['properties'][property_name]['optional']:
                 if property_name not in required_properties:
                     required_properties.append(property_name)
             else:
