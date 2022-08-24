@@ -11,6 +11,7 @@ from typing import NamedTuple, Optional
 # below (e.g. get_config_output())
 from objectiv_backend.schema.event_schemas import EventSchema, get_event_schema, get_event_list_schema
 from objectiv_backend.common.types import EventListSchema
+from objectiv_backend.snowplow.generate_iglu_schema import map_schema_version_to_snowplow
 
 LOAD_BASE_SCHEMA = os.environ.get('LOAD_BASE_SCHEMA', 'true') == 'true'
 SCHEMA_EXTENSION_DIRECTORY = os.environ.get('SCHEMA_EXTENSION_DIRECTORY')
@@ -194,7 +195,6 @@ def get_config_output_snowplow() -> SnowplowConfig:
     else:
         aws_message_raw_type = 'kinesis'
 
-    from objectiv_backend.snowplow.generate_iglu_schema import map_schema_version_to_snowplow
     schema = get_config_event_schema()
     version = map_schema_version_to_snowplow(schema.version['base_schema'])
 
