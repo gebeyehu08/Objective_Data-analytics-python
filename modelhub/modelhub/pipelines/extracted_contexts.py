@@ -7,6 +7,7 @@ from functools import reduce
 import bach
 from typing import Optional, Any, Mapping, Dict, NamedTuple, List
 
+import modelhub
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, is_postgres
@@ -26,8 +27,8 @@ class TaxonomyColumnDefinition(NamedTuple):
 _DEFAULT_TAXONOMY_DTYPE_PER_FIELD = {
     '_type': bach.SeriesString.dtype,
     '_types': bach.SeriesJson.dtype,
-    'global_contexts': bach.SeriesJson.dtype,
-    'location_stack': bach.SeriesJson.dtype,
+    'global_contexts': modelhub.series.SeriesGlobalContexts.dtype,
+    'location_stack': modelhub.series.SeriesLocationStack.dtype,
     'time': bach.SeriesInt64.dtype,
 }
 
@@ -99,17 +100,65 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     def __init__(self, engine: Engine, table_name: str, global_contexts: List[str]):
         super().__init__()
         self._engine = engine
-        self._table_name = table_name
-        self._taxonomy_column = _get_taxonomy_column_definition(engine)
+        self._db_dialect = DBDialect.from_engine(self._engine)
         self._global_contexts = global_contexts
+        self._table_name = table_name
+        self._taxonomy_column: Optional[TaxonomyColumnDefinition] = None
 
         # check if table has all required columns for pipeline
         dtypes = bach.from_database.get_dtypes_from_table(
             engine=self._engine,
             table_name=self._table_name,
         )
+
+        # If the taxonomy column is present, we need to use the "old" format
+        if _get_taxonomy_column_definition(engine).name in dtypes:
+            self._taxonomy_column = _get_taxonomy_column_definition(engine)
+            self._base_dtypes = {
+                self._taxonomy_column.name: self._taxonomy_column.dtype,
+                **self.required_context_columns_per_dialect[self._db_dialect],
+            }
+        else:
+            # No taxonomy column, we need to gather the contexts separately.
+            if not is_bigquery(engine):
+                raise Exception('only bigquery supports new data format for now')
+
+            base_dtypes: Dict[str, Any] = {
+                **self.required_context_columns_per_dialect[self._db_dialect],
+                'event_id': bach.SeriesString.dtype,
+                'network_userid': bach.SeriesString.dtype,
+                'se_action': bach.SeriesString.dtype,
+                'se_category': bach.SeriesString.dtype,
+                'true_tstamp': bach.SeriesTimestamp.dtype
+            }
+
+            global_contexts_columns = {}
+
+            for col, dtype in dtypes.items():
+                # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0
+                # "contexts_io_objectiv_" + context_data_name + "_" + ve_rs_ion
+                if not col.startswith('contexts_io_objectiv_'):
+                    continue
+
+                parts = col.split('_')
+                data_name = parts[3:-3]
+                # The version is contained in parts[-3:]
+
+                if data_name[0] == 'context':
+                    context_name = "_".join(data_name[1:-1])
+                    if context_name in global_contexts:
+                        base_dtypes[col] = [{}]
+                        global_contexts_columns[context_name] = col
+
+                elif data_name[:2] == ['location', 'stack']:
+                    base_dtypes[col] = [{'location_stack': bach.SeriesString.dtype}]
+                    global_contexts_columns['location_stack'] = col
+
+            self._base_dtypes = base_dtypes
+            self._global_contexts_columns = global_contexts_columns
+
         self._validate_data_dtypes(
-            expected_dtypes=dict(self._get_base_dtypes()),
+            expected_dtypes=self._base_dtypes,
             current_dtypes=dtypes,
         )
 
@@ -133,20 +182,13 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     @property
     def result_series_dtypes(self) -> Dict[str, str]:
         context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
-        supported_dtypes = get_supported_dtypes_per_objectiv_column(with_identity_resolution=False)
+        supported_dtypes = get_supported_dtypes_per_objectiv_column(
+            with_identity_resolution=False,
+            with_md_dtypes=True
+        )
         return {
             col: dtype for col, dtype in supported_dtypes.items()
             if col in context_columns
-        }
-
-    def _get_base_dtypes(self) -> Mapping[str, StructuredDtype]:
-        """
-        Returns mapping of series names and dtypes expected from initial data
-        """
-        db_dialect = DBDialect.from_engine(self._engine)
-        return {
-            self._taxonomy_column.name: self._taxonomy_column.dtype,
-            **self.required_context_columns_per_dialect[db_dialect],
         }
 
     def _get_initial_data(self) -> bach.DataFrame:
@@ -154,7 +196,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             table_name=self._table_name,
             engine=self._engine,
             index=[],
-            all_dtypes=self._get_base_dtypes(),
+            all_dtypes=self._base_dtypes,
         )
 
     def _process_taxonomy_data(self, df: bach.DataFrame) -> bach.DataFrame:
@@ -166,44 +208,68 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         Returns a bach DataFrame containing each extracted field as series
         """
         df_cp = df.copy()
-        taxonomy_series = df_cp[self._taxonomy_column.name]
-        dtypes = _DEFAULT_TAXONOMY_DTYPE_PER_FIELD
 
-        if is_bigquery(df.engine):
-            # taxonomy column is a list, we just need to get the first value (LIST IS ALWAYS A SINGLE EVENT)
-            taxonomy_series = taxonomy_series.elements[0]
+        if self._taxonomy_column:
+            taxonomy_series = df_cp[self._taxonomy_column.name]
+            dtypes = _DEFAULT_TAXONOMY_DTYPE_PER_FIELD
 
-            # same definition as _DEFAULT_TAXONOMY_DTYPE_PER_FIELD with some extra fields
-            dtypes = self._taxonomy_column.dtype[0]
+            if is_bigquery(df.engine):
+                # taxonomy column is a list, we just need to get the first value
+                # (LIST IS ALWAYS A SINGLE EVENT)
+                taxonomy_series = taxonomy_series.elements[0]
 
-        for key, dtype in dtypes.items():
-            # parsing element to string and then to dtype will avoid
-            # conflicts between casting compatibility
-            if isinstance(taxonomy_series, bach.SeriesJson):
-                taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
-            else:
-                # taxonomy_series is dtype='dict' for BQ. Therefore, we need to explicitly
-                # cast the resultant element as string
-                taxonomy_col = taxonomy_series.elements[key].astype('string')
+                # same definition as _DEFAULT_TAXONOMY_DTYPE_PER_FIELD with some extra fields
+                dtypes = self._taxonomy_column.dtype[0]
 
-            taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
-            df_cp[key] = taxonomy_col
+            for key, dtype in dtypes.items():
+                # parsing element to string and then to dtype will avoid
+                # conflicts between casting compatibility
+                if isinstance(taxonomy_series, bach.SeriesJson):
+                    taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
+                else:
+                    # taxonomy_series is dtype='dict' for BQ. Therefore, we need to explicitly
+                    # cast the resultant element as string
+                    taxonomy_col = taxonomy_series.elements[key].astype('string')
 
-        gc_series = df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
-        # Extract the requested global contexts
-        for gc in self._global_contexts:
-            df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
+                taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
+                df_cp[key] = taxonomy_col
 
-        df_cp = df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
+            gc_series = df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
+            # Extract the requested global contexts
+            for gc in self._global_contexts:
+                df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
 
-        # rename series to objectiv supported
-        df_cp = df_cp.rename(
-            columns={
-                'cookie_id': ObjectivSupportedColumns.USER_ID.value,
-                '_type': ObjectivSupportedColumns.EVENT_TYPE.value,
-                '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
-            },
-        )
+            df_cp = df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
+
+            # rename series to objectiv supported
+            df_cp = df_cp.rename(
+                columns={
+                    'cookie_id': ObjectivSupportedColumns.USER_ID.value,
+                    '_type': ObjectivSupportedColumns.EVENT_TYPE.value,
+                    '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
+                },
+            )
+        else:
+            df_cp = df_cp.rename(
+                columns={
+                    'se_action': 'event_type',
+                    'se_category': 'stack_event_types',
+                    'network_userid': 'user_id',
+                    'true_tstamp': 'time'
+                }
+            )
+
+            for gc, col in self._global_contexts_columns.items():
+                if gc == 'location_stack':
+                    df_cp[gc] = (
+                        df_cp[col]
+                        .elements_safe[0]
+                        .elements['location_stack']
+                    ).astype('objectiv_location_stack')
+                else:
+                    df_cp[gc] = df_cp[col].astype('objectiv_global_context')
+
+            df_cp = df_cp.drop(columns=list(self._global_contexts_columns.values()))
 
         return df_cp
 
@@ -218,7 +284,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             return df_cp
 
         # remove taxonomy columns that are no longer needed
-        df_cp = df_cp.drop(columns=[self._taxonomy_column.name])
+        if self._taxonomy_column:
+            df_cp = df_cp.drop(columns=[self._taxonomy_column.name])
 
         # this materialization is to generate a readable query
         df_cp = df_cp.materialize(node_name='bq_extra_processing')
@@ -237,11 +304,15 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         # BQ data source has no moment and day columns, therefore we need to generate them
         # based on the time value from the taxonomy column
-        df_cp['moment'] = df_cp['time'].copy_override(
-            expression=bach.expression.Expression.construct(f'TIMESTAMP_MILLIS({{}})', df_cp['time']),
-        )
-        df_cp['moment'] = df_cp['moment'].copy_override_type(bach.SeriesTimestamp)
-        df_cp['day'] = df_cp['moment'].astype('date')
+        if df_cp['time'].dtype == 'timestamp':
+            df_cp['moment'] = df_cp['time']
+        else:
+            df_cp['moment'] = df_cp['time'].copy_override(
+                expression=bach.expression.Expression.construct(f'TIMESTAMP_MILLIS({{}})', df_cp['time']),
+            ).copy_override_type(bach.SeriesTimestamp)
+
+        if 'day' not in df_cp.columns:
+            df_cp['day'] = df_cp['moment'].astype('date')
 
         return df_cp
 
@@ -255,6 +326,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             global_contexts_to_check=self._global_contexts,
             check_dtypes=True,
             infer_identity_resolution=False,
+            with_md_dtypes=True
         )
 
     def _apply_date_filter(

@@ -208,6 +208,10 @@ class SeriesJson(Series):
         if is_bigquery(dialect):
             if source_dtype in ('json', 'string'):
                 return expression
+            elif source_dtype in ('list', 'dict'):
+                # BQ can convert most types into json format, we stick to complex types for now.
+                # https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#to_json_string
+                return Expression.construct(f'to_json_string({{}})', expression)
             raise ValueError(f'cannot convert {source_dtype} to json')
         raise DatabaseNotSupportedException(dialect)
 
