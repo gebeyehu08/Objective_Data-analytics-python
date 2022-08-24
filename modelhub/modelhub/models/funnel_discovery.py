@@ -4,10 +4,9 @@ Copyright 2022 Objectiv B.V.
 
 import bach
 from bach.series import Series
+from bach.expression import Expression, join_expressions
 from sql_models.constants import NotSet, not_set
-from typing import cast, List, Union, TYPE_CHECKING
-
-from sql_models.util import is_bigquery, is_postgres
+from typing import List, Union, TYPE_CHECKING, cast
 
 from modelhub.util import check_groupby
 
@@ -30,138 +29,14 @@ class FunnelDiscovery:
     """
 
     CONVERSTION_STEP_COLUMN = '_first_conversion_step_number'
-    STEP_TAG_COLUMN = '_step_tag'
 
-    @staticmethod
-    def _tag_step(step_series: bach.Series) -> bach.Series:
-        """
-        Tag the step number, is it 1st step, 2nd step, ...
-
-        :param step_series: series of ith step:
-                index
-                index1  val1_step_ith
-                index2  val2_step_ith
-                index3  val3_step_ith
-                ...
-
-        :returns: series with step number in the index:
-
-                index    STEP_TAG_COLUMN
-                index1   ith      val1_step_ith
-                index2   ith      val2_step_ith
-                index3   ith      val3_step_ith
-
-            where ith is a step number.
-        """
-
-        step_df = step_series.to_frame()
-        # add the step name as index
-        step_df[FunnelDiscovery.STEP_TAG_COLUMN] = int(step_series.name.split('_')[-1])
-        step_df = step_df.set_index(keys=FunnelDiscovery.STEP_TAG_COLUMN, append=True)
-        step_df = step_df.materialize(node_name='tagged_step')
-        return step_df[step_series.name]
-
-    def _melt_steps(self, steps_df: bach.DataFrame) -> bach.Series:
-        """
-        Transform steps dataframe into a single series.
-
-        :param steps_df: steps dataframe, which one can get from
-            `FunnelDiscovery.get_navigation_paths` method:
-
-                    step_1  step_2  step_3
-            index1  v11     v12     v13
-            index2  v21     v22     v23
-
-        :returns: transformed steps_df to the following series:
-
-            index   STEP_TAG_COLUMN
-            index1  1               v11
-                    2               v12
-                    3               v13
-            index2  1               v21
-                    2               v22
-                    3               v23
-
-        """
-        # tags the steps numbers
-        tagged_steps = [self._tag_step(step_series)
-                        for step_series in steps_df.data.values()]
-
-        # melt all steps into a single series
-        all_steps_series = tagged_steps[0].append(other=tagged_steps[1:],
-                                                  ignore_index=False)
-        return all_steps_series.copy_override(name='step_value')
-
-    def _add_first_conversion_step_number_column(
-            self,
-            steps_df: bach.DataFrame,
-            conversion_events_df: bach.DataFrame,
-            conversion_location_column: str = 'feature_nice_name',
-    ) -> bach.DataFrame:
-        """
-        Identify the first conversion step number per each navigation path and
-        add it as a column to the copy of steps_df dataframe.
-
-        :param steps_df: dataframe which one gets from `FunnelDiscovery.get_navigation_paths` method.
-        :param conversion_events_df: dataframe where for each `conversion_location_column`
-            value we have info if there was a conversion event.
-        :param conversion_location_column: column name for merging steps_df and conversion_events_df
-            dataframes in order to get converted steps df.
-
-        :returns: copy of steps_df bach DataFrame, with the addition
-            `CONVERSTION_STEP_COLUMN` column.
-        """
-
-        if 'is_conversion_event' not in conversion_events_df.data_columns:
-            raise ValueError('The is_conversion_event column is missing in the dataframe.')
-        conversion_events_df_columns = [conversion_location_column, 'is_conversion_event']
-
-        _steps_df = steps_df.copy()
-
-        # set a new index for _steps_df
-        first_column = _steps_df.data_columns[0]
-        _steps_df['_index'] = steps_df.groupby().window()[first_column].window_row_number()
-        # need add also steps_df 'old' index
-        initial_index = steps_df.index_columns
-        index_columns = ['_index'] + initial_index
-        _steps_df = _steps_df.reset_index().set_index(index_columns)
-
-        # melting steps df in order later to merge with df where we have the conversion info
-        all_steps_series = self._melt_steps(_steps_df)
-        melted_steps_df = all_steps_series.reset_index(drop=False)
-        melted_steps_df = cast(bach.DataFrame, melted_steps_df)  # help mypy
-
-        # identify if step is a conversion
-        _conversion_events_df = conversion_events_df[conversion_events_df_columns]
-        _conversion_events_df = _conversion_events_df[_conversion_events_df.is_conversion_event].reset_index(
-            drop=True).materialize(distinct=True)
-        # merging in order to have is_conversion_event column
-        converted_steps_df = melted_steps_df.merge(_conversion_events_df,
-                                                   left_on='step_value',
-                                                   right_on=conversion_location_column,
-                                                   how='left')
-        converted_steps_df = converted_steps_df[converted_steps_df.is_conversion_event]
-        converted_steps_df = converted_steps_df.drop(columns=[conversion_location_column,
-                                                              'is_conversion_event']).reset_index(drop=True)
-        # consider only first conversion step
-        first_converted_step_df = converted_steps_df.drop_duplicates(subset=index_columns,
-                                                                     keep='first',
-                                                                     sort_by=[self.STEP_TAG_COLUMN])
-        first_converted_step_df = first_converted_step_df[index_columns + [self.STEP_TAG_COLUMN]]
-        first_converted_step_df = first_converted_step_df.rename(
-            columns={self.STEP_TAG_COLUMN: self.CONVERSTION_STEP_COLUMN})
-
-        # final steps df with CONVERSTION_STEP_COLUMN column
-        result_df = _steps_df.materialize().merge(first_converted_step_df.materialize(),
-                                                  how='left', on=index_columns)
-
-        result_df = result_df.reset_index(level='_index',  drop=True)
-
-        return result_df
+    FEATURE_NICE_NAME_SERIES = '__feature_nice_name'
+    STEP_OFFSET_SERIES = '__root_step_offset'
 
     def _filter_navigation_paths_to_conversion(
-            self,
-            steps_df: bach.DataFrame,
+        self,
+        steps_df: bach.DataFrame,
+        step_series_name: List[str],
     ) -> bach.DataFrame:
         """
         Filter each navigation path to first conversion location.
@@ -184,15 +59,89 @@ class FunnelDiscovery:
 
         result_df = steps_df[steps_df[conv_step_num_column] != 1]
 
-        _columns = [i for i in steps_df.data_columns if i != conv_step_num_column]
-        for step_name in _columns:
+        for step_name in step_series_name:
             tag = int(step_name.split('_')[-1])
             mask = (tag > result_df[conv_step_num_column]) | (result_df[conv_step_num_column].isnull())
-            # don't consider any step happened after the fist conversion step
+            # don't consider any step happened after the first conversion step
             result_df.loc[mask, step_name] = None
 
         result_df = result_df.dropna(subset=[conv_step_num_column])
         return result_df
+
+    def _construct_source_target_df(
+            self,
+            steps_df: bach.DataFrame,
+            n_top_examples: int = None,
+    ) -> bach.DataFrame:
+        """
+        Out of `steps_df` Bach dataframe we construct a new Bach dataframe with the following structure:
+
+        - `'source', 'target', 'value'`
+        - `'step1', 'step2', 'val1'`
+        - `'step2', 'step3', 'val2'`
+        - `'...', '...', '...'`
+
+        The navigation steps are our nodes (source and target), the value shows
+        how many source -> target links we have.
+
+        :param steps_df: the dataframe from `FunnelDiscovery.get_navigation_paths`.
+        :param n_top_examples: number of top navigation paths.
+
+        :returns: Bach DataFrame with `source`, `target` and `value` columns.
+        """
+
+        import re
+        from collections import defaultdict
+        _IS_STEP_SERIES_REGEX = re.compile(r'(?P<root_series_name>.+)_step_(?P<step_number>\d+)')
+        root_series_x_steps = defaultdict(list)
+
+        # dataframe can contain steps from different roots, for now lets raise an error if
+        # that is the case
+        for series_name in steps_df.data_columns:
+            match = _IS_STEP_SERIES_REGEX.match(series_name)
+            if not match:
+                continue
+
+            r_series_name, step_number = match.groups()
+            root_series_x_steps[r_series_name].append(int(step_number))
+
+        if len(root_series_x_steps) == 0:
+            raise ValueError('Couldn\'t find any navigation path.')
+
+        if len(root_series_x_steps) > 1:
+            raise ValueError(
+                'Provided DataFrame contains navigation paths from multiple base series,'
+                ' e.g. x_step_1, y_step_1, ... x_step_n, y_step_n.'
+            )
+
+        step_root_name = list(root_series_x_steps.keys())[0]
+        step_numbers = root_series_x_steps[step_root_name]
+        columns = [f'{step_root_name}_step_{i}' for i in step_numbers]
+
+        # count navigation paths
+        steps_counter_df = steps_df[columns].value_counts().reset_index()
+
+        steps_counter_df = cast(bach.DataFrame, steps_counter_df)  # help mypy
+        steps_counter_df = steps_counter_df.sort_values(['value_counts'] + columns,
+                                                        ascending=False)
+        steps_counter_df = steps_counter_df.materialize(limit=n_top_examples)
+
+        step_size = 1  # we want steps' pairs
+        all_dfs = []
+        for i_step in range(1, max(step_numbers) - step_size + 1):
+            step1 = f'location_stack_step_{i_step}'
+            step2 = f'location_stack_step_{i_step + step_size}'
+
+            column_names = {step1: 'source', step2: 'target'}
+            _df = steps_counter_df[[step1, step2, 'value_counts']].rename(columns=column_names)
+            all_dfs.append(_df.dropna())
+
+        from bach.operations.concat import DataFrameConcatOperation
+        result = DataFrameConcatOperation(objects=all_dfs, ignore_index=True)()
+        links_df = result.groupby(['source', 'target']).agg('sum').reset_index().rename(
+            columns={'value_counts_sum': 'value'}).sort_values('value', ascending=False)
+
+        return links_df
 
     def get_navigation_paths(
         self,
@@ -258,160 +207,227 @@ class FunnelDiscovery:
         :returns: Bach DataFrame containing a new Series for each step containing the nice name
             of the location.
         """
-
         from modelhub.util import check_objectiv_dataframe
-        check_objectiv_dataframe(df=data,
-                                 columns_to_check=['location_stack', 'moment'])
-
-        data = data.copy()
-
         from modelhub.series.series_objectiv import SeriesLocationStack
+
+        # check all parameters are correct
+        if (
+            (add_conversion_step_column or only_converted_paths)
+            and 'is_conversion_event' not in data.data_columns
+        ):
+            raise ValueError('The is_conversion_event column is missing in the dataframe.')
+
+        check_objectiv_dataframe(df=data, columns_to_check=['location_stack', 'moment'])
         _location_stack = location_stack or data['location_stack']
         _location_stack = _location_stack.copy_override_type(SeriesLocationStack)
-        partition = None
-        sort_nice_names_by = []
 
+        gb_series_names = []
         if by is not None and by is not not_set:
-            partition = check_groupby(
-                data=data, groupby=by, not_allowed_in_groupby='location_stack',
-            )
-            sort_nice_names_by = [data[idx] for idx in partition.index_columns]
+            valid_gb = check_groupby(data=data, groupby=by, not_allowed_in_groupby=_location_stack.name)
+            gb_series_names = valid_gb.index_columns
 
-        # always sort by moment, since we need to respect the order of the nice names in the data
-        # for getting the correct navigation paths based on event time
-        sort_nice_names_by += [data['moment']]
-
-        ascending = True
-        if start_from_end:
-            ascending = False
-        nice_name = _location_stack.ls.nice_name.sort_by_series(by=sort_nice_names_by,
-                                                                ascending=ascending)
-
-        agg_steps = nice_name.to_json_array(partition=partition)
-        flattened_lc, offset_lc = agg_steps.json.flatten_array()
-
-        # flattening will assume items are still json type, we need to extract the items
-        # as scalar types (string items)
-        if is_bigquery(data.engine):
-            flattened_lc = flattened_lc.copy_override(
-                expression=bach.expression.Expression.construct('JSON_EXTRACT_SCALAR({})',
-                                                                flattened_lc)
-            )
-        elif is_postgres(data.engine):
-            flattened_lc = flattened_lc.copy_override(
-                expression=bach.expression.Expression.construct(
-                    '{} #>> {}',
-                    flattened_lc,
-                    bach.expression.Expression.raw("'{}'")
-                )
-            )
-
-        flattened_lc = flattened_lc.astype('string')
-
-        offset_lc = offset_lc.copy_override(name='__root_step_offset')
-
-        nav_df = flattened_lc.to_frame()
-        nav_df[offset_lc.name] = offset_lc
-
-        nav_df = nav_df.sort_values(
-            by=nav_df.index_columns + [offset_lc.name],
-            ascending=[True if start_from_end else False] * len(nav_df.index_columns) + [False]
+        result = self._generate_navigation_steps(
+            data=data,
+            steps=steps,
+            by=gb_series_names,
+            location_stack=_location_stack,
+            start_from_end=start_from_end,
+            add_first_conversion_column=add_conversion_step_column or only_converted_paths,
         )
-
-        window = nav_df.groupby(by=nav_df.index_columns).window()
-        root_step_series = window[flattened_lc.name]
-
-        all_step_series = {}
-        for step in range(1, steps + 1):
-            step_series_name = f'{flattened_lc.name}_step_{step}'
-            if step == 1:
-                next_step = root_step_series.copy_override(group_by=None)
-            else:
-                next_step = root_step_series.window_lag(offset=step - 1)
-
-            all_step_series[step_series_name] = (
-                next_step.copy_override(name=step_series_name)
-            )
-
-        result = nav_df.copy_override(
-            base_node=window.base_node,
-            series={
-                **all_step_series,
-                offset_lc.name: offset_lc.copy_override(base_node=window.base_node),
-            }
-        )
-        result = result.materialize(node_name='step_extraction')
 
         # limit rows
         if n_examples is not None:
-            result = result[result[offset_lc.name] < n_examples]
-
-        # removing the last step with nulls
-        if steps > 2:
-            mask = (result['__root_step_offset'] != 0) & (result[f'{flattened_lc.name}_step_2'].isnull())
-            result.loc[mask, f'{flattened_lc.name}_step_1'] = None
-            result = result.dropna(subset=[f'{flattened_lc.name}_step_1'])
+            result = result[result[self.STEP_OFFSET_SERIES] < n_examples]
 
         # re-order rows
-        result = result.sort_values(by=result.index_columns + [offset_lc.name])
+        result = result.set_index(gb_series_names, drop=True)
+        result = result.sort_index()
 
-        # drop offset column
-        result = result.drop(columns=[offset_lc.name])
+        final_result_series = [
+            f'{_location_stack.name}_step_{i_step}' for i_step in range(1, steps + 1)
+        ]
 
-        if start_from_end:
-            # need to reverse column order
-            # if path is `a, b, c, d` and steps=3, the current format is:
+        if only_converted_paths:
+            result = self._filter_navigation_paths_to_conversion(
+                result, step_series_name=final_result_series,
+            )
 
-            # step_1 step_2 step_3
-            #   d     c      b
-            #   c     b      a
-            #   b     a      None
+        if add_conversion_step_column:
+            final_result_series.append(self.CONVERSTION_STEP_COLUMN)
 
-            # but we expect this:
+        return result[final_result_series]
 
-            # step_1 step_2  step_3
-            #  b      c       d
-            #  a      b       c
-            #  None   b       a
+    def _generate_navigation_steps(
+        self,
+        data: bach.DataFrame,
+        steps: int,
+        by: List[str],
+        location_stack: 'SeriesLocationStack',
+        start_from_end: bool,
+        add_first_conversion_column: bool,
+    ) -> bach.DataFrame:
+        """
+        Generates all steps series and `_first_conversion_step_number` (if required).
 
-            column_old_order = result.data_columns
-            column_new_order = column_old_order[::-1]
+        Returns a bach DataFrame including a series for each requested step.
+        """
+        # adds __feature_nice_name and __root_step_offset to DataFrame
+        data = self._prepare_data_for_step_extraction(data, by, location_stack)
 
-            new_columns_name = {}
-            for old, new in zip(column_old_order, column_new_order):
-                new_columns_name[old] = new
-            result = result.rename(columns=new_columns_name)[column_old_order]
+        series_to_keep = by + [self.FEATURE_NICE_NAME_SERIES, self.STEP_OFFSET_SERIES]
+        if add_first_conversion_column:
+            series_to_keep.append('is_conversion_event')
 
-        # conversion part
-        if not (add_conversion_step_column or only_converted_paths):
-            return result
+        data = data[series_to_keep]
 
-        if 'feature_nice_name' not in data.data_columns:
-            data['feature_nice_name'] = data.location_stack.ls.nice_name
-        result = self._add_first_conversion_step_number_column(result, data)
+        data = data.sort_values(by=by + [self.STEP_OFFSET_SERIES], ascending=start_from_end)
+        step_window = data.groupby(by=by).window()
+        steps_to_add = list(range(1, steps + 1) if not start_from_end else range(steps, 0, -1))
 
-        if not only_converted_paths:
-            return result
+        root_step_series = data[self.FEATURE_NICE_NAME_SERIES]
+        root_step_series = root_step_series.copy_override(name=f'{location_stack.name}_step')
+        data = self._generate_steps_based_on_series(
+            data, step_window, steps_to_add, root_series=root_step_series,
+        )
 
-        result = self._filter_navigation_paths_to_conversion(result)
+        if add_first_conversion_column:
+            data = self._generate_steps_based_on_series(
+                data, step_window, steps_to_add, root_series=data['is_conversion_event'],
+            )
 
-        if add_conversion_step_column is False:
-            result = result.drop(columns=[self.CONVERSTION_STEP_COLUMN])
+        data = data.materialize(node_name='step_extraction')
 
-        return result
+        # remove ending step of entire partition
+        if steps > 1:
+            if start_from_end:
+                mask = data[self.STEP_OFFSET_SERIES] == 0
+            else:
+                mask = (data[self.STEP_OFFSET_SERIES] != 0) & data[f'{location_stack.name}_step_2'].isnull()
+            data = data[~mask]
+
+        if not add_first_conversion_column:
+            return data
+
+        return self._calculate_first_conversion_step(data, steps_to_add)
+
+    def _prepare_data_for_step_extraction(
+        self,
+        data: bach.DataFrame,
+        by: List[str],
+        location_stack: 'SeriesLocationStack',
+    ) -> bach.DataFrame:
+        """
+        Extracts feature nice name from location stack and calculates the offset of it based
+        on the required partitioning and the moment the event happened.
+
+        returns a bach DataFrame including 2 new series: `__feature_nice_name` and `__root_step_offset`.
+
+        .. note::
+           This function is internal use only, it expects bach DataFrame contains all required series
+           for calculation.
+        """
+        data = data.copy()
+
+        # adds __feature_nice_name and __root_step_offset to DataFrame
+        # extract the nice name per event
+        data[self.FEATURE_NICE_NAME_SERIES] = location_stack.ls.nice_name
+
+        # calculate the offset of each nice name
+
+        # always sort by moment, since we need to respect the order of the nice names in the data
+        # for getting the correct navigation paths based on event time
+        data = data.sort_values(by + ['moment', self.FEATURE_NICE_NAME_SERIES])
+        offset_window = data.groupby(by=by).window()
+        data[self.STEP_OFFSET_SERIES] = data[location_stack.name].window_row_number(window=offset_window) - 1
+        return data.materialize(node_name='pre_step_extraction')
+
+    @staticmethod
+    def _generate_steps_based_on_series(
+        data: bach.DataFrame,
+        step_window: bach.DataFrame,
+        steps_to_add: List[int],
+        root_series: bach.Series,
+    ) -> bach.DataFrame:
+        """
+        Generates a series for each value in steps_to_add list by getting the offset of the next value
+        in `root_series`.
+
+        :param data: bach DataFrame to add new series
+        :param step_window: Aggregated bach DataFrame containing the correct partitioning to use
+            for getting the sequential values for each step series
+
+        :param steps_to_add: List of sorted integers representing the number of each step to be added.
+        :param root_series: bach Series from where to extract the value of each series.
+
+        Example:
+             steps_to_add = [1, 2, 3]
+
+             Initial data
+             root_series
+                 0
+                 1
+                 2
+
+            Final result
+            root_series    root_series_step_1    root_series_step_2     root_series_step_3
+                0                0                     1                      2
+                1                1                     2                    None
+                2                2                   None                   None
+
+        .. note::
+        `steps_to_add` param is expected to have a sorted list of integers.
+        """
+        for idx_step, step in enumerate(steps_to_add):
+            # create series for current step based on the offset after the root step
+            step_series_name = f'{root_series.name}_{step}'
+            if not idx_step:
+                data[step_series_name] = root_series.copy()
+            else:
+                data[step_series_name] = root_series.window_lag(window=step_window, offset=idx_step)
+
+        return data
+
+    def _calculate_first_conversion_step(
+        self, data: bach.DataFrame, steps_to_add: List[int],
+    ) -> bach.DataFrame:
+        """
+        Calculates `_first_conversion_step_number` by generating an expression considering all
+        `is_conversion_event_{step_number}` series generated by `_generate_navigation_steps` method.
+
+        .. note::
+            This function expects that the provided bach DataFrame contains all conversion event step series.
+        """
+        cols_to_drop = []
+        steps_conv_exprs = []
+        for step in steps_to_add:
+            conv_step_series_name = f'is_conversion_event_{step}'
+            cols_to_drop.append(conv_step_series_name)
+            steps_conv_exprs.append(
+                Expression.construct(
+                    f'CASE WHEN {{}} THEN {step}', Expression.identifier(f'is_conversion_event_{step}')
+                )
+            )
+
+        data[self.CONVERSTION_STEP_COLUMN] = data['is_conversion_event'].copy_override(
+            expression=Expression.construct(
+                '{}' + ' END' * len(steps_conv_exprs),
+                join_expressions(steps_conv_exprs, join_str=' ElSE ')
+            ),
+        ).copy_override_type(bach.SeriesInt64)
+
+        return data.drop(columns=cols_to_drop)
 
     def plot_sankey_diagram(
             self,
             steps_df: bach.DataFrame,
-            n_top_examples: int = 15,
-            max_n_top_examples: int = 50) -> None:
+            n_top_examples: int = None
+    ) -> bach.DataFrame:
         """
         Plot a Sankey Diagram of the Funnel with Plotly.
 
-        Tihs method requires the dataframe from `FunnelDiscovery.get_navigation_paths`.
-        In this function we convert this Bach dataframe to a Pandas dataframe, and
-        in order to plot the sankey diagram, we construct a new `df_links` pandas dataframe
-        out of it, with `df_links`:
+        This method requires the dataframe from `FunnelDiscovery.get_navigation_paths`: `steps_df`.
+        Out of `steps_df` Bach dataframe we construct a new Bach dataframe (in order
+        to plot the sankey diagram), which has the following structure:
 
         - `'source', 'target', 'value'`
         - `'step1', 'step2', 'val1'`
@@ -421,78 +437,43 @@ class FunnelDiscovery:
         The navigation steps are our nodes (source and target), the value shows
         how many source -> target links we have.
 
-        :param steps_df: the dataframe which we get from `FunnelDiscovery.get_navigation_paths` method.
-        :param n_top_examples: number of top examples to plot.
-        :param max_n_top_examples: if we have too many examples to plot it can slow down
-            the browser, so you can limit to plot only the `max_n_top_examples` examples.
+        :param steps_df: the dataframe which we get from `FunnelDiscovery.get_navigation_paths`.
+        :param n_top_examples: number of top examples to plot (if we have
+            too many examples to plot it can slow down the browser).
+
+        :returns: Bach DataFrame with `source`, `target` and `value` columns.
         """
 
-        # count navigation paths
-        columns = [i for i in steps_df.data_columns
-                   if i != self.CONVERSTION_STEP_COLUMN]
-        steps_counter_df = steps_df[columns].value_counts().to_frame()
+        links_df = self._construct_source_target_df(steps_df, n_top_examples)
 
-        _steps_counter_df = steps_counter_df.reset_index().to_pandas()
-        if n_top_examples is None:
-            n_top_examples = len(_steps_counter_df)
-        n_top_examples = min(n_top_examples, max_n_top_examples)
-        print(f'Showing {n_top_examples} examples out of {len(_steps_counter_df)}')
+        links_df_pd = links_df.to_pandas()
+        if not links_df_pd.empty:
+            # source and target in sankey's diagram must be numeric and not text
+            import pandas as pd
+            unique_nodes = list(pd.unique(links_df_pd[['source', 'target']].values.ravel()))
 
-        _counter = _steps_counter_df.head(n_top_examples).values.tolist()
+            mapping_dict = {k: v for v, k in enumerate(unique_nodes)}
+            links_df_pd['source'] = links_df_pd['source'].map(mapping_dict)
+            links_df_pd['target'] = links_df_pd['target'].map(mapping_dict)
 
-        def func_ngram(data, n): return [data[i: i + n] for i in range(len(data) - n + 1)]
-
-        source, target, value = [], [], []
-        for elem in _counter:
-            # node
-            _steps = elem[:-1]
-
-            # we remove 'single' steps
-            _steps = [i for i in _steps if i is not None]
-            if len(_steps) < 2:
-                continue
-
-            # link
-            source_target_list = func_ngram(_steps, 2)
-            source.extend([i[0] for i in source_target_list])
-            target.extend([i[1] for i in source_target_list])
-            # weight
-            weight = elem[-1]
-            value.extend([weight for i in range(len(source_target_list))])
-
-        import pandas as pd
-        df_links = pd.DataFrame({'source': source, 'target': target, 'value': value})
-
-        unique_source_target = list(pd.unique(df_links[['source', 'target']].values.ravel()))
-        mapping_dict = {k: v for v, k in enumerate(unique_source_target)}
-        df_links['source'] = df_links['source'].map(mapping_dict)
-        df_links['target'] = df_links['target'].map(mapping_dict)
-
-        # summing up loops - we want one link for a loop
-        df_links["value"] = df_links.groupby(['source', 'target'])['value'].transform('sum')
-        # after summing, we neet to drop the rest
-        df_links = df_links.drop_duplicates(subset=['source', 'target'])
-
-        if not df_links.empty:
-            links_dict = df_links.to_dict(orient='list')
+            links_dict = links_df_pd.to_dict(orient='list')
 
             import plotly.graph_objects as go
             fig = go.Figure(data=[go.Sankey(
-                # textfont=dict(color="rgba(0,0,0,0)", size=1), # make node text invisible
                 orientation='h',  # use 'v' for vertical orientation,
                 node=dict(
                     pad=25,
                     thickness=15,
                     line=dict(color="black", width=0.5),
-                    label=[f'{i[:20]}...' for i in unique_source_target],
-                    customdata=unique_source_target,
+                    label=[f'{i[:20]}...' for i in unique_nodes],
+                    customdata=unique_nodes,
                     hovertemplate='NODE: %{customdata}',
                 ),
                 link=dict(
                     source=links_dict["source"],
                     target=links_dict["target"],
                     value=links_dict["value"],
-                    customdata=unique_source_target,
+                    customdata=unique_nodes,
                     hovertemplate='SOURCE: %{source.customdata}<br />' +
                                   'TARGET: %{target.customdata}<br />'
                 ),
@@ -509,3 +490,9 @@ class FunnelDiscovery:
             fig.show()
         else:
             print("There is no data to plot.")
+
+        # return all the data without limiting to n_top_examples
+        if n_top_examples is not None:
+            links_df = self._construct_source_target_df(steps_df)
+
+        return links_df
