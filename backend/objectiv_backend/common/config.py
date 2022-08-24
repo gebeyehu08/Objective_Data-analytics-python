@@ -50,9 +50,8 @@ _FILESYSTEM_OUTPUT_DIR = os.environ.get('FILESYSTEM_OUTPUT_DIR')
 _SP_SCHEMA_COLLECTOR_PAYLOAD = 'iglu:com.snowplowanalytics.snowplow/CollectorPayload/thrift/1-0-0'
 _SP_SCHEMA_CONTEXTS = 'iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0'
 _SP_SCHEMA_OBJECTIV_TAXONOMY = 'iglu:io.objectiv/taxonomy/jsonschema/1-0-0'
-_SP_SCHEMA_OBJECTIV_LOCATION_STACK = 'iglu:io.objectiv/location_stack/jsonschema/1-0-0'
+_SP_SCHEMA_OBJECTIV_LOCATION_STACK = 'iglu:io.objectiv/location_stack'
 _SP_SCHEMA_OBJECTIV_CONTEXTS_BASE = 'iglu:io.objectiv.context'
-_SP_SCHEMA_OBJECTIV_CONTEXTS_VERSION = '1-0-0'
 _SP_SCHEMA_PAYLOAD_DATA = 'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4'
 _SP_SCHEMA_SCHEMA_VIOLATIONS = 'iglu:com.snowplowanalytics.snowplow.badrows/schema_violations/jsonschema/2-0-0'
 
@@ -195,6 +194,10 @@ def get_config_output_snowplow() -> SnowplowConfig:
     else:
         aws_message_raw_type = 'kinesis'
 
+    from objectiv_backend.snowplow.generate_iglu_schema import map_schema_version_to_snowplow
+    schema = get_config_event_schema()
+    version = map_schema_version_to_snowplow(schema.version['base_schema'])
+
     config = SnowplowConfig(
         gcp_enabled=(_SP_GCP_PROJECT != ''),
         gcp_project=_SP_GCP_PROJECT,
@@ -211,7 +214,7 @@ def get_config_output_snowplow() -> SnowplowConfig:
         schema_objectiv_taxonomy=_SP_SCHEMA_OBJECTIV_TAXONOMY,
         schema_objectiv_location_stack=_SP_SCHEMA_OBJECTIV_LOCATION_STACK,
         schema_objectiv_contexts_base=_SP_SCHEMA_OBJECTIV_CONTEXTS_BASE,
-        schema_objectiv_contexts_version=_SP_SCHEMA_OBJECTIV_CONTEXTS_VERSION,
+        schema_objectiv_contexts_version=version,
         schema_payload_data=_SP_SCHEMA_PAYLOAD_DATA,
         schema_schema_violations=_SP_SCHEMA_SCHEMA_VIOLATIONS
     )
