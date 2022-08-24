@@ -57,5 +57,5 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
 
 
 def _real_setup_postgres_db():
-    db_params = get_postgres_db_params()
+    db_params = get_postgres_db_params()[0]
     setup_db(engine=create_engine(url=db_params.url), table_name=db_params.table_name)
