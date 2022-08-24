@@ -154,13 +154,13 @@ def add_enriched_contexts(events: EventDataList, anonymous_mode: bool):
     Enrich the list of events
     """
 
-    add_cookie_id_contexts(events, anonymous_mode=anonymous_mode)
+    add_cookie_id_context(events, anonymous_mode=anonymous_mode)
     for event in events:
         add_http_context_to_event(event=event, request=flask.request)
         add_marketing_context_to_event(event=event)
 
 
-def add_cookie_id_contexts(events: EventDataList, anonymous_mode: bool):
+def add_cookie_id_context(events: EventDataList, anonymous_mode: bool):
     """
     Modify the given list of events: Add the CookieIdContext to each event, if cookies are enabled.
     """
@@ -177,6 +177,9 @@ def add_cookie_id_contexts(events: EventDataList, anonymous_mode: bool):
                 # - create CookieIdContext, and add id
                 # - remove the original SessionContext
                 cookie_id = str(session_context['id'])
+                if cookie_id[0:7] == 'client-':
+                    print(f'changing {cookie_id} to {cookie_id[7:]}')
+                    cookie_id = cookie_id[7:]
                 cookie_id_context = CookieIdContext(id=cookie_id, cookie_id=cookie_id)
                 add_global_context_to_event(event, cookie_id_context)
                 remove_global_contexts(event, 'SessionContext')
