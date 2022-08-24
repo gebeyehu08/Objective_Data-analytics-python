@@ -83,6 +83,7 @@ def test_objectiv_event_to_snowplow_mapping():
     data = body['data'][0]
 
     mapping = {
+        'id': 'eid',
         '_type': 'se_ac',
         'time': 'ttm',
         'transport_time': 'stm',
