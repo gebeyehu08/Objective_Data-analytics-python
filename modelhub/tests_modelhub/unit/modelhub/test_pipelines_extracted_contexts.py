@@ -3,18 +3,21 @@ Copyright 2022 Objectiv B.V.
 """
 import pandas as pd
 import pytest
-from bach import DataFrame
-from sql_models.util import is_postgres, is_bigquery
 
-from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline
-from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
+from bach import DataFrame
+
+from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline, _get_taxonomy_column_definition
+from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
+    DBParams
 
 
 @pytest.fixture(autouse=True)
 def patch_extracted_contexts_validations(monkeypatch):
     monkeypatch.setattr(
         'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
-        lambda *args, **kwargs: {},
+        lambda engine, table_name: {
+            _get_taxonomy_column_definition(engine).name: _get_taxonomy_column_definition(engine).dtype
+        }
     )
 
     monkeypatch.setattr(
@@ -23,13 +26,10 @@ def patch_extracted_contexts_validations(monkeypatch):
     )
 
 
-def test_get_base_dtypes(db_params) -> None:
+def test_get_base_dtypes(monkeypatch, db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
-    result = pipeline._get_base_dtypes()
-
-    if is_postgres(engine):
+    if db_params.format == DBParams.Format.OBJECTIV:
         expected = {
             'value': 'json',
             'event_id': 'uuid',
@@ -37,7 +37,7 @@ def test_get_base_dtypes(db_params) -> None:
             'moment': 'timestamp',
             'cookie_id': 'uuid'
         }
-    elif is_bigquery(engine):
+    elif db_params.format == DBParams.Format.OBJECTIV_SNOWPLOW:
         expected = {
             'contexts_io_objectiv_taxonomy_1_0_0': [
                 {
@@ -45,15 +45,35 @@ def test_get_base_dtypes(db_params) -> None:
                     'cookie_id': 'uuid',
                     '_type': 'string',
                     '_types': 'json',
-                    'location_stack': 'json',
-                    'global_contexts': 'json',
+                    'location_stack': 'objectiv_location_stack',
+                    'global_contexts': 'objectiv_global_contexts',
                     'time': 'int64',
                 }
             ],
             'collector_tstamp': 'timestamp',
         }
+    elif db_params.format == DBParams.Format.SNOWPLOW:
+        # the default patch is not good enough, we need the location stack to be present as well
+        monkeypatch.setattr(
+            'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
+            lambda *args, **kwargs: {
+                'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}]
+            }
+        )
+        expected = {
+            'collector_tstamp': 'timestamp',
+            'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}],
+            'event_id': 'string',
+            'network_userid': 'string',
+            'se_action': 'string',
+            'se_category': 'string',
+            'true_tstamp': 'timestamp',
+        }
     else:
         raise Exception()
+
+    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
+    result = pipeline._base_dtypes
 
     assert expected == result
 
