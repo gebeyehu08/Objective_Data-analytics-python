@@ -47,6 +47,7 @@ class SeriesBoolean(Series, ABC):
         DBDialect.BIGQUERY: 'BOOL',
     }
     supported_value_types = (bool, )
+    supported_source_dtypes = ('int64', 'string',)
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():
     # 'True' and 'False' are valid boolean literals in Postgres
@@ -65,7 +66,7 @@ class SeriesBoolean(Series, ABC):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'bool':
             return expression
-        if source_dtype not in ['int64', 'string']:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to bool')
         if is_postgres(dialect):
             # Postgres cannot directly cast a bigint to bool.

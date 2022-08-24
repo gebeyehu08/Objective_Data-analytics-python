@@ -13,11 +13,11 @@ from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
-from bach.expression import Expression, join_expressions
-from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
+from bach.expression import Expression, join_expressions, StringValueToken
+from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code
-from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
+from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
@@ -44,6 +44,16 @@ _TOTAL_SECONDS_PER_DATE_PART = {
     DatePart.MILLISECOND: 1e-3,
     DatePart.MICROSECOND: 1e-6,
 }
+
+AllSupportedDateTimeTypes = Union[
+    datetime.datetime,
+    numpy.datetime64,
+    datetime.date,
+    str,
+    None,
+    datetime.timedelta,
+    numpy.timedelta64,
+]
 
 
 class DateTimeOperation:
@@ -311,6 +321,15 @@ class SeriesAbstractDateTime(Series, ABC):
 
     On any of the subtypes, you can access date operations through the `dt` accessor.
     """
+
+    # list of formats used for parsing string literals to date object supported by Series
+    _VALID_DATE_TIME_FORMATS = [
+        '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d'
+    ]
+
+    # format used for all literals when casting them to this Series
+    _FINAL_DATE_TIME_FORMAT = ''
+
     @property
     def dt(self) -> DateTimeOperation:
         """
@@ -321,6 +340,19 @@ class SeriesAbstractDateTime(Series, ABC):
 
         """
         return DateTimeOperation(self)
+
+    @classmethod
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
+        if source_dtype == cls.dtype:
+            return expression
+
+        if source_dtype not in cls.supported_source_dtypes:
+            raise ValueError(f'cannot convert {source_dtype} to {cls.dtype}')
+
+        if expression.is_constant and source_dtype == 'string':
+            return cls._constant_expression_to_dtype_expression(dialect, expression)
+
+        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def _comparator_operation(self, other, comparator,
                               other_dtypes=('timestamp', 'date', 'time', 'string')) -> 'SeriesBoolean':
@@ -340,6 +372,78 @@ class SeriesAbstractDateTime(Series, ABC):
             )
         else:
             return series
+
+    @classmethod
+    def _get_date_format_for_literal_value(cls, value: str) -> str:
+        """
+        Returns the correct date format for a string literal. If value has a non-supported format,
+        an exception will be raised.
+        """
+        for str_format in cls._VALID_DATE_TIME_FORMATS:
+            try:
+                datetime.datetime.strptime(value, str_format)
+            except ValueError:
+                continue
+            else:
+                return str_format
+
+        raise ValueError(
+            f'Not a valid string literal: {value} for {cls.dtype} dtype.'
+            f'Supported formats: {cls._VALID_DATE_TIME_FORMATS}'
+        )
+
+    @classmethod
+    def _constant_expression_to_dtype_expression(cls, dialect, expression) -> Expression:
+        """
+        Parses constant expression to respective dtype expression. Child classes must be
+        in charge of validating if string literals have the expected date format.
+        """
+        # check if string literal has correct format
+        literal_expr_tokens = []
+        for token in expression.data:
+            if not isinstance(token, StringValueToken):
+                literal_expr_tokens.append(token)
+                continue
+
+            val = token.value if token.value != 'NULL' else None
+            val_to_lit_expr = cls.supported_value_to_literal(dialect, val, cls.dtype)
+            literal_expr_tokens.append(val_to_lit_expr)
+        return cls.supported_literal_to_expression(dialect, Expression(literal_expr_tokens))
+
+    @classmethod
+    def supported_value_to_literal(
+        cls,
+        dialect: Dialect,
+        value: AllSupportedDateTimeTypes,
+        dtype: StructuredDtype
+    ) -> Expression:
+        if value is None:
+            return Expression.raw('NULL')
+
+        dt_value: Union[datetime.datetime, datetime.date, datetime.time, None] = None
+
+        if isinstance(value, str):
+            # get the right date format of the string
+            str_format = cls._get_date_format_for_literal_value(value)
+            dt_value = datetime.datetime.strptime(value, str_format)
+
+        if isinstance(value, numpy.datetime64):
+            if numpy.isnat(value):
+                return Expression.raw('NULL')
+            # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
+            # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
+            # Rounding can be unpredictable because of limited precision, so always truncate excess precision
+            microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
+            dt_value = datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)
+
+        if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+            dt_value = value
+
+        if not dt_value or not isinstance(value, cls.supported_value_types):
+            raise ValueError(f'Not a valid {cls.dtype} literal: {value}')
+
+        str_value = dt_value.strftime(cls._FINAL_DATE_TIME_FORMAT)
+        return Expression.string_value(str_value)
 
 
 def dt_strip_timezone(value: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
@@ -369,53 +473,8 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
-    @classmethod
-    def supported_value_to_literal(
-        cls,
-        dialect: Dialect,
-        value: Union[datetime.datetime, numpy.datetime64, datetime.date, str, None],
-        dtype: StructuredDtype
-    ) -> Expression:
-        if value is None:
-            return Expression.raw('NULL')
-        # if value is not a datetime or date, then convert it to datetime first
-        dt_value: Union[datetime.datetime, datetime.date, None] = None
-        if isinstance(value, str):
-            formats = ['%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d']
-            for format in formats:
-                try:
-                    dt_value = datetime.datetime.strptime(value, format)
-                    break
-                except ValueError:
-                    continue
-            if dt_value is None:
-                raise ValueError(f'Not a valid timestamp string literal: {value}.'
-                                 f'Supported formats: {formats}')
-        elif isinstance(value, numpy.datetime64):
-            if numpy.isnat(value):
-                return Expression.raw('NULL')
-            # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
-            # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
-            # Rounding can be unpredictable because of limited precision, so always truncate excess precision
-            microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
-            dt_value = datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)
-        elif isinstance(value, (datetime.datetime, datetime.date)):
-            dt_value = value
-
-        if dt_value is None:
-            raise ValueError(f'Not a valid timestamp literal: {value}')
-
-        str_value = dt_value.strftime('%Y-%m-%d %H:%M:%S.%f')
-        return Expression.string_value(str_value)
-
-    @classmethod
-    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
-        if source_dtype == 'timestamp':
-            return expression
-        else:
-            if source_dtype not in ['string', 'date']:
-                raise ValueError(f'cannot convert {source_dtype} to timestamp')
-            return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
+    supported_source_dtypes = ('string', 'date',)
+    _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
     def to_pandas_info(self) -> Optional['ToPandasInfo']:
         if is_postgres(self.engine):
@@ -452,28 +511,10 @@ class SeriesDate(SeriesAbstractDateTime):
         DBDialect.POSTGRES: 'date',
         DBDialect.BIGQUERY: 'DATE'
     }
-    supported_value_types = (datetime.datetime, datetime.date, str)
+    supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
-    @classmethod
-    def supported_value_to_literal(
-        cls,
-        dialect: Dialect,
-        value: Union[str, datetime.date],
-        dtype: StructuredDtype
-    ) -> Expression:
-        if isinstance(value, datetime.date):
-            value = str(value)
-        # TODO: check here already that the string has the correct format
-        return Expression.string_value(value)
-
-    @classmethod
-    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
-        if source_dtype == 'date':
-            return expression
-        else:
-            if source_dtype not in ['string', 'timestamp']:
-                raise ValueError(f'cannot convert {source_dtype} to date')
-            return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
+    supported_source_dtypes = ('string', 'timestamp',)
+    _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d'
 
     def __add__(self, other) -> 'Series':
         type_mapping = {
@@ -519,27 +560,11 @@ class SeriesTime(SeriesAbstractDateTime):
         DBDialect.POSTGRES: 'time without time zone',
         DBDialect.BIGQUERY: 'TIME',
     }
-    supported_value_types = (datetime.time, str)
+    supported_value_types = (datetime.datetime, numpy.datetime64, datetime.time, str)
+    supported_source_dtypes = ('string', 'timestamp, ')
 
-    @classmethod
-    def supported_value_to_literal(
-        cls,
-        dialect: Dialect,
-        value: Union[str, datetime.time],
-        dtype: StructuredDtype
-    ) -> Expression:
-        value = str(value)
-        # TODO: check here already that the string has the correct format
-        return Expression.string_value(value)
-
-    @classmethod
-    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
-        if source_dtype == 'time':
-            return expression
-        else:
-            if source_dtype not in ['string', 'timestamp']:
-                raise ValueError(f'cannot convert {source_dtype} to time')
-            return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
+    _VALID_DATE_TIME_FORMATS = SeriesAbstractDateTime._VALID_DATE_TIME_FORMATS + ['%H:%M:%S', '%H:%M:%S.%f']
+    _FINAL_DATE_TIME_FORMAT = '%H:%M:%S.%f'
 
     # python supports no arithmetic on Time
 
@@ -561,25 +586,32 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'INTERVAL',
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
+    supported_source_dtypes = ('string',)
 
     @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,
-        value: Union[str, numpy.timedelta64, datetime.timedelta],
+        value: AllSupportedDateTimeTypes,
         dtype: StructuredDtype
     ) -> Expression:
-        # pandas.Timedelta checks already that the string has the correct format
-        # round it up to microseconds precision in order to avoid problems with BigQuery
-        # pandas by default uses nanoseconds precision
-        value_td = pandas.Timedelta(value).round(freq='us')
-
-        if value_td is pandas.NaT:
+        if value is None:
             return Expression.construct('NULL')
 
-        # interval values in iso format are allowed in SQL (both BQ and PG)
-        # https://www.postgresql.org/docs/8.4/datatype-datetime.html#:~:text=interval%20values%20can%20also%20be%20written%20as%20iso%208601%20time%20intervals%2C
-        return Expression.string_value(value_td.isoformat())
+        if isinstance(value, cls.supported_value_types):
+            # pandas.Timedelta checks already that the string has the correct format
+            # round it up to microseconds precision in order to avoid problems with BigQuery
+            # pandas by default uses nanoseconds precision
+            value_td = pandas.Timedelta(value).round(freq='us')
+
+            if value_td is pandas.NaT:
+                return Expression.construct('NULL')
+
+            # interval values in iso format are allowed in SQL (both BQ and PG)
+            # https://www.postgresql.org/docs/8.4/datatype-datetime.html#:~:text=interval%20values%20can%20also%20be%20written%20as%20iso%208601%20time%20intervals%2C
+            return Expression.string_value(value_td.isoformat())
+
+        raise ValueError(f'Not a valid {cls.dtype} literal: {value}')
 
     def to_pandas_info(self) -> Optional[ToPandasInfo]:
         if is_bigquery(self.engine):
@@ -596,15 +628,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             days=value.days + value.months * 30,
             nanoseconds=value.nanoseconds,
         )
-
-    @classmethod
-    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
-        if source_dtype == 'timedelta':
-            return expression
-        else:
-            if not source_dtype == 'string':
-                raise ValueError(f'cannot convert {source_dtype} to timedelta')
-            return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def _comparator_operation(self, other, comparator,
                               other_dtypes=('timedelta', 'string')) -> SeriesBoolean:
