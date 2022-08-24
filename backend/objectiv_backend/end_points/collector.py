@@ -159,7 +159,6 @@ def set_time_in_events(events: EventDataList, current_millis: int, client_millis
         client_millis = current_millis
 
     offset = current_millis - client_millis
-    print(f'debug - time offset: {offset}')
     for event in events:
         # here we correct the tracking time with the calculated offset
         # the assumption here is that transport time should be the same as the server time (current_millis)
