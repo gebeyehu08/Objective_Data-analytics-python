@@ -576,12 +576,97 @@ class SeriesTime(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'time without time zone',
         DBDialect.BIGQUERY: 'TIME',
+        # None here for Athena, because it doesn't have a time type.
+        DBDialect.ATHENA: None,
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.time, str)
     supported_source_dtypes = ('string', 'timestamp, ')
 
     _VALID_DATE_TIME_FORMATS = SeriesAbstractDateTime._VALID_DATE_TIME_FORMATS + ['%H:%M:%S', '%H:%M:%S.%f']
     _FINAL_DATE_TIME_FORMAT = '%H:%M:%S.%f'
+
+    @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
+        if is_athena(dialect):
+            from bach.series import SeriesString
+            return SeriesFloat64.get_db_dtype(dialect)
+        return super().get_db_dtype(dialect)
+
+    @classmethod
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        if is_postgres(dialect) or is_bigquery(dialect):
+            return super().supported_literal_to_expression(dialect=dialect, literal=literal)
+        if is_athena(dialect):
+            from bach import SeriesString
+            return SeriesFloat64.supported_literal_to_expression(dialect=dialect, literal=literal)
+        raise DatabaseNotSupportedException(dialect)
+
+    @classmethod
+    def supported_value_to_literal(
+        cls,
+        dialect: Dialect,
+        value: AllSupportedDateTimeTypes,
+        dtype: StructuredDtype
+    ) -> Expression:
+        val_is_null = value is None or (isinstance(value, numpy.datetime64) and numpy.isnat(value))
+        if not is_athena(dialect) or val_is_null:
+            return super().supported_value_to_literal(dialect=dialect, value=value, dtype=dtype)
+
+        dt_value: Union[datetime.datetime, datetime.date, datetime.time, None] = None
+
+        if isinstance(value, str):
+            # get the right date format of the string
+            str_format = cls._get_date_format_for_literal_value(value)
+            dt_value = datetime.datetime.strptime(value, str_format)
+
+        if isinstance(value, numpy.datetime64):
+            # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
+            # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
+            # Rounding can be unpredictable because of limited precision, so always truncate excess precision
+            microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
+            dt_value = datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)
+
+        if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+            dt_value = value
+
+        if not dt_value or not isinstance(value, cls.supported_value_types):
+            raise ValueError(f'Not a valid {cls.dtype} literal: {value}')
+
+        total_seconds = 0.
+        if isinstance(dt_value, (datetime.datetime, datetime.time)):
+            total_seconds = (
+                dt_value.hour * _TOTAL_SECONDS_PER_DATE_PART[DatePart.HOUR]
+                + dt_value.minute * _TOTAL_SECONDS_PER_DATE_PART[DatePart.MINUTE]
+                + dt_value.second
+                + dt_value.microsecond * _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+            )
+
+        from bach.series import SeriesFloat64
+        return SeriesFloat64.supported_value_to_literal(dialect, value=total_seconds, dtype='float64')
+
+    def to_pandas_info(self) -> Optional[ToPandasInfo]:
+        if is_athena(self.engine):
+            return ToPandasInfo('object', self._parse_time_in_seconds_value_athena)
+        return None
+
+    def _parse_time_in_seconds_value_athena(self, value) -> Optional[datetime.time]:
+        if value is None:
+            return value
+
+        hours_w_fract = value / _TOTAL_SECONDS_PER_DATE_PART[DatePart.HOUR]
+        normalized_hours = int(hours_w_fract // 1)
+
+        minutes_w_fract = (hours_w_fract - normalized_hours) * 60
+        normalized_minutes = int(minutes_w_fract // 1)
+
+        seconds_w_fract = (minutes_w_fract - normalized_minutes) * 60
+        normalized_seconds = int(seconds_w_fract // 1)
+        return datetime.time(
+            hour=normalized_hours,
+            minute=normalized_minutes,
+            second=normalized_seconds,
+            microsecond=int(seconds_w_fract % 1 / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]),
+        )
 
     # python supports no arithmetic on Time
 
