@@ -34,8 +34,12 @@ def filter_dict(data: Dict, filter_keys: List) -> Dict:
 
 def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> str:
     """
-    Create Snowplow custom context, containing snowplow_event, base64 encoded, ready to be inserted into a
-    snowplow event
+    Create Snowplow custom contexts, mapping contexts of an Objectiv Event onto Snowplow custom contexts:
+    - global contexts are mapped onto individual custom contexts
+    - location stack is mapped as a single object
+
+    returns a list of self describing Snowplow customcontexts, base64 encoded a string
+
     :param event: List of Dict containing a schema and a payload
     :param config: SnowplowConfig
     :return: base64 encoded snowplow self-describing custom context
@@ -58,7 +62,9 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
     if len(location_stack['location_stack']) > 0:
         self_describing_contexts.append(make_snowplow_context(schema, location_stack))
 
-    # # original format
+    # original format
+    # Uncomment these lines to also send the original event / structure
+    #
     # schema = config.schema_objectiv_taxonomy
     # _event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
     # try:
@@ -86,7 +92,9 @@ def make_snowplow_context(schema: str, data: Union[Dict, List]) -> Dict:
 
 def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig) -> CollectorPayload:
     """
-    Transform Objectiv event to Snowplow Collector Payload object
+    Transform Objectiv event to Snowplow Collector Payload object:
+    - Map Objectiv event properties onto the tracker protocol(using a structured event) / payload
+    - Encode Objectiv event contexts onto custom contexts
     :param event: EventData
     :param config: SnowplowConfig
     :return: CollectorPayload
@@ -244,17 +252,6 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
             "value": value[:512]
         })
 
-    # map properties in data to enrich.badrow properties
-    mapping = {
-        'cx': 'contexts',
-        'aid': 'app_id',
-        'se_ac': 'se_action',
-        'se_ca': 'se_category',
-        'eid': 'event_id',
-        'url': 'page_url',
-        'ip': 'user_ipaddress'
-    }
-
     ts_format = '%Y-%m-%dT%H:%M:%S.%fZ'
     return {
         "schema": config.schema_schema_violations,
@@ -297,8 +294,7 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
                     "timestamp": datetime.fromtimestamp(payload.timestamp/1000).strftime(ts_format),
                     "useragent": payload.userAgent,
                     "userId": payload.networkUserId
-                },
-                "enrich": {m: data.get(k, '') for k, m in mapping.items()}
+                }
             },
             # Information about the piece of software responsible for the creation of schema violations
             "processor": {
