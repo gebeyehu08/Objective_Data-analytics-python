@@ -2,7 +2,7 @@ import os
 import json5  # type: ignore
 import json
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 
 """
 Script to generate iglu schemas used to map the Objectiv Event objects to Snowplow, based on the 
@@ -24,10 +24,10 @@ def map_schema_version_to_snowplow(version: str) -> str:
     if version in mapping:
         return mapping[version]
     else:
-        raise f'Version: {version} not in mapping'
+        raise Exception(f'Version: {version} not in mapping')
 
 
-def get_properties_for_context(schema: Dict[str, List], context_type: str, hierarchy: Dict[str, list]) -> \
+def get_properties_for_context(schema: Dict[str, Any], context_type: str, hierarchy: Dict[str, list]) -> \
         Tuple[Dict[str, dict], List[str]]:
     """
     recursively get all properties for a context, by traversing the hierarchy until there are no parents
@@ -97,7 +97,7 @@ def get_sp_iglu_schema(name: str, description: str, version: str, vendor: str, p
     }, indent=4)
 
 
-def get_hierarchy(schema: Dict[str, List]) -> Dict[str, List]:
+def get_hierarchy(schema: Dict[str, Any]) -> Dict[str, List]:
     """
     returns a dictionary with context -> parents
     :param schema:
