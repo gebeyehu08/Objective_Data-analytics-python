@@ -5,13 +5,24 @@ import datetime
 from typing import List, Any
 
 import numpy
+import pandas as pd
 import pytest
 from sqlalchemy.engine import Engine
 
+from sql_models.util import is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data,\
     get_df_with_food_data
 
 
+def floor_datetime(engine, dt: datetime.datetime) -> datetime.datetime:
+    pdt = pd.Timestamp.fromtimestamp(dt.timestamp())
+    if is_athena(engine):
+        return pdt.floor(freq='ms')
+
+    return pdt.floor(freq='us')
+
+
+@pytest.mark.athena_supported()
 def test_timestamp_data(engine):
     mt = get_df_with_food_data(engine)[['moment']]
     mt['const1'] = datetime.datetime(1999, 12, 31, 23, 59, 59, 999999)
@@ -38,6 +49,7 @@ def test_timestamp_data(engine):
     )
 
 
+@pytest.mark.athena_supported()
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['dt'] = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000)
@@ -45,6 +57,7 @@ def test_to_pandas(engine):
     assert result_pdf['dt'].to_numpy()[0] == [numpy.array(['2021-05-03T11:28:36.388000000'], dtype='datetime64[ns]')]
 
 
+@pytest.mark.athena_supported()
 @pytest.mark.parametrize("asstring", [True, False])
 def test_timestamp_comparator(engine, asstring: bool):
     mt = get_df_with_food_data(engine)[['moment']]
@@ -54,61 +67,68 @@ def test_timestamp_comparator(engine, asstring: bool):
     if asstring:
         dt = str(dt)
 
-    result = mt[mt['moment'] == dt]
-    assert_equals_data(
-        result,
-        # raw sqlAlchemy will give datetime with timezone UTC on some Databases, because of the used db types
-        # so set use_to_pandas=True to do our data normalization in the DataFrame.to_pandas() function
-        use_to_pandas=True,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [1, datetime(2021, 5, 3, 11, 28, 36, 388000)]
-        ]
-    )
-
-    assert_equals_data(
-        mt[mt['moment'] >= dt],
-        use_to_pandas=True,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [1, datetime(2021, 5, 3, 11, 28, 36, 388000)],
-            [2, datetime(2021, 5, 4, 23, 28, 36, 388000)],
-            [4, datetime(2022, 5, 3, 14, 13, 13, 388000)]
-        ]
-    )
-
-    assert_equals_data(
-        mt[mt['moment'] > dt],
-        use_to_pandas=True,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [2, datetime(2021, 5, 4, 23, 28, 36, 388000)],
-            [4, datetime(2022, 5, 3, 14, 13, 13, 388000)]
-        ]
-    )
+    mt['eq'] = mt['moment'] == dt
+    mt['gte'] = mt['moment'] >= dt
+    mt['gt'] = mt['moment'] > dt
 
     dt = datetime(2022, 5, 3, 14, 13, 13, 388000)
     if asstring:
         dt = str(dt)
 
+    mt['lte'] = mt['moment'] <= dt
+    mt['lt'] = mt['moment'] < dt
+
     assert_equals_data(
-        mt[mt['moment'] <= dt],
+        mt,
+        # raw sqlAlchemy will give datetime with timezone UTC on some Databases, because of the used db types
+        # so set use_to_pandas=True to do our data normalization in the DataFrame.to_pandas() function
         use_to_pandas=True,
-        expected_columns=['_index_skating_order', 'moment'],
+        expected_columns=[
+            '_index_skating_order', 'moment', 'eq', 'gte', 'gt', 'lte', 'lt'
+        ],
         expected_data=[
-            [1, datetime(2021, 5, 3, 11, 28, 36, 388000)],
-            [2, datetime(2021, 5, 4, 23, 28, 36, 388000)],
-            [4, datetime(2022, 5, 3, 14, 13, 13, 388000)]
+            [1, datetime(2021, 5, 3, 11, 28, 36, 388000), True, True, False, True, True],
+            [2, datetime(2021, 5, 4, 23, 28, 36, 388000), False, True, True, True, True],
+            [4, datetime(2022, 5, 3, 14, 13, 13, 388000), False, True, True, True, False],
         ]
     )
 
+
+@pytest.mark.athena_supported()
+def test_timestamp_value_to_literal(engine):
+    mt = get_df_with_food_data(engine)[['moment']]
+
+    with pytest.raises(ValueError, match=r'Not a valid string literal'):
+        mt['string'] = '2022-02-03 12:34:56.789123456'
+        mt['string'] = mt['string'].astype('timestamp')
+
+    mt['string'] = '2022-02-03 12:34:56.789123'
+    mt['string'] = mt['string'].astype('timestamp')
+    mt['none'] = None
+    mt['none'] = mt['none'].astype('timestamp')
+    mt['np_datetime64'] = numpy.datetime64('2022-01-01 12:34:56.7800')
+    mt['datetime'] = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000)
+    result = mt.loc[mt.index['_index_skating_order'] == 1][['string', 'none', 'np_datetime64', 'datetime']]
+    # TODO: when date is supported for athena
+    # mt['date'] = datetime.date(2020, 3, 11)
+
     assert_equals_data(
-        mt[mt['moment'] < dt],
+        result,
+        # raw sqlAlchemy will give datetime with timezone UTC on some Databases, because of the used db types
+        # so set use_to_pandas=True to do our data normalization in the DataFrame.to_pandas() function
         use_to_pandas=True,
-        expected_columns=['_index_skating_order', 'moment'],
+        expected_columns=[
+            '_index_skating_order', 'string', 'none', 'np_datetime64', 'datetime',
+        ],
         expected_data=[
-            [1, datetime(2021, 5, 3, 11, 28, 36, 388000)],
-            [2, datetime(2021, 5, 4, 23, 28, 36, 388000)]
+            [
+                1,
+                datetime.datetime(2022, 2, 3, 12, 34, 56, 789123),
+                pd.NaT,
+                datetime.datetime(2022, 1, 1, 12, 34, 56, 780000),
+                datetime.datetime(2021, 5, 3, 11, 28, 36, 388000),
+            ],
+
         ]
     )
 
