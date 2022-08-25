@@ -160,7 +160,7 @@ class DateTimeOperation:
         # Truncating Postgres date type will include timezone in final value
         # therefore we should cast it into TIMESTAMP WITHOUT TIMEZONE
         _td_series = self._series.astype(SeriesTimestamp.dtype)
-        if is_postgres(engine):
+        if is_postgres(engine) or is_athena(engine):
             expression = Expression.construct(
                 'date_trunc({}, {})',
                 Expression.string_value(date_part),
@@ -360,7 +360,9 @@ class SeriesAbstractDateTime(Series, ABC):
     def _comparator_operation(self, other, comparator,
                               other_dtypes=('timestamp', 'date', 'time', 'string'),
                               strict_other_dtypes=tuple()) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
+        return super()._comparator_operation(
+            other, comparator, other_dtypes, strict_other_dtypes=tuple(self.dtype)
+        )
 
     @classmethod
     def _cast_to_date_if_dtype_date(cls, series: 'Series') -> 'Series':
@@ -509,14 +511,6 @@ class SeriesTimestamp(SeriesAbstractDateTime):
                                           other_dtypes=tuple(type_mapping.keys()),
                                           dtype=type_mapping)
 
-    def _comparator_operation(
-        self, other, comparator, other_dtypes=('timestamp', 'date', 'time', 'string'),
-        strict_other_dtypes=tuple()
-    ) -> 'SeriesBoolean':
-        # only comparison between timestamp and timestamp, force cast via strict_other_dtypes
-        return Series._comparator_operation(self, other, comparator, other_dtypes,
-                                            strict_other_dtypes=tuple('timestamp'))
-
 
 class SeriesDate(SeriesAbstractDateTime):
     """
@@ -532,6 +526,7 @@ class SeriesDate(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'date',
         DBDialect.BIGQUERY: 'DATE',
+        DBDialect.ATHENA: 'date',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
