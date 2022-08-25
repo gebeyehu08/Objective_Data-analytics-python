@@ -341,8 +341,12 @@ def test_json_flatten_array(engine, dtype):
         use_to_pandas=True,
     )
 
-@pytest.mark.skip_postgres
 def test_complex_types_astype_json(engine, dtype):
+
+    if is_athena(engine) or is_postgres(engine):
+        # not supported on those platforms.
+        return None
+
     df = get_df_with_test_data(engine)[['skating_order']]
     df = df.sort_index()[:1].materialize()
     struct = {
