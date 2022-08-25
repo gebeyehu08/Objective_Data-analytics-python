@@ -23,20 +23,6 @@ Raised exception:
 {exception}
 """
 
-WRAPPED_CODE_TEMPLATE = """
-try:
-    {code_to_wrap}
-except Exception as e:
-    {error_log_stmt}
-    raise e
-"""
-
-TIMING_CELL_CODE_TEMPLATE = """
-start = time.time()
-{code_to_time}
-elapsed_time = time.time() - start
-{timing_stmt}
-"""
 
 NB_SCRIPT_TO_STORE_TEMPLATE = """
 def {notebook}():
@@ -65,3 +51,6 @@ MORE_INFORMATION_MESSAGE = (
     'Dear Watson, for more information about failed checks, please see: '
     f"{colored('{github_issue_file}', 'blue')} file."
 )
+
+
+DATE_FORMAT = '%Y-%m-%d'

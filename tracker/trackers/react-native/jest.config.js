@@ -4,7 +4,6 @@
 
 module.exports = {
   preset: 'react-native',
-  reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**/*.{ts,tsx}'],
   moduleNameMapper: {
     '@objectiv/developer-tools': '<rootDir>../../core/developer-tools/src',

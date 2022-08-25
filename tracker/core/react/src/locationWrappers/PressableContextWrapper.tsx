@@ -8,14 +8,9 @@ import { ContentContextWrapperProps } from './ContentContextWrapper';
 import { LocationContextWrapper } from './LocationContextWrapper';
 
 /**
- * The props of PressableContextWrapper. No extra attributes, same as ContentContextWrapper.
- */
-export type PressableContextWrapperProps = ContentContextWrapperProps;
-
-/**
  * Wraps its children in a PressableContext.
  */
-export const PressableContextWrapper = ({ children, id }: PressableContextWrapperProps) => (
+export const PressableContextWrapper = ({ children, id }: ContentContextWrapperProps) => (
   <LocationContextWrapper locationContext={makePressableContext({ id })}>
     {(trackingContext) => (typeof children === 'function' ? children(trackingContext) : children)}
   </LocationContextWrapper>

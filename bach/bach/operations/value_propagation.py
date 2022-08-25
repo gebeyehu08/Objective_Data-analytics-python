@@ -67,7 +67,7 @@ class ValuePropagation:
         # since bfill is ffill with reversed sort (this might generate different results)
         base_series = df[df.data_columns[0]]
         # order nulls last in window function, else numbering will be wrong
-        window = df.groupby().window(nulls_last=True)
+        window = df.groupby().window(na_position='last')
         df[self.ROW_NUMBER_SERIES_NAME] = base_series.window_row_number(window)
         df = df.materialize(node_name='numbered_fillna')
 

@@ -1,12 +1,13 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-__version__ = '0.0.17'
+__version__ = '0.0.19'
 
 from modelhub.modelhub import ModelHub
 from modelhub.aggregate import Aggregate
 from modelhub.map import Map
 from modelhub.models.logistic_regression import LogisticRegression
+from modelhub.models.funnel_discovery import FunnelDiscovery
 from modelhub.pipelines import *
 from modelhub.series import *
 

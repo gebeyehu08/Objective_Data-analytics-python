@@ -4,8 +4,12 @@
 
 module.exports = {
   preset: 'ts-jest',
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+    },
+  },
   testEnvironment: 'node',
-  reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**.ts'],
   moduleNameMapper: {
     '@objectiv/developer-tools': '<rootDir>../../core/developer-tools/src',
