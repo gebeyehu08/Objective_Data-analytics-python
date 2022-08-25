@@ -15,7 +15,7 @@ advanced compound models.
 
 How to use the open model hub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Three types of functions/models are provided: 
+The following types of functions/models are provided: 
 1. :doc:`Helper functions <./models/helper-functions/index>`: Simplify manipulating and analyzing the data.
 2. :doc:`Aggregation models <./models/aggregation/index>`: Enable running some of the more common data 
 analyses and product analytics metrics.

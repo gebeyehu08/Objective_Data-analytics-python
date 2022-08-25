@@ -258,7 +258,7 @@ directly in production.
 	<BLANKLINE>
 	<BLANKLINE>
 	),
-	"session_starts___7f4511d848754e3b2c429cd717af7fd8" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", CASE WHEN (extract(epoch from (("moment") - (lag("moment", 1, cast(NULL as timestamp without time zone)) over (partition by "user_id" order by "moment" asc, "event_id" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 as bigint)) THEN cast(NULL as boolean) ELSE cast(True as boolean) END as "is_start_of_session"
+	"session_starts___a83f96fdb0ea0d0d87e9f03d19476413" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", CASE WHEN (extract(epoch from (("moment") - (lag("moment", 1, cast(NULL as timestamp without time zone)) over (partition by "user_id" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 as bigint)) THEN cast(NULL as boolean) ELSE cast(True as boolean) END as "is_start_of_session"
 	from "context_data___8b8b8232f369c68f2d1d5f3a9af30be5"
 	<BLANKLINE>
 	<BLANKLINE>
@@ -266,16 +266,16 @@ directly in production.
 	<BLANKLINE>
 	<BLANKLINE>
 	),
-	"session_id_and_count___1af1add976fc49285147ee0f7d855082" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", CASE WHEN "is_start_of_session" THEN row_number() over (partition by "is_start_of_session" order by "moment" asc, "event_id" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ELSE cast(NULL as bigint) END as "session_start_id", count("is_start_of_session") over ( order by "user_id" asc, "moment" asc, "event_id" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "is_one_session"
-	from "session_starts___7f4511d848754e3b2c429cd717af7fd8"
+	"session_id_and_count___55bbb57b8cc4c5128b45eac3b1daa595" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", CASE WHEN "is_start_of_session" THEN row_number() over (partition by "is_start_of_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ELSE cast(NULL as bigint) END as "session_start_id", count("is_start_of_session") over ( order by "user_id" asc nulls last, "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "is_one_session"
+	from "session_starts___a83f96fdb0ea0d0d87e9f03d19476413"
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>
 	),
-	"objectiv_sessionized_data___8ca784e7c855c8358b3d7d48507f91b3" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", "session_start_id" as "session_start_id", "is_one_session" as "is_one_session", first_value("session_start_id") over (partition by "is_one_session" order by "moment" asc, "event_id" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_id", row_number() over (partition by "is_one_session" order by "moment" asc, "event_id" asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_hit_number"
-	from "session_id_and_count___1af1add976fc49285147ee0f7d855082"
+	"objectiv_sessionized_data___655fb2b7670cd0195046e6d3e892beb7" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", "session_start_id" as "session_start_id", "is_one_session" as "is_one_session", first_value("session_start_id") over (partition by "is_one_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_id", row_number() over (partition by "is_one_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_hit_number"
+	from "session_id_and_count___55bbb57b8cc4c5128b45eac3b1daa595"
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>
@@ -283,55 +283,55 @@ directly in production.
 	<BLANKLINE>
 	)
 	select (
-											select string_agg(
-															replace(
-																	regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-																	' Context',
-																	''
-															) || ': ' || (value ->> 'id'),
-															' => ')
-											from jsonb_array_elements("location_stack") with ordinality
-											where ordinality = jsonb_array_length("location_stack")
-									) || (
-											case when jsonb_array_length("location_stack") > 1
-														then ' located at ' || (select string_agg(
-																	replace(
-																			regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-																			' Context',
-																			''
-																	) || ': ' || (value ->> 'id'),
-																	' => ')
-															from jsonb_array_elements("location_stack") with ordinality
-															where ordinality < jsonb_array_length("location_stack")
-													)
-													else '' end
-									) as "feature_nice_name", "event_type" as "event_type", count(distinct "user_id") as "unique_users"
-	from "objectiv_sessionized_data___8ca784e7c855c8358b3d7d48507f91b3"
+	                    select string_agg(
+	                            replace(
+	                                regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
+	                                ' Context',
+	                                ''
+	                            ) || ': ' || (value ->> 'id'),
+	                            ' => ')
+	                    from jsonb_array_elements("location_stack") with ordinality
+	                    where ordinality = jsonb_array_length("location_stack")
+	                ) || (
+	                    case when jsonb_array_length("location_stack") > 1
+	                          then ' located at ' || (select string_agg(
+	                                replace(
+	                                    regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
+	                                    ' Context',
+	                                    ''
+	                                ) || ': ' || (value ->> 'id'),
+	                                ' => ')
+	                            from jsonb_array_elements("location_stack") with ordinality
+	                            where ordinality < jsonb_array_length("location_stack")
+	                        )
+	                        else '' end
+	                ) as "feature_nice_name", "event_type" as "event_type", count(distinct "user_id") as "unique_users"
+	from "objectiv_sessionized_data___655fb2b7670cd0195046e6d3e892beb7"
 	<BLANKLINE>
 	group by (
-											select string_agg(
-															replace(
-																	regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-																	' Context',
-																	''
-															) || ': ' || (value ->> 'id'),
-															' => ')
-											from jsonb_array_elements("location_stack") with ordinality
-											where ordinality = jsonb_array_length("location_stack")
-									) || (
-											case when jsonb_array_length("location_stack") > 1
-														then ' located at ' || (select string_agg(
-																	replace(
-																			regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-																			' Context',
-																			''
-																	) || ': ' || (value ->> 'id'),
-																	' => ')
-															from jsonb_array_elements("location_stack") with ordinality
-															where ordinality < jsonb_array_length("location_stack")
-													)
-													else '' end
-									), "event_type"
+	                    select string_agg(
+	                            replace(
+	                                regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
+	                                ' Context',
+	                                ''
+	                            ) || ': ' || (value ->> 'id'),
+	                            ' => ')
+	                    from jsonb_array_elements("location_stack") with ordinality
+	                    where ordinality = jsonb_array_length("location_stack")
+	                ) || (
+	                    case when jsonb_array_length("location_stack") > 1
+	                          then ' located at ' || (select string_agg(
+	                                replace(
+	                                    regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
+	                                    ' Context',
+	                                    ''
+	                                ) || ': ' || (value ->> 'id'),
+	                                ' => ')
+	                            from jsonb_array_elements("location_stack") with ordinality
+	                            where ordinality < jsonb_array_length("location_stack")
+	                        )
+	                        else '' end
+	                ), "event_type"
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>

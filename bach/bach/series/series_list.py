@@ -47,7 +47,7 @@ class SeriesList(Series):
 
     supported_value_types = (list, )
     # This series does not support casting from other dtypes
-    supported_dtypes_to_cast: Tuple[str, ...] = tuple()
+    supported_source_dtypes: Tuple[str, ...] = tuple()
 
     @classmethod
     def supported_value_to_literal(

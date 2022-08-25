@@ -1,7 +1,7 @@
 """
 CHECKLOCK HOLMES CLI
 Usage:
-    checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit]
+    checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit] [--start_date=<start_date>] [--end_date=<end_date>]
     checklock-holmes.py -h | --help
 
 Options:
@@ -12,6 +12,8 @@ Options:
     --gh_issues_dir=<ghi>           Directory for logging github issues [default: {default_github_issues_dir}].
     --dump_nb_scripts_dir<nbs_dir>  Directory where to dump notebook scripts.
     -t --timeit                     Time each cell
+    --start_date=<start_date>       First date for which objectiv data is loaded for Modelhub. Format as 'YYYY-MM-DD'.
+    --end_date=<end_date>           Last date for which objectiv data is loaded for Modelhub. Format as 'YYYY-MM-DD'.
 
 Before running checks, please define .env file. Must include the following variables per engine:
 
@@ -24,9 +26,11 @@ BQ_DB__CREDENTIALS_PATH
 
 Copyright 2022 Objectiv B.V.
 """
+import datetime
+
 import asyncio
 import itertools
-from typing import List, Optional
+from typing import List
 
 from docopt import docopt
 from tqdm.asyncio import tqdm_asyncio
@@ -37,7 +41,7 @@ from checklock_holmes.models.nb_checker_models import (
 from checklock_holmes.nb_checker import NoteBookChecker
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
-    DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR
+    DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR, DATE_FORMAT
 )
 from checklock_holmes.utils.helpers import (
     display_check_results, get_github_issue_filename, store_github_issue,
@@ -48,18 +52,19 @@ from checklock_holmes.utils.supported_engines import SupportedEngine
 
 async def _check_notebook_per_engine(
     nb_path: str,
-    dump_nb_scripts_dir: Optional[str],
-    engines: List[SupportedEngine],
+    check_settings: NoteBookCheckSettings,
     github_issues_file_path: str,
 ) -> List[NoteBookCheck]:
-    nb_metadata = NoteBookMetadata(path=nb_path)
+    nb_metadata = NoteBookMetadata(
+        path=nb_path, start_date=check_settings.start_date, end_date=check_settings.end_date,
+    )
     nb_checker = NoteBookChecker(metadata=nb_metadata)
 
     tasks = []
-    for engine in engines:
+    for engine in check_settings.engines_to_check:
         # store script before check, this way we don't wait till the check is finished
-        if dump_nb_scripts_dir:
-            script_path = f'{dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
+        if check_settings.dump_nb_scripts_dir:
+            script_path = f'{check_settings.dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
             store_nb_script(script_path, nb_checker.get_script(engine))
 
         tasks.append(nb_checker.async_check_notebook(engine))
@@ -87,8 +92,7 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
         *[
             _check_notebook_per_engine(
                 nb_path,
-                dump_nb_scripts_dir=check_settings.dump_nb_scripts_dir,
-                engines=check_settings.engines_to_check,
+                check_settings=check_settings,
                 github_issues_file_path=github_issues_file_path,
             )
             for nb_path in check_settings.notebooks_to_check
@@ -111,12 +115,21 @@ if __name__ == '__main__':
         default_github_issues_dir=DEFAULT_GITHUB_ISSUES_DIR,
     )
     arguments = docopt(cli_docstring, help=True, options_first=False)
+    start_date = None
+    if arguments['--start_date']:
+        start_date = datetime.datetime.strptime(arguments['--start_date'], DATE_FORMAT)
+
+    end_date = None
+    if arguments['--end_date']:
+        end_date = datetime.datetime.strptime(arguments['--end_date'], DATE_FORMAT)
     nb_check_settings = NoteBookCheckSettings(
         engines_to_check=arguments['--engine'],
         github_issues_dir=arguments['--gh_issues_dir'],
         dump_nb_scripts_dir=arguments['--dump_nb_scripts_dir'],
         notebooks_to_check=arguments['--nb'],
-        display_cell_timing=arguments['--timeit']
+        display_cell_timing=arguments['--timeit'],
+        start_date=start_date,
+        end_date=end_date,
     )
     asyncio.run(
         async_check_notebooks(nb_check_settings, exit_on_fail=arguments['--exitfirst'])

@@ -62,7 +62,7 @@ def test_to_pandas(engine):
 def test_timestamp_comparator(engine, asstring: bool):
     mt = get_df_with_food_data(engine)[['moment']]
     from datetime import datetime
-    dt = datetime(2021, 5, 3, 11, 28, 36, 388000)
+    dt = datetime(2021, 5, 4, 23, 28, 36, 388000)
 
     if asstring:
         dt = str(dt)
@@ -70,11 +70,6 @@ def test_timestamp_comparator(engine, asstring: bool):
     mt['eq'] = mt['moment'] == dt
     mt['gte'] = mt['moment'] >= dt
     mt['gt'] = mt['moment'] > dt
-
-    dt = datetime(2022, 5, 3, 14, 13, 13, 388000)
-    if asstring:
-        dt = str(dt)
-
     mt['lte'] = mt['moment'] <= dt
     mt['lt'] = mt['moment'] < dt
 
@@ -87,9 +82,9 @@ def test_timestamp_comparator(engine, asstring: bool):
             '_index_skating_order', 'moment', 'eq', 'gte', 'gt', 'lte', 'lt'
         ],
         expected_data=[
-            [1, datetime(2021, 5, 3, 11, 28, 36, 388000), True, True, False, True, True],
-            [2, datetime(2021, 5, 4, 23, 28, 36, 388000), False, True, True, True, True],
-            [4, datetime(2022, 5, 3, 14, 13, 13, 388000), False, True, True, True, False],
+            [1, datetime(2021, 5, 3, 11, 28, 36, 388000), False, False, False, True, True],
+            [2, datetime(2021, 5, 4, 23, 28, 36, 388000), True, True, False, True, False],
+            [4, datetime(2022, 5, 3, 14, 13, 13, 388000), False, True, True, False, False],
         ]
     )
 
