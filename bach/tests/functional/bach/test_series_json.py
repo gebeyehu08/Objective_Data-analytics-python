@@ -4,8 +4,10 @@ Copyright 2021 Objectiv B.V.
 import pandas
 
 from bach import DataFrame
+from bach.series import SeriesString, SeriesDict, SeriesList
 from sql_models.util import is_postgres, is_bigquery, is_athena
-from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data, \
+    get_df_with_test_data
 import pytest
 
 # We want to run all tests here for all supported databases, and thus we have the 'engine' argument on all
@@ -354,4 +356,36 @@ def test_json_flatten_array(engine, dtype):
             [3, {'id': '5o7Wv5Q5ZE', '_type': 'ItemContext'}],
         ],
         use_to_pandas=True,
+    )
+
+def test_complex_types_astype_json(engine, dtype):
+
+    if is_athena(engine) or is_postgres(engine):
+        # not supported on those platforms.
+        return None
+
+    df = get_df_with_test_data(engine)[['skating_order']]
+    df = df.sort_index()[:1].materialize()
+    struct = {
+        'a': 123,
+        'b': 'test',
+        'c': 123.456,
+    }
+    struct_dtype = {'a': 'int64', 'b': 'string', 'c': 'float64'}
+    llist = [
+        'a', 'b', 'c'
+    ]
+    llist_dtype = [SeriesString.dtype]
+    df['struct'] = SeriesDict.from_value(base=df, value=struct, name='struct', dtype=struct_dtype)
+    df['list'] = SeriesList.from_value(base=df, value=llist, name='list', dtype=llist_dtype)
+    df['struct_json'] = df['struct'].astype(dtype)
+    df['list_json'] = df['list'].astype(dtype)
+    assert_equals_data(
+        df,
+        expected_columns=['_index_skating_order', 'skating_order',
+                          'struct', 'list',
+                          'struct_json', 'list_json'],
+        expected_data=[[1, 1,
+                        {'a': 123, 'b': 'test', 'c': 123.456}, ['a', 'b', 'c'],
+                        '{"a":123,"b":"test","c":123.456}', '["a","b","c"]']]
     )
