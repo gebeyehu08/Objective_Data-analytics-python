@@ -1,6 +1,6 @@
 .. _example_open_taxonomy:
 
-.. frontmatterposition:: 10
+.. frontmatterposition:: 9
 
 .. currentmodule:: bach
 

@@ -1871,6 +1871,7 @@ class DataFrame:
 
         :param min_periods: the minimum amount of observations in the window before a value is reported.
         :param center: whether to center the result, currently not supported.
+        
         .. note::
             The DataFrame is required to be sorted in order to avoid non-determinist results.
 

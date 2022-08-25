@@ -1,6 +1,6 @@
 .. _example_machine_learning:
 
-.. frontmatterposition:: 1
+.. frontmatterposition:: 12
 
 .. currentmodule:: bach
 

@@ -1,6 +1,6 @@
 .. _example_user_intent:
 
-.. frontmatterposition:: 3
+.. frontmatterposition:: 7
 
 .. currentmodule:: bach_open_taxonomy
 
