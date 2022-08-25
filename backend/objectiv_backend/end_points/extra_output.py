@@ -86,10 +86,12 @@ def write_data_to_snowplow_if_configured(events: EventDataList,
     :param event_errors: list of errors, if any
     :return:
     """
-    config: SnowplowConfig = get_collector_config().output.snowplow
+    output_config = get_collector_config().output
 
-    if config.aws_enabled:
-        write_data_to_aws_pipeline(events=events, config=config, good=good, event_errors=event_errors)
+    if output_config.snowplow:
+        config = output_config.snowplow
+        if config.aws_enabled:
+            write_data_to_aws_pipeline(events=events, config=config, good=good, event_errors=event_errors)
 
-    if config.gcp_enabled:
-        write_data_to_gcp_pubsub(events=events, config=config, good=good, event_errors=event_errors)
+        if config.gcp_enabled:
+            write_data_to_gcp_pubsub(events=events, config=config, good=good, event_errors=event_errors)
