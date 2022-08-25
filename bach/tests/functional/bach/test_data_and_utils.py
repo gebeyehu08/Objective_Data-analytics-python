@@ -8,9 +8,11 @@ as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
 import uuid
+from copy import copy
 from decimal import Decimal
 from typing import List, Union, Type, Any, Dict
 
+import pandas as pd
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy, Engine, Dialect
 
@@ -231,17 +233,28 @@ def assert_equals_data(
 
     assert len(db_values) == len(expected_data)
     assert column_names == expected_columns
+
+    _date_freq = 'ms' if is_athena(bt.engine) else 'us'
     for i, df_row in enumerate(db_values):
         expected_row = expected_data[i]
         for j, val in enumerate(df_row):
-            if not round_decimals:
-                assert df_row == expected_row, f'row {i} is not equal: {expected_row} != {df_row}'
-                continue
+            actual = copy(val)
+            expected = copy(expected_row[j])
 
-            if isinstance(val, (float, Decimal)):
-                assert round(Decimal(val), decimal) == round(Decimal(expected_row[j]), decimal)
+            if isinstance(val, (float, Decimal)) and round_decimals:
+                actual = round(Decimal(actual), decimal)
+                expected = round(Decimal(expected), decimal)
+
+            if isinstance(actual, pd.Timestamp):
+                pdt_expected = pd.Timestamp(expected, tz=None)
+                actual = actual.floor(freq=_date_freq)
+                expected = pdt_expected.floor(freq=_date_freq)
+
+            assert_msg = f'row {i} is not equal: {expected_row} != {df_row}'
+            if actual is pd.NaT:
+                assert expected is pd.NaT, assert_msg
             else:
-                assert val == expected_row[j]
+                assert actual == expected, assert_msg
     return db_values
 
 
