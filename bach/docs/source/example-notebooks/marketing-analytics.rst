@@ -451,7 +451,7 @@ Conversions per marketing _source_ daily
 	2022-07-22    twitter             1
 
 Conversions per marketing _campaign_ over full timeframe
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
