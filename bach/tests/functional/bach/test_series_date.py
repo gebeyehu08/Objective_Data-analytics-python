@@ -26,7 +26,7 @@ def test_date_comparator(asstring: bool, engine):
     assert_postgres_type(mt['date'], 'date', SeriesDate)
 
     from datetime import date
-    dt = date(2021, 5, 3)
+    dt = date(2021, 5, 4)
 
     if asstring:
         dt = str(dt)
@@ -34,11 +34,6 @@ def test_date_comparator(asstring: bool, engine):
     mt['eq'] = mt['date'] == dt
     mt['gte'] = mt['date'] >= dt
     mt['gt'] = mt['date'] > dt
-
-    dt = date(2022, 5, 3)
-    if asstring:
-        dt = str(dt)
-
     mt['lte'] = mt['date'] <= dt
     mt['lt'] = mt['date'] < dt
 
@@ -47,9 +42,9 @@ def test_date_comparator(asstring: bool, engine):
         result,
         expected_columns=['_index_skating_order', 'eq', 'gte', 'gt', 'lte', 'lt'],
         expected_data=[
-            [1, True, True, False, True, True],
-            [2, False, True, True, True, True],
-            [4, False, True, True, True, False]
+            [1, False, False, False, True, True],
+            [2, True, True, False, True, False],
+            [4, False, True, True, False, False]
         ]
     )
 
