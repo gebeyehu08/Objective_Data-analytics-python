@@ -647,7 +647,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     @classmethod
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
         if is_athena(dialect):
-            from bach.series import SeriesString
             return SeriesFloat64.get_db_dtype(dialect)
         return super().get_db_dtype(dialect)
 
@@ -837,9 +836,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             )
 
         result = calculate_quantiles(series=self.dt.total_seconds, partition=partition, q=q)
-        if is_athena(self.engine):
-            return result.astype('timedelta').copy_override_type(SeriesTimedelta)
-
         # result must be a timedelta
         return self._convert_total_seconds_to_timedelta(result.copy_override_type(SeriesFloat64))
 
