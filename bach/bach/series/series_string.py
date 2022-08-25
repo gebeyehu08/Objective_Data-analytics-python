@@ -258,8 +258,9 @@ class SeriesString(Series):
     def __add__(self, other) -> 'Series':
         return self._binary_operation(other, 'concat', '{} || {}', other_dtypes=('string',))
 
-    def _comparator_operation(self, other, comparator, other_dtypes=tuple(['string'])) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes)
+    def _comparator_operation(self, other, comparator, other_dtypes=tuple(['string']),
+                              strict_other_dtypes=tuple()) -> 'SeriesBoolean':
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def to_json_array(self, partition: Optional[WrappedPartition] = None) -> 'SeriesJson':
         """
