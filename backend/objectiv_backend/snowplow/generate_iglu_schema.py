@@ -126,6 +126,9 @@ def generate_iglu_schema(schema_file: str, output_dir: str):
 
             description = clean(context['description'])
             properties, required_properties = get_properties_for_context(schema, context_type, hierarchy)
+            if '_type' in properties:
+                del properties['_type']
+            required_properties = [p for p in required_properties if p != '_type']
             sp_schema = get_sp_iglu_schema(name=context_type, description=description, version=version, vendor=vendor,
                                            properties=properties, required_properties=required_properties)
             with open(iglu_schema_file, 'w+') as sp_schema_file:
