@@ -60,7 +60,7 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
             '''(
               select first_value(ctx) over (order by pos)
               from unnest(json_query_array({}, '$')) as ctx with offset as pos
-              where json_value(ctx, '$."_type"') = {}
+              where json_value(ctx, '$."_type"') = {} limit 1
             )''',
             self._series_object,
             Expression.string_value(type)
