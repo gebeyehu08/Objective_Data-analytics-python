@@ -129,19 +129,6 @@ Users per source-medium-campaign over full timeframe
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> # split users by marketing _campaign_ (based on UTM data)
-	>>> users_per_campaign = modelhub.aggregate.unique_users(df_marketing_selection, ['utm_source', 'utm_medium', 'utm_campaign'])
-	>>> users_per_campaign.reset_index().dropna(axis=0, how='any', subset='utm_source').sort_values(['unique_users'], ascending=False).head(10)
-	  utm_source utm_medium         utm_campaign  unique_users
-	0    twitter       paid             utm_test           213
-	1     reddit       paid                 june            83
-	2    twitter       paid      july_conversion            65
-	3     reddit       paid      july_conversion            38
-	4    twitter     social                 blog            11
-	5    twitter       paid                 july             4
-	6    twitter      paidl                 july             1
-	7    twitter       post  Oktopost-Horizontal             1
-
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
@@ -270,7 +257,6 @@ Referrers overall
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
 	* :doc:`bach.Series.sort_index <../bach/api-reference/Series/bach.Series.sort_index>`
 	* :doc:`bach.Series.to_pandas <../bach/api-reference/Series/bach.Series.to_pandas>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
@@ -421,7 +407,6 @@ Daily conversion rate overall
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`bach.series.series_json.JsonAccessor <../bach/api-reference/Series/Json/bach.SeriesJson.json>`
 	* :doc:`modelhub.Map.is_conversion_event <../open-model-hub/models/helper-functions/modelhub.Map.is_conversion_event>`
 	* :doc:`bach.DataFrame.dropna <../bach/api-reference/DataFrame/bach.DataFrame.dropna>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
@@ -465,7 +450,7 @@ Conversions per marketing _source_ daily
 	2022-07-23     reddit             2
 	2022-07-22    twitter             1
 
-Conversions per marketing _campaign over full timeframe
+Conversions per marketing _campaign_ over full timeframe
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. doctest:: marketing-analytics
@@ -482,7 +467,6 @@ Conversions per marketing _campaign over full timeframe
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`bach.series.series_json.JsonAccessor <../bach/api-reference/Series/Json/bach.SeriesJson.json>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
 	* :doc:`modelhub.Map.is_conversion_event <../open-model-hub/models/helper-functions/modelhub.Map.is_conversion_event>`
 	* :doc:`bach.DataFrame.dropna <../bach/api-reference/DataFrame/bach.DataFrame.dropna>`
