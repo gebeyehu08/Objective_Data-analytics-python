@@ -129,9 +129,6 @@ Users per source-medium-campaign over full timeframe
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
 	>>> # split users by marketing _campaign_ (based on UTM data)
 	>>> users_per_campaign = modelhub.aggregate.unique_users(df_marketing_selection, ['utm_source', 'utm_medium', 'utm_campaign'])
 	>>> users_per_campaign.reset_index().dropna(axis=0, how='any', subset='utm_source').sort_values(['unique_users'], ascending=False).head(10)
