@@ -11,7 +11,6 @@ from typing import NamedTuple, Optional
 # below (e.g. get_config_output())
 from objectiv_backend.schema.event_schemas import EventSchema, get_event_schema, get_event_list_schema
 from objectiv_backend.common.types import EventListSchema
-from objectiv_backend.snowplow.generate_iglu_schema import map_schema_version_to_snowplow
 
 LOAD_BASE_SCHEMA = os.environ.get('LOAD_BASE_SCHEMA', 'true') == 'true'
 SCHEMA_EXTENSION_DIRECTORY = os.environ.get('SCHEMA_EXTENSION_DIRECTORY')
@@ -62,6 +61,12 @@ _SP_GCP_PUBSUB_TOPIC_BAD = os.environ.get('SP_GCP_PUBSUB_TOPIC_BAD', '')
 
 _SP_AWS_MESSAGE_TOPIC_RAW = os.environ.get('SP_AWS_MESSAGE_TOPIC_RAW', '')
 _SP_AWS_MESSAGE_TOPIC_BAD = os.environ.get('SP_AWS_MESSAGE_TOPIC_BAD', '')
+
+# mapping from objectiv base_schema version to snowplow iglu version
+# NOTE:  the snowplow versions need to be continuous without gaps
+# NOTE2: for every version of the base schema, a new entry should be added to the mapping
+# NOTE3: Please regenerate iglu definitions on changes
+_SP_OBJECTIV_VERSION_MAPPING = {'0.0.5': '1-0-0'}
 
 # Cookie settings
 _OBJ_COOKIE = 'obj_user_id'
@@ -123,7 +128,7 @@ class OutputConfig(NamedTuple):
     postgres: Optional[PostgresConfig]
     aws: Optional[AwsOutputConfig]
     file_system: Optional[FileSystemOutputConfig]
-    snowplow: SnowplowConfig
+    snowplow: Optional[SnowplowConfig]
 
 
 class CookieConfig(NamedTuple):
@@ -189,7 +194,25 @@ def get_config_postgres() -> Optional[PostgresConfig]:
     )
 
 
-def get_config_output_snowplow() -> SnowplowConfig:
+def map_schema_version_to_snowplow(version: str) -> str:
+    """
+    This maps the objectiv base_schema version to a Snowplow compatible SemVer version string
+    :param version: Objectiv base_schema version
+    :return:
+    """
+    if version in _SP_OBJECTIV_VERSION_MAPPING:
+        return _SP_OBJECTIV_VERSION_MAPPING[version]
+    else:
+        raise Exception(f'Version: {version} not in mapping')
+
+
+def get_config_output_snowplow() -> Optional[SnowplowConfig]:
+    gcp_enabled = _SP_GCP_PROJECT != ''
+    aws_enabled = _SP_AWS_MESSAGE_TOPIC_RAW != ''
+
+    if not gcp_enabled and not aws_enabled:
+        return None
+
     if _SP_AWS_MESSAGE_TOPIC_RAW.startswith('https://sqs.'):
         aws_message_raw_type = 'sqs'
     else:
@@ -199,12 +222,12 @@ def get_config_output_snowplow() -> SnowplowConfig:
     version = map_schema_version_to_snowplow(schema.version['base_schema'])
 
     config = SnowplowConfig(
-        gcp_enabled=(_SP_GCP_PROJECT != ''),
+        gcp_enabled=gcp_enabled,
         gcp_project=_SP_GCP_PROJECT,
         gcp_pubsub_topic_raw=_SP_GCP_PUBSUB_TOPIC_RAW,
         gcp_pubsub_topic_bad=_SP_GCP_PUBSUB_TOPIC_BAD,
 
-        aws_enabled=(_SP_AWS_MESSAGE_TOPIC_RAW != ''),
+        aws_enabled=aws_enabled,
         aws_message_topic_raw=_SP_AWS_MESSAGE_TOPIC_RAW,
         aws_message_topic_bad=_SP_AWS_MESSAGE_TOPIC_BAD,
         aws_message_raw_type=aws_message_raw_type,

@@ -16,16 +16,19 @@ from thrift.protocol import TBinaryProtocol
 from thrift.transport import TTransport
 
 # only load imports if needed
-snowplow_config = get_collector_config().output.snowplow
-if snowplow_config.gcp_enabled:
-    from google.cloud import pubsub_v1
-    from google.api_core.exceptions import NotFound
+output_config = get_collector_config().output
 
-    gcp_publisher = pubsub_v1.PublisherClient()
+if output_config.snowplow:
+    snowplow_config = output_config.snowplow
+    if snowplow_config.gcp_enabled:
+        from google.cloud import pubsub_v1
+        from google.api_core.exceptions import NotFound
 
-if snowplow_config.aws_enabled:
-    import boto3
-    import botocore.exceptions
+        gcp_publisher = pubsub_v1.PublisherClient()
+
+    if snowplow_config.aws_enabled:
+        import boto3
+        import botocore.exceptions
 
 
 def filter_dict(data: Dict, filter_keys: List) -> Dict:

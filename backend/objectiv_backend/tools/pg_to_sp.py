@@ -41,15 +41,18 @@ on the specifics of timestamps in Snowplow data.
 
 
 # use backend / collector config to determine what db / PubSub / Kinesis instances to use
-config = get_collector_config().output
-snowplow_config: SnowplowConfig = config.snowplow
-
+output_config = get_collector_config().output
+if output_config.snowplow:
+    snowplow_config: SnowplowConfig = output_config.snowplow
+else:
+    print('Snowplow pipeline not configured')
+    exit(2)
 # first get all events
 try:
-    if not config.postgres:
+    if not output_config.postgres:
         print('Postgres not configured')
         exit(1)
-    conn = get_db_connection(config.postgres)
+    conn = get_db_connection(output_config.postgres)
     with conn:
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 

@@ -3,28 +3,13 @@ import json5  # type: ignore
 import json
 
 from typing import List, Dict, Tuple, Any
+# import objectiv -> snowplow-iglu version from config
+from objectiv_backend.common.config import map_schema_version_to_snowplow
 
 """
 Script to generate iglu schemas used to map the Objectiv Event objects to Snowplow, based on the 
 Objectiv Taxonomy Schema. Resulting schemas will be under `iglu/`
 """
-
-
-def map_schema_version_to_snowplow(version: str) -> str:
-    """
-    This maps the objectiv base_schema version to a Snowplow compatible SemVer version string
-    NOTE: the snowplow versions need to be continuous without gaps
-    NOTE2: for every version of the base schema, a new entry should be added to the mapping
-    NOTE3: Please regenerate iglu definitions on changes
-    :param version: Objectiv base_schema version
-    :return:
-    """
-    mapping = {'0.0.5': '1-0-0'}
-
-    if version in mapping:
-        return mapping[version]
-    else:
-        raise Exception(f'Version: {version} not in mapping')
 
 
 def get_properties_for_context(schema: Dict[str, Any], context_type: str, hierarchy: Dict[str, list]) -> \
@@ -169,4 +154,5 @@ def generate_iglu_schema(schema_file: str, output_dir: str):
 
 
 if __name__ == "__main__":
-    generate_iglu_schema(schema_file='../schema/base_schema.json5', output_dir='docs/iglu')
+    generate_iglu_schema(schema_file='../schema/base_schema.json5',
+                         output_dir=os.path.join(os.path.dirname(__file__), 'iglu'))
