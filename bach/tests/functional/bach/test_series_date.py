@@ -203,10 +203,6 @@ def test_date_trunc(engine):
     with pytest.raises(ValueError, match='some_wrong_format format is not available.'):
         mt.date.dt.date_trunc('some_wrong_format')
 
-    if is_athena(engine):
-        # TODO: support SeriesTime for athena
-        return
-
     # not supported series type
     mt['time'] = datetime.time(21, 10, 5)
     with pytest.raises(ValueError, match="<class 'bach.series.series_datetime.SeriesTime'>"
@@ -214,17 +210,18 @@ def test_date_trunc(engine):
         mt['time'].dt.date_trunc('hour')
 
 
-def test_date_arithmetic(pg_engine):
-    # TODO: BigQuery
+@pytest.mark.athena_supported()
+def test_date_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', (None, 'timedelta')],
         ['t', datetime.time(23, 11, 5), 'time', (None, None)],
         ['td', datetime.timedelta(days=321, seconds=9877), 'timedelta', ('date', 'date')],
         ['dt', datetime.datetime(2021, 5, 3, 11, 28, 36, 388000), 'timestamp', (None, None)]
     ]
-    types_plus_min(pg_engine, data, datetime.date(2021, 7, 23), 'date')
+    types_plus_min(engine, data, datetime.date(2021, 7, 23), 'date')
 
 
+@pytest.mark.athena_supported()
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['d'] = datetime.date(2020, 3, 11)

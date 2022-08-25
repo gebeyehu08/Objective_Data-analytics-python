@@ -14,6 +14,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data, \
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
+@pytest.mark.athena_supported()
 def test_timedelta_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', ('date', None)],
@@ -25,6 +26,7 @@ def test_timedelta_arithmetic(engine):
     types_plus_min(engine, data, datetime.timedelta(days=123, seconds=5621), 'timedelta')
 
 
+@pytest.mark.athena_supported()
 def test_timedelta_arithmetic2(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)[['inhabitants']]
     td = datetime.timedelta(days=365, seconds=9877)
