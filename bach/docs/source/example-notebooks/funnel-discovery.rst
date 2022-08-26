@@ -1,6 +1,6 @@
 .. _funnel_discovery:
 
-.. frontmatterposition:: 6
+.. frontmatterposition:: 4
 
 .. currentmodule:: bach
 
