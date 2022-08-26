@@ -29,6 +29,9 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 
 	>>> # instantiate the model hub, and set the default time aggregation to daily
 	>>> from modelhub import ModelHub
+	>>> from bach import DataFrame, display_sql_as_markdown
+	>>> from datetime import datetime, timedelta
+	>>> import pandas as pd
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-06-01', end_date='2022-08-20')
