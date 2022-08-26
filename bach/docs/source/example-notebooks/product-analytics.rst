@@ -348,7 +348,7 @@ model.
 	>>> # see top used product features - by default we select only user actions (InteractiveEvents)
 	>>> top_product_features = modelhub.aggregate.top_product_features(df)
 	>>> top_product_features.head()
-	                                                                                                                                                    user_id_nunique
+	                                                                                                                            feature_nice_name   event_type      user_id_nunique
         objectiv-website     Pressable: after located at Root Location: home => Content: capture-data => Content: data-capture-workflow-before-after 	PressEvent 	527
                              Pressable: after located at Root Location: home => Content: modeling => Content: modeling-workflow-before-after 	        PressEvent 	321
                              Pressable: before located at Root Location: home => Content: capture-data => Content: data-capture-workflow-before-after 	PressEvent 	292
