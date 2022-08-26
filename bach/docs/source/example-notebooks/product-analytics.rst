@@ -53,13 +53,13 @@ Have a look at the data
 
 	>>> # sort by users sessions
 	>>> df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
-	                                               day                       moment                                      user_id                                      global_contexts                                          location_stack                   event_type                                 stack_event_types  session_id  session_hit_number             application                                    feature_nice_name      root_location
-	                        event_id
-    17f50b0a-2aa9-46bc-9610-efe8d4240577 	2022-07-30 	2022-07-30 18:59:16.074 	8a2fbdc0-f7af-4a3a-a6da-95220fc8e36a 	[{'id': 'http_context', '_type': 'HttpContext'... 	[{'id': 'home', '_type': 'RootLocationContext'... 	VisibleEvent 	        [AbstractEvent, NonInteractiveEvent, VisibleEv... 	5371 	               1 	objectiv-website 	Overlay: star-us-notification-overlay located ... 	    home
-    03081098-94f7-490e-9f94-bee37aa78270 	2022-07-30 	2022-07-30 18:26:50.260 	1f7afff0-bde4-44da-9fa6-a2d6b0289373 	[{'id': 'http_context', '_type': 'HttpContext'... 	[{'id': 'home', '_type': 'RootLocationContext'... 	VisibleEvent 	        [AbstractEvent, NonInteractiveEvent, VisibleEv... 	5370 	               1 	objectiv-website 	Overlay: star-us-notification-overlay located ... 	    home
-    ed409433-8ca4-417b-a9fd-007e5dd4388c 	2022-07-30 	2022-07-30 15:14:24.087 	136b4cc0-ead0-47ae-9c87-55be86027e4f 	[{'id': 'http_context', '_type': 'HttpContext'... 	[{'id': 'home', '_type': 'RootLocationContext'... 	VisibleEvent 	        [AbstractEvent, NonInteractiveEvent, VisibleEv... 	5369 	               1 	objectiv-website 	Overlay: star-us-notification-overlay located ... 	    home
-    306d1fce-6cae-4956-844a-64000288ca5a 	2022-07-30 	2022-07-30 14:38:03.785 	8d69b136-7db4-4a89-88e7-ba562fcd1f04 	[{'id': 'http_context', '_type': 'HttpContext'... 	[{'id': 'home', '_type': 'RootLocationContext'... 	ApplicationLoadedEvent 	[AbstractEvent, ApplicationLoadedEvent, NonInt... 	5368 	               1 	objectiv-website 	Root Location: home 	                                    home
-    825f6ab6-4499-4bca-a38f-a9828a0cd17e 	2022-07-30 	2022-07-30 13:44:58.251 	102a4b16-8123-4f06-94a1-2e7e4787ebbe 	[{'id': 'http_context', '_type': 'HttpContext'... 	[{'id': 'about', '_type': 'RootLocationContext... 	PressEvent 	        [AbstractEvent, InteractiveEvent, PressEvent] 	        5367 	               4 	objectiv-website 	Link: blog located at Root Location: about => ... 	   about
+	                                             day                  moment                               user_id                                                                               global_contexts                                                                                location_stack              event_type                                             stack_event_types  session_id  session_hit_number       application                                                                             feature_nice_name root_location
+	event_id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+	17f50b0a-2aa9-46bc-9610-efe8d4240577  2022-07-30 2022-07-30 18:59:16.074  8a2fbdc0-f7af-4a3a-a6da-95220fc8e36a  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...            VisibleEvent            [AbstractEvent, NonInteractiveEvent, VisibleEvent]        5371                   1  objectiv-website  Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-u...          home
+	03081098-94f7-490e-9f94-bee37aa78270  2022-07-30 2022-07-30 18:26:50.260  1f7afff0-bde4-44da-9fa6-a2d6b0289373  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...            VisibleEvent            [AbstractEvent, NonInteractiveEvent, VisibleEvent]        5370                   1  objectiv-website  Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-u...          home
+	ed409433-8ca4-417b-a9fd-007e5dd4388c  2022-07-30 2022-07-30 15:14:24.087  136b4cc0-ead0-47ae-9c87-55be86027e4f  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...            VisibleEvent            [AbstractEvent, NonInteractiveEvent, VisibleEvent]        5369                   1  objectiv-website  Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-u...          home
+	306d1fce-6cae-4956-844a-64000288ca5a  2022-07-30 2022-07-30 14:38:03.785  8d69b136-7db4-4a89-88e7-ba562fcd1f04  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInteractiveEvent]        5368                   1  objectiv-website                                                                           Root Location: home          home
+	825f6ab6-4499-4bca-a38f-a9828a0cd17e  2022-07-30 2022-07-30 13:44:58.251  102a4b16-8123-4f06-94a1-2e7e4787ebbe  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...              PressEvent                 [AbstractEvent, InteractiveEvent, PressEvent]        5367                   4  objectiv-website                          Link: blog located at Root Location: about => Navigation: navbar-top         about
 
 .. doctest:: product-analytics
 	:skipif: engine is None
@@ -67,7 +67,7 @@ Have a look at the data
 	>>> # explore the data with describe
 	>>> df.describe(include='all').head()
 	               day                   moment user_id global_contexts location_stack              event_type stack_event_types  session_id  session_hit_number       application                             feature_nice_name root_location
-	__stat
+	__stat                                                                                                                                                                                                                                    
 	count        38835                    38835   38835           38835          38835                   38835             38835    38835.00            38835.00             38835                                         38835         38835
 	mean          None                     None    None            None           None                    None              None     2691.15               20.66              None                                          None          None
 	std           None                     None    None            None           None                    None              None     1576.04               45.75              None                                          None          None
@@ -106,11 +106,11 @@ For `monthly_users`, the default time_aggregation is overridden by using a diffe
 	>>> monthly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
 	>>> monthly_users.sort_index(ascending=False).head()
 	time_aggregation
-        2022-07     830
-        2022-06     497
-        2022-05    1682
-        2022-04     304
-        2022-03     288
+	2022-07     830
+	2022-06     497
+	2022-05    1682
+	2022-04     304
+	2022-03     288
 	Name: unique_users, dtype: int64
 
 .. doctest:: product-analytics
@@ -120,16 +120,16 @@ For `monthly_users`, the default time_aggregation is overridden by using a diffe
 	>>> daily_users = modelhub.aggregate.unique_users(df)
 	>>> daily_users.sort_index(ascending=False).head(10)
 	time_aggregation
-        2022-07-30      9
-        2022-07-29     28
-        2022-07-28     17
-        2022-07-27     78
-        2022-07-26    102
-        2022-07-25    102
-        2022-07-24     75
-        2022-07-23     80
-        2022-07-22     81
-        2022-07-21     43
+	2022-07-30      9
+	2022-07-29     28
+	2022-07-28     17
+	2022-07-27     78
+	2022-07-26    102
+	2022-07-25    102
+	2022-07-24     75
+	2022-07-23     80
+	2022-07-22     81
+	2022-07-21     43
 	Name: unique_users, dtype: int64
 
 To see the number of users per main product section, group by its 
@@ -184,7 +184,7 @@ The users' activity starts to be counted from the `start_date` specified when th
 	>>> retention_matrix = modelhub.aggregate.retention_matrix(df, time_period='monthly', percentage=True, display=True)
 	>>> retention_matrix.head()
 	                 _0        _1        _2        _3        _4
-	first_cohort
+	first_cohort                                               
 	2022-03       100.0  9.722222  6.944444  4.513889  4.861111
 	2022-04       100.0  6.521739  2.173913  1.086957       NaN
 	2022-05       100.0  3.527981  0.851582       NaN       NaN
@@ -199,7 +199,7 @@ Drilling down retention cohorts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the retention matrix above, we can see there's a drop in retained users in the second cohort the next 
-month. We can directly zoom into the different cohorts and see the difference.
+month; just 3.6% of users returned. We can directly zoom into the different cohorts and see the difference.
 
 .. doctest:: product-analytics
 	:skipif: engine is None
@@ -220,8 +220,8 @@ month. We can directly zoom into the different cohorts and see the difference.
 	VisibleEvent              3646
 	PressEvent                2363
 	ApplicationLoadedEvent    2004
-	MediaLoadEvent            754
-	HiddenEvent               293
+	MediaLoadEvent             754
+	HiddenEvent                293
 	Name: value_counts, dtype: int64
 
 .. doctest:: product-analytics
@@ -233,9 +233,9 @@ month. We can directly zoom into the different cohorts and see the difference.
 	event_type
 	PressEvent                1202
 	VisibleEvent              1191
-	ApplicationLoadedEvent    630
-	MediaLoadEvent            246
-	HiddenEvent               128
+	ApplicationLoadedEvent     630
+	MediaLoadEvent             246
+	HiddenEvent                128
 	Name: value_counts, dtype: int64
 
 One interesting thing to note here, for example, is that there are relatively more `VisibleEvents 
@@ -348,12 +348,13 @@ model.
 	>>> # see top used product features - by default we select only user actions (InteractiveEvents)
 	>>> top_product_features = modelhub.aggregate.top_product_features(df)
 	>>> top_product_features.head()
-	                                                                                                                            feature_nice_name   event_type      user_id_nunique
-        objectiv-website     Pressable: after located at Root Location: home => Content: capture-data => Content: data-capture-workflow-before-after 	PressEvent 	527
-                             Pressable: after located at Root Location: home => Content: modeling => Content: modeling-workflow-before-after 	        PressEvent 	321
-                             Pressable: before located at Root Location: home => Content: capture-data => Content: data-capture-workflow-before-after 	PressEvent 	292
-                             Link: about-us located at Root Location: home => Navigation: navbar-top 	                                                PressEvent 	265
-                             Pressable: hamburger located at Root Location: home => Navigation: navbar-top 	                                        PressEvent 	244
+	                                                                                                                           user_id_nunique
+	application      feature_nice_name                                                                             event_type                 
+	objectiv-website Pressable: after located at Root Location: home => Content: capture-data => Content: data-... PressEvent              527
+	                 Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... PressEvent              321
+	                 Pressable: before located at Root Location: home => Content: capture-data => Content: data... PressEvent              292
+	                 Link: about-us located at Root Location: home => Navigation: navbar-top                       PressEvent              265
+	                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 PressEvent              244
 
 Top used features per product area
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -375,12 +376,12 @@ We also want to look at which features were used most in our top product areas.
 	>>> # let's look at the homepage on our website
 	>>> home_users = top_interactions[(top_interactions.application == 'objectiv-website') & (top_interactions.root_location == 'home')]
 	>>> home_users.sort_values('unique_users', ascending=False).head()
-	        application       root_location                                         feature_nice_name       event_type  unique_users
-        0 	objectiv-website 	   home 	Pressable: after located at Root Location: hom... 	PressEvent 	527
-        1 	objectiv-website 	   home 	Pressable: after located at Root Location: hom... 	PressEvent 	321
-        2 	objectiv-website 	   home 	Pressable: before located at Root Location: ho... 	PressEvent 	292
-        3 	objectiv-website 	   home 	Link: about-us located at Root Location: home ... 	PressEvent 	265
-        4 	objectiv-website 	   home 	Pressable: hamburger located at Root Location:... 	PressEvent 	244
+	        application root_location                                                                             feature_nice_name  event_type  unique_users
+	0  objectiv-website          home  Pressable: after located at Root Location: home => Content: capture-data => Content: data...  PressEvent           527
+	1  objectiv-website          home  Pressable: after located at Root Location: home => Content: modeling => Content: modeling...  PressEvent           321
+	2  objectiv-website          home  Pressable: before located at Root Location: home => Content: capture-data => Content: dat...  PressEvent           292
+	3  objectiv-website          home                       Link: about-us located at Root Location: home => Navigation: navbar-top  PressEvent           265
+	4  objectiv-website          home                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top  PressEvent           244
 
 From the same `top_interactions` object, we can see the top used features on our documentation, which is a separate application.
 
@@ -390,12 +391,12 @@ From the same `top_interactions` object, we can see the top used features on our
 	>>> # see the top used features on our documentation application
 	>>> docs_users = top_interactions[top_interactions.application == 'objectiv-docs']
 	>>> docs_users.sort_values('unique_users', ascending=False).head()
-	          application  root_location                                    feature_nice_name      event_type  unique_users
-        0 	objectiv-docs 	        home 	Link: Quickstart Guide located at Root Locatio... 	PressEvent 	90
-        1 	objectiv-docs 	        home 	Link: logo located at Root Location: home => N... 	PressEvent 	76
-        2 	objectiv-docs 	    tracking 	Link: logo located at Root Location: tracking ... 	PressEvent 	65
-        3 	objectiv-docs 	    taxonomy 	Link: logo located at Root Location: taxonomy ... 	PressEvent 	62
-        4 	objectiv-docs 	        home 	Link: Tracking located at Root Location: home ... 	PressEvent 	62
+	     application root_location                                                                  feature_nice_name  event_type  unique_users
+	0  objectiv-docs          home  Link: Quickstart Guide located at Root Location: home => Navigation: docs-sidebar  PressEvent            90
+	1  objectiv-docs          home                Link: logo located at Root Location: home => Navigation: navbar-top  PressEvent            76
+	2  objectiv-docs      tracking            Link: logo located at Root Location: tracking => Navigation: navbar-top  PressEvent            65
+	3  objectiv-docs      taxonomy            Link: logo located at Root Location: taxonomy => Navigation: navbar-top  PressEvent            62
+	4  objectiv-docs          home            Link: Tracking located at Root Location: home => Navigation: navbar-top  PressEvent            62
 
 .. admonition:: Reference
 	:class: api-reference
@@ -432,7 +433,7 @@ calculate the number of unique converted users.
 	>>> conversions = modelhub.aggregate.unique_users(df[df.is_conversion_event])
 	>>> conversions.to_frame().sort_index(ascending=False).head(10)
 	                  unique_users
-	time_aggregation
+	time_aggregation              
 	2022-07-28                   1
 	2022-07-27                   1
 	2022-07-26                   3
@@ -477,13 +478,13 @@ We can calculate what users did _before_ converting.
 	>>> # features used before users converted
 	>>> top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df, name='github_press')
 	>>> top_features_before_conversion.head()
-	                                                                                                                                                                unique_users
-	application                                                                                                               feature_nice_name     event_type
-        objectiv-website    Pressable: hamburger located at Root Location: home => Navigation: navbar-top 	                                        PressEvent 	29
-                            Pressable: after located at Root Location: home => Content: capture-data => Content: data-capture-workflow-before-after 	PressEvent 	20
-                            Pressable: after located at Root Location: home => Content: modeling => Content: modeling-workflow-before-after 	        PressEvent 	16
-                            Pressable: before located at Root Location: home => Content: modeling => Content: modeling-workflow-before-after 	        PressEvent 	10
-                            Pressable: before located at Root Location: home => Content: capture-data => Content: data-capture-workflow-before-after 	PressEvent 	9
+	                                                                                                                           unique_users
+	application      feature_nice_name                                                                             event_type              
+	objectiv-website Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 PressEvent            29
+	                 Pressable: after located at Root Location: home => Content: capture-data => Content: data-... PressEvent            20
+	                 Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... PressEvent            16
+	                 Pressable: before located at Root Location: home => Content: modeling => Content: modeling... PressEvent            10
+	                 Pressable: before located at Root Location: home => Content: capture-data => Content: data... PressEvent             9
 
 Exact features that converted
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -495,13 +496,13 @@ Let's understand which product features actually triggered the conversion.
 	>>> # features that triggered the conversion
 	>>> conversion_locations = modelhub.agg.unique_users(df[df.is_conversion_event], groupby=['application', 'feature_nice_name', 'event_type'])
 	>>> conversion_locations.sort_values(ascending=False).to_frame().head()
-	                                                                                                                                      unique_users
-	application                                                                                        feature_nice_name    event_type
-        objectiv-website    Link: github located at Root Location: home => Navigation: navbar-top 	                        PressEvent 	70
-                            Link: github located at Root Location: home => Navigation: navbar-top => Overlay: hamburger-menu 	PressEvent 	28
-                            Link: github located at Root Location: about => Navigation: navbar-top 	                        PressEvent 	6
-                            Link: github located at Root Location: jobs => Navigation: navbar-top 	                        PressEvent 	5
-        objectiv-docs 	    Link: github located at Root Location: tracking => Navigation: navbar-top 	                        PressEvent 	4
+	                                                                                                                           unique_users
+	application      feature_nice_name                                                                             event_type              
+	objectiv-website Link: github located at Root Location: home => Navigation: navbar-top                         PressEvent            70
+	                 Link: github located at Root Location: home => Navigation: navbar-top => Overlay: hamburge... PressEvent            28
+	                 Link: github located at Root Location: about => Navigation: navbar-top                        PressEvent             6
+	                 Link: github located at Root Location: jobs => Navigation: navbar-top                         PressEvent             5
+	objectiv-docs    Link: github located at Root Location: tracking => Navigation: navbar-top                     PressEvent             4
 
 Time spent before conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -576,7 +577,7 @@ simplify data debugging & delivery to BI tools like Metabase, dbt, etc.
 	with "from_table___7a4057e80babeec1c65913e0a773d65d" as (SELECT "value","event_id","day","moment","cookie_id" FROM "data"),
 	"getitem_where_boolean___f5fe2f7a0ee6da8369d135badb9b12f1" as (select "value" as "value", "event_id" as "event_id", "day" as "day", "moment" as "moment", "cookie_id" as "user_id", "value"->>'_type' as "event_type", cast("value"->>'_types' as jsonb) as "stack_event_types", cast("value"->>'global_contexts' as jsonb) as "global_contexts", cast("value"->>'location_stack' as jsonb) as "location_stack", cast("value"->>'time' as bigint) as "time"
 	from "from_table___7a4057e80babeec1c65913e0a773d65d"
-	where ((("day" >= '2022-03-01')) AND (("day" <= '2022-07-30')))
+	where ((("day" >= '2022-02-01')) AND (("day" <= '2022-06-30')))
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>
