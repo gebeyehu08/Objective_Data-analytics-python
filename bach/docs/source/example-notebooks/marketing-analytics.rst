@@ -899,3 +899,10 @@ For more details on how to do feature engineering, see our
 	* :doc:`bach.DataFrame.nunique <../bach/api-reference/DataFrame/bach.DataFrame.nunique>`
 	* :doc:`bach.Series.unstack <../bach/api-reference/Series/bach.Series.unstack>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+
+Get the SQL for any analysis
+----------------------------
+
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.

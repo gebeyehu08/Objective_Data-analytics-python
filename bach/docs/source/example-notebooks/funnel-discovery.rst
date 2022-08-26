@@ -454,6 +454,13 @@ over each link to see the source and target node.
 	* :doc:`bach.Series.to_frame <../bach/api-reference/Series/bach.Series.to_frame>`
 	* :doc:`bach.DataFrame.rename <../bach/api-reference/DataFrame/bach.DataFrame.rename>`
 
+Get the SQL for any analysis
+----------------------------
+
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.
+
 Where to go next
 ----------------
 Now that you've discovered the customer journeys that lead to conversion or drop-off, you can further analyze 
