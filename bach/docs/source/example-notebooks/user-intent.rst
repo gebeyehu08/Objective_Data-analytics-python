@@ -152,6 +152,13 @@ A good starting point for these analyses on top of the user intent buckets is th
 Get the SQL for this user intent analysis
 -----------------------------------------
 
+Get the SQL for any analysis
+----------------------------
+
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.
+
 .. code-block:: python
 
     # get the SQL to use this analysis in for example your BI tooling

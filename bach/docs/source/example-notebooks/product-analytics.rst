@@ -550,7 +550,8 @@ To analyze the above metrics and more for users coming from marketing efforts, h
 Get the SQL for any analysis
 ----------------------------
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
-simplify data debugging & delivery to BI tools like Metabase, dbt, etc.
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.
 
 .. the testsetup below is a workaround to show the actual SQL output
 

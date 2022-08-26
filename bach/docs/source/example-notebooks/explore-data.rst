@@ -232,8 +232,9 @@ It also means you can make product features very readable and easy to understand
 Get the SQL for any analysis
 ----------------------------
 
-Any dataframe or model built with Bach can be converted to an SQL statement with a single command to use 
-directly in production.
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.
 
 .. doctest:: explore-data-features
 	:skipif: engine is None
