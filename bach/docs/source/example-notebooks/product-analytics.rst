@@ -74,6 +74,15 @@ Have a look at the data
 	min     2022-02-01  2022-02-01 01:16:28.924    None            None           None  ApplicationLoadedEvent              None        1.00                1.00     objectiv-docs  Content: hero located at Root Location: home         about
 	max     2022-06-30  2022-06-30 21:40:32.401    None            None           None            VisibleEvent              None     5325.00              396.00  objectiv-website                       Root Location: tracking      tracking
 
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
+	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
+	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
+	* :doc:`bach.DataFrame.describe <../bach/api-reference/DataFrame/bach.DataFrame.describe>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+
 Next we'll go though a selection of product analytics metrics. We can use models from the 
 :doc:`open model hub <../open-model-hub/index>`, or use :doc:`modeling library Bach <../bach/index>` to run 
 data analyses directly on the data store, with Pandas-like syntax.
@@ -148,7 +157,6 @@ To see the number of users per main product section, group by its
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`modelhub.ModelHub.get_funnel_discovery <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_funnel_discovery>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
 	* :doc:`bach.DataFrame.sort_index <../bach/api-reference/DataFrame/bach.DataFrame.sort_index>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
@@ -238,6 +246,18 @@ This is  just a simple example to demonstrate the differences you can find betwe
 other models like 
 :doc:`top product features <../open-model-hub/models/aggregation/modelhub.Aggregate.top_product_features>`, 
 or develop more in-depth analyses.
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.Aggregate.retention_matrix <../open-model-hub/models/aggregation/modelhub.Aggregate.retention_matrix>`
+	* :doc:`bach.DataFrame.groupby <../bach/api-reference/DataFrame/bach.DataFrame.groupby>`
+	* :doc:`bach.DataFrame.min <../bach/api-reference/DataFrame/bach.DataFrame.min>`
+	* :doc:`bach.DataFrame.reset_index <../bach/api-reference/DataFrame/bach.DataFrame.reset_index>`
+	* :doc:`bach.DataFrame.rename <../bach/api-reference/DataFrame/bach.DataFrame.rename>`
+	* :doc:`bach.DataFrame.merge <../bach/api-reference/DataFrame/bach.DataFrame.merge>`
+	* :doc:`bach.DataFrame.value_counts <../bach/api-reference/DataFrame/bach.DataFrame.value_counts>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
 
 Time spent (aka duration)
 -------------------------
@@ -529,16 +549,76 @@ To analyze the above metrics and more for users coming from marketing efforts, h
 
 Get the SQL for any analysis
 ----------------------------
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc.
 
-.. testsetup:: product-analytics
+.. the testsetup below is a workaround to show the actual SQL output
+
+.. testsetup:: product-analytics-sql
 	:skipif: engine is None
 
+	from modelhub import ModelHub
+	from bach import display_sql_as_markdown
+	from datetime import datetime
+	# instantiate the model hub and set the default time aggregation to daily
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	# get a Bach DataFrame with Objectiv data within a defined timeframe
+	df = modelhub.get_objectiv_dataframe(start_date='2022-02-01', end_date='2022-06-30')
+	monthly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
 	def display_sql_as_markdown(arg):
-		print('sql\\n' + arg.view_sql() + '\\n') # print out SQL instead of an object
+		print('sql\n' + arg.view_sql() + '\n') # print out SQL instead of an object
 
-.. doctest:: product-analytics
+.. doctest:: product-analytics-sql
 	:skipif: engine is None
 
 	>>> # show SQL for analysis; this is just on example, and works for any Objectiv model/analysis
-	>>> display_sql_as_markdown(conversions)
-	<IPython.core.display.Markdown object>
+	>>> display_sql_as_markdown(monthly_users)
+	sql
+	with "from_table___7a4057e80babeec1c65913e0a773d65d" as (SELECT "value","event_id","day","moment","cookie_id" FROM "data"),
+	"getitem_where_boolean___f5fe2f7a0ee6da8369d135badb9b12f1" as (select "value" as "value", "event_id" as "event_id", "day" as "day", "moment" as "moment", "cookie_id" as "user_id", "value"->>'_type' as "event_type", cast("value"->>'_types' as jsonb) as "stack_event_types", cast("value"->>'global_contexts' as jsonb) as "global_contexts", cast("value"->>'location_stack' as jsonb) as "location_stack", cast("value"->>'time' as bigint) as "time"
+	from "from_table___7a4057e80babeec1c65913e0a773d65d"
+	where ((("day" >= '2022-02-01')) AND (("day" <= '2022-06-30')))
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	),
+	"context_data___1df6a7e539082af983d3d383a7c6c8d2" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types"       
+	from "getitem_where_boolean___f5fe2f7a0ee6da8369d135badb9b12f1"
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	),
+	"session_starts___0cfc6688721a9f6fa0c52f1a053d4e7f" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", CASE WHEN (extract(epoch from (("moment") - (lag("moment", 1, cast(NULL as timestamp without time zone)) over (partition by "user_id" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 as bigint)) THEN cast(NULL as boolean) ELSE cast(True as boolean) END as "is_start_of_session"
+	from "context_data___1df6a7e539082af983d3d383a7c6c8d2"
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	),
+	"session_id_and_count___9bb61776cbf5548949964b375cadfff7" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", CASE WHEN "is_start_of_session" THEN row_number() over (partition by "is_start_of_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ELSE cast(NULL as bigint) END as "session_start_id", count("is_start_of_session") over ( order by "user_id" asc nulls last, "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "is_one_session"
+	from "session_starts___0cfc6688721a9f6fa0c52f1a053d4e7f"
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	),
+	"objectiv_sessionized_data___59ea61285371a75efa1ffb593e3fbafb" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", "session_start_id" as "session_start_id", "is_one_session" as "is_one_session", first_value("session_start_id") over (partition by "is_one_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_id", row_number() over (partition by "is_one_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_hit_number" 
+	from "session_id_and_count___9bb61776cbf5548949964b375cadfff7"
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
+	)
+	select to_char("moment", 'YYYY"-"MM') as "time_aggregation", count(distinct "user_id") as "unique_users"
+	from "objectiv_sessionized_data___59ea61285371a75efa1ffb593e3fbafb"
+	<BLANKLINE>
+	group by to_char("moment", 'YYYY"-"MM')
+	<BLANKLINE>
+	<BLANKLINE>
+	<BLANKLINE>
