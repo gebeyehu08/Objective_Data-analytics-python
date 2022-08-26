@@ -199,7 +199,7 @@ Drilling down retention cohorts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the retention matrix above, we can see there's a drop in retained users in the second cohort the next 
-month; just 3.6% of users returned. We can directly zoom into the different cohorts and see the difference.
+month. We can directly zoom into the different cohorts and see the difference.
 
 .. doctest:: product-analytics
 	:skipif: engine is None
@@ -572,13 +572,13 @@ dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi
 .. doctest:: product-analytics-sql
 	:skipif: engine is None
 
-	>>> # show SQL for analysis; this is just on example, and works for any Objectiv model/analysis
+	>>> # show SQL for analysis; this is just one example, and works for any Objectiv model/analysis
 	>>> display_sql_as_markdown(monthly_users)
 	sql
 	with "from_table___7a4057e80babeec1c65913e0a773d65d" as (SELECT "value","event_id","day","moment","cookie_id" FROM "data"),
 	"getitem_where_boolean___2aa6dcb9d89ea574c7878d4408b4d781" as (select "value" as "value", "event_id" as "event_id", "day" as "day", "moment" as "moment", "cookie_id" as "user_id", "value"->>'_type' as "event_type", cast("value"->>'_types' as jsonb) as "stack_event_types", cast("value"->>'global_contexts' as jsonb) as "global_contexts", cast("value"->>'location_stack' as jsonb) as "location_stack", cast("value"->>'time' as bigint) as "time"
 	from "from_table___7a4057e80babeec1c65913e0a773d65d"
-	where ((("day" >= cast('2022-02-01' as date))) AND (("day" <= cast('2022-06-30' as date)))) 
+	where ((("day" >= cast('2022-03-01' as date))) AND (("day" <= cast('2022-07-30' as date)))) 
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>
