@@ -256,7 +256,8 @@ def validate_event_time(event: EventData, current_millis: int) -> List[ErrorInfo
     max_delay = get_config_timestamp_validation().max_delay
     if max_delay and current_millis - event['time'] > max_delay:
         return [ErrorInfo(event, f'Event too old: {current_millis - event["time"]} > {max_delay}')]
-    if event['time'] > current_millis:
+    # allow for a 5 minute clock skew into the future
+    if event['time'] > current_millis + 300000:
         return [ErrorInfo(event, f'Event in the future: {event["time"]} > {current_millis}')]
     return []
 
