@@ -576,7 +576,7 @@ simplify data debugging & delivery to BI tools like Metabase, dbt, etc.
 	with "from_table___7a4057e80babeec1c65913e0a773d65d" as (SELECT "value","event_id","day","moment","cookie_id" FROM "data"),
 	"getitem_where_boolean___f5fe2f7a0ee6da8369d135badb9b12f1" as (select "value" as "value", "event_id" as "event_id", "day" as "day", "moment" as "moment", "cookie_id" as "user_id", "value"->>'_type' as "event_type", cast("value"->>'_types' as jsonb) as "stack_event_types", cast("value"->>'global_contexts' as jsonb) as "global_contexts", cast("value"->>'location_stack' as jsonb) as "location_stack", cast("value"->>'time' as bigint) as "time"
 	from "from_table___7a4057e80babeec1c65913e0a773d65d"
-	where ((("day" >= '2022-02-01')) AND (("day" <= '2022-06-30')))
+	where ((("day" >= '2022-03-01')) AND (("day" <= '2022-07-30')))
 	<BLANKLINE>
 	<BLANKLINE>
 	<BLANKLINE>
