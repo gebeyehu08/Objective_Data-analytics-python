@@ -1,6 +1,6 @@
 .. _explore_data:
 
-.. frontmatterposition:: 4
+.. frontmatterposition:: 8
 
 .. currentmodule:: bach_open_taxonomy
 

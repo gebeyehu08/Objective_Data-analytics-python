@@ -14,12 +14,12 @@ from sqlalchemy.engine import Dialect
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression, join_expressions, StringValueToken
-from bach.series.series import WrappedPartition, ToPandasInfo
+from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code
 from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
 
 class DatePart(str, Enum):
@@ -157,24 +157,27 @@ class DateTimeOperation:
 
         engine = self._series.engine
 
-        if is_postgres(engine):
+        # Truncating Postgres date type will include timezone in final value
+        # therefore we should cast it into TIMESTAMP WITHOUT TIMEZONE
+        _td_series = self._series.astype(SeriesTimestamp.dtype)
+        if is_postgres(engine) or is_athena(engine):
             expression = Expression.construct(
                 'date_trunc({}, {})',
                 Expression.string_value(date_part),
-                self._series,
+                _td_series,
             )
         elif is_bigquery(engine):
             if date_part == 'week':
                 date_part = 'week(monday)'
             expression = Expression.construct(
                 'timestamp_trunc({}, {})',
-                self._series,
+                _td_series,
                 Expression.raw(date_part),
             )
         else:
             raise DatabaseNotSupportedException(engine)
 
-        return self._series.copy_override(expression=expression)
+        return _td_series.copy_override(expression=expression)
 
 
 class TimedeltaOperation(DateTimeOperation):
@@ -355,8 +358,11 @@ class SeriesAbstractDateTime(Series, ABC):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def _comparator_operation(self, other, comparator,
-                              other_dtypes=('timestamp', 'date', 'time', 'string')) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes)
+                              other_dtypes=('timestamp', 'date', 'time', 'string'),
+                              strict_other_dtypes=tuple()) -> 'SeriesBoolean':
+        return super()._comparator_operation(
+            other, comparator, other_dtypes, strict_other_dtypes=tuple(self.dtype)
+        )
 
     @classmethod
     def _cast_to_date_if_dtype_date(cls, series: 'Series') -> 'Series':
@@ -470,15 +476,25 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'timestamp without time zone',
         DBDialect.BIGQUERY: 'TIMESTAMP',
+        DBDialect.ATHENA: 'timestamp',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
     supported_source_dtypes = ('string', 'date',)
     _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
+    @classmethod
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        if not is_athena(dialect):
+            return super().supported_literal_to_expression(dialect, literal)
+
+        # Athena will raise exceptions if literal has incorrect timestamp format
+        return Expression.construct("date_parse({}, '%Y-%m-%d %H:%i:%S.%f')", literal)
+
     def to_pandas_info(self) -> Optional['ToPandasInfo']:
-        if is_postgres(self.engine):
+        if is_postgres(self.engine) or is_athena(self.engine):
             return ToPandasInfo('datetime64[ns]', None)
+
         if is_bigquery(self.engine):
             return ToPandasInfo('datetime64[ns, UTC]', dt_strip_timezone)
         return None
@@ -509,7 +525,8 @@ class SeriesDate(SeriesAbstractDateTime):
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'date',
-        DBDialect.BIGQUERY: 'DATE'
+        DBDialect.BIGQUERY: 'DATE',
+        DBDialect.ATHENA: 'date',
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
@@ -630,8 +647,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         )
 
     def _comparator_operation(self, other, comparator,
-                              other_dtypes=('timedelta', 'string')) -> SeriesBoolean:
-        return super()._comparator_operation(other, comparator, other_dtypes)
+                              other_dtypes=('timedelta', 'string'),
+                              strict_other_dtypes=tuple()) -> SeriesBoolean:
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def __add__(self, other) -> 'Series':
         type_mapping = {

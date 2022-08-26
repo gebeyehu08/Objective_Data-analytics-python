@@ -50,6 +50,8 @@ _FILESYSTEM_OUTPUT_DIR = os.environ.get('FILESYSTEM_OUTPUT_DIR')
 _SP_SCHEMA_COLLECTOR_PAYLOAD = 'iglu:com.snowplowanalytics.snowplow/CollectorPayload/thrift/1-0-0'
 _SP_SCHEMA_CONTEXTS = 'iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0'
 _SP_SCHEMA_OBJECTIV_TAXONOMY = 'iglu:io.objectiv/taxonomy/jsonschema/1-0-0'
+_SP_SCHEMA_OBJECTIV_LOCATION_STACK = 'iglu:io.objectiv/location_stack'
+_SP_SCHEMA_OBJECTIV_CONTEXTS_BASE = 'iglu:io.objectiv.context'
 _SP_SCHEMA_PAYLOAD_DATA = 'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4'
 _SP_SCHEMA_SCHEMA_VIOLATIONS = 'iglu:com.snowplowanalytics.snowplow.badrows/schema_violations/jsonschema/2-0-0'
 
@@ -59,6 +61,12 @@ _SP_GCP_PUBSUB_TOPIC_BAD = os.environ.get('SP_GCP_PUBSUB_TOPIC_BAD', '')
 
 _SP_AWS_MESSAGE_TOPIC_RAW = os.environ.get('SP_AWS_MESSAGE_TOPIC_RAW', '')
 _SP_AWS_MESSAGE_TOPIC_BAD = os.environ.get('SP_AWS_MESSAGE_TOPIC_BAD', '')
+
+# mapping from objectiv base_schema version to snowplow iglu version
+# NOTE:  the snowplow versions need to be continuous without gaps
+# NOTE2: for every version of the base schema, a new entry should be added to the mapping
+# NOTE3: Please regenerate iglu definitions on changes
+_SP_OBJECTIV_VERSION_MAPPING = {'0.0.5': '1-0-0'}
 
 # Cookie settings
 _OBJ_COOKIE = 'obj_user_id'
@@ -113,6 +121,9 @@ class SnowplowConfig(NamedTuple):
     schema_collector_payload: str
     schema_contexts: str
     schema_objectiv_taxonomy: str
+    schema_objectiv_location_stack: str
+    schema_objectiv_contexts_base: str
+    schema_objectiv_contexts_version: str
     schema_payload_data: str
     schema_schema_violations: str
 
@@ -121,7 +132,7 @@ class OutputConfig(NamedTuple):
     postgres: Optional[PostgresConfig]
     aws: Optional[AwsOutputConfig]
     file_system: Optional[FileSystemOutputConfig]
-    snowplow: SnowplowConfig
+    snowplow: Optional[SnowplowConfig]
 
 
 class CookieConfig(NamedTuple):
@@ -199,19 +210,40 @@ def get_config_postgres() -> Optional[PostgresConfig]:
     )
 
 
-def get_config_output_snowplow() -> SnowplowConfig:
+def map_schema_version_to_snowplow(version: str) -> str:
+    """
+    This maps the objectiv base_schema version to a Snowplow compatible SemVer version string
+    :param version: Objectiv base_schema version
+    :return:
+    """
+    if version in _SP_OBJECTIV_VERSION_MAPPING:
+        return _SP_OBJECTIV_VERSION_MAPPING[version]
+    else:
+        raise Exception(f'Version: {version} not in mapping')
+
+
+def get_config_output_snowplow() -> Optional[SnowplowConfig]:
+    gcp_enabled = _SP_GCP_PROJECT != ''
+    aws_enabled = _SP_AWS_MESSAGE_TOPIC_RAW != ''
+
+    if not gcp_enabled and not aws_enabled:
+        return None
+
     if _SP_AWS_MESSAGE_TOPIC_RAW.startswith('https://sqs.'):
         aws_message_raw_type = 'sqs'
     else:
         aws_message_raw_type = 'kinesis'
 
+    schema = get_config_event_schema()
+    version = map_schema_version_to_snowplow(schema.version['base_schema'])
+
     config = SnowplowConfig(
-        gcp_enabled=(_SP_GCP_PROJECT != ''),
+        gcp_enabled=gcp_enabled,
         gcp_project=_SP_GCP_PROJECT,
         gcp_pubsub_topic_raw=_SP_GCP_PUBSUB_TOPIC_RAW,
         gcp_pubsub_topic_bad=_SP_GCP_PUBSUB_TOPIC_BAD,
 
-        aws_enabled=(_SP_AWS_MESSAGE_TOPIC_RAW != ''),
+        aws_enabled=aws_enabled,
         aws_message_topic_raw=_SP_AWS_MESSAGE_TOPIC_RAW,
         aws_message_topic_bad=_SP_AWS_MESSAGE_TOPIC_BAD,
         aws_message_raw_type=aws_message_raw_type,
@@ -219,6 +251,9 @@ def get_config_output_snowplow() -> SnowplowConfig:
         schema_collector_payload=_SP_SCHEMA_COLLECTOR_PAYLOAD,
         schema_contexts=_SP_SCHEMA_CONTEXTS,
         schema_objectiv_taxonomy=_SP_SCHEMA_OBJECTIV_TAXONOMY,
+        schema_objectiv_location_stack=_SP_SCHEMA_OBJECTIV_LOCATION_STACK,
+        schema_objectiv_contexts_base=_SP_SCHEMA_OBJECTIV_CONTEXTS_BASE,
+        schema_objectiv_contexts_version=version,
         schema_payload_data=_SP_SCHEMA_PAYLOAD_DATA,
         schema_schema_violations=_SP_SCHEMA_SCHEMA_VIOLATIONS
     )
