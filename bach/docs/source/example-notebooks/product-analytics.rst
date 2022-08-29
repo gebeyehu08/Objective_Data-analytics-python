@@ -19,9 +19,20 @@ Get started
 -----------
 We first have to instantiate the model hub and an Objectiv DataFrame object.
 
+.. doctest::
+	:skipif: engine is None
+
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-03-01'
+	>>> end_date = None
+
+.. we override the timeframe for the doctests below
+	
 .. testsetup:: product-analytics
 	:skipif: engine is None
 
+	start_date = '2022-03-01'
+	end_date = '2022-07-30'
 	pd.set_option('display.max_colwidth', 93)
 
 .. doctest:: product-analytics
@@ -33,7 +44,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	>>> # instantiate the model hub and set the default time aggregation to daily
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 	>>> # get a Bach DataFrame with Objectiv data within a defined timeframe
-	>>> df = modelhub.get_objectiv_dataframe(start_date='2022-03-01', end_date='2022-07-30')
+	>>> df = modelhub.get_objectiv_dataframe(start_date=start_date, end_date=end_date)
 
 .. doctest:: product-analytics
 	:skipif: engine is None
