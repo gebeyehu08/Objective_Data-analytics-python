@@ -19,6 +19,21 @@ Get started
 -----------
 We first have to instantiate the model hub and an Objectiv DataFrame object.
 
+.. doctest::
+	:skipif: engine is None
+
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-06-01'
+	>>> end_date = None
+
+.. we override the timeframe for the doctests below
+	
+.. testsetup:: explore-data
+	:skipif: engine is None
+
+	start_date = '2022-06-01'
+	end_date = '2022-06-30'
+
 .. doctest:: explore-data
 	:skipif: engine is None
 
@@ -26,7 +41,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	>>> from modelhub import ModelHub
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 	>>> # get an Objectiv DataFrame within a defined timeframe
-	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-06-01', end_date='2022-06-30')
+	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
 .. admonition:: Reference
 	:class: api-reference
