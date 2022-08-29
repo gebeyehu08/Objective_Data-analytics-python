@@ -15,12 +15,6 @@
             ],
             "description": "A unique string identifier to be combined with the Context Type (`_type`) for Context instance uniqueness."
         },
-        "_type": {
-            "type": [
-                "string"
-            ],
-            "description": "A string literal used during serialization. Should always match the Context interface name."
-        },
         "source": {
             "type": [
                 "string"
@@ -78,7 +72,6 @@
     "additionalProperties": true,
     "required": [
         "id",
-        "_type",
         "source",
         "medium",
         "campaign"

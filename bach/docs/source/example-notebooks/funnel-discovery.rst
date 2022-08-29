@@ -1,18 +1,8 @@
 .. _funnel_discovery:
 
-.. frontmatterposition:: 6
+.. frontmatterposition:: 4
 
 .. currentmodule:: bach
-
-.. testsetup:: funnel-discovery
-	:skipif: engine is None
-
-	df = modelhub.get_objectiv_dataframe(
-			db_url=DB_URL,
-			start_date='2022-02-01',
-			end_date='2022-06-30',
-			table_name='data')
-	pd.set_option('display.max_colwidth', 93)
 
 ================
 Funnel Discovery
@@ -47,6 +37,22 @@ Get started
 -----------
 We first have to instantiate the model hub and an Objectiv DataFrame object.
 
+.. doctest::
+	:skipif: engine is None
+
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-02-01'
+	>>> end_date = None
+
+.. we override the timeframe for the doctests below
+	
+.. testsetup:: funnel-discovery
+	:skipif: engine is None
+
+	start_date = '2022-02-01'
+	end_date = '2022-06-30'
+	pd.set_option('display.max_colwidth', 93)
+
 .. doctest:: funnel-discovery
 	:skipif: engine is None
 
@@ -54,7 +60,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	>>> from modelhub import ModelHub
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 	>>> # get an Objectiv DataFrame within a defined timeframe
-	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-02-01', end_date='2022-06-30')
+	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
 .. doctest:: funnel-discovery
 	:skipif: engine is None
@@ -453,6 +459,13 @@ over each link to see the source and target node.
 	* :doc:`bach.Series.value_counts <../bach/api-reference/Series/bach.Series.value_counts>`
 	* :doc:`bach.Series.to_frame <../bach/api-reference/Series/bach.Series.to_frame>`
 	* :doc:`bach.DataFrame.rename <../bach/api-reference/DataFrame/bach.DataFrame.rename>`
+
+Get the SQL for any analysis
+----------------------------
+
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.
 
 Where to go next
 ----------------

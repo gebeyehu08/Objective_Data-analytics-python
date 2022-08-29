@@ -18,14 +18,15 @@ and instantiate an Objectiv DataFrame:
 .. toctree::
     :maxdepth: 1
 
-    machine-learning
     product-analytics
-    user-intent
-    explore-data
-    feature-engineering
+    marketing-analytics
     funnel-discovery
     logistic-regression
     feature-importance
-    modelhub-basics
+    user-intent
+    explore-data
     open-taxonomy
+    modelhub-basics
+    feature-engineering
+    machine-learning
 
