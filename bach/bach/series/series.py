@@ -381,13 +381,16 @@ class Series(ABC):
     @classmethod
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
         """
-        Give the static db_dtype of this Series, for the given database dialect.
+        Give the static db_dtype used to store values of this Series, for the given database dialect.
+
+        Note: Multiple Series types might return the same db_dtype. For example on BigQuery
+        `SeriesUuid`, `SeriesJson`, and `SeriesString` will all return 'STRING'. As we use the STRING
+        database type to store all of those value types.
 
         :raises DatabaseNotSupportedException: If the Series subclass doesn't support the database dialect.
-        :return: database type as string, or None if this Series has no database type for which it is the
-            standard Series for that database, or if that type is a structural type whose exact type depends
-            on the data of the subtypes (e.g. SeriesList will return None on BigQuery, as it can handle all
-            ARRAY<*> subtypes)
+        :return: database type as string, or None if this Series database type is a structural type whose
+            exact type depends on the data of the subtypes (e.g. SeriesList will return None on BigQuery,
+            as it can handle all ARRAY<*> subtypes)
         """
         db_dialect = DBDialect.from_dialect(dialect)
         if db_dialect not in cls.supported_db_dtype:
