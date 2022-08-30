@@ -42,6 +42,7 @@ def test_string_slice(engine):
         # single values, keep small because we don't want to go out of range
         0, 1, 3, -3, -1,
         # some single value slices
+        slice(0), slice(1), slice(5), slice(-5), slice(-1),
         slice(0, None), slice(1, None), slice(5, None), slice(-5, None), slice(-1, None),
         # simple slices
         slice(0, 3), slice(1, 3), slice(3, 3), slice(4, 3),
@@ -50,7 +51,9 @@ def test_string_slice(engine):
         # some longer than some of the input strings
         slice(1, -8), slice(8, 1), slice(8, -4),
         # Some more with no beginnings or endings
-        slice(None, 3), slice(3, None), slice(None, -3), slice(-3, None)
+        slice(None, 3), slice(3, None), slice(None, -3), slice(-3, None),
+        # slices with out of range indexes
+        slice(1000, 40), slice(-1000, -40), slice(200, -3), slice(-100, 10),
     ]
 
     expected_data = {

@@ -46,6 +46,7 @@ class StringOperation:
 
     def _get_substr_expression(self, start=None, stop=None) -> Expression:
         base_expr = self._base.expression
+        len_series = self._base.str.len()
 
         # just return the full string
         if start is None and stop is None:
@@ -56,19 +57,28 @@ class StringOperation:
 
         if start_off > 0:
             start_offset_expr = ConstValueExpression.construct(str(start_off))
-        else:
+        elif start_off < 0:
             start_offset_expr = Expression.construct(
-                f'({{}} - {abs(start_off)})', self._base.str.len()
+                f'({{}} - {abs(start_off)})', len_series
             )
+        else:
+            # start position is -1
+            start_offset_expr = len_series.expression
 
         # Case 1: no substr length, therefore return all characters after start offset
-        # when stop == -1, it means the stop_offset is 0, therefore substr_length == 0
-        if stop is None or stop == -1:
+        if stop is None:
             return Expression.construct('substr({}, {})', base_expr, start_offset_expr)
 
         stop_off = stop + 1
 
-        # Case 2: Both offsets have the same sign
+        # Case 2. Stop Offset is Zero
+        # This means we are trying str[x:-1], which is excluding the last char
+        if not stop_off:
+            return Expression.construct(
+                'substr({}, {}, {} - 1)', base_expr, start_offset_expr, len_series,
+            )
+
+        # Case 3: Both offsets have the same sign
 
         if start_off * stop_off > 0:
             # return empty string if start offset is greater or equal to stop_off
@@ -76,12 +86,24 @@ class StringOperation:
                 return Expression.string_value('')
 
             # stop_off - start_off will always return positive, because stop_off > start_off
-            return Expression.construct(
+            substr_expr = Expression.construct(
                 f'substr({{}}, {{}}, {stop_off - start_off})',
                 base_expr, start_offset_expr,
             )
 
-        # Case 3. Negative Stop Offset and Positive Start Offset
+            # if both values are negative and start offset exceeds the negative index range,
+            # we should return empty string
+            if start_off < stop_off < 0:
+                substr_expr = Expression.construct(
+                    f'CASE WHEN {start_off} > {{}} THEN {{}} ELSE {{}} END',
+                    len_series * -1,
+                    substr_expr,
+                    Expression.string_value('')
+                )
+
+            return substr_expr
+
+        # Case 4. Negative Stop Offset and Positive Start Offset
         # This means that we need to get the respective positive index of the stop offset by
         # len(str) - |stop_offset|
         # Where substr length: (len(str) - |stop_offset|) - start_offset > 0
@@ -98,15 +120,23 @@ class StringOperation:
 
         if stop_off < 0:
             substr_len_exp = Expression.construct(
-                f'({{}} - {abs(stop_off)}) - {{}}', self._base.str.len(), start_offset_expr,
+                f'({{}} - {abs(stop_off)}) - {{}}', len_series, start_offset_expr,
             )
 
-        # Case 4. Positive Stop Offset and Negative Start Offset
+        # Case 5. Positive Stop Offset and Negative Start Offset
         # For this case we just need to get the positive index of the start offset by
         # len(str) - |start_offset|
         # Where substr length: stop_offset - (len(str) - |start_offset|)  > 0
         else:
             substr_len_exp = Expression.construct(f'({stop_off} - {{}})',  start_offset_expr)
+
+            # since start_offset is negative, if it exceeds the negative index range of the string,
+            # we should start by default from 1. (postgres does it by default)
+            if not is_postgres(self._base.engine):
+                start_offset_expr = Expression.construct(
+                    'CASE WHEN {} < {} THEN 1 ELSE {} END',
+                    start_offset_expr, len_series * -1, start_offset_expr,
+                )
 
         # wrap substr expression in case when, since substr length must be > 0
         return Expression.construct(
