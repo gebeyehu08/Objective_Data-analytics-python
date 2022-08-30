@@ -62,6 +62,7 @@ class StringOperation:
             )
 
         # Case 1: no substr length, therefore return all characters after start offset
+        # when stop == -1, it means the stop_offset is 0, therefore substr_length == 0
         if stop is None or stop == -1:
             return Expression.construct('substr({}, {})', base_expr, start_offset_expr)
 
@@ -102,11 +103,12 @@ class StringOperation:
 
         # Case 4. Positive Stop Offset and Negative Start Offset
         # For this case we just need to get the positive index of the start offset by
-        # len(str) - |stop_offset|
-        # Where substr length: stop_offset - (len(str) - |stop_offset|)  > 0
+        # len(str) - |start_offset|
+        # Where substr length: stop_offset - (len(str) - |start_offset|)  > 0
         else:
             substr_len_exp = Expression.construct(f'({stop_off} - {{}})',  start_offset_expr)
 
+        # wrap substr expression in case when, since substr length must be > 0
         return Expression.construct(
             f'CASE WHEN {{}} > 0 THEN substr({{}}, {{}}, {{}}) ELSE {{}} END',
             substr_len_exp,
