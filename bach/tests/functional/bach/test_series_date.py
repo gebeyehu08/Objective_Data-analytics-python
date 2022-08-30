@@ -12,7 +12,8 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
-from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES
+from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES, \
+    CODES_SUPPORTED_IN_ALL_DIALECTS
 
 
 @pytest.mark.athena_supported()
@@ -49,6 +50,7 @@ def test_date_comparator(asstring: bool, engine):
     )
 
 
+@pytest.mark.athena_supported()
 def test_date_format(engine, recwarn):
     timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000)
     date = datetime.date(2022, 1, 1)
@@ -56,11 +58,22 @@ def test_date_format(engine, recwarn):
     pdf = pd.DataFrame({'timestamp_series': [timestamp], 'date_series': [date]})
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
 
+    # Create format string that contains all codes that we claim to support.
+    # This string will looks like: %%a: %a | %%b: %b | %%c: %c | ...
+    format_str_all_supported_codes = ' | '.join(
+        f'{c[1]}: {c}'
+        for c in sorted(CODES_SUPPORTED_IN_ALL_DIALECTS)
+    )
+
     all_formats = [
         'Year: %Y',
         '%Y', '%g%Y', '%Y-%m-%d', '%Y%m%d-%Y%m-%m%d-%d', '%Y%m-%d%d',  '%Y%Y%Y',
         '%Y-%%%m-%d', 'abc %Y def%', '"abc" %Y "def"%', 'HH24:MI:SS MS',
         '%H:%M:%S.%f',
+        # non-existing codes:
+        '%q %1 %_',
+        # all codes that we claim to support for all databases
+        format_str_all_supported_codes,
     ]
 
     for idx, fmt in enumerate(all_formats):
@@ -69,16 +82,20 @@ def test_date_format(engine, recwarn):
 
     expected_columns = df.columns[2:]
 
+    # Some columns do not contain correct results on some databases. For now, we accept that.
+    # Here we define the correct result, below we define exceptions per database
+    iso_week_year_date = '212022'
+    iso_week_year_timestamp = '212021'
+    percentage_format_date = '2022-%01-01'
+    percentage_format_timestamp = '2021-%05-03'
+
     if is_postgres(engine):
         percentage_format_date = '2022-%%01-01'  # %% is not supported for pg
         percentage_format_timestamp = '2021-%%05-03'
-        date_hour_format = '00:00:00.000000'
-    elif is_bigquery(engine):
-        percentage_format_date = '2022-%01-01'
-        percentage_format_timestamp = '2021-%05-03'
-        date_hour_format = '%H:%M:%E6S'  # bq will not consider the format for date values
-    else:
-        raise Exception()
+    elif is_athena(engine):
+        # TODO: don't support %g? It's not listed on python's doc page
+        iso_week_year_date = '%g2022'
+        iso_week_year_timestamp = '%g2021'
 
     assert_equals_data(
         df[expected_columns],
@@ -87,7 +104,7 @@ def test_date_format(engine, recwarn):
             [
                 'Year: 2022', 'Year: 2021',
                 '2022', '2021',
-                '212022', '212021',
+                iso_week_year_date, iso_week_year_timestamp,
                 '2022-01-01', '2021-05-03',
                 '20220101-202201-0101-01', '20210503-202105-0503-03',
                 '202201-0101', '202105-0303',
@@ -96,10 +113,14 @@ def test_date_format(engine, recwarn):
                 'abc 2022 def%', 'abc 2021 def%',
                 '"abc" 2022 "def"%', '"abc" 2021 "def"%',
                 'HH24:MI:SS MS', 'HH24:MI:SS MS',
-                date_hour_format, '11:28:36.388000',
+                '00:00:00.000000', '11:28:36.388000',
+                '%q %1 %_', '%q %1 %_',
+                'A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
+                'A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
             ],
         ],
     )
+
 
 @pytest.mark.skip_bigquery
 def test_date_format_all_supported_pg_codes(engine):

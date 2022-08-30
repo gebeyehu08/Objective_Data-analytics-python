@@ -16,7 +16,7 @@ from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, Seri
 from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
-    parse_c_code_to_bigquery_code
+    parse_c_code_to_bigquery_code, parse_c_code_to_athena_code
 from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
@@ -92,9 +92,16 @@ class DateTimeOperation:
         """
         Allow formatting of this Series (to a string type).
 
-        :param format_str: The format to apply to the date/time column.
-            This uses  1989 C standard format codes:
-            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+        :param format_str: The format to apply to the date/time column. See Format Codes below for more
+        information on what is supported.
+
+
+        Format Codes
+        A subset of the 1989 C standard format codes is supported. See the python documentation for the
+        code semantics: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+
+        The subset of codes that are supported across all databases is:
+            %A, %B, %F, %H, %I, %M, %R, %S, %T, %Y, %a, %b, %d, %j, %m, %y
 
         .. code-block:: python
 
@@ -104,25 +111,32 @@ class DateTimeOperation:
         :returns: a SeriesString containing the formatted date.
         """
         engine = self._series.engine
+        series = self._series
 
         if is_postgres(engine):
             parsed_format_str = parse_c_standard_code_to_postgres_code(format_str)
             expression = Expression.construct(
-                'to_char({}, {})', self._series, Expression.string_value(parsed_format_str),
+                'to_char({}, {})', series, Expression.string_value(parsed_format_str)
+            )
+        elif is_athena(engine):
+            parsed_format_str = parse_c_code_to_athena_code(format_str)
+            expression = Expression.construct(
+                'date_format({}, {})', series, Expression.string_value(parsed_format_str)
             )
         elif is_bigquery(engine):
-            # BQ uses C Standard Codes
-            # https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_elements_date_time
+            # BigQuery will ignore some formatting codes when applied to a date.
+            # For example, rather than returning '00' as value for '%H' (hour) it will return '%H'.
+            # To avoid this problem, we convert to timestamp.
+            series = cast(SeriesTimestamp, series.astype('timestamp'))
+
             parsed_format_str = parse_c_code_to_bigquery_code(format_str)
             expression = Expression.construct(
-                'format_date({}, {})',
-                Expression.string_value(parsed_format_str),
-                self._series,
+                'format_date({}, {})', Expression.string_value(parsed_format_str), series
             )
         else:
             raise DatabaseNotSupportedException(engine)
 
-        str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
+        str_series = series.copy_override_type(SeriesString).copy_override(expression=expression)
         return str_series
 
     def date_trunc(self, date_part: str) -> Series:
