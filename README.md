@@ -8,9 +8,7 @@
 
 </a>
 
-[Objectiv](https://objectiv.io/) is an integrated set of data collection and modeling tools to quickly build & run models for any product analytics use case.
-
-Self-hosted, free to use & open-source.
+[Objectiv](https://objectiv.io/) is an open-source data collection & modeling platform for product analytics.
 
 ---
 
