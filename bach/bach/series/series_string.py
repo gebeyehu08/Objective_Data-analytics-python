@@ -8,14 +8,14 @@ from sqlalchemy.engine import Dialect
 
 from bach.partitioning import get_order_by_expression
 from bach.series import Series
-from bach.expression import Expression, AggregateFunctionExpression, get_variable_tokens
+from bach.expression import Expression, AggregateFunctionExpression, get_variable_tokens, ConstValueExpression
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres
 
 if TYPE_CHECKING:
-    from bach.series import SeriesBoolean
+    from bach.series import SeriesBoolean, SeriesInt64
     from bach import DataFrame, SortColumn, SeriesJson
 
 
@@ -24,64 +24,97 @@ class StringOperation:
     def __init__(self, base: 'SeriesString'):
         self._base = base
 
-    def __getitem__(self, start: Union[int, slice]) -> 'SeriesString':
+    def __getitem__(self, key: Union[int, slice]) -> 'SeriesString':
         """
         Get a python string slice using DB functions. Format follows standard slice format
         Note: this is called 'slice' to not destroy index selection logic
-        :param item: an int for a single character, or a slice for some nice slicing
+        :param key: an int for a single character, or a slice for some nice slicing
         :return: SeriesString with the slice applied
         """
-        if isinstance(start, (int, type(None))):
-            item = slice(start, start + 1)
-        elif isinstance(start, slice):
-            item = start
+        if key and not isinstance(key, (int, slice)):
+            raise ValueError(f'Type not supported {type(key)}')
+
+        start = key.start if isinstance(key, slice) else key
+
+        if isinstance(key, slice):
+            stop = key.stop
         else:
-            raise ValueError(f'Type not supported {type(start)}')
+            # if key == -1, then we should just return last character, otherwise stop on the next character
+            stop = key + 1 if key != -1 else None
 
-        expression = self._base.expression
+        return self._base.copy_override(expression=self._get_substr_expression(start=start, stop=stop))
 
-        if item.start is not None and item.start < 0:
-            expression = Expression.construct(f'right({{}}, {abs(item.start)})', expression)
-            if item.stop is not None:
-                if item.stop <= 0 and item.stop > item.start:
-                    # we needed to check stop <= 0, because that would mean we're going the wrong direction
-                    # and that's not supported
-                    expression = Expression.construct(f'left({{}}, {item.stop - item.start})', expression)
-                else:
-                    expression = Expression.construct("''")
+    def _get_substr_expression(self, start=None, stop=None) -> Expression:
+        base_expr = self._base.expression
 
-        elif item.stop is not None and item.stop < 0:
-            # we need to get the full string, minus abs(stop) chars with possibly item.start as an offset
-            offset = 1 if item.start is None else item.start + 1
-            length_offset = item.stop - (offset - 1)
-            expression = Expression.construct(
-                f'substr({{}}, {offset}, greatest(0, length({{}}){length_offset}))',
-                expression, expression
+        # just return the full string
+        if start is None and stop is None:
+            return base_expr
+
+        # normalize start offset, since SQL substr is ordinal
+        start_off = 1 if not start else start + 1
+
+        if start_off > 0:
+            start_offset_expr = ConstValueExpression.construct(str(start_off))
+        else:
+            start_offset_expr = Expression.construct(
+                f'({{}} - {abs(start_off)})', self._base.str.len()
             )
 
-        else:
-            # positives only
-            if item.stop is None:
-                if item.start is None:
-                    # full string, what are we doing here?
-                    # current expression is okay.
-                    pass
-                else:
-                    # full string starting at start
-                    expression = Expression.construct(f'substr({{}}, {item.start + 1})', expression)
-            else:
-                if item.start is None:
-                    expression = Expression.construct(f'left({{}}, {item.stop})', expression)
-                else:
-                    if item.stop > item.start:
-                        expression = Expression.construct(
-                            f'substr({{}}, {item.start + 1}, {item.stop - item.start})',
-                            expression
-                        )
-                    else:
-                        expression = Expression.construct("''")
+        # Case 1: no substr length, therefore return all characters after start offset
+        if stop is None or stop == -1:
+            return Expression.construct('substr({}, {})', base_expr, start_offset_expr)
 
-        return self._base.copy_override(expression=expression)
+        stop_off = stop + 1
+
+        # Case 2: Both offsets have the same sign
+
+        if start_off * stop_off > 0:
+            # return empty string if start offset is greater or equal to stop_off
+            if start_off >= stop_off:
+                return Expression.string_value('')
+
+            # stop_off - start_off will always return positive, because stop_off > start_off
+            return Expression.construct(
+                f'substr({{}}, {{}}, {stop_off - start_off})',
+                base_expr, start_offset_expr,
+            )
+
+        # Case 3. Negative Stop Offset and Positive Start Offset
+        # This means that we need to get the respective positive index of the stop offset by
+        # len(str) - |stop_offset|
+        # Where substr length: (len(str) - |stop_offset|) - start_offset > 0
+
+        # for example:
+        #
+        #          -8  -7  -6  -5  -4  -3  -2  -1
+        #           O | B | J | E | C | T | I | V
+        #  sql      1   2   3   4   5   6   7   8
+        # python    0   1   2   3   4   5   6   7
+        #
+        # For start == 1 and stop == -6, then the positive stop offset is:  8 - |-6 + 1| = 3
+        # and substr length: 3 - (1 + 1) = 1.
+
+        if stop_off < 0:
+            substr_len_exp = Expression.construct(
+                f'({{}} - {abs(stop_off)}) - {{}}', self._base.str.len(), start_offset_expr,
+            )
+
+        # Case 4. Positive Stop Offset and Negative Start Offset
+        # For this case we just need to get the positive index of the start offset by
+        # len(str) - |stop_offset|
+        # Where substr length: stop_offset - (len(str) - |stop_offset|)  > 0
+        else:
+            substr_len_exp = Expression.construct(f'({stop_off} - {{}})',  start_offset_expr)
+
+        return Expression.construct(
+            f'CASE WHEN {{}} > 0 THEN substr({{}}, {{}}, {{}}) ELSE {{}} END',
+            substr_len_exp,
+            base_expr,
+            start_offset_expr,
+            substr_len_exp,
+            Expression.string_value(''),
+        )
 
     def slice(self, start=None, stop=None) -> 'SeriesString':
         """
@@ -155,6 +188,17 @@ class StringOperation:
         return self._base.copy_override(
             expression=Expression.construct('lower({})', self._base)
         )
+
+    def len(self) -> 'SeriesInt64':
+        """
+        gets the lengths of string values.
+
+        :return: SeriesInt64
+        """
+        from bach.series import SeriesInt64
+        return self._base.copy_override(
+            expression=Expression.construct('length({})', self._base)
+        ).copy_override_type(SeriesInt64)
 
 
 class SeriesString(Series):
