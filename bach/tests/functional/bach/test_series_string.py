@@ -175,6 +175,7 @@ def test_string_lower_upper(engine) -> None:
     )
 
 
+@pytest.mark.athena_supported
 def test_to_json_array(engine):
     df = get_df_with_test_data(engine, full_data_set=True)
     s_muni = df['municipality']
@@ -194,7 +195,7 @@ def test_to_json_array(engine):
         ]]
     )
 
-
+@pytest.mark.athena_supported
 def test_to_json_array_sorting_null(engine):
     data = [
         [1, 'x', 'aa'],
@@ -234,6 +235,7 @@ def test_to_json_array_sorting_null(engine):
     )
 
 
+@pytest.mark.athena_supported
 def test_to_json_array_groupby(engine):
     df = get_df_with_test_data(engine, full_data_set=True)
     df = df.reset_index()

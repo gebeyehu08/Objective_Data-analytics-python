@@ -12,7 +12,7 @@ from bach.expression import Expression, AggregateFunctionExpression, get_variabl
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres
+from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres, is_athena
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean, SeriesInt64
@@ -364,6 +364,8 @@ class SeriesString(Series):
             expression = Expression.construct('to_jsonb({})', array_agg_expression)
         elif is_bigquery(self.engine):
             expression = Expression.construct('to_json_string({})', array_agg_expression)
+        elif is_athena(self.engine):
+            expression = Expression.construct('cast({} as json)', array_agg_expression)
         else:
             raise DatabaseNotSupportedException(self.engine)
 
