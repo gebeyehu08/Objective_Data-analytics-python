@@ -43,9 +43,14 @@ CODES_SUPPORTED_IN_ALL_DIALECTS = {
     # '%%',  # PERCENT_CHAR
 }
 
-STRINGS_SUPPORTED_IN_ALL_DIALECTS = {
+STRINGS_SUPPORTED_IN_ALL_DIALECTS = [
+    # These are the combinations of codes that we support for all database dialects, even if some of the
+    # individual codes are not supported.
+    # When adding more strings here: Strings must be sorted longest to shortest, and all strings must
+    # start with a percentage sign.
+
     '%S.%f',  # <seconds>.<microsecnds>
-}
+]
 
 
 _SUPPORTED_C_STANDARD_CODES = {
@@ -178,7 +183,6 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
         return f'"{date_format}"'
 
     tokenized_c_codes = sorted(set(grouped_codes_matches), key=len, reverse=True)
-    unsupported_c_codes = set()
     single_c_code_regex = re.compile(rf'{codes_base_pattern}')
 
     new_date_format_tokens = []
@@ -199,7 +203,6 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
         replaced_codes = []
         for to_repl_code in codes_to_replace:
             if to_repl_code not in _C_STANDARD_CODES_X_POSTGRES_DATE_CODES:
-                unsupported_c_codes.add(to_repl_code)
                 replaced_codes.append(to_repl_code)
                 continue
 
@@ -207,12 +210,6 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
             replaced_codes.append(_C_STANDARD_CODES_X_POSTGRES_DATE_CODES[to_repl_code])
 
         new_date_format_tokens.append('""'.join(replaced_codes))
-
-    if unsupported_c_codes:
-        warnings.warn(
-            message=f'There are no equivalent codes for {sorted(unsupported_c_codes)}.',
-            category=UserWarning,
-        )
 
     return ''.join(new_date_format_tokens)
 
@@ -278,10 +275,46 @@ def parse_c_code_to_bigquery_code(date_format: str) -> str:
     """
     if '%S.%f' in date_format:
         date_format = re.sub(r'%S\.%f', '%E6S', date_format)
+    return date_format
 
-    if '%f' in date_format:
+
+def warn_non_supported_format_codes(date_format: str):
+    """
+    Checks that all formatting codes in date_format are listed in CODES_SUPPORTED_IN_ALL_DIALECTS or are
+    part of a string that's listed in STRINGS_SUPPORTED_IN_ALL_DIALECTS.
+
+    If one or more non-listed codes are found, a UserWarning is emitted.
+    """
+    unsupported_c_codes = set()
+    i = 0
+    while i < len(date_format):
+        current = date_format[i]
+        i += 1
+        if current != '%':  # This is not the start of a code sequence, just a regular character.
+            continue
+
+        # This is the start of a code sequence.
+        # See if any of the STRINGS_SUPPORTED_IN_ALL_DIALECTS start at this character
+        for supported_string in STRINGS_SUPPORTED_IN_ALL_DIALECTS:
+            sub_str = date_format[i-1:len(supported_string) + i]
+            if sub_str == supported_string:
+                # Match: we know this string is good, and can skip to the end of it.
+                i += len(supported_string) - 1
+                break  # skip the 'else:' clause of this for loop
+        else:
+            # If we get here, that means that none of the strings in STRINGS_SUPPORTED_IN_ALL_DIALECTS
+            # start at the current character.
+            # See if the code that starts here is listed in CODES_SUPPORTED_IN_ALL_DIALECTS
+            if i < len(date_format):
+                current = current + date_format[i]
+                i += 1
+            if current not in CODES_SUPPORTED_IN_ALL_DIALECTS:
+                unsupported_c_codes.add(current)
+    if unsupported_c_codes:
+        message = f'These formatting codes are not generally supported: ' \
+                  f'{", ".join(sorted(unsupported_c_codes))}.' \
+                  f'They might not work reliably on some or all database platforms..'
         warnings.warn(
-            message=f'There are no equivalent codes for %f.',
+            message=message,
             category=UserWarning,
         )
-    return date_format
