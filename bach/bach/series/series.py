@@ -381,9 +381,10 @@ class Series(ABC):
     @classmethod
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
         """
-        Give the static db_dtype used to store values of this Series, for the given database dialect.
+        Give the database type used to store values of this Series, for the given database dialect.
 
-        Note: Multiple Series types might return the same db_dtype. For example on BigQuery
+        ..note:
+            Multiple Series types might return the same db_dtype. For example on BigQuery
         `SeriesUuid`, `SeriesJson`, and `SeriesString` will all return 'STRING'. As we use the STRING
         database type to store all of those value types.
 
