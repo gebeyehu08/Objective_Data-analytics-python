@@ -383,15 +383,15 @@ class Series(ABC):
         """
         Give the database type used to store values of this Series, for the given database dialect.
 
-        ..note:
-            Multiple Series types might return the same db_dtype. For example on BigQuery
-        `SeriesUuid`, `SeriesJson`, and `SeriesString` will all return 'STRING'. As we use the STRING
-        database type to store all of those value types.
-
         :raises DatabaseNotSupportedException: If the Series subclass doesn't support the database dialect.
-        :return: database type as string, or None if this Series database type is a structural type whose
+        :return: Database type as string, or None if this Series database type is a structural type whose
             exact type depends on the data of the subtypes (e.g. SeriesList will return None on BigQuery,
             as it can handle all ARRAY<*> subtypes)
+
+        .. note::
+            Multiple Series types might return the same db_dtype. For example on BigQuery
+            :class:`SeriesUuid`, :class:`SeriesJson`, and :class:`SeriesString` will all return 'STRING'.
+            As we use the STRING database type to store all of those value types.
         """
         db_dialect = DBDialect.from_dialect(dialect)
         if db_dialect not in cls.supported_db_dtype:
