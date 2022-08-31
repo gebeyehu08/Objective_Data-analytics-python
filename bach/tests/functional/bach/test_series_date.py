@@ -13,7 +13,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data,\
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES, \
-    CODES_SUPPORTED_IN_ALL_DIALECTS
+    CODES_SUPPORTED_IN_ALL_DIALECTS, STRINGS_SUPPORTED_IN_ALL_DIALECTS
 
 
 @pytest.mark.athena_supported()
@@ -64,6 +64,8 @@ def test_date_format(engine, recwarn):
         f'{c[1]}: {c}'
         for c in sorted(CODES_SUPPORTED_IN_ALL_DIALECTS)
     )
+    # Create format string that contains all strings that we claim to support in addition to the codes above.
+    format_str_all_supported_strings = ' | '.join(STRINGS_SUPPORTED_IN_ALL_DIALECTS)
 
     all_formats = [
         'Year: %Y',
@@ -74,6 +76,7 @@ def test_date_format(engine, recwarn):
         '%q %1 %_',
         # all codes that we claim to support for all databases
         format_str_all_supported_codes,
+        format_str_all_supported_strings
     ]
 
     for idx, fmt in enumerate(all_formats):
@@ -117,6 +120,7 @@ def test_date_format(engine, recwarn):
                 '%q %1 %_', '%q %1 %_',
                 'A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
                 'A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
+                '00.000000', '36.388000'
             ],
         ],
     )

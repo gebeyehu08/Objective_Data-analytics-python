@@ -43,7 +43,7 @@ CODES_SUPPORTED_IN_ALL_DIALECTS = {
     # '%%',  # PERCENT_CHAR
 }
 
-_STRINGS_SUPPORTED_IN_ALL_DIALECTS = {
+STRINGS_SUPPORTED_IN_ALL_DIALECTS = {
     '%S.%f',  # <seconds>.<microsecnds>
 }
 
