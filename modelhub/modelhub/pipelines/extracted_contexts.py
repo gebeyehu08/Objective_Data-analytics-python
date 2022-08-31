@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import operator
+import re
 from functools import reduce
 
 import bach
@@ -132,27 +133,25 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 'true_tstamp': bach.SeriesTimestamp.dtype
             }
 
+            # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0 -> cookie_id
+            # but also contexts_io_objectiv_location_stack_1_0_0 -> location_stack
+            pattern_global_context = re.compile(r'contexts_io_objectiv_(context_)?(.*?)(_context)?_\d_\d_\d')
+
             global_contexts_columns = {}
 
             for col, dtype in dtypes.items():
-                # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0
-                # "contexts_io_objectiv_" + context_data_name + "_" + ve_rs_ion
-                if not col.startswith('contexts_io_objectiv_'):
+                match = pattern_global_context.search(col)
+                if not match:
                     continue
 
-                parts = col.split('_')
-                data_name = parts[3:-3]
-                # The version is contained in parts[-3:]
-
-                if data_name[0] == 'context':
-                    context_name = "_".join(data_name[1:-1])
-                    if context_name in global_contexts:
-                        base_dtypes[col] = [{}]
-                        global_contexts_columns[context_name] = col
-
-                elif data_name[:2] == ['location', 'stack']:
-                    base_dtypes[col] = [{'location_stack': bach.SeriesString.dtype}]
-                    global_contexts_columns['location_stack'] = col
+                # get match group 2, as the first one is a "context_" that we don't need.
+                context_name = match.group(2)
+                if context_name == 'location_stack':
+                    base_dtypes[col] = [{context_name: bach.SeriesString.dtype}]
+                    global_contexts_columns[context_name] = col
+                elif context_name in global_contexts:
+                    base_dtypes[col] = [{}]
+                    global_contexts_columns[context_name] = col
 
             self._base_dtypes = base_dtypes
             self._global_contexts_columns = global_contexts_columns
@@ -234,7 +233,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
                 df_cp[key] = taxonomy_col
 
-            gc_series = df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
+            gc_series = (
+                df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
+            )
             # Extract the requested global contexts
             for gc in self._global_contexts:
                 df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
