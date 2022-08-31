@@ -32,13 +32,13 @@ def test_generated_sql_order_last_select(dialect):
     sql_sorted = bt_sorted.view_sql()
 
     if is_postgres(dialect):
-        expected_order_str = 'order by "city" asc'
+        expected_order_str = 'ORDER BY "city" ASC'
     elif is_bigquery(dialect):
-        expected_order_str = 'order by `city` asc'
+        expected_order_str = 'ORDER BY `city` ASC'
     else:
         raise Exception(f'Need to expand test to support {dialect}')
 
-    assert 'order by' not in sql_not_sorted[-60:]
+    assert 'ORDER BY' not in sql_not_sorted[-60:]
     assert expected_order_str in sql_sorted[-60:]
 
 
