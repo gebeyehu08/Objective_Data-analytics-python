@@ -112,7 +112,7 @@ def get_supported_dtypes_per_objectiv_column(
 
 def check_objectiv_dataframe(
     df: bach.DataFrame,
-    columns_to_check: List[str] = None,
+    columns_to_check: List[str],
     global_contexts_to_check: List[str] = None,
     check_index: bool = False,
     check_dtypes: bool = False,
@@ -122,8 +122,8 @@ def check_objectiv_dataframe(
     """
     Helper function that determines if provided dataframe is an objectiv dataframe.
     :param df: bach DataFrame to be checked
-    :param columns_to_check: list of columns to verify,
-        if not provided, all expected objectiv columns will be used instead.
+    :param columns_to_check: list of columns to verify excluding any global contexts,
+        as they need to be specified in the following parameter.
     :param global_contexts_to_check: list of columns to verify as global_contexts
     :param check_index: if true, will check if dataframe has expected index series
     :param check_dtypes: if true, will check if each series has expected dtypes

@@ -57,7 +57,7 @@ def use_only_required_objectiv_series(
             from modelhub.util import check_objectiv_dataframe, ObjectivSupportedColumns
             check_objectiv_dataframe(
                 df=data,
-                columns_to_check=required_series,
+                columns_to_check=required_series or [],
                 global_contexts_to_check=required_global_contexts,
                 check_index=True,
                 check_dtypes=True,
