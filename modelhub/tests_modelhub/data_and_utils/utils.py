@@ -52,7 +52,7 @@ def get_df_with_json_data_real(db_params: DBParams) -> DataFrame:
     return df
 
 
-def get_objectiv_dataframe_test(db_params=None, time_aggregation=None, global_contexts=[]):
+def get_objectiv_dataframe_test(db_params=None, time_aggregation=None, global_contexts=None):
     if not db_params:
         # by default use PG (this should be removed after modelhub is able to work with all bach engines)
         import os
