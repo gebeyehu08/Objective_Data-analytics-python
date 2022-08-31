@@ -5,7 +5,8 @@ import bach
 import pandas as pd
 import pytest
 
-from modelhub.util import get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
+from modelhub.util import get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe, \
+    ObjectivSupportedColumns
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 
@@ -60,15 +61,20 @@ def test_check_objectiv_dataframe(db_params) -> None:
     # should be ok
     check_objectiv_dataframe(columns_to_check=['event_id'], df=fake_objectiv_df[['event_id', 'day']])
 
+    all_objectiv_columns = columns_to_check=ObjectivSupportedColumns.get_all_columns()
+
     # checks all objectiv columns
     with pytest.raises(ValueError, match=r'is not present in DataFrame.'):
-        check_objectiv_dataframe(df=fake_objectiv_df[['event_id', 'day']])
+        check_objectiv_dataframe(columns_to_check=all_objectiv_columns,
+                                 df=fake_objectiv_df[['event_id', 'day']])
 
     # will check if event_id is in df index
-    check_objectiv_dataframe(check_index=True, df=fake_objectiv_df.set_index('event_id'))
+    check_objectiv_dataframe(columns_to_check=all_objectiv_columns,
+                             check_index=True, df=fake_objectiv_df.set_index('event_id'))
 
     with pytest.raises(ValueError, match=r'is not present in DataFrame index.'):
-        check_objectiv_dataframe(check_index=True, df=fake_objectiv_df)
+        check_objectiv_dataframe(columns_to_check=all_objectiv_columns,
+                                 check_index=True, df=fake_objectiv_df)
 
     check_objectiv_dataframe(
         columns_to_check=['session_id'],
