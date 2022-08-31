@@ -9,7 +9,7 @@ from tests.unit.bach.util import get_fake_df
 
 def test_display_sql_as_markdown(monkeypatch: MonkeyPatch, dialect) -> None:
     df = get_fake_df(dialect, ['a'], ['b', 'c'])
-    expected_sql = 'select * from fake_table'
+    expected_sql = 'SELECT *\nFROM fake_table'
     displayed_calls = 0
 
     def mocked_view_sql() -> str:
