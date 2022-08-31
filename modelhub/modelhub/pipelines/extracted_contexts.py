@@ -124,42 +124,57 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             if not is_bigquery(engine):
                 raise Exception('only bigquery supports new data format for now')
 
-            base_dtypes: Dict[str, Any] = {
-                **self.required_context_columns_per_dialect[self._db_dialect],
-                'event_id': bach.SeriesString.dtype,
-                'network_userid': bach.SeriesString.dtype,
-                'se_action': bach.SeriesString.dtype,
-                'se_category': bach.SeriesString.dtype,
-                'true_tstamp': bach.SeriesTimestamp.dtype
-            }
-
-            # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0 -> cookie_id
-            # but also contexts_io_objectiv_location_stack_1_0_0 -> location_stack
-            pattern_global_context = re.compile(r'contexts_io_objectiv_(context_)?(.*?)(_context)?_\d_\d_\d')
-
-            global_contexts_columns = {}
-
-            for col, dtype in dtypes.items():
-                match = pattern_global_context.search(col)
-                if not match:
-                    continue
-
-                # get match group 2, as the first one is a "context_" that we don't need.
-                context_name = match.group(2)
-                if context_name == 'location_stack':
-                    base_dtypes[col] = [{context_name: bach.SeriesString.dtype}]
-                    global_contexts_columns[context_name] = col
-                elif context_name in global_contexts:
-                    base_dtypes[col] = [{}]
-                    global_contexts_columns[context_name] = col
-
-            self._base_dtypes = base_dtypes
-            self._global_contexts_columns = global_contexts_columns
+            self._base_dtypes = self._get_bq_sp_base_dtypes(dtypes, global_contexts)
 
         self._validate_data_dtypes(
             expected_dtypes=self._base_dtypes,
             current_dtypes=dtypes,
         )
+
+    def _get_bq_sp_base_dtypes(
+            self, dtypes: Dict[str, StructuredDtype], global_contexts: List[str]
+    ) -> Dict[str, Any]:
+        """
+        Get the base dtypes for BQ in the flat/snowplow data format.
+        Will also set self._global_contexts_column_mapping, to map database columns to global context
+        columns in the dataframe.
+        """
+        base_dtypes: Dict[str, Any] = {
+            **self.required_context_columns_per_dialect[self._db_dialect],
+            'event_id': bach.SeriesString.dtype,
+            'network_userid': bach.SeriesString.dtype,
+            'se_action': bach.SeriesString.dtype,
+            'se_category': bach.SeriesString.dtype,
+            'true_tstamp': bach.SeriesTimestamp.dtype
+        }
+
+        # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0 -> cookie_id
+        # but also contexts_io_objectiv_location_stack_1_0_0 -> location_stack
+        pattern_global_context = re.compile(r'contexts_io_objectiv_(context_)?(.*?)(_context)?_\d_\d_\d')
+
+        global_contexts_column_mapping = {}
+
+        for col, dtype in dtypes.items():
+            match = pattern_global_context.search(col)
+            if not match:
+                continue
+
+            # get match group 2, as the first one is a "context_" that we don't need.
+            context_name = match.group(2)
+            if context_name == 'location_stack':
+                base_dtypes[col] = [{context_name: bach.SeriesString.dtype}]
+                global_contexts_column_mapping[context_name] = col
+            elif context_name in global_contexts:
+                base_dtypes[col] = [{}]
+                global_contexts_column_mapping[context_name] = col
+
+        missing = [c for c in global_contexts if c not in global_contexts_column_mapping.keys()]
+        if len(missing) > 0:
+            raise ValueError(f'Requested global contexts {missing} not found in data.')
+
+        self._global_contexts_column_mapping = global_contexts_column_mapping
+
+        return base_dtypes
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
         """
@@ -260,7 +275,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 }
             )
 
-            for gc, col in self._global_contexts_columns.items():
+            for gc, col in self._global_contexts_column_mapping.items():
                 if gc == 'location_stack':
                     df_cp[gc] = (
                         df_cp[col]
@@ -270,7 +285,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 else:
                     df_cp[gc] = df_cp[col].astype('objectiv_global_context')
 
-            df_cp = df_cp.drop(columns=list(self._global_contexts_columns.values()))
+            df_cp = df_cp.drop(columns=list(self._global_contexts_column_mapping.values()))
 
         return df_cp
 
