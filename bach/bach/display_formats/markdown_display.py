@@ -1,7 +1,6 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-import sqlparse
 
 from bach.dataframe import DataFrameOrSeries
 
@@ -17,7 +16,6 @@ def display_sql_as_markdown(obj: DataFrameOrSeries) -> None:
         Requires the IPython package, if not installed the query will be print instead
     """
     sql_str = obj.view_sql()
-    sql_str = sqlparse.format(sql_str, reindent=True, keyword_case='upper')
     try:
         from IPython.display import display, Markdown
         display(Markdown(f'```sql\n{sql_str}```'))
