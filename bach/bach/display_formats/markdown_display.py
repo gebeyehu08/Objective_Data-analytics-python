@@ -18,6 +18,6 @@ def display_sql_as_markdown(obj: DataFrameOrSeries) -> None:
     sql_str = obj.view_sql()
     try:
         from IPython.display import display, Markdown
-        display(Markdown(f'```sql\n{sql_str}```'))
+        display(Markdown(f'```sql\n{sql_str}\n```'))
     except ModuleNotFoundError:
         print(sql_str)

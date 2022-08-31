@@ -20,7 +20,7 @@ def test_display_sql_as_markdown(monkeypatch: MonkeyPatch, dialect) -> None:
         displayed_calls += 1
 
         assert isinstance(markdown, display.Markdown)
-        assert markdown.data == f"```sql\n{expected_sql}```"
+        assert markdown.data == f"```sql\n{expected_sql}\n```"
 
     monkeypatch.setattr(df, 'view_sql', mocked_view_sql)
     monkeypatch.setattr(display, 'display', mocked_display)
