@@ -2199,7 +2199,7 @@ class DataFrame:
                 big_number = 2**63-1  # use a big number, because 'all' is not supported
                 return Expression.construct(f'limit {big_number} offset {limit.start}')
 
-            # 'Normal' databases
+            # Other databases
             else:
                 if limit.stop is not None:
                     return Expression.construct(f'offset {limit.start} limit {limit.stop - limit.start}')
