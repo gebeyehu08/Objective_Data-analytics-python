@@ -51,9 +51,9 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 The `location_stack` column, and the columns taken from the global contexts, contain most of the 
 event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
 objects with :doc:`SeriesLocationStack 
-<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.SeriesLocationStack>` 
-methods, or the `context` accessor for global context columns. See the :doc:`open taxonomy example 
-<./open-taxonomy>` for how to use the `location_stack` and global contexts.
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack>` methods, or the `context` 
+accessor for global context columns. See the :doc:`open taxonomy example <./open-taxonomy>` for how to use 
+the `location_stack` and global contexts.
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
@@ -107,10 +107,10 @@ methods, or the `context` accessor for global context columns. See the :doc:`ope
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/ModelHub>`
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
 	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
 	* :ref:`using global context data <open_taxonomy_location_stack_and_global_contexts>`
-	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/ls>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 	* :doc:`bach.DataFrame.from_pandas <../bach/api-reference/DataFrame/bach.DataFrame.from_pandas>`
 	* :doc:`bach.Series.isnull <../bach/api-reference/Series/bach.Series.isnull>`
 	* :doc:`bach.DataFrame.materialize <../bach/api-reference/DataFrame/bach.DataFrame.materialize>`

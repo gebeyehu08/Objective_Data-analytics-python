@@ -36,7 +36,7 @@ the open model hub.
 
 By instantiating the model hub with a `global_contexts` parameter, all global contexts that are needed in the 
 following analyses are added to the DataFrame. In this example, we select 'application' and 'marketing' 
-contexts. :ref:`Later in this notebook <_global_contexts>` we'll give more details on what data is available 
+contexts. :ref:`Later in this notebook <global_contexts>` we'll give more details on what data is available 
 in the global contexts and how to access this data for analyses.
 
 .. doctest::
@@ -58,7 +58,6 @@ in the global contexts and how to access this data for analyses.
 	:skipif: engine is None
 
 	>>> from modelhub import ModelHub
-	>>> from bach import display_sql_as_markdown
 	>>> # instantiate the model hub, set the default time aggregation to daily
 	>>> # and get the global contexts that will be used in this example
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
@@ -68,12 +67,12 @@ in the global contexts and how to access this data for analyses.
 The data for this DataFrame is still in the database, and the database is not queried before any of the data 
 is loaded to the python environment. The methods that query the database are: 
 
-* :doc:`head <../modeling/bach/api-reference/DataFrame/head/>`
-* :doc:`to_pandas <../modeling/bach/api-reference/DataFrame/to_pandas`
-* :doc:`get_sample <../modeling/bach/api-reference/DataFrame/get_sample`
-* :doc:`to_numpy <../modeling/bach/api-reference/DataFrame/to_numpy`
-* The property accessors :doc:`Series.array <../modeling/bach/api-reference/Series/array>`, and 
-	:doc:`Series.value <../modeling/bach/api-reference/Series/value>`
+* :doc:`head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+* :doc:`to_pandas <../bach/api-reference/DataFrame/bach.DataFrame.to_pandas>`
+* :doc:`get_sample <../bach/api-reference/DataFrame/bach.DataFrame.get_sample>`
+* :doc:`to_numpy <../bach/api-reference/DataFrame/bach.DataFrame.to_numpy>`
+* The property accessors :doc:`Series.array <../bach/api-reference/Series/bach.Series.array>`, and 
+	:doc:`Series.value <../bach/api-reference/Series/bach.Series.value>`
 
 For demo purposes of this notebook, these methods are called often to show the results of our operations. To 
 limit the number of executed queries on the full dataset, it is recommended to use these methods less often or 
@@ -255,8 +254,8 @@ menu on our documentation pages.
 Because of the specific way the location information is labeled, validated, and stored using the open 
 analytics taxonomy, it can be used to easily slice and group your product's features. The column is set as an 
 `objectiv_location_stack` type, and therefore location stack specific methods can be used to access the data 
-from the `location_stack`. These :doc:`methods <../bach/api-reference/Series/Json/>`` can be used using the 
-`.ls` accessor on the column:
+from the `location_stack`. These :doc:`methods <../bach/api-reference/Series/Json/bach.SeriesJson.json>` can 
+be used using the `.ls` accessor on the column:
 
 * :doc:`.ls.navigation_features <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 * :doc:`.ls.feature_stack <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
@@ -265,6 +264,7 @@ from the `location_stack`. These :doc:`methods <../bach/api-reference/Series/Jso
 For example:
 
 .. code-block:: python
+	
 	df.location_stack.ls.nice_name
 
 returns '*Link: Overview located at Root Location: docs => Navigation: docs-sidebar => Expandable: API 
@@ -277,23 +277,7 @@ An example location stack for a PressEvent is queried below:
 	:skipif: engine is None
 
 	>>> df[df.event_type == 'PressEvent'].location_stack.head(1)[0]
-	[{'id': 'home',
-	  '_type': 'RootLocationContext',
-	  '_types': ['AbstractContext',
-	   'AbstractLocationContext',
-	   'RootLocationContext']},
-	  'id': 'navbar-top',
-	  '_type': 'NavigationContext',
-	  '_types': ['AbstractContext',
-	   'AbstractLocationContext',
-	   'NavigationContext']},
-	  'id': 'about-us',
-	  'href': '/about',
-	  '_type': 'LinkContext',
-	  '_types': ['AbstractContext',
-	   'AbstractLocationContext',
-	   'LinkContext',
-	   'PressableContext']}]
+	[{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext']}, {'id': 'navbar-top', '_type': 'NavigationContext', '_types': ['AbstractContext', 'AbstractLocationContext', 'NavigationContext']}, {'id': 'about-us', 'href': '/about', '_type': 'LinkContext', '_types': ['AbstractContext', 'AbstractLocationContext', 'LinkContext', 'PressableContext']}]
 
 .. _global_contexts:
 
@@ -319,7 +303,7 @@ Similarly, the application ID can be set as regular (text) column in the DataFra
 	df['application_id'] = df.application.context.id
 
 `See the full reference of all available global contexts in the open taxonomy here 
-<https://objectiv.io/docs/taxonomy/global-contexts/`_. Each global context _always_ has an 'id' key that 
+<https://objectiv.io/docs/taxonomy/global-contexts/>`_. Each global context _always_ has an 'id' key that 
 uniquely identifies the global context of that type. Additional keys are shown in the blocks of each context 
 in the reference.
 
@@ -389,10 +373,13 @@ the sampled is written to the database, therefore the `table_name` must be provi
 
 	from modelhub import ModelHub
 	from bach import display_sql_as_markdown
+	def display_sql_as_markdown(arg): 
+		print('sql\\n' + arg.view_sql() + '\\n') # print out SQL instead of an object
 	start_date = '2022-06-01'
 	end_date = '2022-06-30'
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
 	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
+	df['application_id'] = df.application.context.id
 
 .. doctest:: open-taxonomy-sampling
 	:skipif: engine is None
@@ -417,21 +404,21 @@ A new column is created in the sample.
 	454997de-09cb-440b-b288-83d48280e2d6  2022-06-30 2022-06-30 17:14:20.194  5f5b80ec-f14f-4e81-a8f4-7015ba4c0b47  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...         868                  33  [{'id': 'objectiv-docs', '_type': 'Application...        []     objectiv-docs             None  [{'id': 'home', '_type': 'RootLocationContext'...
 	566c9831-582c-4ec3-861a-6893c65b7b29  2022-06-30 2022-06-30 17:14:13.815  5f5b80ec-f14f-4e81-a8f4-7015ba4c0b47  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...         868                  31  [{'id': 'objectiv-docs', '_type': 'Application...        []     objectiv-docs             None  [{'id': 'home', '_type': 'RootLocationContext'...
 
-Using the :doc:`.get_unsampled() <../bach/api-reference/DataFrame/get_unsampled>` operation, the operations 
-that are done on the sample (the creation of the column), are applied to the entire data set:
+Using the :doc:`.get_unsampled() <../bach/api-reference/DataFrame/bach.DataFrame.get_unsampled>` operation, 
+the operations that are done on the sample (the creation of the column), are applied to the entire data set:
 
 .. doctest:: open-taxonomy-sampling
 	:skipif: engine is None
 
 	>>> df_unsampled = df_sample.get_unsampled()
 	>>> df_unsampled.sort_values('moment', ascending=False).head()
-	                                             day                  moment                               user_id                                     location_stack              event_type                                  stack_event_types  session_id  session_hit_number                                        application marketing    application_id marketing_source                             root_location_contexts
-	event_id                                                                                                                                                                                                                                                                                                                                                                                   
-	96b5e709-bb8a-46de-ac82-245be25dac29  2022-06-30 2022-06-30 21:40:32.401  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...         872                   3  [{'id': 'objectiv-website', '_type': 'Applicat...        []  objectiv-website             None  [{'id': 'home', '_type': 'RootLocationContext'...
-	252d7d87-5600-4d90-b24f-2a6fb8986c5e  2022-06-30 2022-06-30 21:40:30.117  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]         872                   2  [{'id': 'objectiv-website', '_type': 'Applicat...        []  objectiv-website             None  [{'id': 'home', '_type': 'RootLocationContext'...
-	157a3000-bbfc-42e0-b857-901bd578ea7c  2022-06-30 2022-06-30 21:40:16.908  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]         872                   1  [{'id': 'objectiv-website', '_type': 'Applicat...        []  objectiv-website             None  [{'id': 'home', '_type': 'RootLocationContext'...
-	8543f519-d3a4-4af6-89f5-cb04393944b8  2022-06-30 2022-06-30 20:43:50.962  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext'...          MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, No...         871                   2  [{'id': 'objectiv-website', '_type': 'Applicat...        []  objectiv-website             None  [{'id': 'home', '_type': 'RootLocationContext'...
-	a0ad4364-57e0-4da9-a266-057744550cc2  2022-06-30 2022-06-30 20:43:49.820  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext'...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInt...         871                   1  [{'id': 'objectiv-website', '_type': 'Applicat...        []  objectiv-website             None  [{'id': 'home', '_type': 'RootLocationContext'...
+	                                             day                  moment                               user_id                                                                                location_stack              event_type                                                 stack_event_types  session_id  session_hit_number                                                                                   application marketing    application_id
+	event_id                                                                                                                                                                                                                                                                                                                                                                                                          
+	96b5e709-bb8a-46de-ac82-245be25dac29  2022-06-30 2022-06-30 21:40:32.401  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...            VisibleEvent                [AbstractEvent, NonInteractiveEvent, VisibleEvent]         872                   3  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...        []  objectiv-website
+	252d7d87-5600-4d90-b24f-2a6fb8986c5e  2022-06-30 2022-06-30 21:40:30.117  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...              PressEvent                     [AbstractEvent, InteractiveEvent, PressEvent]         872                   2  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...        []  objectiv-website
+	157a3000-bbfc-42e0-b857-901bd578ea7c  2022-06-30 2022-06-30 21:40:16.908  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...              PressEvent                     [AbstractEvent, InteractiveEvent, PressEvent]         872                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...        []  objectiv-website
+	8543f519-d3a4-4af6-89f5-cb04393944b8  2022-06-30 2022-06-30 20:43:50.962  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...          MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, NonInteractiveEvent]         871                   2  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...        []  objectiv-website
+	a0ad4364-57e0-4da9-a266-057744550cc2  2022-06-30 2022-06-30 20:43:49.820  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  ApplicationLoadedEvent      [AbstractEvent, ApplicationLoadedEvent, NonInteractiveEvent]         871                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...        []  objectiv-website
 
 The sample can also be used for grouping and aggregating. The example below counts all hits and the unique 
 `event_types` in the sample:
@@ -448,9 +435,23 @@ The sample can also be used for grouping and aggregating. The example below coun
 	objectiv-docs                      5                       399
 	objectiv-website                   8                       235
 
+.. testsetup:: open-taxonomy-sampling-grouped
+	:skipif: engine is None
+
+	from modelhub import ModelHub
+	from bach import display_sql_as_markdown
+	start_date = '2022-06-01'
+	end_date = '2022-06-30'
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
+	df['application_id'] = df.application.context.id
+	df_sample = df.get_sample(table_name='sample_data', sample_percentage=10, overwrite=True)
+	df_sample['root_location_contexts'] = df_sample.location_stack.json[:1]
+	df_sample_grouped = df_sample.groupby(['application_id']).agg({'event_type':'nunique','session_hit_number':'count'})
+
 As can be seen from the counts, unsampling applies the transformation to the entire data set:
 
-.. doctest:: open-taxonomy-sampling
+.. doctest:: open-taxonomy-sampling-grouped
 	:skipif: engine is None
 
 	>>> df_unsampled_grouped = df_sample_grouped.get_unsampled()
@@ -480,112 +481,124 @@ dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi
 	:skipif: engine is None
 
 	>>> # show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
-	>>> display_sql_as_markdown(df_unsampled_grouped)
+	>>> press_events = df[df.event_type == 'PressEvent'].sort_values('moment', ascending=False)
+	>>> display_sql_as_markdown(press_events)
 	sql
 	WITH "from_table___7a4057e80babeec1c65913e0a773d65d" AS (
-	      SELECT "value",
-	             "event_id",
-	             "day",
-	             "moment",
-	             "cookie_id"
-	        FROM "data"
-	     ),
-	     "getitem_where_boolean___7da03df742f761c61cd49b238d956582" AS (
-	      SELECT "value" AS "value",
-	             "event_id" AS "event_id",
-	             "day" AS "day",
-	             "moment" AS "moment",
-	             "cookie_id" AS "user_id",
-	             "value"->>'_type' AS "event_type",
-	             cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	             cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	             cast("value"->>'time' AS bigint) AS "time",
-	             jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",
-	             jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing"
-	        FROM "from_table___7a4057e80babeec1c65913e0a773d65d"
-	       WHERE ("day" >= cast('2022-03-01' AS date))
-	     ),
-	     "context_data___7924bd43ff9e1b4e591f15dd156fbf6c" AS (
-	      SELECT "event_id" AS "event_id",
-	             "day" AS "day",
-	             "moment" AS "moment",
-	             "user_id" AS "user_id",
-	             "location_stack" AS "location_stack",
-	             "event_type" AS "event_type",
-	             "stack_event_types" AS "stack_event_types",
-	             "application" AS "application",
-	             "marketing" AS "marketing"
-	        FROM "getitem_where_boolean___7da03df742f761c61cd49b238d956582"
-	     ),
-	     "session_starts___50d61f29e62a277df23267e7bc3a7d03" AS (
-	      SELECT "event_id" AS "event_id",
-	             "day" AS "day",
-	             "moment" AS "moment",
-	             "user_id" AS "user_id",
-	             "location_stack" AS "location_stack",
-	             "event_type" AS "event_type",
-	             "stack_event_types" AS "stack_event_types",
-	             "application" AS "application",
-	             "marketing" AS "marketing",
-	             CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                  ELSE cast(TRUE AS boolean)
-	                   END AS "is_start_of_session"
-	        FROM "context_data___7924bd43ff9e1b4e591f15dd156fbf6c"
-	     ),
-	     "session_id_and_count___015fa268afb90a9d6216983b28253d7c" AS (
-	      SELECT "event_id" AS "event_id",
-	             "day" AS "day",
-	             "moment" AS "moment",
-	             "user_id" AS "user_id",
-	             "location_stack" AS "location_stack",
-	             "event_type" AS "event_type",
-	             "stack_event_types" AS "stack_event_types",
-	             "application" AS "application",
-	             "marketing" AS "marketing",
-	             "is_start_of_session" AS "is_start_of_session",
-	             CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                  ELSE cast(NULL AS bigint)
-	                   END AS "session_start_id",
-	             count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	        FROM "session_starts___50d61f29e62a277df23267e7bc3a7d03"
-	     ),
-	     "objectiv_sessionized_data___d2c0360f0296862bbf47e78c821ae1eb" AS (
-	      SELECT "event_id" AS "event_id",
-	             "day" AS "day",
-	             "moment" AS "moment",
-	             "user_id" AS "user_id",
-	             "location_stack" AS "location_stack",
-	             "event_type" AS "event_type",
-	             "stack_event_types" AS "stack_event_types",
-	             "application" AS "application",
-	             "marketing" AS "marketing",
-	             "is_start_of_session" AS "is_start_of_session",
-	             "session_start_id" AS "session_start_id",
-	             "is_one_session" AS "is_one_session",
-	             first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	             row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	        FROM "session_id_and_count___015fa268afb90a9d6216983b28253d7c"
-	     ),
-	     "get_sample___b4c64530cb372902e3415e6e2c96ab6b" AS (
-	      SELECT "event_id" AS "event_id",
-	             "day" AS "day",
-	             "moment" AS "moment",
-	             "user_id" AS "user_id",
-	             "location_stack" AS "location_stack",
-	             "event_type" AS "event_type",
-	             "stack_event_types" AS "stack_event_types",
-	             "session_id" AS "session_id",
-	             "session_hit_number" AS "session_hit_number",
-	             "application" AS "application",
-	             "marketing" AS "marketing",
-	             "application"->0->>'id' AS "application_id",
-	             "marketing"->0->>'source' AS "marketing_source"
-	        FROM "objectiv_sessionized_data___d2c0360f0296862bbf47e78c821ae1eb"
-	     ) SELECT "application_id" AS "application_id",
-	     count(DISTINCT "event_type") AS "event_type_nunique",
-	     count("session_hit_number") AS "session_hit_number_count"
-	FROM "get_sample___b4c64530cb372902e3415e6e2c96ab6b"
-	GROUP BY "application_id"
+	        SELECT "value",
+	               "event_id",
+	               "day",
+	               "moment",
+	               "cookie_id"
+	          FROM "data"
+	       ),
+	       "getitem_where_boolean___1016c1af615206d9b3365d2b01e23e06" AS (
+	        SELECT "value" AS "value",
+	               "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "cookie_id" AS "user_id",
+	               "value"->>'_type' AS "event_type",
+	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
+	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
+	               cast("value"->>'time' AS bigint) AS "time",
+	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",
+	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing"
+	          FROM "from_table___7a4057e80babeec1c65913e0a773d65d"
+	         WHERE ((("day" >= cast('2022-06-01' AS date))) AND (("day" <= cast('2022-06-30' AS date))))
+	       ),
+	       "context_data___126ced4e10b558840eda7c82baf90344" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing"
+	          FROM "getitem_where_boolean___1016c1af615206d9b3365d2b01e23e06"
+	       ),
+	       "session_starts___082530754548ac1c50d02151b10fa8fc" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	                    ELSE cast(TRUE AS boolean)
+	                     END AS "is_start_of_session"
+	          FROM "context_data___126ced4e10b558840eda7c82baf90344"
+	       ),
+	       "session_id_and_count___7f171f8d35e7062947b95b49f3e420ec" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               "is_start_of_session" AS "is_start_of_session",
+	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+	                    ELSE cast(NULL AS bigint)
+	                     END AS "session_start_id",
+	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
+	          FROM "session_starts___082530754548ac1c50d02151b10fa8fc"
+	       ),
+	       "objectiv_sessionized_data___f44ac0d78c4b2fc46336fd69bb34d488" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               "is_start_of_session" AS "is_start_of_session",
+	               "session_start_id" AS "session_start_id",
+	               "is_one_session" AS "is_one_session",
+	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
+	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
+	          FROM "session_id_and_count___7f171f8d35e7062947b95b49f3e420ec"
+	       ),
+	       "getitem_where_boolean___894a74057851db4fec74eaeb0b6f29bf" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "session_id" AS "session_id",
+	               "session_hit_number" AS "session_hit_number",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               "application"->0->>'id' AS "application_id",
+	               "marketing"->0->>'source' AS "marketing_source"
+	          FROM "objectiv_sessionized_data___f44ac0d78c4b2fc46336fd69bb34d488"
+	         WHERE ("event_type" = 'PressEvent')
+	       ) SELECT "event_id" AS "event_id",
+	       "day" AS "day",
+	       "moment" AS "moment",
+	       "user_id" AS "user_id",
+	       "location_stack" AS "location_stack",
+	       "event_type" AS "event_type",
+	       "stack_event_types" AS "stack_event_types",
+	       "session_id" AS "session_id",
+	       "session_hit_number" AS "session_hit_number",
+	       "application" AS "application",
+	       "marketing" AS "marketing",
+	       "application_id" AS "application_id",
+	       "marketing_source" AS "marketing_source"
+	  FROM "getitem_where_boolean___894a74057851db4fec74eaeb0b6f29bf"
+	 ORDER BY "moment" DESC NULLS LAST
 	<BLANKLINE>
 
 Where to go next

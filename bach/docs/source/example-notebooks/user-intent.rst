@@ -39,9 +39,9 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 The `location_stack` column, and the columns taken from the global contexts, contain most of the 
 event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
 objects with :doc:`SeriesLocationStack 
-<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.SeriesLocationStack>` 
-methods, or the `context` accessor for global context columns. See the :doc:`open taxonomy example 
-<./open-taxonomy>` for how to use the `location_stack` and global contexts.
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack>` methods, or the `context` 
+accessor for global context columns. See the :doc:`open taxonomy example <./open-taxonomy>` for how to use 
+the `location_stack` and global contexts.
 
 .. code-block:: python
 
