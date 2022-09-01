@@ -171,10 +171,6 @@ class SeriesList(Series):
     def elements(self) -> 'ListAccessor':
         return ListAccessor(self)
 
-    @property
-    def elements_safe(self) -> 'ListAccessor':
-        return SafeListAccessor(self)
-
 
 class ListAccessor:
     def __init__(self, series: SeriesList):
@@ -188,7 +184,7 @@ class ListAccessor:
         engine = self._series.engine
         if isinstance(key, int):
             if is_bigquery(engine):
-                expr_str = f'{{}}[OFFSET({key})]'
+                expr_str = f'{{}}[SAFE_OFFSET({key})]'
             else:
                 raise DatabaseNotSupportedException(engine)
 
@@ -230,19 +226,3 @@ class ListAccessor:
         return self._series \
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=Expression.construct(expr_str, self._series))
-
-
-class SafeListAccessor(ListAccessor):
-    """
-    Accessor for Lists, just as the parent ListAccessor, but it wraps the retrieval in a
-    check to make sure the list length is sufficient, else NULL is returned instead..
-    """
-    def __getitem__(self, key: Union[int, slice]):
-        if not isinstance(key, int):
-            # we can not check anything else
-            raise ValueError(f'Invalid key type: {type(key)}')
-
-        element = ListAccessor.__getitem__(self, key)
-        array_len = self.len()
-        fmt = f"(CASE WHEN ({{}}) <= {key} THEN NULL ELSE {{}} END)"
-        return element.copy_override(expression=Expression.construct(fmt, array_len, element))
