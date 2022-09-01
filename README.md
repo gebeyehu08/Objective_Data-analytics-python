@@ -89,9 +89,12 @@ A pandas-like [modeling library](https://www.objectiv.io/docs/modeling/bach/) to
 
 ---
 
-## Compatible data stores
+## Stack compatibility
 
-Objectiv currently supports PostgreSQL and Google BigQuery (through Snowplow).  Amazon Athena is next, and more data stores coming.
+Objectiv plays nice with most popular tools in the modern data stack.
+
+![image](https://user-images.githubusercontent.com/82152911/187926331-1428acd1-e350-48f3-9b7c-c9db35f14972.png)
+
 
 ---
 
