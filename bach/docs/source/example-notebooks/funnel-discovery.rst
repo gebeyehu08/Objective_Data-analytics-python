@@ -57,8 +57,9 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # instantiate the model hub, and set the default time aggregation to daily
+	>>> # and set the global contexts that will be used in this example
 	>>> from modelhub import ModelHub
-	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
@@ -66,7 +67,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # add specific contexts to the data as columns
-	>>> df['application'] = df.global_contexts.gc.application
+	>>> df['application_id'] = df.application.context.id
 	>>> df['feature_nice_name'] = df.location_stack.ls.nice_name
 
 .. doctest:: funnel-discovery
@@ -78,10 +79,10 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. admonition:: Reference
 	:class: api-reference
 
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/ModelHub>`
 	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
-	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
-
+	* :ref:`using global context data <open_taxonomy_location_stack_and_global_contexts>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/ls>`
 
 First: define what is conversion
 --------------------------------
@@ -96,7 +97,7 @@ but you can
 
 	>>> # define which data to use as conversion events; in this example, anyone who goes on to read the documentation
 	>>> df['is_conversion_event'] = False
-	>>> df.loc[df['application'] == 'objectiv-docs', 'is_conversion_event'] = True
+	>>> df.loc[df['application_id'] == 'objectiv-docs', 'is_conversion_event'] = True
 
 Out of curiosity, let's see which features are used by users that converted, sorted by their conversion impact.
 
@@ -349,7 +350,7 @@ do or do not convert.
 
 	>>> # first, add marketing data to the dataframe
 	>>> df_marketing = df.copy()
-	>>> df_marketing['utm_campaign'] = df_marketing.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='campaign')
+	>>> df_marketing['utm_campaign'] = df_marketing.marketing.context.campaign
 	>>> 
 	>>> # filter the dataframe down to users that came in via a marketing campaign
 	>>> user_list = df_marketing[~df_marketing['utm_campaign'].isnull()].user_id
@@ -373,7 +374,7 @@ converted when they go on to read the documentation from our website, but you ca
 
 	>>> # define which data to use as conversion events; in this example, anyone who goes on to read the documentation
 	>>> df_marketing['is_conversion_event'] = False
-	>>> df_marketing.loc[df_marketing['application'] == 'objectiv-docs', 'is_conversion_event'] = True
+	>>> df_marketing.loc[df_marketing['application_id'] == 'objectiv-docs', 'is_conversion_event'] = True
 
 .. doctest:: funnel-discovery
 	:skipif: engine is None
@@ -445,7 +446,7 @@ over each link to see the source and target node.
 	:class: api-reference
 
 	* :doc:`bach.DataFrame.copy <../bach/api-reference/DataFrame/bach.DataFrame.copy>`
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
+	* :ref:`using global context data <open_taxonomy_location_stack_and_global_contexts>`
 	* :doc:`bach.Series.isnull <../bach/api-reference/Series/bach.Series.isnull>`
 	* :doc:`bach.Series.isin <../bach/api-reference/Series/bach.Series.isin>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
