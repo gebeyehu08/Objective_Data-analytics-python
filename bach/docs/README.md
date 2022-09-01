@@ -43,3 +43,12 @@ branch/PR, or run `make clean-target`, e.g.:
 ```
 
 ---
+
+To run doctests for a single file: 
+
+```
+python -m doctest -v [PATH_TO_FILE] -o NORMALIZE_WHITESPACE -o IGNORE_EXCEPTION_DETAIL -o ELLIPSIS -o DONT_ACCEPT_TRUE_FOR_1
+```
+
+Note that this will probably require copying some of the global doctest config currently defined in `conf.py` 
+to the respective file.

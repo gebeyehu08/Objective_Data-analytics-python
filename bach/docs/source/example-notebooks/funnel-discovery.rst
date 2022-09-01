@@ -57,16 +57,24 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # instantiate the model hub, and set the default time aggregation to daily
+	>>> # and set the global contexts that will be used in this example
 	>>> from modelhub import ModelHub
-	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
+
+The `location_stack` column, and the columns taken from the global contexts, contain most of the 
+event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
+objects with :doc:`SeriesLocationStack 
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack>` methods, or the `context` 
+accessor for global context columns. See the :doc:`open taxonomy example <./open-taxonomy>` for how to use 
+the `location_stack` and global contexts.
 
 .. doctest:: funnel-discovery
 	:skipif: engine is None
 
 	>>> # add specific contexts to the data as columns
-	>>> df['application'] = df.global_contexts.gc.application
+	>>> df['application_id'] = df.application.context.id
 	>>> df['feature_nice_name'] = df.location_stack.ls.nice_name
 
 .. doctest:: funnel-discovery
@@ -78,10 +86,10 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. admonition:: Reference
 	:class: api-reference
 
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
 	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
+	* :ref:`using global context data <location-stack-and-global-contexts>`
 	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
-
 
 First: define what is conversion
 --------------------------------
@@ -96,7 +104,7 @@ but you can
 
 	>>> # define which data to use as conversion events; in this example, anyone who goes on to read the documentation
 	>>> df['is_conversion_event'] = False
-	>>> df.loc[df['application'] == 'objectiv-docs', 'is_conversion_event'] = True
+	>>> df.loc[df['application_id'] == 'objectiv-docs', 'is_conversion_event'] = True
 
 Out of curiosity, let's see which features are used by users that converted, sorted by their conversion impact.
 
@@ -349,20 +357,20 @@ do or do not convert.
 
 	>>> # first, add marketing data to the dataframe
 	>>> df_marketing = df.copy()
-	>>> df_marketing['utm_campaign'] = df_marketing.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='campaign')
+	>>> df_marketing['utm_campaign'] = df_marketing.marketing.context.campaign
 	>>> 
 	>>> # filter the dataframe down to users that came in via a marketing campaign
 	>>> user_list = df_marketing[~df_marketing['utm_campaign'].isnull()].user_id
 	>>> df_marketing = df_marketing[df_marketing['user_id'].isin(user_list)]
 	>>> 
 	>>> df_marketing.head()
-	                                             day                  moment                               user_id                                                                               global_contexts                                                                                location_stack  event_type                              stack_event_types  session_id  session_hit_number       application                                                                             feature_nice_name  is_conversion_event utm_campaign
-	event_id                                                                                                                                                                                                                                                                                                                                      
-	d1c72d21-4233-40dc-b93d-3323dbf4cf75  2022-06-01 2022-06-01 18:55:35.074  04ac1790-825a-47a3-aac3-dccfeee61ade  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'blog', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        4490                   1  objectiv-website                           Link: logo located at Root Location: blog => Navigation: navbar-top                False         blog
-	3a714be8-20aa-46cb-8deb-fa03635e20a9  2022-04-12 2022-04-12 12:43:29.990  09cb57db-1a41-4f9f-bade-64a7f9f374ad  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1742                   1  objectiv-website                           Link: docs located at Root Location: home => Navigation: navbar-top                False  16526831451
-	99fed3fd-6f22-430c-92a4-78149d85c78e  2022-04-12 2022-04-12 12:43:36.151  09cb57db-1a41-4f9f-bade-64a7f9f374ad  [{'id': 'objectiv-docs', '_type': 'ApplicationContext', '_types': ['AbstractContext', 'Ab...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1742                   4     objectiv-docs  Link: Quickstart Guide located at Root Location: home => Navigation: doc-paginator-naviga...                 True         None
-	ff88125e-49d0-47e8-a60a-48b7e244e5ac  2022-03-21 2022-03-21 23:36:20.587  0b7fa533-64ca-48c9-84d9-04c54b0fa069  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1450                   3  objectiv-website                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top                False  16526831451
-	38d7bf60-6c65-4521-9dbc-82138a862d4f  2022-03-21 2022-03-21 23:36:23.769  0b7fa533-64ca-48c9-84d9-04c54b0fa069  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1450                   5  objectiv-website  Link: docs located at Root Location: home => Navigation: navbar-top => Overlay: hamburger...                False  16526831451
+	                                             day                  moment                               user_id                                                                                location_stack  event_type                              stack_event_types  session_id  session_hit_number                                                                                   application                                                                                     marketing    application_id                                                                             feature_nice_name  is_conversion_event utm_campaign
+	event_id                                                                                                                                                                                                                                                                                                                                                                                                          
+	d1c72d21-4233-40dc-b93d-3323dbf4cf75  2022-06-01 2022-06-01 18:55:35.074  04ac1790-825a-47a3-aac3-dccfeee61ade  [{'id': 'blog', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        4490                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': None, '_type': 'MarketingContext', '_types': ['AbstractContext', '...  objectiv-website                           Link: logo located at Root Location: blog => Navigation: navbar-top                False         blog
+	3a714be8-20aa-46cb-8deb-fa03635e20a9  2022-04-12 2022-04-12 12:43:29.990  09cb57db-1a41-4f9f-bade-64a7f9f374ad  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1742                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': 'open source analytics', '_type': 'MarketingContext', '_types': ['...  objectiv-website                           Link: docs located at Root Location: home => Navigation: navbar-top                False  16526831451
+	99fed3fd-6f22-430c-92a4-78149d85c78e  2022-04-12 2022-04-12 12:43:36.151  09cb57db-1a41-4f9f-bade-64a7f9f374ad  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1742                   4  [{'id': 'objectiv-docs', '_type': 'ApplicationContext', '_types': ['AbstractContext', 'Ab...                                                                                            []     objectiv-docs  Link: Quickstart Guide located at Root Location: home => Navigation: doc-paginator-naviga...                 True         None
+	ff88125e-49d0-47e8-a60a-48b7e244e5ac  2022-03-21 2022-03-21 23:36:20.587  0b7fa533-64ca-48c9-84d9-04c54b0fa069  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1450                   3  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': 'open source analytics software', '_type': 'MarketingContext', '_t...  objectiv-website                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top                False  16526831451
+	38d7bf60-6c65-4521-9dbc-82138a862d4f  2022-03-21 2022-03-21 23:36:23.769  0b7fa533-64ca-48c9-84d9-04c54b0fa069  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1450                   5  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': 'open source analytics software', '_type': 'MarketingContext', '_t...  objectiv-website  Link: docs located at Root Location: home => Navigation: navbar-top => Overlay: hamburger...                False  16526831451
 
 Let's define what you see as conversion events for these users. In this example, we'll again view someone as 
 converted when they go on to read the documentation from our website, but you can 
@@ -373,7 +381,7 @@ converted when they go on to read the documentation from our website, but you ca
 
 	>>> # define which data to use as conversion events; in this example, anyone who goes on to read the documentation
 	>>> df_marketing['is_conversion_event'] = False
-	>>> df_marketing.loc[df_marketing['application'] == 'objectiv-docs', 'is_conversion_event'] = True
+	>>> df_marketing.loc[df_marketing['application_id'] == 'objectiv-docs', 'is_conversion_event'] = True
 
 .. doctest:: funnel-discovery
 	:skipif: engine is None
@@ -445,7 +453,7 @@ over each link to see the source and target node.
 	:class: api-reference
 
 	* :doc:`bach.DataFrame.copy <../bach/api-reference/DataFrame/bach.DataFrame.copy>`
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
+	* :ref:`using global context data <location-stack-and-global-contexts>`
 	* :doc:`bach.Series.isnull <../bach/api-reference/Series/bach.Series.isnull>`
 	* :doc:`bach.Series.isin <../bach/api-reference/Series/bach.Series.isin>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
