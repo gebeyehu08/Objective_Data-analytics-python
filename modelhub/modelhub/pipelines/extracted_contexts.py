@@ -6,7 +6,7 @@ import re
 from functools import reduce
 
 import bach
-from typing import Optional, Any, Mapping, Dict, NamedTuple, List
+from typing import Optional, Any, Dict, NamedTuple, List
 
 import modelhub
 from bach.types import StructuredDtype
@@ -222,10 +222,10 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         Returns a bach DataFrame containing each extracted field as series
         """
         df_cp = df.copy()
+        dtypes = _DEFAULT_TAXONOMY_DTYPE_PER_FIELD
 
         if self._taxonomy_column:
             taxonomy_series = df_cp[self._taxonomy_column.name]
-            dtypes = _DEFAULT_TAXONOMY_DTYPE_PER_FIELD
 
             if is_bigquery(df.engine):
                 # taxonomy column is a list, we just need to get the first value
@@ -274,6 +274,10 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                     'true_tstamp': 'time'
                 }
             )
+
+            df_cp['stack_event_types'] = df_cp['stack_event_types'].astype(bach.SeriesJson.dtype)
+            df_cp['event_id'] = df_cp['event_id'].astype(bach.SeriesUuid.dtype)
+            df_cp['user_id'] = df_cp['user_id'].astype(bach.SeriesUuid.dtype)
 
             for gc, col in self._global_contexts_column_mapping.items():
                 if gc == 'location_stack':

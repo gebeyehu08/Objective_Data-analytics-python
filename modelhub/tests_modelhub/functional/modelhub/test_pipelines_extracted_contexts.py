@@ -198,17 +198,15 @@ def test_process_taxonomy_data(db_params) -> None:
         # day and moment are parsed after processing base data
         expected_series = expected_series[:-2]
 
-    for expected_s in expected_series:
-        assert expected_s in result.data
-
-    result = result.sort_values(by='event_id')[expected_series]
-    expected = get_expected_context_pandas_df(engine, db_format=db_params.format)[expected_series]
-
-    rpd = result.to_pandas()
+    result = result.sort_values(by='event_id')[expected_series].to_pandas()
+    expected = (
+        get_expected_context_pandas_df(engine, db_format=db_params.format)
+        .sort_values(by='event_id')[expected_series]
+    )
 
     pd.testing.assert_frame_equal(
         expected,
-        rpd,
+        result,
         check_index_type=False,
     )
 
