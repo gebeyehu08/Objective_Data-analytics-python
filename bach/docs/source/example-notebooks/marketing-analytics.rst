@@ -39,21 +39,26 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # instantiate the model hub, and set the default time aggregation to daily
+	>>> # and set the global contexts that will be used in this example
 	>>> from modelhub import ModelHub
 	>>> from bach import DataFrame, display_sql_as_markdown
 	>>> from datetime import datetime, timedelta
 	>>> import pandas as pd
-	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['http', 'marketing', 'application'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
+
+The `location_stack` column, and the columns taken from the global contexts, contain most of the 
+event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
+objects with :doc:`SeriesLocationStack 
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.SeriesLocationStack>` 
+methods, or the `context` accessor for global context columns. See the :doc:`open taxonomy example 
+<./open-taxonomy>` for how to use the `location_stack` and global contexts.
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> # The columns 'global_contexts' and the 'location_stack' contain most of the event specific data. These columns are json type 
-	>>> # columns and we can extract data from it based on the keys of the json objects using `SeriesGlobalContexts` or 
-	>>> # `SeriesLocationStack` methods to extract the data.
-	>>> # add 'application', 'feature_nice_name' and 'root_location' as columns, so that we can use it for grouping etc later
+	>>> # add `feature_nice_name` and `root_location` as columns, so that we can use it for grouping etc. later
 	>>> df['feature_nice_name'] = df.location_stack.ls.nice_name
 	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
 
@@ -62,11 +67,11 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 
 	>>> # derive a specific DataFrame with added marketing contexts
 	>>> df_acquisition = df.copy()
-	>>> # extract referrer and marketing contexts from the global contexts
-	>>> df_acquisition['referrer'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='HttpContext', key='referrer')
-	>>> df_acquisition['utm_source'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='source')
-	>>> df_acquisition['utm_medium'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='medium')
-	>>> df_acquisition['utm_campaign'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='campaign')
+	>>> # extract referrer and marketing contexts from the respective global contexts
+	>>> df_acquisition['referrer'] = df_acquisition.http.context.referrer
+	>>> df_acquisition['utm_source'] = df_acquisition.marketing.context.source
+	>>> df_acquisition['utm_medium'] = df_acquisition.marketing.context.medium
+	>>> df_acquisition['utm_campaign'] = df_acquisition.marketing.context.campaign
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
@@ -102,8 +107,10 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. admonition:: Reference
 	:class: api-reference
 
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/ModelHub>`
 	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
+	* :ref:`using global context data <open_taxonomy_location_stack_and_global_contexts>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/ls>`
 	* :doc:`bach.DataFrame.from_pandas <../bach/api-reference/DataFrame/bach.DataFrame.from_pandas>`
 	* :doc:`bach.Series.isnull <../bach/api-reference/Series/bach.Series.isnull>`
 	* :doc:`bach.DataFrame.materialize <../bach/api-reference/DataFrame/bach.DataFrame.materialize>`
