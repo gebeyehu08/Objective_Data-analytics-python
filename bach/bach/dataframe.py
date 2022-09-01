@@ -2191,7 +2191,8 @@ class DataFrame:
 
         if limit.start is not None:
             # BigQuery does not support 'limit all', and 'offset' has to come after 'limit'
-            # See https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#limit_and_offset_clause
+            # See https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax
+            #   #limit_and_offset_clause
             if is_bigquery(self.engine):
                 if limit.stop is not None:
                     return Expression.construct(f'limit {limit.stop - limit.start} offset {limit.start}')
