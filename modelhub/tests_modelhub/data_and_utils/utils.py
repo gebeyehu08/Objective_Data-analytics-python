@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Dict, Any, NamedTuple, Optional
 from uuid import UUID
 
@@ -17,10 +18,18 @@ from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JS
 from tests_modelhub.data_and_utils.data_objectiv import TEST_DATA_OBJECTIV
 
 
+
 class DBParams(NamedTuple):
+    class Format(Enum):
+        # native objectiv format, currently only in PG
+        OBJECTIV = 'objectiv'
+        # snowplow's native format, using Iglu contexts to store objectiv specific data
+        SNOWPLOW = 'snowplow'
+
     url: str
     credentials: Optional[str]
     table_name: str
+    format: Format
 
 
 def _convert_moment_to_utc_time(moment: str) -> int:

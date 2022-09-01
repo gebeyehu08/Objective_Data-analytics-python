@@ -184,7 +184,7 @@ class ListAccessor:
         engine = self._series.engine
         if isinstance(key, int):
             if is_bigquery(engine):
-                expr_str = f'{{}}[OFFSET({key})]'
+                expr_str = f'{{}}[SAFE_OFFSET({key})]'
             else:
                 raise DatabaseNotSupportedException(engine)
 
