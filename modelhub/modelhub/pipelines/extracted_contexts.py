@@ -113,8 +113,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         )
 
         # If the taxonomy column is present, we need to use the "old" format
-        if _get_taxonomy_column_definition(engine).name in dtypes:
-            self._taxonomy_column = _get_taxonomy_column_definition(engine)
+        taxonomy_column = _get_taxonomy_column_definition(engine)
+        if taxonomy_column.name in dtypes:
+            self._taxonomy_column = taxonomy_column
             self._base_dtypes = {
                 self._taxonomy_column.name: self._taxonomy_column.dtype,
                 **self.required_context_columns_per_dialect[self._db_dialect],
