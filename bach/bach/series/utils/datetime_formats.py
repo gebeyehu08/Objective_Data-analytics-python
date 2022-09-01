@@ -296,10 +296,14 @@ def warn_non_supported_format_codes(date_format: str):
         # This is the start of a code sequence.
         # See if any of the STRINGS_SUPPORTED_IN_ALL_DIALECTS start at this character
         for supported_string in STRINGS_SUPPORTED_IN_ALL_DIALECTS:
-            sub_str = date_format[i-1:len(supported_string) + i]
+            # Get a string from date_format with the same length as supported_string starting at the current
+            # position.
+            sub_str_start = i - 1
+            sub_str_end = sub_str_start + len(supported_string)
+            sub_str = date_format[sub_str_start:sub_str_end]
             if sub_str == supported_string:
                 # Match: we know this string is good, and can skip to the end of it.
-                i += len(supported_string) - 1
+                i = sub_str_end
                 break  # skip the 'else:' clause of this for loop
         else:
             # If we get here, that means that none of the strings in STRINGS_SUPPORTED_IN_ALL_DIALECTS

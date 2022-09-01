@@ -61,14 +61,18 @@ def test_parse_c_code_to_athena_code():
     assert parse_c_code_to_athena_code('%%%m') == '%%%m'
 
 
-def test_warn_non_supported_format_codes():
+def test_warn_non_supported_format_codes(recwarn):
     # See https://docs.pytest.org/en/6.2.x/warnings.html#recwarn for docs on pytest.warns()
 
-    # Make sure there are no warning for these
-    with warnings.catch_warnings():
-        warn_non_supported_format_codes('%Y-%m-%d')
-        warn_non_supported_format_codes('%H:%M:%S.%f')
-        warn_non_supported_format_codes('test %H:%M:%S.%f test')
+    # Make sure there are no warning for these, as they are all supported
+    warn_non_supported_format_codes('%Y-%m-%d')
+    warn_non_supported_format_codes('%H:%M:%S.%f')
+    warn_non_supported_format_codes('test %H:%M:%S.%f test')
+    warn_non_supported_format_codes('test %H:%M:%S.%f%S.%f%S.%f')
+    warn_non_supported_format_codes('%H:%M:%S.%f:%H')
+    warn_non_supported_format_codes('%S.%f')
+    warn_non_supported_format_codes('%S.%f.%S')
+    assert len(recwarn) == 0
 
     # Make sure we get the correct warnings for non-supported codes
     expected_msg_match = "These formatting codes are not generally supported: %f"
@@ -78,6 +82,12 @@ def test_warn_non_supported_format_codes():
         warn_non_supported_format_codes('%f')
     with pytest.warns(UserWarning, match=expected_msg_match):
         warn_non_supported_format_codes('test %f test')
+    with pytest.warns(UserWarning, match=expected_msg_match):
+        warn_non_supported_format_codes('%S:%f%f')
+    with pytest.warns(UserWarning, match=expected_msg_match):
+        warn_non_supported_format_codes('%M.%f')
+    with pytest.warns(UserWarning, match=expected_msg_match):
+        warn_non_supported_format_codes('%S%f')
 
     expected_msg_match = "These formatting codes are not generally supported: %1, %_, %q"
     with pytest.warns(UserWarning, match=expected_msg_match):
