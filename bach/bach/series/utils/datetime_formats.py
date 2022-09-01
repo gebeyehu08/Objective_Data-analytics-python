@@ -44,6 +44,9 @@ CODES_SUPPORTED_IN_ALL_DIALECTS = {
 }
 
 STRINGS_SUPPORTED_IN_ALL_DIALECTS = {
+    # These are the combinations of codes that we support for all database dialects, even if some of the
+    # individual codes are not supported.
+
     '%S.%f',  # <seconds>.<microsecnds>
 }
 

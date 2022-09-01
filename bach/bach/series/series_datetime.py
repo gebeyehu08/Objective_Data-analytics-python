@@ -102,6 +102,7 @@ class DateTimeOperation:
 
         The subset of codes that are supported across all databases is:
             %A, %B, %F, %H, %I, %M, %R, %S, %T, %Y, %a, %b, %d, %j, %m, %y
+        Additionally one specific combination is supported: '%S.%f'
 
         .. code-block:: python
 
