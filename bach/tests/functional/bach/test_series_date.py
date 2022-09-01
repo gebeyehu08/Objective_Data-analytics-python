@@ -71,6 +71,7 @@ def test_date_format(engine, recwarn):
         # tuple, types: (str, bool). Content: format, whether the format should raise a warning
         ('Year: %Y', False),
         ('%Y', False),
+        ('%y%Y', False),
         ('%Y-%m-%d', False),
         ('%Y%m%d-%Y%m-%m%d-%d', False),
         ('%Y%m-%d%d', False),
@@ -112,6 +113,7 @@ def test_date_format(engine, recwarn):
             [
                 'Year: 2022', 'Year: 2021',
                 '2022', '2021',
+                '222022', '212021',
                 '2022-01-01', '2021-05-03',
                 '20220101-202201-0101-01', '20210503-202105-0503-03',
                 '202201-0101', '202105-0303',
