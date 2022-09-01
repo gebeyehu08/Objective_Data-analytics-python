@@ -75,6 +75,7 @@ def get_objectiv_data(
         df=data,
         columns_to_check=columns_to_check,
         check_dtypes=True,
+        with_md_dtypes=True,
         infer_identity_resolution=identity_resolution is not None,
     )
     data = data[columns_to_check + global_contexts]

@@ -7,7 +7,7 @@ Copyright 2021 Objectiv B.V.
 
 import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
-from tests_modelhub.functional.modelhub.logistic_regression_test_utils import TestLR
+from tests_modelhub.functional.modelhub.logistic_regression_test_utils import LRTestHelper
 
 
 def test_fitted_model(db_params):
@@ -16,8 +16,8 @@ def test_fitted_model(db_params):
     bt['session'] = bt['session_hit_number'] * 100
     bt['target'] = bt.session_hit_number > 1
 
-    test_lr = TestLR(X=bt[['ts', 'session_hit_number']],
-                     y=bt['target'])
+    test_lr = LRTestHelper(X=bt[['ts', 'session_hit_number']],
+                           y=bt['target'])
 
     test_lr.test_fitted_model()
 
@@ -33,7 +33,7 @@ def test_model_methods(db_params, method_name, X, y):
     bt['session'] = bt['session_hit_number'] * 100
     bt['target'] = bt.session_hit_number > 1
 
-    test_lr = TestLR(X=bt[['ts', 'session_hit_number', 'session']],
-                     y=bt['target'])
+    test_lr = LRTestHelper(X=bt[['ts', 'session_hit_number', 'session']],
+                           y=bt['target'])
 
     test_lr.test_method(method_name=method_name, X=X, y=y)
