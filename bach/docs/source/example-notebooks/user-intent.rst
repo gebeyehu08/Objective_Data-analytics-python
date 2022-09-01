@@ -161,10 +161,6 @@ The are many next possible analysis steps, for example:
 
 A good starting point for these analyses on top of the user intent buckets is the basic product analytics example in the :doc:`example notebooks <index>`.
 
-
-Get the SQL for this user intent analysis
------------------------------------------
-
 Get the SQL for any analysis
 ----------------------------
 

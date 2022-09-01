@@ -68,7 +68,7 @@ the `location_stack` and global contexts.
 
 	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
 	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
-	* :ref:`using global context data <open_taxonomy_location_stack_and_global_contexts>`
+	* :ref:`using global context data <location_stack-and-global_contexts>`
 	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 
 Have a look at the data

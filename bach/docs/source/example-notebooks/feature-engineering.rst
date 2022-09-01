@@ -34,7 +34,7 @@ We start with showing the first couple of rows from the data set and describing 
 Columns of interest are 'user_id', this is what we will aggregate to. 'moment' contains timestamp info for the
 events. Global contexts (not present in this example) and the 'location_stack' contain most of the event 
 specific data. The global contexts that you want to use in the analysis need to be set when instantiating 
-the model hub. See the :ref:`open taxonomy example <open_taxonomy_location_stack_and_global_contexts>` for 
+the model hub. See the :ref:`open taxonomy example <location_stack-and-global_contexts>` for 
 how to use the location stack and global contexts.
 
 .. code-block:: python

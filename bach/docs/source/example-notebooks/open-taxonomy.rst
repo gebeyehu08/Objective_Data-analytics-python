@@ -18,7 +18,7 @@ out.
 
 The Objectiv :doc:`Bach API <../bach/api-reference/index>` is strongly pandas-like, to provide a familiar 
 interface to handle large amounts of data in a python environment, while supporting multiple data stores. See 
-`an intro into the pandas API here <https://pandas.pydata.org/pandas-docs/stable/user_guide/10min.html>`.
+`an intro into the pandas API here <https://pandas.pydata.org/pandas-docs/stable/user_guide/10min.html>`_.
 
 This example uses real data collected with Objectiv's `Tracking SDK <https://objectiv.io/docs/tracking/>`_ on 
 objectiv.io, stored in an SQL database.
@@ -178,10 +178,10 @@ interactive and non-interactive events in a standardized way. Together with the 
 	>>> df[df.day == '2022-01-10'].event_type.head()
 	Series([], Name: event_type, dtype: object)
 
-.. _open_taxonomy_location_stack_and_global_contexts:
+.. _location_stack-and-global_contexts:
 
-location_stack & global_contexts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+location_stack and global_contexts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The location stack and global contexts are stored as JSON type data. Within the DataFrame, it is easy to 
 access data in JSON data based on position or content.
 
@@ -219,6 +219,7 @@ For the example array it would return:
 **Slicing by querying**
 
 We want to return only the part of the array starting at the object that contain this object:
+
 .. code-block:: javascript
 
 	{"id": "docs-sidebar", "_type": "NavigationContext"}
@@ -246,7 +247,6 @@ In case a JSON array does not contain the object, `None` is returned. More info 
 location_stack column
 ~~~~~~~~~~~~~~~~~~~~~
 
-### `location_stack` column
 The `location_stack` column in the DataFrame stores the information on where an event exactly happened in the 
 user interface. The example used above is the location stack of a link to the DataFrame API reference, in the 
 menu on our documentation pages.
