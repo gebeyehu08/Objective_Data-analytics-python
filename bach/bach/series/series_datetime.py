@@ -2,7 +2,6 @@
 Copyright 2021 Objectiv B.V.
 """
 import datetime
-import warnings
 from abc import ABC
 from enum import Enum
 from typing import Union, cast, List, Tuple, Optional, Any

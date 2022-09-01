@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from bach import SeriesDate, DataFrame
-from sql_models.util import is_postgres, is_bigquery, is_athena
+from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
@@ -253,5 +253,5 @@ def test_date_arithmetic(engine):
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['d'] = datetime.date(2020, 3, 11)
-    bt[['d']].to_pandas()
-    assert bt[['d']].to_numpy()[0] == [datetime.date(2020, 3, 11)]
+    pdf_result = bt.to_pandas()
+    assert pdf_result[['d']].to_numpy()[0] == [datetime.date(2020, 3, 11)]
