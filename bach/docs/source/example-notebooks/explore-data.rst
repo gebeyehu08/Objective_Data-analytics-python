@@ -37,9 +37,10 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. doctest:: explore-data
 	:skipif: engine is None
 
-	>>> # instantiate the model hub, and set the default time aggregation to daily
+	>>> # instantiate the model hub, set the default time aggregation to daily
+	>>> # and get the application & path global contexts\n",
 	>>> from modelhub import ModelHub
-	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'path'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
@@ -57,14 +58,13 @@ A first look at the data
 	
 	>>> # have a look at the event data, sorted by the user's session ID & hit
 	>>> df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
-	                                             day                  moment                               user_id                                    global_contexts                                     location_stack              event_type                                  stack_event_types session_id session_hit_number
+	                                             day                  moment                               user_id                                     location_stack              event_type                                  stack_event_types  session_id  session_hit_number                                        application                                               path
 	event_id
-	96b5e709-bb8a-46de-ac82-245be25dac29  2022-06-30 2022-06-30 21:40:32.401  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        872                  3
-	252d7d87-5600-4d90-b24f-2a6fb8986c5e  2022-06-30 2022-06-30 21:40:30.117  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]        872                  2
-	157a3000-bbfc-42e0-b857-901bd578ea7c  2022-06-30 2022-06-30 21:40:16.908  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]        872                  1
-	8543f519-d3a4-4af6-89f5-cb04393944b8  2022-06-30 2022-06-30 20:43:50.962  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...          MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, No...        871                  2
-	a0ad4364-57e0-4da9-a266-057744550cc2  2022-06-30 2022-06-30 20:43:49.820  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInt...        871                  1
-	<BLANKLINE>
+	96b5e709-bb8a-46de-ac82-245be25dac29  2022-06-30 2022-06-30 21:40:32.401  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...         872                   3  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	252d7d87-5600-4d90-b24f-2a6fb8986c5e  2022-06-30 2022-06-30 21:40:30.117  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]         872                   2  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	157a3000-bbfc-42e0-b857-901bd578ea7c  2022-06-30 2022-06-30 21:40:16.908  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]         872                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	8543f519-d3a4-4af6-89f5-cb04393944b8  2022-06-30 2022-06-30 20:43:50.962  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext'...          MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, No...         871                   2  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	a0ad4364-57e0-4da9-a266-057744550cc2  2022-06-30 2022-06-30 20:43:49.820  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext'...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInt...         871                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
 
 .. admonition:: Reference
 	:class: api-reference
@@ -82,14 +82,15 @@ Understanding the columns
 	>>> # see the data type for each column
 	>>> df.dtypes
 	{'day': 'date',
-	'moment': 'timestamp',
-	'user_id': 'uuid',
-	'global_contexts': 'objectiv_global_context',
-	'location_stack': 'objectiv_location_stack',
-	'event_type': 'string',
-	'stack_event_types': 'json',
-	'session_id': 'int64',
-	'session_hit_number': 'int64'}
+	 'moment': 'timestamp',
+	 'user_id': 'uuid',
+	 'location_stack': 'objectiv_location_stack',
+	 'event_type': 'string',
+	 'stack_event_types': 'json',
+	 'session_id': 'int64',
+	 'session_hit_number': 'int64',
+	 'application': 'objectiv_global_context',
+	 'path': 'objectiv_global_context'}
 
 .. admonition:: Reference
 	:class: api-reference
@@ -112,6 +113,12 @@ What's in these columns:
   DataFrame.
 * `session_hit_number`: an incremented integer ID for each hit in the session, ordered by moment.
 
+Besides these 'standard' columns, additional columns that are extracted from the global contexts are in the 
+DataFrame. In this case these columns are:
+
+* `application`.
+* `path`.
+
 .. admonition:: Reference
 	:class: api-reference
 
@@ -121,6 +128,8 @@ What's in these columns:
 	* `Events </docs/taxonomy/events>`_.
 	* `Global contexts </docs/taxonomy/global-contexts>`_.
 	* `Location contexts </docs/taxonomy/location-contexts>`_.
+
+	The :doc:`open taxonomy notebook <./open-taxonomy>` has several examples on how to use it in modeling.
 
 Your first Objectiv event data
 ------------------------------
@@ -135,43 +144,43 @@ relevant context about the event. :doc:`See the open taxonomy notebook <./open-t
 	:skipif: engine is None
 
 	>>> # add specific contexts to the data as columns
-	>>> df['application'] = df.global_contexts.gc.application
+	>>> df['application_id'] = df.application.context.id
 	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
-	>>> df['path'] = df.global_contexts.gc.get_from_context_with_type_series(type='PathContext', key='id')
+	>>> df['path_id'] = df.path.context.id
 
 .. doctest:: explore-data
 	:skipif: engine is None
 
 	>>> # now easily slice the data using the added context columns
-	>>> event_data = modelhub.agg.unique_users(df, groupby=['application', 'root_location', 'path', 'event_type'])
+	>>> event_data = modelhub.agg.unique_users(df, groupby=['application_id', 'root_location', 'path_id', 'event_type'])
 	>>> event_data.sort_values(ascending=False).to_frame().head(20)
-	                                                                                                                    unique_users
-	application         root_location   path                                            event_type 
-	objectiv-website    home            https://objectiv.io/                            MediaLoadEvent                  202
-	                                                                                    ApplicationLoadedEvent          194
-	                                                                                    PressEvent                      161
-	                                                                                    VisibleEvent                    158
-	                                                                                    HiddenEvent                     82
-	objectiv-docs       home            NaN                                             VisibleEvent                    79
-	                                                                                    ApplicationLoadedEvent          67
-	                    modeling        NaN                                             VisibleEvent                    56
-	                    home            NaN                                             PressEvent                      47
-	                                    https://objectiv.io/docs/                       VisibleEvent                    45
-	                    modeling        NaN                                             PressEvent                      41
-	                    taxonomy        NaN                                             VisibleEvent                    39
-	                                    https://objectiv.io/docs/taxonomy/reference     VisibleEvent                    36
-	                                    NaN                                             PressEvent                      34
-	objectiv-website    about           https://objectiv.io/about                       PressEvent                      30
-	objectiv-docs       taxonomy        NaN                                             ApplicationLoadedEvent          29
-	                                    https://objectiv.io/docs/taxonomy/              ApplicationLoadedEvent          27
-	                    home            https://objectiv.io/docs/home/quickstart-guide/ VisibleEvent                    26
-	                    tracking        NaN                                             VisibleEvent                    25
-	                    modeling        NaN                                             ApplicationLoadedEvent          24
+	                                                                                                       unique_users
+	application_id   root_location path_id                                         event_type
+	objectiv-website home          https://objectiv.io/                            MediaLoadEvent                   202
+	                                                                               ApplicationLoadedEvent           194
+	                                                                               PressEvent                       161
+	                                                                               VisibleEvent                     158
+	                                                                               HiddenEvent                       82
+	objectiv-docs    home          NaN                                             VisibleEvent                      79
+	                                                                               ApplicationLoadedEvent            67
+	                 modeling      NaN                                             VisibleEvent                      56
+	                 home          NaN                                             PressEvent                        47
+	                               https://objectiv.io/docs/                       VisibleEvent                      45
+	                 modeling      NaN                                             PressEvent                        41
+	                 taxonomy      NaN                                             VisibleEvent                      39
+	                               https://objectiv.io/docs/taxonomy/reference     VisibleEvent                      36
+	                               NaN                                             PressEvent                        34
+	objectiv-website about         https://objectiv.io/about                       PressEvent                        30
+	objectiv-docs    taxonomy      NaN                                             ApplicationLoadedEvent            29
+	                               https://objectiv.io/docs/taxonomy/              ApplicationLoadedEvent            27
+	                 home          https://objectiv.io/docs/home/quickstart-guide/ VisibleEvent                      26
+	                 tracking      NaN                                             VisibleEvent                      25
+	                 modeling      NaN                                             ApplicationLoadedEvent            24
 
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
+	* :doc:`using global context data <./open-taxonomy>`
 	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
 	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
