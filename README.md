@@ -8,7 +8,14 @@
 
 </a>
 
-[Objectiv](https://objectiv.io/) is an open-source data collection & modeling platform for product analytics.
+[Objectiv](https://objectiv.io/) is a an open-source data collection & modeling platform for product analytics. It enables data teams to run product analytics from their notebooks with full control over data and models.
+
+![image](https://user-images.githubusercontent.com/82152911/187921808-24c8dab7-8410-4f35-b609-e9ce4a893cfc.png)
+
+* **Build BI dashboards for your teams in minutes** - Take pre-built analytics models (or build your own) and turn them into production-ready SQL with one command.
+* **Explore and model with zero grunt work** - Work directly on super-structured  raw data that’s designed for modeling. No cleaning or transformations required.
+* **Set up error-free tracking with strict validation tools** - Get helpful tooling to test, validate and debug your tracking setup at multiple stages. No more surprises downstream.
+
 
 ---
 
