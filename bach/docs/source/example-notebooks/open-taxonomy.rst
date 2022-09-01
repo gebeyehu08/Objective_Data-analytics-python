@@ -178,9 +178,9 @@ interactive and non-interactive events in a standardized way. Together with the 
 	>>> df[df.day == '2022-01-10'].event_type.head()
 	Series([], Name: event_type, dtype: object)
 
-.. _location_stack-and-global_contexts:
+.. _location-stack-and-global-contexts:
 
-location_stack and global_contexts
+location stack and global contexts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The location stack and global contexts are stored as JSON type data. Within the DataFrame, it is easy to 
 access data in JSON data based on position or content.
