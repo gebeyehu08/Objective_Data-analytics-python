@@ -25,7 +25,8 @@ from sql_models.graph_operations import update_placeholders_in_graph, get_all_pl
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
 from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
+from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres, \
+    is_athena
 
 if TYPE_CHECKING:
     from bach.partitioning import Window, GroupBy
@@ -2119,26 +2120,7 @@ class DataFrame:
         if isinstance(limit, int):
             limit = slice(0, limit)
 
-        limit_str: Optional[str] = None
-        if limit is not None:
-            if limit.step is not None:
-                raise NotImplementedError("Step size not supported in slice")
-            if (limit.start is not None and limit.start < 0) or \
-                    (limit.stop is not None and limit.stop < 0):
-                raise NotImplementedError("Negative start or stop not supported in slice")
-
-            if limit.start is not None:
-                if limit.stop is not None:
-                    if limit.stop <= limit.start:
-                        raise ValueError('limit.stop <= limit.start')
-                    limit_str = f'limit {limit.stop - limit.start} offset {limit.start}'
-                else:
-                    limit_str = f'limit all offset {limit.start}'
-            else:
-                if limit.stop is not None:
-                    limit_str = f'limit {limit.stop}'
-
-        limit_clause = Expression.construct('' if limit_str is None else f'{limit_str}')
+        limit_clause = self._get_limit_clause(limit)
         where_clause = where_clause if where_clause else Expression.construct('')
         group_by_clause = None
 
@@ -2187,6 +2169,42 @@ class DataFrame:
             previous_node=self.base_node,
             variables=self.variables
         )
+
+    def _get_limit_clause(self, limit: Optional[slice]) -> Expression:
+        """
+        Give a SQL limit expression based on the provided slice.
+        """
+        if limit is None:
+            return Expression.construct('')
+
+        # Validation
+        if limit.step is not None:
+            raise NotImplementedError("Step size not supported in slice")
+        if (limit.start is not None and limit.start < 0) or \
+                (limit.stop is not None and limit.stop < 0):
+            raise NotImplementedError("Negative start or stop not supported in slice")
+        if limit.start is not None and limit.stop is not None and limit.stop <= limit.start:
+            raise ValueError('limit.stop <= limit.start')
+
+        if limit.start is None and limit.stop is not None:
+            return Expression.construct(f'limit {limit.stop}')
+
+        if limit.start is not None:
+            # BigQuery does not support 'limit all', and 'offset' has to come after 'limit'
+            # See https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#limit_and_offset_clause
+            if is_bigquery(self.engine):
+                if limit.stop is not None:
+                    return Expression.construct(f'limit {limit.stop - limit.start} offset {limit.start}')
+                big_number = 2**63-1  # use a big number, because 'all' is not supported
+                return Expression.construct(f'limit {big_number} offset {limit.start}')
+
+            # 'Normal' databases
+            else:
+                if limit.stop is not None:
+                    return Expression.construct(f'offset {limit.start} limit {limit.stop - limit.start}')
+                return Expression.construct(f'offset {limit.start} limit all')
+        # Both limit.start and limit.stop are None
+        return Expression.construct('')
 
     def view_sql(self, limit: Union[int, slice] = None) -> str:
         """
