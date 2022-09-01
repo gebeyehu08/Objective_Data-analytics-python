@@ -284,7 +284,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 if gc == 'location_stack':
                     df_cp[gc] = (
                         df_cp[col]
-                        .elements_safe[0]
+                        .elements[0]
                         .elements['location_stack']
                     ).astype('objectiv_location_stack')
                 else:
