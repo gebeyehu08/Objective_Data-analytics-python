@@ -1,11 +1,14 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from copy import deepcopy
+from typing import List
+
 import pytest
 
 from bach import DataFrame, Series, SeriesDict
 from tests.functional.bach.test_data_and_utils import assert_equals_data, df_to_list, \
-    get_df_with_test_data
+    get_df_with_test_data, TEST_DATA_CITIES_FULL
 
 
 def test_get_item_single(engine):
@@ -64,9 +67,10 @@ def test_get_item_multiple(engine):
     )
 
 
-def test_positional_slicing(pg_engine):
-    # TODO: BigQuery
-    bt = get_df_with_test_data(pg_engine, full_data_set=True)
+@pytest.mark.athena_supported
+def test_positional_slicing(engine):
+    bt = get_df_with_test_data(engine, full_data_set=True)
+    base_exepcted_data = deepcopy(TEST_DATA_CITIES_FULL)
 
     class ReturnSlice:
         def __getitem__(self, key):
@@ -84,19 +88,31 @@ def test_positional_slicing(pg_engine):
                   return_slice[4:5],
                   return_slice[:1]
                   ]
-    for s in slice_list:
+    all_dfs: List[DataFrame] = []
+    all_expected_data = []
+    for i, s in enumerate(slice_list):
         bt_slice = bt[s]
 
         # if the slice length == 1, all Series need to have a single value expression
         assert (len('slice_me_now'.__getitem__(s)) == 1) == all(s.expression.is_single_value
                                                                 for s in bt_slice.all_series.values())
 
-        assert_equals_data(
-            bt[s],
-            expected_columns=['_index_skating_order', 'skating_order', 'city', 'municipality', 'inhabitants',
-                              'founding'],
-            expected_data=df_to_list(bt.to_pandas()[s])
-        )
+        # We add a column with the slice number, so we can append all sliced DataFrames together and still
+        # distinguish each slice.
+        bt_slice['slice'] = i
+        all_dfs.append(bt_slice)
+        expected_data = [row + [i] for row in base_exepcted_data][s]
+        all_expected_data.extend(expected_data)
+
+    df = all_dfs[0].append(all_dfs[1:])
+    df = df.reset_index(drop=True)
+    df = df.sort_values(by=['slice', 'skating_order'])
+
+    assert_equals_data(
+        df,
+        expected_columns=['skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'slice'],
+        expected_data=all_expected_data
+    )
 
 
 def test_get_item_materialize(engine):
