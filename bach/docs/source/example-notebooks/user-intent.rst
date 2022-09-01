@@ -27,15 +27,27 @@ Besides the open model hub, we have to import the following packages for this ex
     import pandas as pd
     from datetime import timedelta
 
-The columns 'global_contexts' and the 'location_stack' contain most of the event specific data. These columns
-are json type columns and we can extract data from it based on the keys of the json objects using
-:doc:`get_from_context_with_type_series <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.objectiv>`. 
-Or use methods specific to the :ref:`location_stack` or :ref:`global_contexts` to extract the data.
+We first have to instantiate the model hub and an Objectiv DataFrame object.
 
 .. code-block:: python
 
-    df['application'] = df.global_contexts.gc.application
-    df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+  # instantiate the model hub, set the default time aggregation to daily and get the application global context
+  modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application'])
+  # get the Bach DataFrame with Objectiv data
+  df = modelhub.get_objectiv_dataframe(start_date='2022-02-01', end_date='2022-05-01')
+
+The `location_stack` column, and the columns taken from the global contexts, contain most of the 
+event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
+objects with :doc:`SeriesLocationStack 
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.SeriesLocationStack>` 
+methods, or the `context` accessor for global context columns. See the :doc:`open taxonomy example 
+<./open-taxonomy>` for how to use the `location_stack` and global contexts.
+
+.. code-block:: python
+
+  # adding specific contexts to the data as columns
+  df['application_id'] = df.application.context.id
+  df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
 
 Exploring root location
 -----------------------
@@ -44,7 +56,7 @@ The root_location context in the location_stack uniquely represents the top-leve
 .. code-block:: python
 
     # model hub: unique users per application and root location
-    users_root = modelhub.aggregate.unique_users(df, groupby=['application', 'root_location'])
+    users_root = modelhub.aggregate.unique_users(df, groupby=['application_id', 'root_location'])
     users_root.sort_index().head(10)
 
 Exploring session duration
@@ -54,7 +66,7 @@ The average `session_duration` model from the `open model hub </docs/modeling/op
 .. code-block:: python
 
     # model hub: duration, per application and root location
-    duration_root = modelhub.aggregate.session_duration(df, groupby=['application', 'root_location']).sort_index()
+    duration_root = modelhub.aggregate.session_duration(df, groupby=['application_id', 'root_location']).sort_index()
     duration_root.head(10)
 
 Now, we can look at the distribution of time spent. We used the Bach quantile operation for this. We'll use this distribution to define the different stages of user intent.
@@ -63,7 +75,8 @@ Now, we can look at the distribution of time spent. We used the Bach quantile op
 
     # how is this time spent distributed?
     session_duration = modelhub.aggregate.session_duration(df, groupby='session_id')
-    # materialization is needed because the expression of the created series contains aggregated data, and it is not allowed to aggregate that.
+    # materialization is needed because the expression of the created series contains aggregated data
+    # and it is not allowed to aggregate that.
     session_duration = session_duration.materialize()
 
     # show quantiles
@@ -117,9 +130,9 @@ Based on the definitions above, we can start assigning a stage of intent to each
                                                         exclude_bounces=False).to_frame()
 
     # same as above, but for selected roots only
-    explore_inform_users_session_duration = modelhub.agg.session_duration((df[(df.root_location.isin(roots)) & (df.application=='objectiv-docs')]),
-                                                                          groupby='user_id',
-                                                                          method='sum')
+    selector = (df.root_location.isin(roots)) & (df.application_id=='objectiv-docs')
+    explore_inform_users_session_duration = modelhub.agg.session_duration(df[selector], groupby='user_id', method='sum')
+    
     # and set it as column
     user_intent_buckets['explore_inform_duration'] = explore_inform_users_session_duration
 
