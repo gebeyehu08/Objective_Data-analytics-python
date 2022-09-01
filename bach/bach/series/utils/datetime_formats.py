@@ -37,10 +37,8 @@ CODES_SUPPORTED_IN_ALL_DIALECTS = {
     '%R',  # HOUR_MINUTE
     '%T',  # HOUR_MINUTE_SECOND
 
-    # special characters - TODO
-    # '%n',  # NEW_LINE
-    # '%t',  # TAB
-    # '%%',  # PERCENT_CHAR
+    # special characters
+    '%%',  # PERCENT_CHAR
 }
 
 STRINGS_SUPPORTED_IN_ALL_DIALECTS = [
@@ -139,6 +137,7 @@ _C_STANDARD_CODES_X_POSTGRES_DATE_CODES = {
     "%Z": "TZ",
     "%R": "HH24:MI",
     "%T": "HH24:MI:SS",
+    "%%": "%",
 }
 
 
@@ -202,12 +201,8 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
         codes_to_replace = single_c_code_regex.findall(token)
         replaced_codes = []
         for to_repl_code in codes_to_replace:
-            if to_repl_code not in _C_STANDARD_CODES_X_POSTGRES_DATE_CODES:
-                replaced_codes.append(to_repl_code)
-                continue
-
-            # get correspondent postgres code
-            replaced_codes.append(_C_STANDARD_CODES_X_POSTGRES_DATE_CODES[to_repl_code])
+            # get correspondent postgres code if it exists, otherwise include to_repl_code unchanged.
+            replaced_codes.append(_C_STANDARD_CODES_X_POSTGRES_DATE_CODES.get(to_repl_code, to_repl_code))
 
         new_date_format_tokens.append('""'.join(replaced_codes))
 
@@ -232,7 +227,6 @@ def parse_c_code_to_athena_code(date_format: str) -> str:
         # should yield '%'. So we want to generate '%%'
         '%': '%%',
         # List supported codes that are not in CODES_SUPPORTED_IN_ALL_DIALECTS
-        '%%': '%%',
         '%f': '%f',
         # Actual mappings
         '%A': '%W',
