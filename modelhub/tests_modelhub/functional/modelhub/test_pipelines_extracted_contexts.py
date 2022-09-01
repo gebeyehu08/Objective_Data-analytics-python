@@ -34,25 +34,7 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
 
     bq_data = []
     for event in parsed_data:
-        if db_format == DBParams.Format.OBJECTIV_SNOWPLOW:
-            taxonomy_data = [
-                {
-                    '_type': event['value']['_type'],
-                    '_types': json.dumps(event['value']['_types']),
-                    'global_contexts': json.dumps(event['value']['global_contexts']),
-                    'location_stack': json.dumps(event['value']['location_stack']),
-                    'time': event['value']['time'],
-                    'event_id': str(event['event_id']),
-                    'cookie_id': str(event['cookie_id']),
-                }
-            ]
-            bq_data.append(
-                {
-                    'contexts_io_objectiv_taxonomy_1_0_0': taxonomy_data,
-                    'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
-                }
-            )
-        elif db_format == DBParams.Format.SNOWPLOW :
+        if db_format == DBParams.Format.SNOWPLOW :
             bq_data.append(
                 {
                     'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
@@ -66,6 +48,8 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
                     ],
                 }
             )
+        else:
+            raise TypeError(f"Unsupported db format {db_format}")
 
     return pd.DataFrame(bq_data)
 
@@ -147,23 +131,7 @@ def test_get_initial_data(db_params) -> None:
         )
         return
 
-    if db_params.format == DBParams.Format.OBJECTIV_SNOWPLOW:
-        taxonomy_column = 'contexts_io_objectiv_taxonomy_1_0_0'
-        assert taxonomy_column in result.data
-        assert isinstance(result[taxonomy_column], bach.SeriesList)
-
-        # need to sort the rows since order is non-deterministic
-        result['event_id'] = result[taxonomy_column].elements[0].elements['event_id']
-        result = result.sort_values(by='event_id')
-        result = result[[taxonomy_column, 'collector_tstamp']]
-
-        assert_equals_data(
-            result,
-            expected_columns=[taxonomy_column, 'collector_tstamp'],
-            expected_data=expected.to_numpy().tolist(),
-            use_to_pandas=True,
-        )
-    elif db_params.format == DBParams.Format.SNOWPLOW:
+    if db_params.format == DBParams.Format.SNOWPLOW:
         location_stack_column = 'contexts_io_objectiv_location_stack_1_0_0'
         assert location_stack_column in result.data
         assert result[location_stack_column].dtype == 'list'
@@ -189,7 +157,9 @@ def test_process_taxonomy_data(db_params) -> None:
     engine = context_pipeline._engine
 
     df = context_pipeline._get_initial_data()
-    result = context_pipeline._process_taxonomy_data(df).reset_index(drop=True)
+    df = context_pipeline._process_taxonomy_data(df)
+    df = context_pipeline._convert_dtypes(df)
+    result = df.reset_index(drop=True)
 
     expected_series = [
         'user_id', 'event_type', 'stack_event_types', 'location_stack', 'event_id', 'day', 'moment',
@@ -197,6 +167,7 @@ def test_process_taxonomy_data(db_params) -> None:
     if is_bigquery(engine):
         # day and moment are parsed after processing base data
         expected_series = expected_series[:-2]
+
 
     result = result.sort_values(by='event_id')[expected_series].to_pandas()
     expected = (
@@ -248,28 +219,31 @@ def test_apply_extra_processing_duplicated_event_ids(db_params) -> None:
     engine = context_pipeline._engine
 
     default_timestamp = datetime.datetime(2022, 1, 1,  1,  1, 1)
+    tstamps = [
+        datetime.datetime(2022, 1, 1, 12, 0, 0),
+        default_timestamp,
+        default_timestamp,
+        datetime.datetime(2022, 1, 1, 12, 0, 1),
+        datetime.datetime(2022, 1, 2, 12, 0, 1),
+        datetime.datetime(2022, 1, 1, 11, 59, 59),
+        datetime.datetime(2022, 1, 3, 12, 0, 1)
+    ]
     pdf = pd.DataFrame(
         {
             'event_id': ['1', '2', '3', '1', '4', '1', '4'],
-            'collector_tstamp': [
-                datetime.datetime(2022, 1, 1, 12,  0, 0),
-                default_timestamp,
-                default_timestamp,
-                datetime.datetime(2022, 1, 1, 12,  0, 1),
-                datetime.datetime(2022, 1, 2, 12,  0, 1),
-                datetime.datetime(2022, 1, 1, 11, 59, 59),
-                datetime.datetime(2022, 1, 3, 12, 0, 1),
-            ],
-            'time': [int(default_timestamp.timestamp() * 1e3)] * 7,
+            'collector_tstamp': tstamps,
+            'true_tstamp': tstamps,
             'contexts_io_objectiv_taxonomy_1_0_0': ['{}'] * 7,
         }
     )
     df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
     result = context_pipeline._apply_extra_processing(df)
 
+    # collector_timestamp will be removed, so will true_tstamp, but the latter will live on as moment
+    # so we can use that one to check whether the right event was selected.
     assert_equals_data(
-        result.sort_values(by='event_id')[['event_id', 'collector_tstamp']],
-        expected_columns=['event_id', 'collector_tstamp'],
+        result.sort_values(by='event_id')[['event_id', 'moment']],
+        expected_columns=['event_id', 'moment'],
         expected_data=[
             ['1', datetime.datetime(2022, 1, 1, 11, 59, 59)],
             ['2', default_timestamp],

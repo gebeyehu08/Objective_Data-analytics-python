@@ -73,7 +73,6 @@ def pytest_generate_tests(metafunc: Metafunc):
         db_params.append(get_postgres_db_params())
 
     if testing_bq and not skip_bigquery:
-        db_params.append(_get_bigquery_db_params())
         db_params.append(_get_bigquery_sp_db_params())
 
     if 'db_params' in metafunc.fixturenames:
@@ -89,15 +88,6 @@ def get_postgres_db_params() -> DBParams:
         credentials=None,
         table_name='objectiv_data',
         format=DBParams.Format.OBJECTIV
-    )
-
-
-def _get_bigquery_db_params() -> DBParams:
-    return DBParams(
-        url=DB_BQ_TEST_URL,
-        credentials=DB_BQ_CREDENTIALS_PATH,
-        table_name='events',
-        format=DBParams.Format.OBJECTIV_SNOWPLOW
     )
 
 

@@ -25,37 +25,15 @@ class TaxonomyColumnDefinition(NamedTuple):
     dtype: Any
 
 
-_DEFAULT_TAXONOMY_DTYPE_PER_FIELD = {
-    '_type': bach.SeriesString.dtype,
-    '_types': bach.SeriesJson.dtype,
-    'global_contexts': modelhub.series.SeriesGlobalContexts.dtype,
-    'location_stack': modelhub.series.SeriesLocationStack.dtype,
-    'time': bach.SeriesInt64.dtype,
-}
-
-_PG_TAXONOMY_COLUMN = TaxonomyColumnDefinition(name='value', dtype=bach.SeriesJson.dtype)
-
-_BQ_TAXONOMY_COLUMN = TaxonomyColumnDefinition(
-    name='contexts_io_objectiv_taxonomy_1_0_0',  # change only when version is updated
-    dtype=[
-        {
-            **_DEFAULT_TAXONOMY_DTYPE_PER_FIELD,
-            'cookie_id': bach.SeriesUuid.dtype,
-            'event_id': bach.SeriesUuid.dtype,
-        },
-    ],
-)
-
-
-def _get_taxonomy_column_definition(engine: Engine) -> TaxonomyColumnDefinition:
+def _get_taxonomy_column_definition(engine: Engine) -> Optional[TaxonomyColumnDefinition]:
     """
     Returns the definition of the Objectiv taxonomy column per supported engine
     """
     if is_postgres(engine):
-        return _PG_TAXONOMY_COLUMN
+        return TaxonomyColumnDefinition(name='value', dtype=bach.SeriesJson.dtype)
 
     if is_bigquery(engine):
-        return _BQ_TAXONOMY_COLUMN
+        return None
 
     raise Exception('define taxonomy definition for engine')
 
@@ -95,6 +73,11 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         },
         DBDialect.BIGQUERY: {
             'collector_tstamp': bach.SeriesTimestamp.dtype,
+            'event_id': bach.SeriesString.dtype,
+            'network_userid': bach.SeriesString.dtype,
+            'se_action': bach.SeriesString.dtype,
+            'se_category': bach.SeriesString.dtype,
+            'true_tstamp': bach.SeriesTimestamp.dtype
         },
     }
 
@@ -114,7 +97,10 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         # If the taxonomy column is present, we need to use the "old" format
         taxonomy_column = _get_taxonomy_column_definition(engine)
-        if taxonomy_column.name in dtypes:
+        if taxonomy_column and taxonomy_column.name in dtypes:
+            if not is_postgres(engine):
+                raise Exception('only postgres supports single global context column.')
+
             self._taxonomy_column = taxonomy_column
             self._base_dtypes = {
                 self._taxonomy_column.name: self._taxonomy_column.dtype,
@@ -123,7 +109,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         else:
             # No taxonomy column, we need to gather the contexts separately.
             if not is_bigquery(engine):
-                raise Exception('only bigquery supports new data format for now')
+                raise Exception('only bigquery supports snowplow flat format.')
 
             self._base_dtypes = self._get_bq_sp_base_dtypes(dtypes, global_contexts)
 
@@ -140,14 +126,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         Will also set self._global_contexts_column_mapping, to map database columns to global context
         columns in the dataframe.
         """
-        base_dtypes: Dict[str, Any] = {
-            **self.required_context_columns_per_dialect[self._db_dialect],
-            'event_id': bach.SeriesString.dtype,
-            'network_userid': bach.SeriesString.dtype,
-            'se_action': bach.SeriesString.dtype,
-            'se_category': bach.SeriesString.dtype,
-            'true_tstamp': bach.SeriesTimestamp.dtype
-        }
+        base_dtypes = self.required_context_columns_per_dialect[self._db_dialect].copy()
 
         # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0 -> cookie_id
         # but also contexts_io_objectiv_location_stack_1_0_0 -> location_stack
@@ -223,18 +202,16 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         Returns a bach DataFrame containing each extracted field as series
         """
         df_cp = df.copy()
-        dtypes = _DEFAULT_TAXONOMY_DTYPE_PER_FIELD
 
         if self._taxonomy_column:
+            dtypes = {
+                '_type': bach.SeriesString.dtype,
+                '_types': bach.SeriesJson.dtype,
+                'global_contexts': modelhub.series.SeriesGlobalContexts.dtype,
+                'location_stack': modelhub.series.SeriesLocationStack.dtype,
+                'time': bach.SeriesInt64.dtype,
+            }
             taxonomy_series = df_cp[self._taxonomy_column.name]
-
-            if is_bigquery(df.engine):
-                # taxonomy column is a list, we just need to get the first value
-                # (LIST IS ALWAYS A SINGLE EVENT)
-                taxonomy_series = taxonomy_series.elements[0]
-
-                # same definition as _DEFAULT_TAXONOMY_DTYPE_PER_FIELD with some extra fields
-                dtypes = self._taxonomy_column.dtype[0]
 
             for key, dtype in dtypes.items():
                 # parsing element to string and then to dtype will avoid
@@ -256,7 +233,10 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             for gc in self._global_contexts:
                 df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
 
-            df_cp = df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
+            df_cp = df_cp.drop(columns=[
+                ObjectivSupportedColumns.GLOBAL_CONTEXTS.value,
+                self._taxonomy_column.name
+            ])
 
             # rename series to objectiv supported
             df_cp = df_cp.rename(
@@ -267,28 +247,22 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 },
             )
         else:
-            df_cp = df_cp.rename(
-                columns={
-                    'se_action': 'event_type',
-                    'se_category': 'stack_event_types',
-                    'network_userid': 'user_id',
-                    'true_tstamp': 'time'
-                }
-            )
-
-            df_cp['stack_event_types'] = df_cp['stack_event_types'].astype(bach.SeriesJson.dtype)
-            df_cp['event_id'] = df_cp['event_id'].astype(bach.SeriesUuid.dtype)
-            df_cp['user_id'] = df_cp['user_id'].astype(bach.SeriesUuid.dtype)
-
             for gc, col in self._global_contexts_column_mapping.items():
                 if gc == 'location_stack':
                     df_cp[gc] = (
-                        df_cp[col]
-                        .elements[0]
-                        .elements['location_stack']
-                    ).astype('objectiv_location_stack')
+                        df_cp[col].elements[0].elements['location_stack']
+                        .astype('objectiv_location_stack')
+                    )
                 else:
                     df_cp[gc] = df_cp[col].astype('objectiv_global_context')
+
+            df_cp = df_cp.rename(
+                columns={
+                    'se_action': ObjectivSupportedColumns.EVENT_TYPE.value,
+                    'se_category': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
+                    'network_userid': ObjectivSupportedColumns.USER_ID.value,
+                }
+            )
 
             df_cp = df_cp.drop(columns=list(self._global_contexts_column_mapping.values()))
 
@@ -301,12 +275,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         Returns a bach DataFrame
         """
         df_cp = df.copy()
+
         if is_postgres(self._engine):
             return df_cp
-
-        # remove taxonomy columns that are no longer needed
-        if self._taxonomy_column:
-            df_cp = df_cp.drop(columns=[self._taxonomy_column.name])
 
         # this materialization is to generate a readable query
         df_cp = df_cp.materialize(node_name='bq_extra_processing')
@@ -324,18 +295,19 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         df_cp = df_cp.drop_duplicates(subset=['event_id'], sort_by=['collector_tstamp'], keep='first')
 
         # BQ data source has no moment and day columns, therefore we need to generate them
-        # based on the time value from the taxonomy column
-        if df_cp['time'].dtype == 'timestamp':
-            df_cp['moment'] = df_cp['time']
+        if df_cp['true_tstamp'].dtype == 'timestamp':
+            df_cp['moment'] = df_cp['true_tstamp']
         else:
-            df_cp['moment'] = df_cp['time'].copy_override(
-                expression=bach.expression.Expression.construct(f'TIMESTAMP_MILLIS({{}})', df_cp['time']),
+            df_cp['moment'] = df_cp['true_tstamp'].copy_override(
+                expression=bach.expression.Expression.construct(
+                    f'TIMESTAMP_MILLIS({{}})', df_cp['true_tstamp']
+                )
             ).copy_override_type(bach.SeriesTimestamp)
 
         if 'day' not in df_cp.columns:
             df_cp['day'] = df_cp['moment'].astype('date')
 
-        return df_cp
+        return df_cp.drop(columns=['true_tstamp', 'collector_tstamp'])
 
     def validate_pipeline_result(self, result: bach.DataFrame) -> None:
         """

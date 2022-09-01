@@ -22,11 +22,9 @@ from tests_modelhub.data_and_utils.data_objectiv import TEST_DATA_OBJECTIV
 class DBParams(NamedTuple):
     class Format(Enum):
         # native objectiv format, currently only in PG
-        OBJECTIV= 'objectiv'
-        # objectiv format in SP, initial BQ implementation with one big json blob for global contexts
-        OBJECTIV_SNOWPLOW= 'objectiv_snowplow'
+        OBJECTIV = 'objectiv'
         # snowplow's native format, using Iglu contexts to store objectiv specific data
-        SNOWPLOW= 'snowplow'
+        SNOWPLOW = 'snowplow'
 
     url: str
     credentials: Optional[str]

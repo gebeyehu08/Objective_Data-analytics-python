@@ -12,12 +12,21 @@ from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, ge
 
 
 @pytest.fixture(autouse=True)
-def patch_extracted_contexts_validations(monkeypatch):
-    monkeypatch.setattr(
-        'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
-        lambda engine, table_name: {
+def patch_extracted_contexts_validations(monkeypatch, db_params):
+    engine = create_engine_from_db_params(db_params)
+
+    if db_params.format == DBParams.Format.OBJECTIV:
+        patch_db_dtypes ={
             _get_taxonomy_column_definition(engine).name: _get_taxonomy_column_definition(engine).dtype
         }
+    elif db_params.format == DBParams.Format.SNOWPLOW:
+        patch_db_dtypes = {
+            'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}]
+        }
+
+    monkeypatch.setattr(
+        'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
+        lambda *args, **kwargs: patch_db_dtypes
     )
 
     monkeypatch.setattr(
@@ -26,7 +35,7 @@ def patch_extracted_contexts_validations(monkeypatch):
     )
 
 
-def test_get_base_dtypes(monkeypatch, db_params) -> None:
+def test_get_base_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
     if db_params.format == DBParams.Format.OBJECTIV:
@@ -37,29 +46,7 @@ def test_get_base_dtypes(monkeypatch, db_params) -> None:
             'moment': 'timestamp',
             'cookie_id': 'uuid'
         }
-    elif db_params.format == DBParams.Format.OBJECTIV_SNOWPLOW:
-        expected = {
-            'contexts_io_objectiv_taxonomy_1_0_0': [
-                {
-                    'event_id': 'uuid',
-                    'cookie_id': 'uuid',
-                    '_type': 'string',
-                    '_types': 'json',
-                    'location_stack': 'objectiv_location_stack',
-                    'global_contexts': 'objectiv_global_contexts',
-                    'time': 'int64',
-                }
-            ],
-            'collector_tstamp': 'timestamp',
-        }
     elif db_params.format == DBParams.Format.SNOWPLOW:
-        # the default patch is not good enough, we need the location stack to be present as well
-        monkeypatch.setattr(
-            'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
-            lambda *args, **kwargs: {
-                'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}]
-            }
-        )
         expected = {
             'collector_tstamp': 'timestamp',
             'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}],
