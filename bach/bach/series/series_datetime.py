@@ -2,7 +2,6 @@
 Copyright 2021 Objectiv B.V.
 """
 import datetime
-import warnings
 from abc import ABC
 from enum import Enum
 from typing import Union, cast, List, Tuple, Optional, Any
@@ -92,24 +91,26 @@ class DateTimeOperation:
         """
         Allow formatting of this Series (to a string type).
 
-        :param format_str: The format to apply to the date/time column. See Format Codes below for more
-        information on what is supported.
+        :param format_str: The format to apply to the date/time column. See Supported Format Codes below for
+        more information on what is supported.
 
+        :returns: a SeriesString containing the formatted date.
 
-        Format Codes
-        A subset of the 1989 C standard format codes is supported. See the python documentation for the
+        **Supported Format Codes**
+
+        A subset of the C standard format codes is supported. See the python documentation for the
         code semantics: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
 
         The subset of codes that are supported across all databases is:
-            %A, %B, %F, %H, %I, %M, %R, %S, %T, %Y, %a, %b, %d, %j, %m, %y
-        Additionally one specific combination is supported: '%S.%f'
+            `%A`, `%B`, `%F`, `%H`, `%I`, `%M`, `%R`, `%S`, `%T`, `%Y`, `%a`, `%b`, `%d`, `%j`, `%m`, `%y`
+        Additionally one specific combination is supported: `%S.%f`
+
+        **Example**
 
         .. code-block:: python
 
-            df['year'] = df.some_date_series.dt.sql_format('%Y')  # return year
-            df['date'] = df.some_date_series.dt.sql_format('%Y%m%d')  # return date
-
-        :returns: a SeriesString containing the formatted date.
+            df['year'] = df.some_date_series.dt.strftime('%Y')  # return year
+            df['date'] = df.some_date_series.dt.strftime('%Y%m%d')  # return date
         """
         engine = self._series.engine
         series = self._series
