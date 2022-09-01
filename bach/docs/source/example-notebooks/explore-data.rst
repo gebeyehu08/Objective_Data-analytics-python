@@ -38,7 +38,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # instantiate the model hub, set the default time aggregation to daily
-	>>> # and get the application & path global contexts\n",
+	>>> # and get the application & path global contexts
 	>>> from modelhub import ModelHub
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'path'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
