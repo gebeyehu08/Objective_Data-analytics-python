@@ -9,8 +9,8 @@ Supported data stores
 =====================
 Our aim is to support all popular data stores with Bach. Currently we support `PostgreSQL 
 </docs/tracking/collector/postgresql>`_ and `Google BigQuery </docs/tracking/collector/google-bigquery>`_; 
-see below for more details and tips on each. Our roadmap includes Amazon Athena, Databrick, Redshift, 
-Clickhouse, etcetera.
+see below for more details and tips on each. Amazon Athena support is coming soon, and our roadmap includes 
+Databricks, Redshift, Clickhouse, etcetera.
 
 PostgreSQL
 ---------------
