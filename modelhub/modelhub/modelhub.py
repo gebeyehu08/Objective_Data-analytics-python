@@ -51,15 +51,18 @@ class ModelHub:
       i.e. : :py:meth:`get_logistic_regression`.
     """
     def __init__(self,
-                 time_aggregation: str = TIME_DEFAULT_FORMAT):
+                 time_aggregation: str = TIME_DEFAULT_FORMAT,
+                 global_contexts: Optional[List[str]] = None):
         """
         Constructor
 
         :param time_aggregation: Time aggregation used for aggregation models.
+        :param global_contexts: The global contexts that should be made available for analysis
         """
 
         self._time_aggregation = time_aggregation
         self._conversion_events = cast(Dict[str, ConversionEventDefinitionType], {})
+        self._global_contexts = global_contexts or []
 
         # init metabase
         self._metabase = None
@@ -107,7 +110,7 @@ class ModelHub:
         with_sessionized_data: bool = True,
         session_gap_seconds: int = SESSION_GAP_DEFAULT_SECONDS,
         identity_resolution: Optional[str] = None,
-        anonymize_unidentified_users: bool = True,
+        anonymize_unidentified_users: bool = True
     ):
         """
         Sets data from sql table into an :py:class:`bach.DataFrame` object.
@@ -160,10 +163,10 @@ class ModelHub:
             session_gap_seconds=session_gap_seconds,
             identity_resolution=identity_resolution,
             anonymize_unidentified_users=anonymize_unidentified_users,
+            global_contexts=self._global_contexts
         )
 
         # get_objectiv_data returns both series as bach.SeriesJson.
-        data['global_contexts'] = data.global_contexts.astype('objectiv_global_context')
         data['location_stack'] = data.location_stack.astype('objectiv_location_stack')
         return data
 

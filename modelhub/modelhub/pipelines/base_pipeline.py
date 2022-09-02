@@ -24,9 +24,8 @@ class BaseDataPipeline:
         self.validate_pipeline_result(result)
         return result
 
-    @classmethod
     @abstractmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+    def validate_pipeline_result(self, result: bach.DataFrame) -> None:
         raise NotImplementedError()
 
     @abstractmethod

@@ -42,19 +42,34 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	>>> from bach import display_sql_as_markdown
 	>>> from datetime import datetime
 	>>> # instantiate the model hub and set the default time aggregation to daily
-	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	>>> # and set the global contexts that will be used in this example
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application'])
 	>>> # get a Bach DataFrame with Objectiv data within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(start_date=start_date, end_date=end_date)
+
+The `location_stack` column, and the columns taken from the global contexts, contain most of the 
+event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
+objects with :doc:`SeriesLocationStack 
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack>` methods, or the `context` 
+accessor for global context columns. See the :doc:`open taxonomy example <./open-taxonomy>` for how to use 
+the `location_stack` and global contexts.
+
 
 .. doctest:: product-analytics
 	:skipif: engine is None
 
-	>>> # The columns 'global_contexts' and the 'location_stack' contain most of the event specific data. These columns are json type 
-	>>> # columns and we can extract data from it based on the keys of the json objects using `SeriesGlobalContexts` or 
-	>>> # `SeriesLocationStack` methods to extract the data.
-	>>> df['application'] = df.global_contexts.gc.application
+	>>> df['application_id'] = df.application.context.id
 	>>> df['feature_nice_name'] = df.location_stack.ls.nice_name
 	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
+	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
+	* :ref:`using global context data <location-stack-and-global-contexts>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 
 Have a look at the data
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,32 +79,30 @@ Have a look at the data
 
 	>>> # sort by users sessions
 	>>> df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
-	                                             day                  moment                               user_id                                                                               global_contexts                                                                                location_stack              event_type                                             stack_event_types  session_id  session_hit_number       application                                                                             feature_nice_name root_location
-	event_id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-	17f50b0a-2aa9-46bc-9610-efe8d4240577  2022-07-30 2022-07-30 18:59:16.074  8a2fbdc0-f7af-4a3a-a6da-95220fc8e36a  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...            VisibleEvent            [AbstractEvent, NonInteractiveEvent, VisibleEvent]        5371                   1  objectiv-website  Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-u...          home
-	03081098-94f7-490e-9f94-bee37aa78270  2022-07-30 2022-07-30 18:26:50.260  1f7afff0-bde4-44da-9fa6-a2d6b0289373  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...            VisibleEvent            [AbstractEvent, NonInteractiveEvent, VisibleEvent]        5370                   1  objectiv-website  Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-u...          home
-	ed409433-8ca4-417b-a9fd-007e5dd4388c  2022-07-30 2022-07-30 15:14:24.087  136b4cc0-ead0-47ae-9c87-55be86027e4f  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...            VisibleEvent            [AbstractEvent, NonInteractiveEvent, VisibleEvent]        5369                   1  objectiv-website  Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-u...          home
-	306d1fce-6cae-4956-844a-64000288ca5a  2022-07-30 2022-07-30 14:38:03.785  8d69b136-7db4-4a89-88e7-ba562fcd1f04  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInteractiveEvent]        5368                   1  objectiv-website                                                                           Root Location: home          home
-	825f6ab6-4499-4bca-a38f-a9828a0cd17e  2022-07-30 2022-07-30 13:44:58.251  102a4b16-8123-4f06-94a1-2e7e4787ebbe  [{'id': 'http_context', '_type': 'HttpContext', '_types': ['AbstractContext', 'AbstractGl...  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...              PressEvent                 [AbstractEvent, InteractiveEvent, PressEvent]        5367                   4  objectiv-website                          Link: blog located at Root Location: about => Navigation: navbar-top         about
+	                                             day                  moment                               user_id                                     location_stack              event_type                                  stack_event_types  session_id  session_hit_number                                        application    application_id                                  feature_nice_name root_location
+	event_id                                                                                                                                                                                                                                                                                                                                                                                  
+	17f50b0a-2aa9-46bc-9610-efe8d4240577  2022-07-30 2022-07-30 18:59:16.074  8a2fbdc0-f7af-4a3a-a6da-95220fc8e36a  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        5371                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Overlay: star-us-notification-overlay located ...          home
+	03081098-94f7-490e-9f94-bee37aa78270  2022-07-30 2022-07-30 18:26:50.260  1f7afff0-bde4-44da-9fa6-a2d6b0289373  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        5370                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Overlay: star-us-notification-overlay located ...          home
+	ed409433-8ca4-417b-a9fd-007e5dd4388c  2022-07-30 2022-07-30 15:14:24.087  136b4cc0-ead0-47ae-9c87-55be86027e4f  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        5369                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Overlay: star-us-notification-overlay located ...          home
+	306d1fce-6cae-4956-844a-64000288ca5a  2022-07-30 2022-07-30 14:38:03.785  8d69b136-7db4-4a89-88e7-ba562fcd1f04  [{'id': 'home', '_type': 'RootLocationContext'...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInt...        5368                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website                                Root Location: home          home
+	825f6ab6-4499-4bca-a38f-a9828a0cd17e  2022-07-30 2022-07-30 13:44:58.251  102a4b16-8123-4f06-94a1-2e7e4787ebbe  [{'id': 'about', '_type': 'RootLocationContext...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]        5367                   4  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Link: blog located at Root Location: about => ...         about
 
 .. doctest:: product-analytics
 	:skipif: engine is None
 
 	>>> # explore the data with describe
 	>>> df.describe(include='all').head()
-	               day                   moment user_id global_contexts location_stack              event_type stack_event_types  session_id  session_hit_number       application                             feature_nice_name root_location
-	__stat                                                                                                                                                                                                                                    
-	count        38835                    38835   38835           38835          38835                   38835             38835    38835.00            38835.00             38835                                         38835         38835
-	mean          None                     None    None            None           None                    None              None     2691.15               20.66              None                                          None          None
-	std           None                     None    None            None           None                    None              None     1576.04               45.75              None                                          None          None
-	min     2022-03-01  2022-03-01 02:38:04.495    None            None           None  ApplicationLoadedEvent              None        1.00                1.00     objectiv-docs  Content: hero located at Root Location: home         about
-	max     2022-07-30  2022-07-30 18:59:16.074    None            None           None            VisibleEvent              None     5371.00              504.00  objectiv-website                       Root Location: tracking      tracking
+	               day                   moment user_id location_stack              event_type stack_event_types  session_id  session_hit_number application    application_id                             feature_nice_name root_location
+	__stat
+	count        38835                    38835   38835          38835                   38835             38835    38835.00            38835.00       38835             38835                                         38835         38835
+	mean          None                     None    None           None                    None              None     2691.15               20.66        None              None                                          None          None
+	std           None                     None    None           None                    None              None     1576.04               45.75        None              None                                          None          None
+	min     2022-03-01  2022-03-01 02:38:04.495    None           None  ApplicationLoadedEvent              None        1.00                1.00        None     objectiv-docs  Content: hero located at Root Location: home         about
+	max     2022-07-30  2022-07-30 18:59:16.074    None           None            VisibleEvent              None     5371.00              504.00        None  objectiv-website                       Root Location: tracking      tracking
 
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
 	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
 	* :doc:`bach.DataFrame.describe <../bach/api-reference/DataFrame/bach.DataFrame.describe>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
@@ -150,9 +163,9 @@ To see the number of users per main product section, group by its
 	:skipif: engine is None
 
 	>>> # unique users, per main product section
-	>>> users_root = modelhub.aggregate.unique_users(df, groupby=['application', 'root_location'])
+	>>> users_root = modelhub.aggregate.unique_users(df, groupby=['application_id', 'root_location'])
 	>>> users_root.sort_index(ascending=False).head(10)
-	application       root_location
+	application_id    root_location
 	objectiv-website  privacy            13
 	                  join-slack         47
 	                  jobs              214
@@ -310,9 +323,9 @@ To see the average time spent by users in each main product section (per month i
 	:skipif: engine is None
 
 	>>> # duration, monthly average per root_location
-	>>> duration_root_month = modelhub.aggregate.session_duration(df, groupby=['application', 'root_location', modelhub.time_agg(df, '%Y-%m')]).sort_index()
+	>>> duration_root_month = modelhub.aggregate.session_duration(df, groupby=['application_id', 'root_location', modelhub.time_agg(df, '%Y-%m')]).sort_index()
 	>>> duration_root_month.head(10)
-	application    root_location  time_aggregation
+	application_id root_location  time_aggregation
 	objectiv-docs  home           2022-03            0 days 00:03:15.469159
 	                              2022-04            0 days 00:02:24.079984
 	                              2022-05            0 days 00:02:28.704679
@@ -378,16 +391,16 @@ We also want to look at which features were used most in our top product areas.
 	>>> # select only user actions, so stack_event_types must contain 'InteractiveEvent'
 	>>> interactive_events = df[df.stack_event_types.json.array_contains('InteractiveEvent')]
 	>>> # from these interactions, get the number of unique users per application, root_location, feature, and event type.
-	>>> top_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
+	>>> top_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application_id','root_location','feature_nice_name', 'event_type'])
 	>>> top_interactions = top_interactions.reset_index()
 
 .. doctest:: product-analytics
 	:skipif: engine is None
 
 	>>> # let's look at the homepage on our website
-	>>> home_users = top_interactions[(top_interactions.application == 'objectiv-website') & (top_interactions.root_location == 'home')]
+	>>> home_users = top_interactions[(top_interactions.application_id == 'objectiv-website') & (top_interactions.root_location == 'home')]
 	>>> home_users.sort_values('unique_users', ascending=False).head()
-	        application root_location                                                                             feature_nice_name  event_type  unique_users
+	     application_id root_location                                                                             feature_nice_name  event_type  unique_users
 	0  objectiv-website          home  Pressable: after located at Root Location: home => Content: capture-data => Content: data...  PressEvent           527
 	1  objectiv-website          home  Pressable: after located at Root Location: home => Content: modeling => Content: modeling...  PressEvent           321
 	2  objectiv-website          home  Pressable: before located at Root Location: home => Content: capture-data => Content: dat...  PressEvent           292
@@ -400,9 +413,9 @@ From the same `top_interactions` object, we can see the top used features on our
 	:skipif: engine is None
 
 	>>> # see the top used features on our documentation application
-	>>> docs_users = top_interactions[top_interactions.application == 'objectiv-docs']
+	>>> docs_users = top_interactions[top_interactions.application_id == 'objectiv-docs']
 	>>> docs_users.sort_values('unique_users', ascending=False).head()
-	     application root_location                                                                  feature_nice_name  event_type  unique_users
+	  application_id root_location                                                                  feature_nice_name  event_type  unique_users
 	0  objectiv-docs          home  Link: Quickstart Guide located at Root Location: home => Navigation: docs-sidebar  PressEvent            90
 	1  objectiv-docs          home                Link: logo located at Root Location: home => Navigation: navbar-top  PressEvent            76
 	2  objectiv-docs      tracking            Link: logo located at Root Location: tracking => Navigation: navbar-top  PressEvent            65
@@ -505,10 +518,10 @@ Let's understand which product features actually triggered the conversion.
 	:skipif: engine is None
 
 	>>> # features that triggered the conversion
-	>>> conversion_locations = modelhub.agg.unique_users(df[df.is_conversion_event], groupby=['application', 'feature_nice_name', 'event_type'])
+	>>> conversion_locations = modelhub.agg.unique_users(df[df.is_conversion_event], groupby=['application_id', 'feature_nice_name', 'event_type'])
 	>>> conversion_locations.sort_values(ascending=False).to_frame().head()
 	                                                                                                                           unique_users
-	application      feature_nice_name                                                                             event_type              
+	application_id   feature_nice_name                                                                             event_type              
 	objectiv-website Link: github located at Root Location: home => Navigation: navbar-top                         PressEvent            70
 	                 Link: github located at Root Location: home => Navigation: navbar-top => Overlay: hamburge... PressEvent            28
 	                 Link: github located at Root Location: about => Navigation: navbar-top                        PressEvent             6
@@ -594,7 +607,7 @@ dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi
 	               "cookie_id"
 	          FROM "data"
 	       ),
-	       "getitem_where_boolean___c7fcfdb8968e23aa5e72b78455a60203" AS (
+	       "getitem_where_boolean___f4dc59429858adf5a1b204fd484a66bd" AS (
 	        SELECT "value" AS "value",
 	               "event_id" AS "event_id",
 	               "day" AS "day",
@@ -602,43 +615,39 @@ dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi
 	               "cookie_id" AS "user_id",
 	               "value"->>'_type' AS "event_type",
 	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'global_contexts' AS JSONB) AS "global_contexts",
 	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
 	               cast("value"->>'time' AS bigint) AS "time"
 	          FROM "from_table___7a4057e80babeec1c65913e0a773d65d"
 	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-07-30' AS date))))
 	       ),
-	       "context_data___c8bed7b87ee665370199c6e6ccc012ad" AS (
+	       "context_data___9708f7c63e3c541e246248e8415b43e1" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
 	               "user_id" AS "user_id",
-	               "global_contexts" AS "global_contexts",
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types"
-	          FROM "getitem_where_boolean___c7fcfdb8968e23aa5e72b78455a60203"
+	          FROM "getitem_where_boolean___f4dc59429858adf5a1b204fd484a66bd"
 	       ),
-	       "session_starts___3cab822a8f5a26e18c9e6b38866f9e93" AS (
+	       "session_starts___1c1a927bc83722bdca8bb5c539d365b4" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
 	               "user_id" AS "user_id",
-	               "global_contexts" AS "global_contexts",
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
 	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
-	          FROM "context_data___c8bed7b87ee665370199c6e6ccc012ad"
+	          FROM "context_data___9708f7c63e3c541e246248e8415b43e1"
 	       ),
-	       "session_id_and_count___154f082434d09a38287fd596ea6602e2" AS (
+	       "session_id_and_count___8a115e28d96d7df2e43802d8dd954b5c" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
 	               "user_id" AS "user_id",
-	               "global_contexts" AS "global_contexts",
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
@@ -647,14 +656,13 @@ dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi
 	                    ELSE cast(NULL AS bigint)
 	                     END AS "session_start_id",
 	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___3cab822a8f5a26e18c9e6b38866f9e93"
+	          FROM "session_starts___1c1a927bc83722bdca8bb5c539d365b4"
 	       ),
-	       "objectiv_sessionized_data___3b5d656ca74468e58db0a4317b597877" AS (
+	       "objectiv_sessionized_data___90a4e33f82138c3d1ab3d87859b94ae8" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
 	               "user_id" AS "user_id",
-	               "global_contexts" AS "global_contexts",
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
@@ -663,9 +671,9 @@ dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi
 	               "is_one_session" AS "is_one_session",
 	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___154f082434d09a38287fd596ea6602e2"
+	          FROM "session_id_and_count___8a115e28d96d7df2e43802d8dd954b5c"
 	       ) SELECT to_char("moment", 'YYYY"-"MM') AS "time_aggregation",
 	       count(DISTINCT "user_id") AS "unique_users"
-	  FROM "objectiv_sessionized_data___3b5d656ca74468e58db0a4317b597877"
+	  FROM "objectiv_sessionized_data___90a4e33f82138c3d1ab3d87859b94ae8"
 	 GROUP BY to_char("moment", 'YYYY"-"MM')
 	<BLANKLINE>

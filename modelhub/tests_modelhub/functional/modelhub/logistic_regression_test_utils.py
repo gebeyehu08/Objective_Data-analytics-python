@@ -3,17 +3,15 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-
-
-
 from typing import Iterable
+
 import bach
 from sklearn.linear_model import LogisticRegression
 from modelhub import ModelHub
 import numpy as np
 
 
-class TestLR:
+class LRTestHelper:
     """
     Tests if model used on Bach gives the same outcome as model used on sklearn.
     Note that it only works for solvers that provide consistent outcomes.

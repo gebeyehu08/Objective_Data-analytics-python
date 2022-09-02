@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy.engine import Engine
 
@@ -18,6 +18,7 @@ def get_objectiv_data(
     with_sessionized_data: bool = True,
     identity_resolution: Optional[str] = None,
     anonymize_unidentified_users: bool = True,
+    global_contexts: Optional[List[str]] = None
 ) -> bach.DataFrame:
     """
         :param engine: db_connection
@@ -34,6 +35,7 @@ def get_objectiv_data(
             on ExtractedContextsPipeline result
         :param anonymize_unidentified_users: If True, unidentified user_ids will be set to NULL.
             This step is performed after applying IdentityResolutionPipeline and SessionizedDataPipeline.
+        :param global_contexts: The global contexts to extract and make available for analysis
 
         :returns: initial bach DataFrame required by ModelHub.
     """
@@ -41,7 +43,12 @@ def get_objectiv_data(
         ExtractedContextsPipeline, SessionizedDataPipeline, IdentityResolutionPipeline
     )
 
-    contexts_pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
+    global_contexts = global_contexts or []
+    if identity_resolution and 'identity' not in global_contexts:
+        global_contexts.append('identity')
+
+    contexts_pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name,
+                                                  global_contexts=global_contexts)
     sessionized_pipeline = SessionizedDataPipeline(session_gap_seconds=session_gap_seconds)
     identity_pipeline = IdentityResolutionPipeline(identity_id=identity_resolution)
 
@@ -68,9 +75,10 @@ def get_objectiv_data(
         df=data,
         columns_to_check=columns_to_check,
         check_dtypes=True,
+        with_md_dtypes=True,
         infer_identity_resolution=identity_resolution is not None,
     )
-    data = data[columns_to_check]
+    data = data[columns_to_check + global_contexts]
 
     if set_index:
         data = data.set_index(keys=ObjectivSupportedColumns.get_index_columns())
