@@ -368,10 +368,7 @@ class SeriesAbstractDateTime(Series, ABC):
         )
 
     @classmethod
-    def _cast_to_date_if_dtype_date(cls, series: 'Series') -> 'Series':
-        if series.dtype != 'date':
-            return series
-
+    def _cast_and_round_to_date(cls, series: 'SeriesDate') -> 'Series':
         # Most of engines return timestamp in all cases were we expect date
         # Make sure we cast properly, and round similar to python datetime: add 12 hours and cast to date
         td_12_hours = datetime.timedelta(seconds=3600 * 12)
@@ -580,7 +577,7 @@ class SeriesDate(SeriesAbstractDateTime):
         # current result is timestamp dtype, cast it back to date
         # (without explicitly casting db type, as time units are required for rounding)
         result = result.copy_override_type(SeriesDate)
-        return self._cast_to_date_if_dtype_date(result)
+        return self._cast_and_round_to_date(result)
 
     def __sub__(self, other) -> 'Series':
         # python will raise a TypeError when trying arithmetic operations
@@ -601,7 +598,7 @@ class SeriesDate(SeriesAbstractDateTime):
         # current result is timestamp dtype, cast it back to date
         # (without explicitly casting db type, as time units are required for rounding)
         result = result.copy_override_type(SeriesDate)
-        return self._cast_to_date_if_dtype_date(result)
+        return self._cast_and_round_to_date(result)
 
 
 class SeriesTime(SeriesAbstractDateTime):
