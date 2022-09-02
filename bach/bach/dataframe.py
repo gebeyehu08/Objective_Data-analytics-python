@@ -10,6 +10,7 @@ from typing import (
 
 import numpy
 import pandas
+import sqlparse
 from sqlalchemy.engine import Engine
 
 from bach.expression import Expression, SingleValueExpression, VariableToken, ColumnReferenceToken
@@ -2205,6 +2206,8 @@ class DataFrame:
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
 
         sql = to_sql(dialect=dialect, model=model)
+        # https://sqlparse.readthedocs.io/en/latest/api/#formatting-of-sql-statements
+        sql = sqlparse.format(sql, reindent_aligned=True, keyword_case='upper')
         return sql
 
     def merge(
