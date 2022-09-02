@@ -436,11 +436,8 @@ class SeriesAbstractDateTime(Series, ABC):
         if isinstance(value, numpy.datetime64):
             if numpy.isnat(value):
                 return Expression.raw('NULL')
-            # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
-            # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
-            # Rounding can be unpredictable because of limited precision, so always truncate excess precision
-            microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
-            dt_value = datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)
+
+            dt_value = _convert_numpy_datetime_to_utc_datetime(value)
 
         if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
             dt_value = value
@@ -570,13 +567,18 @@ class SeriesTime(SeriesAbstractDateTime):
 
     * Postgres: utilizes the 'time without time zone' database type.
     * BigQuery: utilizes the 'TIME' database type.
+    * Athena: utilizes the 'double' database type.
+
     """
     dtype = 'time'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'time without time zone',
         DBDialect.BIGQUERY: 'TIME',
-        # None here for Athena, because it doesn't have a time type.
+        # Athena supports time database type, however we decided to represent
+        # time values as floats (total seconds) due to the following reasons:
+        # 1. Athena does not support writing time values into tables
+        # 2. Time values have till millisecond precision, using floats we can support till microseconds.
         DBDialect.ATHENA: None,
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.time, str)
@@ -620,11 +622,7 @@ class SeriesTime(SeriesAbstractDateTime):
             dt_value = datetime.datetime.strptime(value, str_format)
 
         if isinstance(value, numpy.datetime64):
-            # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
-            # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
-            # Rounding can be unpredictable because of limited precision, so always truncate excess precision
-            microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
-            dt_value = datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)
+            dt_value = _convert_numpy_datetime_to_utc_datetime(value)
 
         if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
             dt_value = value
@@ -649,7 +647,8 @@ class SeriesTime(SeriesAbstractDateTime):
             return ToPandasInfo('object', self._parse_time_in_seconds_value_athena)
         return None
 
-    def _parse_time_in_seconds_value_athena(self, value) -> Optional[datetime.time]:
+    @staticmethod
+    def _parse_time_in_seconds_value_athena(value) -> Optional[datetime.time]:
         if value is None:
             return value
 
@@ -901,3 +900,11 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             name=self.name,
         )
         return result.copy_override_type(SeriesTimedelta)
+
+
+def _convert_numpy_datetime_to_utc_datetime(value: numpy.datetime64) -> datetime.datetime:
+    # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
+    # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
+    # Rounding can be unpredictable because of limited precision, so always truncate excess precision
+    microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
+    return datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)
