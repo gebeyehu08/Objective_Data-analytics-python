@@ -168,6 +168,13 @@ class SeriesJson(Series):
         return self.json
 
     @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
+        if is_bigquery(dialect):
+            from bach.series import SeriesString
+            return SeriesString.get_db_dtype(dialect)
+        return super().get_db_dtype(dialect)
+
+    @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         if is_postgres(dialect):
             return super().supported_literal_to_expression(dialect=dialect, literal=literal)

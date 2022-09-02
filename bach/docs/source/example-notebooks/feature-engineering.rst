@@ -1,6 +1,6 @@
 .. _example_feature_engineering:
 
-.. frontmatterposition:: 5
+.. frontmatterposition:: 11
 
 .. currentmodule:: bach
 
