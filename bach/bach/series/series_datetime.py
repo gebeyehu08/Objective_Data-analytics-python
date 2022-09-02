@@ -709,7 +709,8 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     **Database support and types**
 
     * Postgres: utilizes the 'interval' database type.
-    * BigQuery: support coming soon
+    * BigQuery: utilizes the 'interval' database type.
+    * Athena: utilizes the 'double' database type.
     """
 
     dtype = 'timedelta'
@@ -717,7 +718,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'interval',
         DBDialect.BIGQUERY: 'INTERVAL',
-        # None here for Athena, because it doesn't have a interval type.
+        # Athena supports interval database type, however we decided to represent
+        # timedelta values as floats (total seconds) as Athena does not support writing
+        # interval values into tables
         DBDialect.ATHENA: None,
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
