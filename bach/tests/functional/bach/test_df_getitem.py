@@ -70,7 +70,7 @@ def test_get_item_multiple(engine):
 @pytest.mark.athena_supported
 def test_positional_slicing(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
-    base_exepcted_data = deepcopy(TEST_DATA_CITIES_FULL)
+    base_expected_data = deepcopy(TEST_DATA_CITIES_FULL)
 
     class ReturnSlice:
         def __getitem__(self, key):
@@ -101,7 +101,7 @@ def test_positional_slicing(engine):
         # distinguish each slice.
         bt_slice['slice'] = i
         all_dfs.append(bt_slice)
-        expected_data = [row + [i] for row in base_exepcted_data][s]
+        expected_data = [row + [i] for row in base_expected_data][s]
         all_expected_data.extend(expected_data)
 
     df = all_dfs[0].append(all_dfs[1:])
