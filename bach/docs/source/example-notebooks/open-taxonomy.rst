@@ -313,12 +313,14 @@ From the marketing context, for example, we can therefore also get the 'source' 
 
 	df['marketing_source'] = df.marketing.context.source
 
-When instantiating the model hub, global contexts are added using the name of the context in lower case, 
-without the word 'context', ie. 'HttpContext' becomes 'http':
+When instantiating the model hub, global contexts are added using the name of the context without the word
+'Context' and converted to 'snake_case' (the name of the context split before every capital letter and
+joining them with `_`). I.e. 'HttpContext' becomes 'http' and 'InputValueContext' becomes 'input_value' when
+added as `global_context`:
 
 .. code-block:: python
 
-	modelhub = ModelHub(global_contexts=['http'])
+	modelhub = ModelHub(global_contexts=['http', 'input_value'])
 
 In the case you later want to add other data from the global contexts to your DataFrame, you will have to 
 re-instantiate the model hub with those contexts and recreate the DataFrame. Note that no data has to be 
