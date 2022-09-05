@@ -22,7 +22,7 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
-from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath, BaseTableModelBuilder
+from sql_models.model import SqlModel, Materialization, RefPath, SourceTableModelBuilder
 
 from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
@@ -565,7 +565,7 @@ class DataFrame:
             )
 
         # We just generate a reference to the base table
-        sql_model = BaseTableModelBuilder(table_name)()
+        sql_model = SourceTableModelBuilder(table_name)()
         return cls._from_node(
             engine=engine,
             model=sql_model,

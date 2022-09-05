@@ -686,7 +686,11 @@ class SqlModel(Generic[T]):
 
 
 class SourceTableModelBuilder(SqlModelBuilder):
-    def __init__(self,name: str):
+    """
+    Builder that instantiates a SqlModel with SOURCE materialization to refer to source data tables
+    """
+
+    def __init__(self, name: str):
         super().__init__()
         self._sql = ''
         self._generic_name = name
@@ -696,6 +700,7 @@ class SourceTableModelBuilder(SqlModelBuilder):
     @property
     def sql(self):
         return ''
+
 
 class CustomSqlModelBuilder(SqlModelBuilder):
     """

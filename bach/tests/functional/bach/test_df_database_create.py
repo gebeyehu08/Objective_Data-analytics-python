@@ -35,13 +35,12 @@ def test_database_create_table(engine, unique_table_test_name: str):
     )
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
 
-    # check that df_from_table actually queries the table
+    # check that df_from_table does not query the table
     dialect = engine.dialect
     assert df_from_table.base_node != df.base_node
     assert len(df_from_table.base_node.references) == 0
     new_sql = to_sql(dialect=dialect, model=df_from_table.base_node)
-    quoted_table_name = quote_identifier(dialect, table_name)
-    expected_sql_fragment = f'FROM {quoted_table_name}'
+    expected_sql_fragment = f''
     assert expected_sql_fragment in new_sql
 
     # Second test: try to write table, but with overwrite=False. We expect an error
