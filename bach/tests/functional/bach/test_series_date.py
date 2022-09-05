@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 
 from bach import SeriesDate, DataFrame
-from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
@@ -61,7 +60,7 @@ def test_date_format(engine, recwarn):
     # Create format string that contains all codes that we claim to support.
     # This string will looks like: %%a: %a | %%b: %b | %%c: %c | ...
     format_str_all_supported_codes = ' | '.join(
-        f'{c[1]}: {c}'
+        f'{c[1].replace("%", "%%")}: {c}'
         for c in sorted(CODES_SUPPORTED_IN_ALL_DIALECTS)
     )
     # Create format string that contains all strings that we claim to support in addition to the codes above.
@@ -76,9 +75,9 @@ def test_date_format(engine, recwarn):
         ('%Y%m%d-%Y%m-%m%d-%d', False),
         ('%Y%m-%d%d', False),
         ('%Y%Y%Y', False),
-        ('%Y-%%%m-%d', True),  # %% is not a supported code
+        ('%Y-%%%m-%d', False),
         ('abc %Y def%', True),
-        ('"abc" %Y "def"%', True),  # % is not a supported code
+        ('"abc" %Y "def"%', True),  # % is not a supported code, should use %%
         ('HH24:MI:SS MS', False),
         ('%H:%M:%S.%f', False),
         # non-existing codes:
@@ -97,15 +96,6 @@ def test_date_format(engine, recwarn):
         assert (len(record) > 0) == expected_warning, assert_msg
     expected_columns = df.columns[2:]
 
-    # Some columns do not contain correct results on some databases. For now, we accept that.
-    # Here we define the correct result, below we define exceptions per database
-    percentage_format_date = '2022-%01-01'
-    percentage_format_timestamp = '2021-%05-03'
-
-    if is_postgres(engine):
-        percentage_format_date = '2022-%%01-01'  # %% is not supported for pg
-        percentage_format_timestamp = '2021-%%05-03'
-
     assert_equals_data(
         df[expected_columns],
         expected_columns=expected_columns,
@@ -118,14 +108,14 @@ def test_date_format(engine, recwarn):
                 '20220101-202201-0101-01', '20210503-202105-0503-03',
                 '202201-0101', '202105-0303',
                 '202220222022', '202120212021',
-                percentage_format_date, percentage_format_timestamp,
+                '2022-%01-01', '2021-%05-03',
                 'abc 2022 def%', 'abc 2021 def%',
                 '"abc" 2022 "def"%', '"abc" 2021 "def"%',
                 'HH24:MI:SS MS', 'HH24:MI:SS MS',
                 '00:00:00.000000', '11:28:36.388000',
                 '%q %1 %_', '%q %1 %_',
-                'A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
-                'A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
+                '%: % | A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
+                '%: % | A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
                 '00.000000', '36.388000'
             ],
         ],

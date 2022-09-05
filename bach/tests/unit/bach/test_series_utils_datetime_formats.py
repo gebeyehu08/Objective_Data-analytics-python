@@ -1,8 +1,6 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-import warnings
-
 import pytest
 
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
@@ -23,7 +21,12 @@ def test_parse_c_standard_code_to_postgres_code():
 
     # c-code supported in bach, not in postgres
     assert parse_c_standard_code_to_postgres_code('%s') == '%s'
-    assert parse_c_standard_code_to_postgres_code('%Y-%%%m-%d') == 'YYYY"-"%%""MM"-"DD'
+
+    # percentage signs
+    assert parse_c_standard_code_to_postgres_code('%Y-%%%m-%d') == 'YYYY"-"%""MM"-"DD'
+    assert parse_c_standard_code_to_postgres_code('%%') == '%'
+    assert parse_c_standard_code_to_postgres_code('%%Y') == '%"Y"'
+    assert parse_c_standard_code_to_postgres_code('%%%Y%%%%') == '%""YYYY""%""%'
 
     # simple case
     assert parse_c_standard_code_to_postgres_code('%Y-%m-%d') == 'YYYY"-"MM"-"DD'
@@ -72,6 +75,7 @@ def test_warn_non_supported_format_codes(recwarn):
     warn_non_supported_format_codes('%H:%M:%S.%f:%H')
     warn_non_supported_format_codes('%S.%f')
     warn_non_supported_format_codes('%S.%f.%S')
+    warn_non_supported_format_codes('%%%%')
     assert len(recwarn) == 0
 
     # Make sure we get the correct warnings for non-supported codes
@@ -93,6 +97,6 @@ def test_warn_non_supported_format_codes(recwarn):
     with pytest.warns(UserWarning, match=expected_msg_match):
         warn_non_supported_format_codes('%q, %1, %_ %q %H:%M:%S.%f')
 
-    expected_msg_match = "These formatting codes are not generally supported: %%, %n, %t"
+    expected_msg_match = "These formatting codes are not generally supported: %n, %t"
     with pytest.warns(UserWarning, match=expected_msg_match):
         warn_non_supported_format_codes('%%%t%n')
