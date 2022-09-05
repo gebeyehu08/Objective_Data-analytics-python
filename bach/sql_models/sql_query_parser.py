@@ -24,7 +24,8 @@ def raw_sql_to_selects(sql: str) -> List[CteTuple]:
     """
     # TODO: refactor function
     stmts = sqlparse.parse(sql)
-    # if len(stmts) != 1:
+    if len(stmts) != 1:
+        return []
     #     raise ValueError(f'Expected sql with a single statement, found {len(stmts)} statements.')
     # todo: check that there is one real statement. make sure this check works even if the statement
     #  ends with a semicolon

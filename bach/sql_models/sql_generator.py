@@ -292,7 +292,16 @@ def _single_model_to_sql(dialect: Dialect,
     """
     if model.hash in compiler_cache:
         return compiler_cache[model.hash]
+
+    result: List[SemiCompiledTuple] = []
     sql = model.sql
+    if sql == '':
+        # If the SQL is completely empty, this is the first node that we're selecting from.
+        # We only need to store it so we can select from the materialization name
+        compiler_cache[model.hash] = result
+        return result
+
+
     # If there are any format strings in the placeholder values that need escaping, they should have been
     # escaped by now.
     # Otherwise this will cause trouble the next time we call format() below for the references
@@ -304,7 +313,7 @@ def _single_model_to_sql(dialect: Dialect,
     _reference_names[REFERENCE_UNIQUE_FIELD] = model.hash
     sql = _format_sql(sql=sql, values=_reference_names, model=model)
     ctes = raw_sql_to_selects(sql)
-    result: List[SemiCompiledTuple] = []
+
     for cte in ctes[:-1]:
         # For all CTEs the name should be set. Only for the final select (== cte[-1]) it will be None.
         assert cte.name is not None

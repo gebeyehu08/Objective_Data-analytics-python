@@ -684,6 +684,18 @@ class SqlModel(Generic[T]):
         return hash(self.hash)
 
 
+class BaseTableModelBuilder(SqlModelBuilder):
+    def __init__(self,name: str):
+        self._sql = None
+        self._generic_name = name
+        super().__init__()
+
+        self.set_materialization_name(name)
+
+    @property
+    def sql(self):
+        return ""
+
 class CustomSqlModelBuilder(SqlModelBuilder):
     """
     Builder that instantiates a SqlModel that can run custom sql and refer custom tables.
