@@ -41,9 +41,7 @@ def test_database_create_table(engine, unique_table_test_name: str):
     assert df_from_table.base_node != df.base_node
     assert len(df_from_table.base_node.references) == 0
     assert df_from_table.base_node.materialization == Materialization.SOURCE
-    new_sql = to_sql(dialect=dialect, model=df_from_table.base_node)
-    expected_sql_fragment = f''
-    assert expected_sql_fragment in new_sql
+    assert to_sql(dialect=dialect, model=df_from_table.base_node) == ''
 
     # Second test: try to write table, but with overwrite=False. We expect an error
     df['y'] = random_value
