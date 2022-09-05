@@ -2,10 +2,11 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
+import modelhub
 from bach.series import Series
 
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 from modelhub.series import series_objectiv
 
@@ -33,7 +34,7 @@ class ObjectivSupportedColumns(Enum):
     _INDEX_SERIES = (EVENT_ID, )
 
     _EXTRACTED_CONTEXT_COLUMNS = (
-        EVENT_ID, DAY, MOMENT, USER_ID, GLOBAL_CONTEXTS, LOCATION_STACK, EVENT_TYPE, STACK_EVENT_TYPES,
+        EVENT_ID, DAY, MOMENT, USER_ID, LOCATION_STACK, EVENT_TYPE, STACK_EVENT_TYPES,
     )
 
     _SESSIONIZED_COLUMNS = (
@@ -88,6 +89,7 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE = {
 
 def get_supported_dtypes_per_objectiv_column(
     with_md_dtypes: bool = False, with_identity_resolution: bool = True,
+    global_contexts: Optional[List[str]] = None
 ) -> Dict[str, str]:
     """
     Helper function that returns mapping between Objectiv series name and dtype
@@ -102,12 +104,16 @@ def get_supported_dtypes_per_objectiv_column(
     if with_identity_resolution:
         supported_dtypes.update({ObjectivSupportedColumns.USER_ID: bach.SeriesString.dtype})
 
-    return {col.value: dtype for col, dtype in supported_dtypes.items()}
+    return {
+        **{col.value: dtype for col, dtype in supported_dtypes.items()},
+        **{gc: modelhub.SeriesGlobalContext.dtype for gc in global_contexts or []}
+    }
 
 
 def check_objectiv_dataframe(
     df: bach.DataFrame,
-    columns_to_check: List[str] = None,
+    columns_to_check: List[str],
+    global_contexts_to_check: List[str] = None,
     check_index: bool = False,
     check_dtypes: bool = False,
     with_md_dtypes: bool = False,
@@ -116,8 +122,9 @@ def check_objectiv_dataframe(
     """
     Helper function that determines if provided dataframe is an objectiv dataframe.
     :param df: bach DataFrame to be checked
-    :param columns_to_check: list of columns to verify,
-        if not provided, all expected objectiv columns will be used instead.
+    :param columns_to_check: list of columns to verify excluding any global contexts,
+        as they need to be specified in the following parameter.
+    :param global_contexts_to_check: list of columns to verify as global_contexts
     :param check_index: if true, will check if dataframe has expected index series
     :param check_dtypes: if true, will check if each series has expected dtypes
     :param with_md_dtypes: if true, will check if series has expected modelhub dtype
@@ -139,7 +146,9 @@ def check_objectiv_dataframe(
             with_identity_resolution = True
 
     supported_dtypes = get_supported_dtypes_per_objectiv_column(
-        with_md_dtypes=with_md_dtypes, with_identity_resolution=with_identity_resolution,
+        with_md_dtypes=with_md_dtypes,
+        with_identity_resolution=with_identity_resolution,
+        global_contexts=global_contexts_to_check
     )
 
     for col in columns:

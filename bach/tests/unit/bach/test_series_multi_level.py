@@ -174,7 +174,7 @@ def test_series_numeric_interval_get_column_expression(dialect) -> None:
     elif is_bigquery(dialect):
         assert result == (
             'CASE WHEN (((((0 is not null)) AND ((1 is not null)))) AND (("""(]""" is not null))) '
-            'THEN struct(0 as lower, 1 as upper, """(]""" as bounds) ELSE NULL END as `num_interval`'
+            'THEN struct(0 as `lower`, 1 as `upper`, """(]""" as `bounds`) ELSE NULL END as `num_interval`'
         )
     else:
         raise Exception()

@@ -10,6 +10,7 @@ from typing import (
 
 import numpy
 import pandas
+import sqlparse
 from sqlalchemy.engine import Engine
 
 from bach.expression import Expression, SingleValueExpression, VariableToken, ColumnReferenceToken
@@ -1800,8 +1801,22 @@ class DataFrame:
         .. note::
             The `win_type`, `axis` and `method` parameters as supported by pandas, are currently not
             implemented.
+
+        .. note::
+            The DataFrame is required to be sorted in order to avoid non-determinist results.
+
+        :raises Exception: If DataFrame.order_by is empty.
         """
-        from bach.partitioning import WindowFrameBoundary, WindowFrameMode, Window
+        from bach.partitioning import WindowFrameBoundary, WindowFrameMode
+
+        if not self._order_by:
+            raise ValueError(
+                (
+                    'Cannot apply `rolling` if DataFrame is not sorted. '
+                    'Please call `DataFrame.sort_values(by=...)` or `DataFrame.sort_index()` '
+                    'and try again.'
+                )
+            )
 
         if min_periods is None:
             min_periods = window
@@ -1828,16 +1843,21 @@ class DataFrame:
         else:
             end_boundary = WindowFrameBoundary.FOLLOWING
 
-        index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(
-            dialect=self.engine.dialect,
-            group_by_columns=index,
-            order_by=self._order_by,
-            mode=mode,
-            start_boundary=start_boundary, start_value=start_value,
-            end_boundary=end_boundary, end_value=end_value,
-            min_values=min_periods,
-        )
+        window_params = {
+            'mode': mode,
+            'start_boundary': start_boundary,
+            'start_value': start_value,
+            'end_boundary': end_boundary,
+            'end_value': end_value,
+            'min_values': min_periods,
+        }
+        if self._group_by:
+            group_by = self.window(**window_params).group_by
+        else:
+            group_by = self.groupby(by=[]).window(**window_params).group_by
+
+        # help: mypy
+        assert group_by is not None
         return DataFrame._groupby_to_frame(self, group_by)
 
     def expanding(self,
@@ -1852,10 +1872,23 @@ class DataFrame:
 
         :param min_periods: the minimum amount of observations in the window before a value is reported.
         :param center: whether to center the result, currently not supported.
+
+        .. note::
+            The DataFrame is required to be sorted in order to avoid non-determinist results.
+
+        :raises Exception: If DataFrame.order_by is empty.
         """
         # TODO We could move the partitioning to GroupBy
-        from bach.partitioning import WindowFrameBoundary, WindowFrameMode, \
-            Window
+        from bach.partitioning import WindowFrameBoundary, WindowFrameMode
+
+        if not self._order_by:
+            raise ValueError(
+                (
+                    'Cannot apply `expanding` if DataFrame is not sorted. '
+                    'Please call `DataFrame.sort_values(by=...)` or `DataFrame.sort_index()` '
+                    'and try again.'
+                )
+            )
 
         if center:
             # Will never be implemented probably, as it's also deprecated in pandas
@@ -1867,17 +1900,21 @@ class DataFrame:
         end_boundary = WindowFrameBoundary.CURRENT_ROW
         end_value = None
 
-        index = list(self._group_by.index.values()) if self._group_by else []
-        group_by = Window(
-            dialect=self.engine.dialect,
-            group_by_columns=index,
-            order_by=self._order_by,
-            mode=mode,
-            start_boundary=start_boundary, start_value=start_value,
-            end_boundary=end_boundary, end_value=end_value,
-            min_values=min_periods
-        )
+        window_params = {
+            'mode': mode,
+            'start_boundary': start_boundary,
+            'start_value': start_value,
+            'end_boundary': end_boundary,
+            'end_value': end_value,
+            'min_values': min_periods,
+        }
+        if self._group_by:
+            group_by = self.window(**window_params).group_by
+        else:
+            group_by = self.groupby(by=[]).window(**window_params).group_by
 
+        # help: mypy
+        assert group_by is not None
         return DataFrame._groupby_to_frame(self, group_by)
 
     def sort_values(
@@ -2169,6 +2206,8 @@ class DataFrame:
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
 
         sql = to_sql(dialect=dialect, model=model)
+        # https://sqlparse.readthedocs.io/en/latest/api/#formatting-of-sql-statements
+        sql = sqlparse.format(sql, reindent_aligned=True, keyword_case='upper')
         return sql
 
     def merge(

@@ -3,18 +3,30 @@ Copyright 2022 Objectiv B.V.
 """
 import pandas as pd
 import pytest
-from bach import DataFrame
-from sql_models.util import is_postgres, is_bigquery
 
-from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline
-from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
+from bach import DataFrame
+
+from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline, _get_taxonomy_column_definition
+from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
+    DBParams
 
 
 @pytest.fixture(autouse=True)
-def patch_extracted_contexts_validations(monkeypatch):
+def patch_extracted_contexts_validations(monkeypatch, db_params):
+    engine = create_engine_from_db_params(db_params)
+
+    if db_params.format == DBParams.Format.OBJECTIV:
+        patch_db_dtypes ={
+            _get_taxonomy_column_definition(engine).name: _get_taxonomy_column_definition(engine).dtype
+        }
+    elif db_params.format == DBParams.Format.SNOWPLOW:
+        patch_db_dtypes = {
+            'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}]
+        }
+
     monkeypatch.setattr(
         'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
-        lambda *args, **kwargs: {},
+        lambda *args, **kwargs: patch_db_dtypes
     )
 
     monkeypatch.setattr(
@@ -26,10 +38,7 @@ def patch_extracted_contexts_validations(monkeypatch):
 def test_get_base_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name)
-    result = pipeline._get_base_dtypes()
-
-    if is_postgres(engine):
+    if db_params.format == DBParams.Format.OBJECTIV:
         expected = {
             'value': 'json',
             'event_id': 'uuid',
@@ -37,23 +46,21 @@ def test_get_base_dtypes(db_params) -> None:
             'moment': 'timestamp',
             'cookie_id': 'uuid'
         }
-    elif is_bigquery(engine):
+    elif db_params.format == DBParams.Format.SNOWPLOW:
         expected = {
-            'contexts_io_objectiv_taxonomy_1_0_0': [
-                {
-                    'event_id': 'uuid',
-                    'cookie_id': 'uuid',
-                    '_type': 'string',
-                    '_types': 'json',
-                    'global_contexts': 'json',
-                    'location_stack': 'json',
-                    'time': 'int64',
-                }
-            ],
             'collector_tstamp': 'timestamp',
+            'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}],
+            'event_id': 'string',
+            'network_userid': 'string',
+            'se_action': 'string',
+            'se_category': 'string',
+            'true_tstamp': 'timestamp',
         }
     else:
         raise Exception()
+
+    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
+    result = pipeline._base_dtypes
 
     assert expected == result
 
@@ -61,7 +68,7 @@ def test_get_base_dtypes(db_params) -> None:
 def test_convert_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name)
+    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
 
     event = get_parsed_objectiv_data(engine)[0]
     pdf = pd.DataFrame(

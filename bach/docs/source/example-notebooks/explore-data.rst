@@ -1,6 +1,6 @@
 .. _explore_data:
 
-.. frontmatterposition:: 4
+.. frontmatterposition:: 8
 
 .. currentmodule:: bach_open_taxonomy
 
@@ -19,14 +19,30 @@ Get started
 -----------
 We first have to instantiate the model hub and an Objectiv DataFrame object.
 
+.. doctest::
+	:skipif: engine is None
+
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-06-01'
+	>>> end_date = None
+
+.. we override the timeframe for the doctests below
+	
+.. testsetup:: explore-data
+	:skipif: engine is None
+
+	start_date = '2022-06-01'
+	end_date = '2022-06-30'
+
 .. doctest:: explore-data
 	:skipif: engine is None
 
-	>>> # instantiate the model hub, and set the default time aggregation to daily
+	>>> # instantiate the model hub, set the default time aggregation to daily
+	>>> # and get the application & path global contexts
 	>>> from modelhub import ModelHub
-	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'path'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
-	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-06-01', end_date='2022-06-30')
+	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
 .. admonition:: Reference
 	:class: api-reference
@@ -42,14 +58,13 @@ A first look at the data
 	
 	>>> # have a look at the event data, sorted by the user's session ID & hit
 	>>> df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
-	                                             day                  moment                               user_id                                    global_contexts                                     location_stack              event_type                                  stack_event_types session_id session_hit_number
+	                                             day                  moment                               user_id                                     location_stack              event_type                                  stack_event_types  session_id  session_hit_number                                        application                                               path
 	event_id
-	96b5e709-bb8a-46de-ac82-245be25dac29  2022-06-30 2022-06-30 21:40:32.401  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        872                  3
-	252d7d87-5600-4d90-b24f-2a6fb8986c5e  2022-06-30 2022-06-30 21:40:30.117  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]        872                  2
-	157a3000-bbfc-42e0-b857-901bd578ea7c  2022-06-30 2022-06-30 21:40:16.908  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]        872                  1
-	8543f519-d3a4-4af6-89f5-cb04393944b8  2022-06-30 2022-06-30 20:43:50.962  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...          MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, No...        871                  2
-	a0ad4364-57e0-4da9-a266-057744550cc2  2022-06-30 2022-06-30 20:43:49.820  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'http_context', '_type': 'HttpContext'...  [{'id': 'home', '_type': 'RootLocationContext'...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInt...        871                  1
-	<BLANKLINE>
+	96b5e709-bb8a-46de-ac82-245be25dac29  2022-06-30 2022-06-30 21:40:32.401  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...         872                   3  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	252d7d87-5600-4d90-b24f-2a6fb8986c5e  2022-06-30 2022-06-30 21:40:30.117  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]         872                   2  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	157a3000-bbfc-42e0-b857-901bd578ea7c  2022-06-30 2022-06-30 21:40:16.908  2d718142-9be7-4975-a669-ba022fd8fd48  [{'id': 'home', '_type': 'RootLocationContext'...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]         872                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	8543f519-d3a4-4af6-89f5-cb04393944b8  2022-06-30 2022-06-30 20:43:50.962  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext'...          MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, No...         871                   2  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
+	a0ad4364-57e0-4da9-a266-057744550cc2  2022-06-30 2022-06-30 20:43:49.820  bb127c9e-3067-4375-9c73-cb86be332660  [{'id': 'home', '_type': 'RootLocationContext'...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInt...         871                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  [{'id': 'https://objectiv.io/', '_type': 'Path...
 
 .. admonition:: Reference
 	:class: api-reference
@@ -67,14 +82,15 @@ Understanding the columns
 	>>> # see the data type for each column
 	>>> df.dtypes
 	{'day': 'date',
-	'moment': 'timestamp',
-	'user_id': 'uuid',
-	'global_contexts': 'objectiv_global_context',
-	'location_stack': 'objectiv_location_stack',
-	'event_type': 'string',
-	'stack_event_types': 'json',
-	'session_id': 'int64',
-	'session_hit_number': 'int64'}
+	 'moment': 'timestamp',
+	 'user_id': 'uuid',
+	 'location_stack': 'objectiv_location_stack',
+	 'event_type': 'string',
+	 'stack_event_types': 'json',
+	 'session_id': 'int64',
+	 'session_hit_number': 'int64',
+	 'application': 'objectiv_global_context',
+	 'path': 'objectiv_global_context'}
 
 .. admonition:: Reference
 	:class: api-reference
@@ -97,6 +113,12 @@ What's in these columns:
   DataFrame.
 * `session_hit_number`: an incremented integer ID for each hit in the session, ordered by moment.
 
+Besides these 'standard' columns, additional columns that are extracted from the global contexts are in the 
+DataFrame. In this case these columns are:
+
+* `application`.
+* `path`.
+
 .. admonition:: Reference
 	:class: api-reference
 
@@ -106,6 +128,8 @@ What's in these columns:
 	* `Events </docs/taxonomy/events>`_.
 	* `Global contexts </docs/taxonomy/global-contexts>`_.
 	* `Location contexts </docs/taxonomy/location-contexts>`_.
+
+	The :doc:`open taxonomy notebook <./open-taxonomy>` has several examples on how to use it in modeling.
 
 Your first Objectiv event data
 ------------------------------
@@ -120,43 +144,43 @@ relevant context about the event. :doc:`See the open taxonomy notebook <./open-t
 	:skipif: engine is None
 
 	>>> # add specific contexts to the data as columns
-	>>> df['application'] = df.global_contexts.gc.application
+	>>> df['application_id'] = df.application.context.id
 	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
-	>>> df['path'] = df.global_contexts.gc.get_from_context_with_type_series(type='PathContext', key='id')
+	>>> df['path_id'] = df.path.context.id
 
 .. doctest:: explore-data
 	:skipif: engine is None
 
 	>>> # now easily slice the data using the added context columns
-	>>> event_data = modelhub.agg.unique_users(df, groupby=['application', 'root_location', 'path', 'event_type'])
+	>>> event_data = modelhub.agg.unique_users(df, groupby=['application_id', 'root_location', 'path_id', 'event_type'])
 	>>> event_data.sort_values(ascending=False).to_frame().head(20)
-	                                                                                                                    unique_users
-	application         root_location   path                                            event_type 
-	objectiv-website    home            https://objectiv.io/                            MediaLoadEvent                  202
-	                                                                                    ApplicationLoadedEvent          194
-	                                                                                    PressEvent                      161
-	                                                                                    VisibleEvent                    158
-	                                                                                    HiddenEvent                     82
-	objectiv-docs       home            NaN                                             VisibleEvent                    79
-	                                                                                    ApplicationLoadedEvent          67
-	                    modeling        NaN                                             VisibleEvent                    56
-	                    home            NaN                                             PressEvent                      47
-	                                    https://objectiv.io/docs/                       VisibleEvent                    45
-	                    modeling        NaN                                             PressEvent                      41
-	                    taxonomy        NaN                                             VisibleEvent                    39
-	                                    https://objectiv.io/docs/taxonomy/reference     VisibleEvent                    36
-	                                    NaN                                             PressEvent                      34
-	objectiv-website    about           https://objectiv.io/about                       PressEvent                      30
-	objectiv-docs       taxonomy        NaN                                             ApplicationLoadedEvent          29
-	                                    https://objectiv.io/docs/taxonomy/              ApplicationLoadedEvent          27
-	                    home            https://objectiv.io/docs/home/quickstart-guide/ VisibleEvent                    26
-	                    tracking        NaN                                             VisibleEvent                    25
-	                    modeling        NaN                                             ApplicationLoadedEvent          24
+	                                                                                                       unique_users
+	application_id   root_location path_id                                         event_type
+	objectiv-website home          https://objectiv.io/                            MediaLoadEvent                   202
+	                                                                               ApplicationLoadedEvent           194
+	                                                                               PressEvent                       161
+	                                                                               VisibleEvent                     158
+	                                                                               HiddenEvent                       82
+	objectiv-docs    home          NaN                                             VisibleEvent                      79
+	                                                                               ApplicationLoadedEvent            67
+	                 modeling      NaN                                             VisibleEvent                      56
+	                 home          NaN                                             PressEvent                        47
+	                               https://objectiv.io/docs/                       VisibleEvent                      45
+	                 modeling      NaN                                             PressEvent                        41
+	                 taxonomy      NaN                                             VisibleEvent                      39
+	                               https://objectiv.io/docs/taxonomy/reference     VisibleEvent                      36
+	                               NaN                                             PressEvent                        34
+	objectiv-website about         https://objectiv.io/about                       PressEvent                        30
+	objectiv-docs    taxonomy      NaN                                             ApplicationLoadedEvent            29
+	                               https://objectiv.io/docs/taxonomy/              ApplicationLoadedEvent            27
+	                 home          https://objectiv.io/docs/home/quickstart-guide/ VisibleEvent                      26
+	                 tracking      NaN                                             VisibleEvent                      25
+	                 modeling      NaN                                             ApplicationLoadedEvent            24
 
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`modelhub.SeriesGlobalContexts.gc <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.gc>`
+	* :doc:`using global context data <./open-taxonomy>`
 	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
 	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
@@ -232,8 +256,9 @@ It also means you can make product features very readable and easy to understand
 Get the SQL for any analysis
 ----------------------------
 
-Any dataframe or model built with Bach can be converted to an SQL statement with a single command to use 
-directly in production.
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.
 
 .. doctest:: explore-data-features
 	:skipif: engine is None
@@ -241,101 +266,97 @@ directly in production.
 	>>> # show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
 	>>> display_sql_as_markdown(product_feature_data)
 	sql
-	with "from_table___7a4057e80babeec1c65913e0a773d65d" as (SELECT "value","event_id","day","moment","cookie_id" FROM "data"),
-	"getitem_where_boolean___fed67ee9d11d7631154f62679fc36a5b" as (select "value" as "value", "event_id" as "event_id", "day" as "day", "moment" as "moment", "cookie_id" as "user_id", "value"->>'_type' as "event_type", cast("value"->>'_types' as jsonb) as "stack_event_types", cast("value"->>'global_contexts' as jsonb) as "global_contexts", cast("value"->>'location_stack' as jsonb) as "location_stack", cast("value"->>'time' as bigint) as "time"
-	from "from_table___7a4057e80babeec1c65913e0a773d65d"
-	where ((("day" >= '2022-06-01')) AND (("day" <= '2022-06-30')))
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	),
-	"context_data___8b8b8232f369c68f2d1d5f3a9af30be5" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types"
-	from "getitem_where_boolean___fed67ee9d11d7631154f62679fc36a5b"
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	),
-	"session_starts___a83f96fdb0ea0d0d87e9f03d19476413" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", CASE WHEN (extract(epoch from (("moment") - (lag("moment", 1, cast(NULL as timestamp without time zone)) over (partition by "user_id" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 as bigint)) THEN cast(NULL as boolean) ELSE cast(True as boolean) END as "is_start_of_session"
-	from "context_data___8b8b8232f369c68f2d1d5f3a9af30be5"
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	),
-	"session_id_and_count___55bbb57b8cc4c5128b45eac3b1daa595" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", CASE WHEN "is_start_of_session" THEN row_number() over (partition by "is_start_of_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ELSE cast(NULL as bigint) END as "session_start_id", count("is_start_of_session") over ( order by "user_id" asc nulls last, "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "is_one_session"
-	from "session_starts___a83f96fdb0ea0d0d87e9f03d19476413"
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	),
-	"objectiv_sessionized_data___655fb2b7670cd0195046e6d3e892beb7" as (select "event_id" as "event_id", "day" as "day", "moment" as "moment", "user_id" as "user_id", "global_contexts" as "global_contexts", "location_stack" as "location_stack", "event_type" as "event_type", "stack_event_types" as "stack_event_types", "is_start_of_session" as "is_start_of_session", "session_start_id" as "session_start_id", "is_one_session" as "is_one_session", first_value("session_start_id") over (partition by "is_one_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_id", row_number() over (partition by "is_one_session" order by "moment" asc nulls last, "event_id" asc nulls last RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as "session_hit_number"
-	from "session_id_and_count___55bbb57b8cc4c5128b45eac3b1daa595"
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	)
-	select (
-	                    select string_agg(
-	                            replace(
-	                                regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-	                                ' Context',
-	                                ''
-	                            ) || ': ' || (value ->> 'id'),
-	                            ' => ')
-	                    from jsonb_array_elements("location_stack") with ordinality
-	                    where ordinality = jsonb_array_length("location_stack")
-	                ) || (
-	                    case when jsonb_array_length("location_stack") > 1
-	                          then ' located at ' || (select string_agg(
-	                                replace(
-	                                    regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-	                                    ' Context',
-	                                    ''
-	                                ) || ': ' || (value ->> 'id'),
-	                                ' => ')
-	                            from jsonb_array_elements("location_stack") with ordinality
-	                            where ordinality < jsonb_array_length("location_stack")
-	                        )
-	                        else '' end
-	                ) as "feature_nice_name", "event_type" as "event_type", count(distinct "user_id") as "unique_users"
-	from "objectiv_sessionized_data___655fb2b7670cd0195046e6d3e892beb7"
-	<BLANKLINE>
-	group by (
-	                    select string_agg(
-	                            replace(
-	                                regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-	                                ' Context',
-	                                ''
-	                            ) || ': ' || (value ->> 'id'),
-	                            ' => ')
-	                    from jsonb_array_elements("location_stack") with ordinality
-	                    where ordinality = jsonb_array_length("location_stack")
-	                ) || (
-	                    case when jsonb_array_length("location_stack") > 1
-	                          then ' located at ' || (select string_agg(
-	                                replace(
-	                                    regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'),
-	                                    ' Context',
-	                                    ''
-	                                ) || ': ' || (value ->> 'id'),
-	                                ' => ')
-	                            from jsonb_array_elements("location_stack") with ordinality
-	                            where ordinality < jsonb_array_length("location_stack")
-	                        )
-	                        else '' end
-	                ), "event_type"
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
-	<BLANKLINE>
+	WITH "from_table___7a4057e80babeec1c65913e0a773d65d" AS (
+	        SELECT "value",
+	               "event_id",
+	               "day",
+	               "moment",
+	               "cookie_id"
+	          FROM "data"
+	       ),
+	       "getitem_where_boolean___14b2efacda99ccc1ffdc1d200f1ecc50" AS (
+	        SELECT "value" AS "value",
+	               "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "cookie_id" AS "user_id",
+	               "value"->>'_type' AS "event_type",
+	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
+	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
+	               cast("value"->>'time' AS bigint) AS "time"
+	          FROM "from_table___7a4057e80babeec1c65913e0a773d65d"
+	         WHERE ((("day" >= cast('2022-06-01' AS date))) AND (("day" <= cast('2022-06-30' AS date))))
+	       ),
+	       "context_data___7e55a20c86b2ea98dd8a57bef0dc1702" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types"
+	          FROM "getitem_where_boolean___14b2efacda99ccc1ffdc1d200f1ecc50"
+	       ),
+	       "session_starts___caf9122f95ebe78c51411713f96a0044" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	                    ELSE cast(TRUE AS boolean)
+	                     END AS "is_start_of_session"
+	          FROM "context_data___7e55a20c86b2ea98dd8a57bef0dc1702"
+	       ),
+	       "session_id_and_count___2c486e547094f4415430966266b0f7c9" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "is_start_of_session" AS "is_start_of_session",
+	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+	                    ELSE cast(NULL AS bigint)
+	                     END AS "session_start_id",
+	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
+	          FROM "session_starts___caf9122f95ebe78c51411713f96a0044"
+	       ),
+	       "objectiv_sessionized_data___ec112a61214a0708d0237d3bc5406c19" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "is_start_of_session" AS "is_start_of_session",
+	               "session_start_id" AS "session_start_id",
+	               "is_one_session" AS "is_one_session",
+	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
+	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
+	          FROM "session_id_and_count___2c486e547094f4415430966266b0f7c9"
+	       ) SELECT (
+	        SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ')
+	          FROM jsonb_array_elements("location_stack") WITH
+	    ORDINALITY
+	         WHERE
+	    ORDINALITY = jsonb_array_length("location_stack")
+	       ) || (CASE WHEN jsonb_array_length("location_stack") > 1 THEN ' located at ' || (SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ') FROM jsonb_array_elements("location_stack") WITH ORDINALITY WHERE ORDINALITY < jsonb_array_length("location_stack") ) ELSE '' END) AS "feature_nice_name",
+	       "event_type" AS "event_type",
+	       count(DISTINCT "user_id") AS "unique_users"
+	  FROM "objectiv_sessionized_data___ec112a61214a0708d0237d3bc5406c19"
+	 GROUP BY (
+	           SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ')
+	             FROM jsonb_array_elements("location_stack") WITH
+	       ORDINALITY
+	            WHERE
+	       ORDINALITY = jsonb_array_length("location_stack")
+	          ) || (CASE WHEN jsonb_array_length("location_stack") > 1 THEN ' located at ' || (SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ') FROM jsonb_array_elements("location_stack") WITH ORDINALITY WHERE ORDINALITY < jsonb_array_length("location_stack") ) ELSE '' END),
+	          "event_type"
 	<BLANKLINE>
 
 Where to go next

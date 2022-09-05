@@ -60,7 +60,7 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
             '''(
               select first_value(ctx) over (order by pos)
               from unnest(json_query_array({}, '$')) as ctx with offset as pos
-              where json_value(ctx, '$."_type"') = {}
+              where json_value(ctx, '$."_type"') = {} limit 1
             )''',
             self._series_object,
             Expression.string_value(type)
@@ -70,6 +70,56 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
         value_series = ctx_series.json.get_value(key=key, as_str=as_str)
         return value_series.copy_override_dtype(dtype)
 
+    def get_contexts(self, name: str) -> 'SeriesGlobalContext':
+        """
+        Returns an array of contexts from an Objectiv stack where `_type` matches the
+        UpperCamelCase context and created from `name` e.g. 'identity' becomes 'IdentityContext'.
+        """
+        upper_camel_name = name.capitalize() + "Context"
+        return self.get_contexts_with_type(upper_camel_name).astype('objectiv_global_context')
+
+    def get_contexts_with_type(self, type: str):
+        """
+        Returns an array of contexts from an Objectiv stack where `_type` matches `type`.
+
+        :param type: the _type to search for in the contexts of the stack.
+        :returns: a seriesjson, containing a possibly empty array of the specified types
+        """
+        dialect = self._series_object.engine.dialect
+        if is_postgres(dialect):
+            return self._postgres_get_contexts_with_type(type)
+        if is_bigquery(dialect):
+            return self._bigquery_get_contexts_with_type(type)
+        raise DatabaseNotSupportedException(dialect)
+
+    def _postgres_get_contexts_with_type(self, type: str):
+        dialect = self._series_object.engine.dialect
+        expression_str = f'''
+        jsonb_path_query_array({{}},
+        \'$[*] ? (@._type == $type)\',
+        \'{{"type":{quote_identifier(dialect, type)}}}\')'''
+        expression = Expression.construct(
+            expression_str,
+            self._series_object
+        )
+        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
+
+    def _bigquery_get_contexts_with_type(self, type: str):
+        # This is quite ugly, but we need to convert to JSON (pre GA), and back to string because
+        # there is no nicer way to otherwise generate the JSON array that we need (as a string for now)
+        # This should be revisited when we implement BQ JSON through that datatype.
+        expression = Expression.construct(
+            '''
+            to_json_string(array(
+                select ctx
+                from unnest(json_query_array(parse_json({}), '$')) as ctx with offset as pos
+                where json_value(ctx, '$."_type"') = {}
+            ))''',
+            self._series_object,
+            Expression.string_value(type)
+        )
+        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
+
 
 @register_dtype(value_types=[], override_registered_types=True)
 class SeriesGlobalContexts(SeriesJson):
@@ -77,38 +127,10 @@ class SeriesGlobalContexts(SeriesJson):
     Objectiv Global Contexts series. This series type contains functionality specific to the Objectiv Global
     Contexts.
     """
-    dtype = 'objectiv_global_context'
-
-    class GlobalContexts(ObjectivStack):
-        @property
-        def cookie_id(self):
-            """
-            .. _gc_cookie_id:
-
-            Returns cookie id from the global contexts.
-            """
-            return self.get_from_context_with_type_series("CookieIdContext", "cookie_id")
-
-        @property
-        def user_agent(self):
-            """
-            .. _gc_user_agent:
-
-            Returns user agent string from the global contexts.
-            """
-            return self.get_from_context_with_type_series("HttpContext", "user_agent")
-
-        @property
-        def application(self):
-            """
-            .. _gc_application:
-
-            Returns application id from the global contexts.
-            """
-            return self.get_from_context_with_type_series("ApplicationContext", "id")
+    dtype = 'objectiv_global_contexts'
 
     @property
-    def objectiv(self):
+    def objectiv(self) -> 'ObjectivStack':
         """
         Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
         accessor. Same as :py:attr:`obj`
@@ -121,7 +143,7 @@ class SeriesGlobalContexts(SeriesJson):
         return ObjectivStack(self)
 
     @property
-    def obj(self):
+    def obj(self) -> 'ObjectivStack':
         """
         Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
         accessor. Same as :py:attr:`objectiv`
@@ -133,30 +155,33 @@ class SeriesGlobalContexts(SeriesJson):
         """
         return ObjectivStack(self)
 
+
+@register_dtype(value_types=[], override_registered_types=True)
+class SeriesGlobalContext(SeriesJson):
+    """
+    Objectiv Global Context series for a single global context. By default, this field should contain
+    and array of all contexts available for this type
+    """
+    dtype = 'objectiv_global_context'
+
+    class GlobalContext:
+        def __init__(self, series: 'SeriesGlobalContext'):
+            self._series = series
+
+        def __getattr__(self, name) -> 'SeriesString':
+            """
+            By default, any attribute requested will be given the matching field from the first instance
+            of this context, if any.
+            """
+            return self._series.json[0].json.get_value(name, as_str=True)
+
     @property
-    def global_contexts(self):
-        """
-        Accessor for Objectiv global context data. All methods of :py:attr:`json` and :py:attr:`objectiv` can
-        also be accessed with this accessor. Same as :py:attr:`gc`
-
-        .. autoclass:: modelhub.series.SeriesGlobalContexts.GlobalContexts
-            :members:
-
-        """
-        return self.GlobalContexts(self)
+    def c(self):
+        return self.GlobalContext(self)
 
     @property
-    def gc(self):
-        """
-        Accessor for Objectiv global context data. All methods of :py:attr:`json` and :py:attr:`objectiv` can
-        also be accessed with this accessor. Same as :py:attr:`global_contexts`
-
-        .. autoclass:: modelhub.series.SeriesGlobalContexts.GlobalContexts
-            :members:
-            :noindex:
-
-        """
-        return self.GlobalContexts(self)
+    def context(self):
+        return self.GlobalContext(self)
 
 
 @register_dtype([], override_registered_types=True)

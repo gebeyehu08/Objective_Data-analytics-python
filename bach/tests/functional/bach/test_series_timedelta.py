@@ -8,11 +8,13 @@ import pandas as pd
 import pytest
 
 from bach import DataFrame
+from sql_models.util import is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, \
     get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
+@pytest.mark.athena_supported()
 def test_timedelta_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', ('date', None)],
@@ -24,6 +26,7 @@ def test_timedelta_arithmetic(engine):
     types_plus_min(engine, data, datetime.timedelta(days=123, seconds=5621), 'timedelta')
 
 
+@pytest.mark.athena_supported()
 def test_timedelta_arithmetic2(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)[['inhabitants']]
     td = datetime.timedelta(days=365, seconds=9877)
@@ -52,6 +55,7 @@ def test_timedelta_arithmetic2(engine):
     )
 
 
+@pytest.mark.athena_supported()
 def test_timedelta(engine):
     mt = get_df_with_food_data(engine)[['skating_order', 'moment']]
 
@@ -92,6 +96,10 @@ def test_timedelta(engine):
         use_to_pandas=True,
     )
 
+    if is_athena(engine):
+        # TODO: Support mode aggregation for athena
+        return None
+
     r4 = gb[['delta']].groupby().mode()
     assert_equals_data(
         r4,
@@ -103,7 +111,7 @@ def test_timedelta(engine):
     )
 
 
-
+@pytest.mark.athena_supported()
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['td'] = datetime.timedelta(days=321, seconds=9877)
@@ -134,26 +142,28 @@ def test_timedelta_operations(engine):
     np.testing.assert_equal(expected.to_numpy(), result.sort_index().to_numpy())
 
 
+@pytest.mark.athena_supported()
 def test_timedelta_dt_properties(engine) -> None:
+    unit = 'ms' if is_athena(engine) else 'us'
     pdf = pd.DataFrame(
         data={
             'start_date': [
-                np.datetime64("2022-01-01 12:34:56.7800"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-10 02:34:56.7800"),
-                np.datetime64("2020-12-10 02:34:56.7800"),
-                np.datetime64("2022-01-05 01:23:45.1234567"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-03"),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-10 02:34:56.7800", unit),
+                np.datetime64("2020-12-10 02:34:56.7800", unit),
+                np.datetime64("2022-01-05 01:23:45.1234567", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-03", unit),
             ],
             'end_date': [
-                np.datetime64("2022-01-03"),
-                np.datetime64("2022-01-06"),
-                np.datetime64("2022-01-10"),
-                np.datetime64("2022-01-10"),
-                np.datetime64("2022-01-05 01:23:45.7700"),
-                np.datetime64("1999-12-31 01:23:45.6700"),
-                np.datetime64("2022-01-01 12:34:56.7800"),
+                np.datetime64("2022-01-03", unit),
+                np.datetime64("2022-01-06", unit),
+                np.datetime64("2022-01-10", unit),
+                np.datetime64("2022-01-10", unit),
+                np.datetime64("2022-01-05 01:23:45.7700", unit),
+                np.datetime64("1999-12-31 01:23:45.6700", unit),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
             ]
         }
     )
@@ -182,12 +192,17 @@ def test_timedelta_dt_properties(engine) -> None:
 
     properties_df['total_seconds'] = df['diff'].dt.total_seconds
 
+    row_w_diff_precision = [0.,       0., 646544.,     0.64654]
+    if is_athena(engine):
+        # athena supports till milliseconds, therefore components might be rounded
+        row_w_diff_precision = [0.,       0., 647000.,     0.64700]
+
     expected_data = [
         [1.,   41103., 220000.,   127503.22],
         [0.,   81374., 330000.,    81374.33],
         [-1.,  77103., 220000.,    -9296.78],
         [395., 77103., 220000., 34205103.22],
-        [0.,       0., 646544.,     0.64654],
+        row_w_diff_precision,
         [-8041.,   0.,      0., -694742400.],
         [-2.,  45296., 780000.,  -127503.22],
     ]
@@ -196,22 +211,24 @@ def test_timedelta_dt_properties(engine) -> None:
     )
 
 
+@pytest.mark.athena_supported()
 def test_timedelta_dt_components(engine) -> None:
+    unit = 'ms' if is_athena(engine) else 'us'
     pdf = pd.DataFrame(
         data={
             'start_date': [
-                np.datetime64("2022-01-01 12:34:56.7800"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-05 01:23:45.1234567"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-03"),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-05 01:23:45.1234567", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-03", unit),
             ],
             'end_date': [
-                np.datetime64("2022-01-03"),
-                np.datetime64("2022-01-06"),
-                np.datetime64("2022-01-05 01:23:45.7700"),
-                np.datetime64("1999-12-31 01:23:45.6700"),
-                np.datetime64("2022-01-01 12:34:56.7800"),
+                np.datetime64("2022-01-03", unit),
+                np.datetime64("2022-01-06", unit),
+                np.datetime64("2022-01-05 01:23:45.7700", unit),
+                np.datetime64("1999-12-31 01:23:45.6700", unit),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
             ]
         }
     )

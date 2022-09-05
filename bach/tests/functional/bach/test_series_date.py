@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from bach import SeriesDate, DataFrame
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
@@ -15,6 +15,7 @@ from tests.functional.bach.test_series_timestamp import types_plus_min
 from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES
 
 
+@pytest.mark.athena_supported()
 @pytest.mark.parametrize("asstring", [True, False])
 def test_date_comparator(asstring: bool, engine):
     mt = get_df_with_food_data(engine)[['date']]
@@ -25,58 +26,25 @@ def test_date_comparator(asstring: bool, engine):
     assert_postgres_type(mt['date'], 'date', SeriesDate)
 
     from datetime import date
-    dt = date(2021, 5, 3)
+    dt = date(2021, 5, 4)
 
     if asstring:
         dt = str(dt)
 
-    result = mt[mt['date'] == dt]
+    mt['eq'] = mt['date'] == dt
+    mt['gte'] = mt['date'] >= dt
+    mt['gt'] = mt['date'] > dt
+    mt['lte'] = mt['date'] <= dt
+    mt['lt'] = mt['date'] < dt
+
+    result = mt[['eq', 'gte', 'gt', 'lte', 'lt']]
     assert_equals_data(
         result,
-        expected_columns=['_index_skating_order', 'date'],
+        expected_columns=['_index_skating_order', 'eq', 'gte', 'gt', 'lte', 'lt'],
         expected_data=[
-            [1, date(2021, 5, 3)]
-        ]
-    )
-    assert_equals_data(
-        mt[mt['date'] >= dt],
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 5, 3)],
-            [2, date(2021, 5, 4)],
-            [4, date(2022, 5, 3)]
-        ]
-    )
-
-    assert_equals_data(
-        mt[mt['date'] > dt],
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [2, date(2021, 5, 4)],
-            [4, date(2022, 5, 3)]
-        ]
-    )
-
-    dt = date(2022, 5, 3)
-    if asstring:
-        dt = str(dt)
-
-    assert_equals_data(
-        mt[mt['date'] <= dt],
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 5, 3)],
-            [2, date(2021, 5, 4,)],
-            [4, date(2022, 5, 3)]
-        ]
-    )
-
-    assert_equals_data(
-        mt[mt['date'] < dt],
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 5, 3)],
-            [2, date(2021, 5, 4)]
+            [1, False, False, False, True, True],
+            [2, True, True, False, True, False],
+            [4, False, True, True, False, False]
         ]
     )
 
@@ -153,6 +121,7 @@ def test_date_format_all_supported_pg_codes(engine):
     pd.testing.assert_frame_equal(pdf, df.to_pandas(), check_dtype=False)
 
 
+@pytest.mark.athena_supported()
 def test_date_trunc(engine):
     mt = get_df_with_food_data(engine)
     mt['date'] = mt['date'].astype('date')
@@ -236,17 +205,18 @@ def test_date_trunc(engine):
         mt['time'].dt.date_trunc('hour')
 
 
-def test_date_arithmetic(pg_engine):
-    # TODO: BigQuery
+@pytest.mark.athena_supported()
+def test_date_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', (None, 'timedelta')],
         ['t', datetime.time(23, 11, 5), 'time', (None, None)],
         ['td', datetime.timedelta(days=321, seconds=9877), 'timedelta', ('date', 'date')],
         ['dt', datetime.datetime(2021, 5, 3, 11, 28, 36, 388000), 'timestamp', (None, None)]
     ]
-    types_plus_min(pg_engine, data, datetime.date(2021, 7, 23), 'date')
+    types_plus_min(engine, data, datetime.date(2021, 7, 23), 'date')
 
 
+@pytest.mark.athena_supported()
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['d'] = datetime.date(2020, 3, 11)

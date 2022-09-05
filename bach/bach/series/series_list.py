@@ -46,6 +46,8 @@ class SeriesList(Series):
     }
 
     supported_value_types = (list, )
+    # This series does not support casting from other dtypes
+    supported_source_dtypes: Tuple[str, ...] = tuple()
 
     @classmethod
     def supported_value_to_literal(
@@ -182,7 +184,7 @@ class ListAccessor:
         engine = self._series.engine
         if isinstance(key, int):
             if is_bigquery(engine):
-                expr_str = f'{{}}[OFFSET({key})]'
+                expr_str = f'{{}}[SAFE_OFFSET({key})]'
             else:
                 raise DatabaseNotSupportedException(engine)
 

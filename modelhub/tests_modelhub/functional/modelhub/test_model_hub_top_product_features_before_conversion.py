@@ -10,7 +10,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def test_top_product_features_before_conversion(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+    df, modelhub = get_objectiv_dataframe_test(db_params, global_contexts=['application'])
     initial_columns = df.data_columns
 
     event_type = 'ClickEvent'

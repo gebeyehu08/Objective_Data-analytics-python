@@ -159,12 +159,18 @@ def set_time_in_events(events: EventDataList, current_millis: int, client_millis
         client_millis = current_millis
 
     offset = current_millis - client_millis
-    print(f'debug - time offset: {offset}')
     for event in events:
         # here we correct the tracking time with the calculated offset
         # the assumption here is that transport time should be the same as the server time (current_millis)
         # to account for clients that have an out-of-sync clock
-        event['time'] = event['time'] + offset
+        # this means we have the following timestamps in an event:
+        # time: timestamp when the event occurred according to the client
+        # corrected_time: timestamp when the event occurred, corrected for transport latency
+        # transport_time: timestamp when the event was sent by the client-side transport layer
+        # collector_time: timestamp when the collector received the event to process it
+        event['corrected_time'] = event['time'] + offset
+        event['transport_time'] = client_millis
+        event['collector_time'] = current_millis
 
 
 def _get_remote_address(request: Request) -> str:
