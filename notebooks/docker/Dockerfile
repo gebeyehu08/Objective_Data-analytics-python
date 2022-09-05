@@ -16,6 +16,8 @@ RUN mkdir -p $APP && \
 
 COPY docker/00_objectiv.sql  /services/
 COPY docker/0_objectiv_data.sql /services/
+COPY docker/1_metabase_init.sql /services
+COPY docker/2_metabase_data.sql /services
 
 COPY requirements.txt /services
 

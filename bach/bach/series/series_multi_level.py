@@ -466,7 +466,7 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
         elif is_bigquery(self.engine):
             # BigQuery has no proper datatype for numeric intervals,
             # therefore we should represent it as a struct
-            base_expr_stmt = f'struct({{}} as lower, {{}} as upper, {{}} as bounds)'
+            base_expr_stmt = f'struct({{}} as `lower`, {{}} as `upper`, {{}} as `bounds`)'
         else:
             raise DatabaseNotSupportedException(self.engine)
 

@@ -13,6 +13,7 @@ from sql_models.util import is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data,\
     get_df_with_food_data
 
+pytestmark = pytest.mark.athena_supported()
 
 def floor_datetime(engine, dt: datetime.datetime) -> datetime.datetime:
     pdt = pd.Timestamp.fromtimestamp(dt.timestamp())
@@ -22,7 +23,6 @@ def floor_datetime(engine, dt: datetime.datetime) -> datetime.datetime:
     return pdt.floor(freq='us')
 
 
-@pytest.mark.athena_supported()
 def test_timestamp_data(engine):
     mt = get_df_with_food_data(engine)[['moment']]
     mt['const1'] = datetime.datetime(1999, 12, 31, 23, 59, 59, 999999)
@@ -49,7 +49,6 @@ def test_timestamp_data(engine):
     )
 
 
-@pytest.mark.athena_supported()
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['dt'] = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000)
@@ -57,7 +56,6 @@ def test_to_pandas(engine):
     assert result_pdf['dt'].to_numpy()[0] == [numpy.array(['2021-05-03T11:28:36.388000000'], dtype='datetime64[ns]')]
 
 
-@pytest.mark.athena_supported()
 @pytest.mark.parametrize("asstring", [True, False])
 def test_timestamp_comparator(engine, asstring: bool):
     mt = get_df_with_food_data(engine)[['moment']]
@@ -89,7 +87,6 @@ def test_timestamp_comparator(engine, asstring: bool):
     )
 
 
-@pytest.mark.athena_supported()
 def test_timestamp_value_to_literal(engine):
     mt = get_df_with_food_data(engine)[['moment']]
 

@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Dict, Any, NamedTuple, Optional
 from uuid import UUID
 
@@ -17,10 +18,18 @@ from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JS
 from tests_modelhub.data_and_utils.data_objectiv import TEST_DATA_OBJECTIV
 
 
+
 class DBParams(NamedTuple):
+    class Format(Enum):
+        # native objectiv format, currently only in PG
+        OBJECTIV = 'objectiv'
+        # snowplow's native format, using Iglu contexts to store objectiv specific data
+        SNOWPLOW = 'snowplow'
+
     url: str
     credentials: Optional[str]
     table_name: str
+    format: Format
 
 
 def _convert_moment_to_utc_time(moment: str) -> int:
@@ -41,7 +50,7 @@ def get_df_with_json_data_real(db_params: DBParams) -> DataFrame:
     return df
 
 
-def get_objectiv_dataframe_test(db_params=None, time_aggregation=None):
+def get_objectiv_dataframe_test(db_params=None, time_aggregation=None, global_contexts=None):
     if not db_params:
         # by default use PG (this should be removed after modelhub is able to work with all bach engines)
         import os
@@ -56,7 +65,7 @@ def get_objectiv_dataframe_test(db_params=None, time_aggregation=None):
     kwargs = {}
     if time_aggregation:
         kwargs = {'time_aggregation': time_aggregation}
-    modelhub = ModelHub(**kwargs)
+    modelhub = ModelHub(**kwargs, global_contexts=global_contexts, )
 
     return modelhub.get_objectiv_dataframe(
         db_url=db_url,

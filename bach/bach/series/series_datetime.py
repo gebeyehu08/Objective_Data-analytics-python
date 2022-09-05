@@ -199,7 +199,7 @@ class TimedeltaOperation(DateTimeOperation):
 
     @staticmethod
     def _format_converted_series_name(date_part: DatePart) -> str:
-        return f'_SECONDS_IN_{date_part.name}'
+        return f'_SECONDS_IN_{date_part.name}'.lower()
 
     @property
     def components(self) -> DataFrame:
@@ -293,12 +293,15 @@ class TimedeltaOperation(DateTimeOperation):
     def total_seconds(self) -> SeriesFloat64:
         """
         returns the total amount of seconds in the interval
-        """
 
-        if not is_bigquery(self._series.engine):
+        .. note::
+            Since Athena does not support interval types, series values are actually the total seconds.
+        """
+        expression = self._series.expression
+        if is_postgres(self._series.engine):
             # extract(epoch from source) returns the total number of seconds in the interval
             expression = Expression.construct(f'extract(epoch from {{}})', self._series)
-        else:
+        elif is_bigquery(self._series.engine):
             # bq cannot extract epoch from interval
             expression = Expression.construct(
                 (
@@ -365,19 +368,22 @@ class SeriesAbstractDateTime(Series, ABC):
         )
 
     @classmethod
-    def _cast_to_date_if_dtype_date(cls, series: 'Series') -> 'Series':
-        # PG returns timestamp in all cases were we expect date
+    def _cast_and_round_to_date(cls, series: 'SeriesDate') -> 'Series':
+        # Most of engines return timestamp in all cases were we expect date
         # Make sure we cast properly, and round similar to python datetime: add 12 hours and cast to date
-        if series.dtype == 'date':
-            td_12_hours = datetime.timedelta(seconds=3600 * 12)
-            series_12_hours = SeriesTimedelta.from_value(base=series, value=td_12_hours, name='tmp')
-            expr_12_hours = series_12_hours.expression
+        td_12_hours = datetime.timedelta(seconds=3600 * 12)
+        series_12_hours = SeriesTimedelta.from_value(base=series, value=td_12_hours, name='tmp')
+        expr_12_hours = series_12_hours.expression
 
-            return series.copy_override(
-                expression=Expression.construct("cast({} + {} as date)", series, expr_12_hours)
-            )
-        else:
-            return series
+        expr = "cast({} + {} as date)"
+
+        # time intervals are not supported in athena, we need to use unix time instead
+        if is_athena(series.engine):
+            expr = "cast(from_unixtime(to_unixtime({}) + {}) as date)"
+
+        return series.copy_override(
+            expression=Expression.construct(expr, series, expr_12_hours)
+        )
 
     @classmethod
     def _get_date_format_for_literal_value(cls, value: str) -> str:
@@ -436,11 +442,8 @@ class SeriesAbstractDateTime(Series, ABC):
         if isinstance(value, numpy.datetime64):
             if numpy.isnat(value):
                 return Expression.raw('NULL')
-            # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
-            # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
-            # Rounding can be unpredictable because of limited precision, so always truncate excess precision
-            microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
-            dt_value = datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)
+
+            dt_value = _convert_numpy_datetime_to_utc_datetime(value)
 
         if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
             dt_value = value
@@ -500,16 +503,49 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         return None
 
     def __add__(self, other) -> 'Series':
-        return self._arithmetic_operation(other, 'add', '({}) + ({})', other_dtypes=tuple(['timedelta']))
+        _self = self.copy()
+        fmt_str = '({}) + ({})'
+        if is_athena(self.engine):
+            # convert timestamp to unixtime and cast result back to timestamp
+            _self = self.copy_override(
+                expression=Expression.construct('to_unixtime({})', self)
+            )
+            fmt_str = f'from_unixtime({fmt_str})'
+
+        return _self._arithmetic_operation(other, 'add', fmt_str, other_dtypes=tuple(['timedelta']))
 
     def __sub__(self, other) -> 'Series':
         type_mapping = {
             'timedelta': 'timestamp',
             'timestamp': 'timedelta'
         }
-        return self._arithmetic_operation(other, 'sub', '({}) - ({})',
-                                          other_dtypes=tuple(type_mapping.keys()),
-                                          dtype=type_mapping)
+
+        _self = self.copy()
+        _other = other.copy()
+
+        fmt_str = '({}) - ({})'
+        if is_athena(self.engine):
+            # since we represent intervals with float values, we should consider unix time values instead
+            _self = self.copy_override(
+                expression=Expression.construct('to_unixtime({})', self)
+            )
+            fmt_str = f'round({fmt_str}, 3)'
+            if other.dtype == 'timestamp':
+                _other = _other.copy_override(
+                    expression=Expression.construct('to_unixtime({})', _other)
+                )
+
+            else:
+                # need to cast back to timestamp if we are subtracting by a timedelta
+                fmt_str = f'from_unixtime({fmt_str})'
+
+        return _self._arithmetic_operation(
+            _other,
+            operation='sub',
+            fmt_str=fmt_str,
+            other_dtypes=tuple(type_mapping.keys()),
+            dtype=type_mapping,
+        )
 
 
 class SeriesDate(SeriesAbstractDateTime):
@@ -534,31 +570,35 @@ class SeriesDate(SeriesAbstractDateTime):
     _FINAL_DATE_TIME_FORMAT = '%Y-%m-%d'
 
     def __add__(self, other) -> 'Series':
-        type_mapping = {
-            'timedelta': 'date'  # PG returns timestamp, needs explicit cast to date
-        }
-        return self._cast_to_date_if_dtype_date(
-            self._arithmetic_operation(other, 'add', '({}) + ({})',
-                                       other_dtypes=tuple(type_mapping.keys()),
-                                       dtype=type_mapping)
-        )
+        _self = self.astype('timestamp')
+        _other = other.copy()
+
+        result = _self + _other
+        # current result is timestamp dtype, cast it back to date
+        # (without explicitly casting db type, as time units are required for rounding)
+        result = result.copy_override_type(SeriesDate)
+        return self._cast_and_round_to_date(result)
 
     def __sub__(self, other) -> 'Series':
-        type_mapping = {
-            'date': 'timedelta',
-            'timedelta': 'date',  # PG returns timestamp, needs explicit cast to date
-        }
-        if other.dtype == 'date':
-            # PG does unexpected things when doing date - date. Work around that.
-            fmt_str = 'cast(cast({} as timestamp) - ({}) as interval)'
-        else:
-            fmt_str = '({}) - ({})'
+        # python will raise a TypeError when trying arithmetic operations
+        # that are not date or timedelta type
 
-        return self._cast_to_date_if_dtype_date(
-            self._arithmetic_operation(other, 'sub', fmt_str,
-                                       other_dtypes=tuple(type_mapping.keys()),
-                                       dtype=type_mapping)
-        )
+        if other.dtype not in ('date', 'timedelta'):
+            raise TypeError(f'arithmetic operation sub not supported for '
+                            f'{self.__class__} and {other.__class__}')
+
+        _self = self.astype('timestamp')
+        _other = other.astype('timestamp') if other.dtype == 'date' else other.copy()
+
+        result = _self - _other
+        if other.dtype == 'date':
+            # will return an interval
+            return result
+
+        # current result is timestamp dtype, cast it back to date
+        # (without explicitly casting db type, as time units are required for rounding)
+        result = result.copy_override_type(SeriesDate)
+        return self._cast_and_round_to_date(result)
 
 
 class SeriesTime(SeriesAbstractDateTime):
@@ -570,18 +610,106 @@ class SeriesTime(SeriesAbstractDateTime):
 
     * Postgres: utilizes the 'time without time zone' database type.
     * BigQuery: utilizes the 'TIME' database type.
+    * Athena: utilizes the 'double' database type. Storing the number of seconds since `00:00:00`.
+
     """
     dtype = 'time'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'time without time zone',
         DBDialect.BIGQUERY: 'TIME',
+        # Athena supports time database type, however we decided to represent
+        # time values as floats (total seconds) due to the following reasons:
+        # 1. Athena does not support writing time values into tables
+        # 2. Time values have till millisecond precision, using floats we can support till microseconds.
+        DBDialect.ATHENA: None,
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.time, str)
     supported_source_dtypes = ('string', 'timestamp, ')
 
     _VALID_DATE_TIME_FORMATS = SeriesAbstractDateTime._VALID_DATE_TIME_FORMATS + ['%H:%M:%S', '%H:%M:%S.%f']
     _FINAL_DATE_TIME_FORMAT = '%H:%M:%S.%f'
+
+    @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
+        if is_athena(dialect):
+            from bach.series import SeriesString
+            return SeriesFloat64.get_db_dtype(dialect)
+        return super().get_db_dtype(dialect)
+
+    @classmethod
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        if is_postgres(dialect) or is_bigquery(dialect):
+            return super().supported_literal_to_expression(dialect=dialect, literal=literal)
+        if is_athena(dialect):
+            from bach import SeriesString
+            return SeriesFloat64.supported_literal_to_expression(dialect=dialect, literal=literal)
+        raise DatabaseNotSupportedException(dialect)
+
+    @classmethod
+    def supported_value_to_literal(
+        cls,
+        dialect: Dialect,
+        value: AllSupportedDateTimeTypes,
+        dtype: StructuredDtype
+    ) -> Expression:
+        val_is_null = value is None or (isinstance(value, numpy.datetime64) and numpy.isnat(value))
+        if not is_athena(dialect) or val_is_null:
+            return super().supported_value_to_literal(dialect=dialect, value=value, dtype=dtype)
+
+        dt_value: Union[datetime.datetime, datetime.date, datetime.time, None] = None
+
+        if isinstance(value, str):
+            # get the right date format of the string
+            str_format = cls._get_date_format_for_literal_value(value)
+            dt_value = datetime.datetime.strptime(value, str_format)
+
+        if isinstance(value, numpy.datetime64):
+            dt_value = _convert_numpy_datetime_to_utc_datetime(value)
+
+        if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+            dt_value = value
+
+        if not dt_value or not isinstance(value, cls.supported_value_types):
+            raise ValueError(f'Not a valid {cls.dtype} literal: {value}')
+
+        total_seconds = 0.
+        if isinstance(dt_value, (datetime.datetime, datetime.time)):
+            total_seconds = (
+                dt_value.hour * _TOTAL_SECONDS_PER_DATE_PART[DatePart.HOUR]
+                + dt_value.minute * _TOTAL_SECONDS_PER_DATE_PART[DatePart.MINUTE]
+                + dt_value.second
+                + dt_value.microsecond * _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+            )
+
+        from bach.series import SeriesFloat64
+        return SeriesFloat64.supported_value_to_literal(dialect, value=total_seconds, dtype='float64')
+
+    def to_pandas_info(self) -> Optional[ToPandasInfo]:
+        if is_athena(self.engine):
+            return ToPandasInfo('object', self._parse_time_in_seconds_value_athena)
+        return None
+
+    @staticmethod
+    def _parse_time_in_seconds_value_athena(value) -> Optional[datetime.time]:
+        if value is None:
+            return value
+
+        hours_w_fract = value / _TOTAL_SECONDS_PER_DATE_PART[DatePart.HOUR]
+        normalized_hours = int(hours_w_fract // 1)
+
+        minutes_w_fract = (hours_w_fract - normalized_hours) * 60
+        normalized_minutes = int(minutes_w_fract // 1)
+
+        # round till milliseconds
+        seconds_w_fract = round((minutes_w_fract - normalized_minutes) * 60, 6)
+        normalized_seconds = int(seconds_w_fract // 1)
+        return datetime.time(
+            hour=normalized_hours,
+            minute=normalized_minutes,
+            second=normalized_seconds,
+            microsecond=int(seconds_w_fract % 1 / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]),
+        )
 
     # python supports no arithmetic on Time
 
@@ -593,7 +721,8 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     **Database support and types**
 
     * Postgres: utilizes the 'interval' database type.
-    * BigQuery: support coming soon
+    * BigQuery: utilizes the 'interval' database type.
+    * Athena: utilizes the 'double' database type.
     """
 
     dtype = 'timedelta'
@@ -601,9 +730,19 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'interval',
         DBDialect.BIGQUERY: 'INTERVAL',
+        # Athena supports interval database type, however we decided to represent
+        # timedelta values as floats (total seconds) as Athena does not support writing
+        # interval values into tables
+        DBDialect.ATHENA: None,
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
     supported_source_dtypes = ('string',)
+
+    @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
+        if is_athena(dialect):
+            return SeriesFloat64.get_db_dtype(dialect)
+        return super().get_db_dtype(dialect)
 
     @classmethod
     def supported_value_to_literal(
@@ -624,6 +763,13 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             if value_td is pandas.NaT:
                 return Expression.construct('NULL')
 
+            if is_athena(dialect):
+                # athena does not support interval type, therefore we need to use epoch instead
+                from bach.series import SeriesFloat64
+                return SeriesFloat64.supported_value_to_literal(
+                    dialect, value=value_td.total_seconds(), dtype='float64'
+                )
+
             # interval values in iso format are allowed in SQL (both BQ and PG)
             # https://www.postgresql.org/docs/8.4/datatype-datetime.html#:~:text=interval%20values%20can%20also%20be%20written%20as%20iso%208601%20time%20intervals%2C
             return Expression.string_value(value_td.isoformat())
@@ -633,6 +779,10 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     def to_pandas_info(self) -> Optional[ToPandasInfo]:
         if is_bigquery(self.engine):
             return ToPandasInfo(dtype='object', function=self._parse_interval_bigquery)
+
+        if is_athena(self.engine):
+            return ToPandasInfo(dtype='object', function=lambda value: pandas.Timedelta(seconds=value))
+
         return None
 
     def _parse_interval_bigquery(self, value: Optional[Any]) -> Optional[pandas.Timedelta]:
@@ -652,15 +802,16 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def __add__(self, other) -> 'Series':
-        type_mapping = {
-            'date': 'date',  # PG makes this a timestamp
-            'timedelta': 'timedelta',
-            'timestamp': 'timestamp'
-        }
-        return self._cast_to_date_if_dtype_date(
-            self._arithmetic_operation(other, 'add', '({}) + ({})',
-                                       other_dtypes=tuple(type_mapping.keys()),
-                                       dtype=type_mapping))
+        if isinstance(other, datetime.timedelta) or other.dtype == 'timedelta':
+            return self._arithmetic_operation(
+                other,
+                'add',
+                '({}) + ({})',
+                other_dtypes=('timedelta', ),
+                dtype={'timedelta': 'timedelta'}
+            )
+        # inverse the operands, so we call SeriesDate or SeriesTimestamp __add__
+        return other + self
 
     def __sub__(self, other) -> 'Series':
         type_mapping = {
@@ -780,7 +931,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             )
 
         result = calculate_quantiles(series=self.dt.total_seconds, partition=partition, q=q)
-
         # result must be a timedelta
         return self._convert_total_seconds_to_timedelta(result.copy_override_type(SeriesFloat64))
 
@@ -816,3 +966,11 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             name=self.name,
         )
         return result.copy_override_type(SeriesTimedelta)
+
+
+def _convert_numpy_datetime_to_utc_datetime(value: numpy.datetime64) -> datetime.datetime:
+    # Weird trick: count number of microseconds in datetime, but only works on timedelta, so convert
+    # to a timedelta first, by subtracting 0 (epoch = 1970-01-01 00:00:00)
+    # Rounding can be unpredictable because of limited precision, so always truncate excess precision
+    microseconds = int((value - numpy.datetime64('1970', 'us')) // numpy.timedelta64(1, 'us'))
+    return datetime.datetime.utcfromtimestamp(microseconds / 1_000_000)

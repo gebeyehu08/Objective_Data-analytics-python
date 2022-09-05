@@ -9,7 +9,7 @@ from tests.unit.bach.util import get_fake_df
 
 def test_display_sql_as_markdown(monkeypatch: MonkeyPatch, dialect) -> None:
     df = get_fake_df(dialect, ['a'], ['b', 'c'])
-    expected_sql = 'select * from fake_table'
+    expected_sql = 'SELECT *\nFROM fake_table'
     displayed_calls = 0
 
     def mocked_view_sql() -> str:
@@ -20,7 +20,7 @@ def test_display_sql_as_markdown(monkeypatch: MonkeyPatch, dialect) -> None:
         displayed_calls += 1
 
         assert isinstance(markdown, display.Markdown)
-        assert markdown.data == f"```sql\n{expected_sql}```"
+        assert markdown.data == f"```sql\n{expected_sql}\n```"
 
     monkeypatch.setattr(df, 'view_sql', mocked_view_sql)
     monkeypatch.setattr(display, 'display', mocked_display)

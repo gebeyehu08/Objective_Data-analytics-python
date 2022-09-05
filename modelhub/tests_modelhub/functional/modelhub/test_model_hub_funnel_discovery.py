@@ -260,21 +260,18 @@ def test_get_navigation_paths_filtered(db_params) -> None:
 
 
 def test_filter_navigation_paths_conversion(db_params) -> None:
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+    df, modelhub = get_objectiv_dataframe_test(db_params, global_contexts=['application'])
     funnel = modelhub.get_funnel_discovery()
 
-    df = df[['moment', 'location_stack', 'global_contexts']]
+    df = df[['moment', 'location_stack', 'application']]
 
     with pytest.raises(ValueError, match='The is_conversion_event column '
                                          'is missing in the dataframe.'):
         funnel.get_navigation_paths(data=df, steps=3, only_converted_paths=True)
 
-    # add conversion events
-    df['application'] = df.global_contexts.gc.application
-
     df['is_conversion_event'] = False
     # define which data to use as conversion events
-    df.loc[df['application'] == 'objectiv-website', 'is_conversion_event'] = True
+    df.loc[df.application.context.id == 'objectiv-website', 'is_conversion_event'] = True
 
     # add_conversion_step_column
     bts = funnel.get_navigation_paths(df, steps=3, add_conversion_step_column=True, n_examples=3)

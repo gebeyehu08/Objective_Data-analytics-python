@@ -9,7 +9,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def test_top_product_features(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+    df, modelhub = get_objectiv_dataframe_test(db_params, global_contexts=['application'])
     initial_columns = df.data_columns
     # without location_stack
     tdf = modelhub.aggregate.top_product_features(df)
