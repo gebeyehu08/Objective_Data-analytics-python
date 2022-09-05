@@ -225,7 +225,7 @@ def parse_c_code_to_athena_code(date_format: str) -> str:
     Parses a date format string, and return a string that's compatible with Athena's date_format() function.
 
     Some python format codes are different on Athena, or might even raise an error. Such codes are converted
-    or escaped; using the returned string with Athena's data_format will never raise an error.
+    or escaped; using the returned string with Athena's date_format will never raise an error.
 
     Codes in CODES_SUPPORTED_IN_ALL_DIALECTS are guaranteed to be correctly represented in the returned
     format string. If date_format contains codes that are not in that set, then the returned format might
