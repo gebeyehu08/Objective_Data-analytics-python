@@ -70,6 +70,7 @@ def test_get_item_multiple(engine):
 @pytest.mark.athena_supported
 def test_positional_slicing(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
+    bt = bt.sort_index()
     base_expected_data = deepcopy(TEST_DATA_CITIES_FULL)
 
     class ReturnSlice:
