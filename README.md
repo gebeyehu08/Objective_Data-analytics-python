@@ -8,7 +8,7 @@
 
 </a>
 
-[Objectiv](https://objectiv.io/) is a an open-source data collection & modeling platform for product analytics. It enables data teams to run product analytics from their notebooks with full control over data and models.
+[Objectiv](https://objectiv.io/) is an open-source data collection & modeling platform for product analytics. It enables data teams to run product analytics from their notebooks with full control over data and models.
 
 ![image](https://user-images.githubusercontent.com/82152911/187921808-24c8dab7-8410-4f35-b609-e9ce4a893cfc.png)
 
