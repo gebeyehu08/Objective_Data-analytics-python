@@ -10,7 +10,8 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
-from sql_models.model import CustomSqlModelBuilder, SqlModel
+from sql_models.model import CustomSqlModelBuilder, SqlModel, Materialization
+from sql_models.sql_generator import to_sql
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
@@ -65,8 +66,9 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df.is_materialized
     assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
-    # todo: in the future introduce a special SqlModel type 'source', so we don't even need a first model
-    # with a query and we can just query directly from the source table.
+    assert df.base_node.materialization == Materialization.SOURCE
+    # no query needed to create this data
+    assert to_sql(dialect=engine.dialect, model=df.base_node) == ''
     assert df.base_node.references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 
@@ -92,8 +94,6 @@ def test_from_model_basic(pg_engine, unique_table_test_name):
     assert df.is_materialized
     assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
-    # todo: in the future introduce a special SqlModel type 'source', so we don't even need a first model
-    # with a query and we can just query directly from the source table.
     assert df.base_node.references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 

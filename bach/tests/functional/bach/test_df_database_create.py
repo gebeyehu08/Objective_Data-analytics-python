@@ -5,6 +5,7 @@ from random import randrange
 
 import pytest
 
+from sql_models.model import Materialization
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier
@@ -39,6 +40,7 @@ def test_database_create_table(engine, unique_table_test_name: str):
     dialect = engine.dialect
     assert df_from_table.base_node != df.base_node
     assert len(df_from_table.base_node.references) == 0
+    assert df_from_table.base_node.materialization == Materialization.SOURCE
     new_sql = to_sql(dialect=dialect, model=df_from_table.base_node)
     expected_sql_fragment = f''
     assert expected_sql_fragment in new_sql
