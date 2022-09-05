@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from bach import SeriesDate, DataFrame
-from sql_models.util import is_postgres, is_bigquery, is_athena
+from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
@@ -71,7 +71,7 @@ def test_date_format(engine, recwarn):
         # tuple, types: (str, bool). Content: format, whether the format should raise a warning
         ('Year: %Y', False),
         ('%Y', False),
-        ('%g%Y', True),  # %g is not a supported code
+        ('%y%Y', False),
         ('%Y-%m-%d', False),
         ('%Y%m%d-%Y%m-%m%d-%d', False),
         ('%Y%m-%d%d', False),
@@ -99,18 +99,12 @@ def test_date_format(engine, recwarn):
 
     # Some columns do not contain correct results on some databases. For now, we accept that.
     # Here we define the correct result, below we define exceptions per database
-    iso_week_year_date = '212022'
-    iso_week_year_timestamp = '212021'
     percentage_format_date = '2022-%01-01'
     percentage_format_timestamp = '2021-%05-03'
 
     if is_postgres(engine):
         percentage_format_date = '2022-%%01-01'  # %% is not supported for pg
         percentage_format_timestamp = '2021-%%05-03'
-    elif is_athena(engine):
-        # TODO: don't support %g? It's not listed on python's doc page
-        iso_week_year_date = '%g2022'
-        iso_week_year_timestamp = '%g2021'
 
     assert_equals_data(
         df[expected_columns],
@@ -119,7 +113,7 @@ def test_date_format(engine, recwarn):
             [
                 'Year: 2022', 'Year: 2021',
                 '2022', '2021',
-                iso_week_year_date, iso_week_year_timestamp,
+                '222022', '212021',
                 '2022-01-01', '2021-05-03',
                 '20220101-202201-0101-01', '20210503-202105-0503-03',
                 '202201-0101', '202105-0303',
@@ -261,5 +255,5 @@ def test_date_arithmetic(engine):
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['d'] = datetime.date(2020, 3, 11)
-    bt[['d']].to_pandas()
-    assert bt[['d']].to_numpy()[0] == [datetime.date(2020, 3, 11)]
+    pdf_result = bt.to_pandas()
+    assert pdf_result[['d']].to_numpy()[0] == [datetime.date(2020, 3, 11)]
