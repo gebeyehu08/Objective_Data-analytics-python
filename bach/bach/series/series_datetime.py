@@ -199,7 +199,7 @@ class TimedeltaOperation(DateTimeOperation):
 
     @staticmethod
     def _format_converted_series_name(date_part: DatePart) -> str:
-        return f'_SECONDS_IN_{date_part.name}'
+        return f'_SECONDS_IN_{date_part.name}'.lower()
 
     @property
     def components(self) -> DataFrame:
@@ -293,12 +293,15 @@ class TimedeltaOperation(DateTimeOperation):
     def total_seconds(self) -> SeriesFloat64:
         """
         returns the total amount of seconds in the interval
-        """
 
-        if not is_bigquery(self._series.engine):
+        .. note::
+            Since Athena does not support interval types, series values are actually the total seconds.
+        """
+        expression = self._series.expression
+        if is_postgres(self._series.engine):
             # extract(epoch from source) returns the total number of seconds in the interval
             expression = Expression.construct(f'extract(epoch from {{}})', self._series)
-        else:
+        elif is_bigquery(self._series.engine):
             # bq cannot extract epoch from interval
             expression = Expression.construct(
                 (
@@ -497,16 +500,45 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         return None
 
     def __add__(self, other) -> 'Series':
-        return self._arithmetic_operation(other, 'add', '({}) + ({})', other_dtypes=tuple(['timedelta']))
+        _self = self.copy()
+        fmt_str = '({}) + ({})'
+        if is_athena(self.engine):
+            # convert timestamp to unixtime and cast result back to timestamp
+            _self = self.copy_override(
+                expression=Expression.construct('to_unixtime({})', self)
+            )
+            fmt_str = f'from_unixtime({fmt_str})'
+
+        return _self._arithmetic_operation(other, 'add', fmt_str, other_dtypes=tuple(['timedelta']))
 
     def __sub__(self, other) -> 'Series':
         type_mapping = {
             'timedelta': 'timestamp',
             'timestamp': 'timedelta'
         }
-        return self._arithmetic_operation(other, 'sub', '({}) - ({})',
-                                          other_dtypes=tuple(type_mapping.keys()),
-                                          dtype=type_mapping)
+
+        _self = self.copy()
+        _other = other.copy()
+
+        fmt_str = '({}) - ({})'
+        if is_athena(self.engine):
+            # since we represent intervals with float values, we should consider unix time values instead
+            _self = self.copy_override(
+                expression=Expression.construct('to_unixtime({})', self)
+            )
+            fmt_str = f'round({fmt_str}, 3)'
+            if other.dtype == 'timestamp':
+                _other = _other.copy_override(
+                    expression=Expression.construct('to_unixtime({})', _other)
+                )
+
+        return _self._arithmetic_operation(
+            _other,
+            operation='sub',
+            fmt_str=fmt_str,
+            other_dtypes=tuple(type_mapping.keys()),
+            dtype=type_mapping,
+        )
 
 
 class SeriesDate(SeriesAbstractDateTime):
@@ -677,7 +709,8 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     **Database support and types**
 
     * Postgres: utilizes the 'interval' database type.
-    * BigQuery: support coming soon
+    * BigQuery: utilizes the 'interval' database type.
+    * Athena: utilizes the 'double' database type.
     """
 
     dtype = 'timedelta'
@@ -685,9 +718,19 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'interval',
         DBDialect.BIGQUERY: 'INTERVAL',
+        # Athena supports interval database type, however we decided to represent
+        # timedelta values as floats (total seconds) as Athena does not support writing
+        # interval values into tables
+        DBDialect.ATHENA: None,
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
     supported_source_dtypes = ('string',)
+
+    @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
+        if is_athena(dialect):
+            return SeriesFloat64.get_db_dtype(dialect)
+        return super().get_db_dtype(dialect)
 
     @classmethod
     def supported_value_to_literal(
@@ -708,6 +751,13 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             if value_td is pandas.NaT:
                 return Expression.construct('NULL')
 
+            if is_athena(dialect):
+                # athena does not support interval type, therefore we need to use epoch instead
+                from bach.series import SeriesFloat64
+                return SeriesFloat64.supported_value_to_literal(
+                    dialect, value=value_td.total_seconds(), dtype='float64'
+                )
+
             # interval values in iso format are allowed in SQL (both BQ and PG)
             # https://www.postgresql.org/docs/8.4/datatype-datetime.html#:~:text=interval%20values%20can%20also%20be%20written%20as%20iso%208601%20time%20intervals%2C
             return Expression.string_value(value_td.isoformat())
@@ -717,6 +767,10 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     def to_pandas_info(self) -> Optional[ToPandasInfo]:
         if is_bigquery(self.engine):
             return ToPandasInfo(dtype='object', function=self._parse_interval_bigquery)
+
+        if is_athena(self.engine):
+            return ToPandasInfo(dtype='object', function=lambda value: pandas.Timedelta(seconds=value))
+
         return None
 
     def _parse_interval_bigquery(self, value: Optional[Any]) -> Optional[pandas.Timedelta]:
@@ -864,7 +918,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             )
 
         result = calculate_quantiles(series=self.dt.total_seconds, partition=partition, q=q)
-
         # result must be a timedelta
         return self._convert_total_seconds_to_timedelta(result.copy_override_type(SeriesFloat64))
 
