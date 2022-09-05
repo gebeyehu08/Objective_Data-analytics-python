@@ -662,8 +662,8 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
         if isinstance(key, (dict, str)):
             key = json.dumps(key)
             quoted_key = quote_string(self._series_object.engine, key)
-            expression_str = f"""(select min(case when ({quoted_key}::jsonb) <@ value
-            then ordinality end) -1 from jsonb_array_elements({{}}) with ordinality)"""
+            expression_str = f"""(select min(case when ({quoted_key}::jsonb) <@ _ord._v
+            then _ord._rn end) -1 from jsonb_array_elements({{}}) with ordinality _ord(_v,_rn))"""
             return expression_str
         else:
             raise TypeError(f'key should be int or slice, actual type: {type(key)}')
@@ -707,9 +707,9 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             else:
                 # no start and no stop: we want to select all elements.
                 where = 'is not null'  # should be true for all ordinalities.
-        combined_expression = f"""(select jsonb_agg(x.value)
-        from jsonb_array_elements({{}}) with ordinality x
-        where ordinality - 1 {where})"""
+        combined_expression = f"""(select jsonb_agg(_ord._v)
+        from jsonb_array_elements({{}}) with ordinality _ord(_v,_rn)
+        where _ord._rn - 1 {where})"""
         expression_references += 1
         non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
         return self._series_object \
