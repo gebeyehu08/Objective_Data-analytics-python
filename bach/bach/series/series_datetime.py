@@ -567,7 +567,7 @@ class SeriesTime(SeriesAbstractDateTime):
 
     * Postgres: utilizes the 'time without time zone' database type.
     * BigQuery: utilizes the 'TIME' database type.
-    * Athena: utilizes the 'double' database type.
+    * Athena: utilizes the 'double' database type. Storing the number of seconds since `00:00:00`.
 
     """
     dtype = 'time'
