@@ -14,9 +14,9 @@ from sqlalchemy.engine import Dialect
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression, join_expressions, StringValueToken
-from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
+from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
-    parse_c_code_to_bigquery_code, parse_c_code_to_athena_code
+    parse_c_code_to_bigquery_code, parse_c_code_to_athena_code, warn_non_supported_format_codes
 from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
@@ -115,6 +115,9 @@ class DateTimeOperation:
         """
         engine = self._series.engine
         series = self._series
+
+        # Warn user if he is using non-supported format codes
+        warn_non_supported_format_codes(format_str)
 
         if is_postgres(engine):
             parsed_format_str = parse_c_standard_code_to_postgres_code(format_str)

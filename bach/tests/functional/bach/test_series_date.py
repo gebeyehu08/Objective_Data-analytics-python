@@ -68,21 +68,33 @@ def test_date_format(engine, recwarn):
     format_str_all_supported_strings = ' | '.join(STRINGS_SUPPORTED_IN_ALL_DIALECTS)
 
     all_formats = [
-        'Year: %Y',
-        '%Y', '%g%Y', '%Y-%m-%d', '%Y%m%d-%Y%m-%m%d-%d', '%Y%m-%d%d',  '%Y%Y%Y',
-        '%Y-%%%m-%d', 'abc %Y def%', '"abc" %Y "def"%', 'HH24:MI:SS MS',
-        '%H:%M:%S.%f',
+        # tuple, types: (str, bool). Content: format, whether the format should raise a warning
+        ('Year: %Y', False),
+        ('%Y', False),
+        ('%g%Y', True),  # %g is not a supported code
+        ('%Y-%m-%d', False),
+        ('%Y%m%d-%Y%m-%m%d-%d', False),
+        ('%Y%m-%d%d', False),
+        ('%Y%Y%Y', False),
+        ('%Y-%%%m-%d', True),  # %% is not a supported code
+        ('abc %Y def%', True),
+        ('"abc" %Y "def"%', True),  # % is not a supported code
+        ('HH24:MI:SS MS', False),
+        ('%H:%M:%S.%f', False),
         # non-existing codes:
-        '%q %1 %_',
+        ('%q %1 %_', True),
         # all codes that we claim to support for all databases
-        format_str_all_supported_codes,
-        format_str_all_supported_strings
+        (format_str_all_supported_codes, False),
+        (format_str_all_supported_strings, False),
     ]
 
-    for idx, fmt in enumerate(all_formats):
-        df[f'date_f{idx}'] = df['date_series'].dt.strftime(fmt)
-        df[f'timestamp_f{idx}'] = df['timestamp_series'].dt.strftime(fmt)
-
+    for idx, fmt_tuple in enumerate(all_formats):
+        fmt, expected_warning = fmt_tuple
+        with pytest.warns(None) as record:
+            df[f'date_f{idx}'] = df['date_series'].dt.strftime(fmt)
+            df[f'timestamp_f{idx}'] = df['timestamp_series'].dt.strftime(fmt)
+        assert_msg = f'{fmt_tuple}, expected warning: {expected_warning}, num warning: {len(record)}'
+        assert (len(record) > 0) == expected_warning, assert_msg
     expected_columns = df.columns[2:]
 
     # Some columns do not contain correct results on some databases. For now, we accept that.
@@ -127,7 +139,10 @@ def test_date_format(engine, recwarn):
 
 
 @pytest.mark.skip_bigquery
-def test_date_format_all_supported_pg_codes(engine):
+def test_date_format_all_supported_pg_codes(engine, recwarn):
+    # We use recwarn here, because some of the format codes we support on Postgres are not supported on other
+    # databases. Those format codes will raise a warning.
+
     timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000, tzinfo=datetime.timezone.utc)
     pdf = pd.DataFrame({'timestamp_series': [timestamp]})
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
@@ -144,6 +159,7 @@ def test_date_format_all_supported_pg_codes(engine):
     # datetime divides year by 100 and truncates integral part, postgres considers '2001' as start of 21st century
     pdf['%C'] = '21'
     pd.testing.assert_frame_equal(pdf, df.to_pandas(), check_dtype=False)
+    assert len(recwarn) > 0
 
 
 @pytest.mark.athena_supported()
