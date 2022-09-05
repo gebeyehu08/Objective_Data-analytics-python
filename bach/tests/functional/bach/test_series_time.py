@@ -9,6 +9,7 @@ from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
+@pytest.mark.athena_supported()
 def test_time_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', (None, None)],
