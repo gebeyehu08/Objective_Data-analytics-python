@@ -34,23 +34,23 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
     },
     GLOBAL_CONTEXT_DUPLICATED: {
       ApplicationContext:
-        'Only one ApplicationContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
+        'Only one ApplicationContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
       CookieIdContext:
-        'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
+        'Only one CookieIdContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
-        'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+        'Only one HttpContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
-        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+        'Only one IdentityContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       InputValueContext:
-        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+        'Only one InputValueContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
       LocaleContext:
-        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
+        'Only one LocaleContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
-        'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
+        'Only one MarketingContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
-        'Only one PathContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+        'Only one PathContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
       SessionContext:
-        'Only one SessionContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
+        'Only one SessionContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
     },
   },
   CORE: {
@@ -76,23 +76,23 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
     },
     GLOBAL_CONTEXT_DUPLICATED: {
       ApplicationContext:
-        'Only one ApplicationContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
+        'Only one ApplicationContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
       CookieIdContext:
-        'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
+        'Only one CookieIdContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
-        'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+        'Only one HttpContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
-        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+        'Only one IdentityContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       InputValueContext:
-        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+        'Only one InputValueContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
       LocaleContext:
-        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
+        'Only one LocaleContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
-        'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
+        'Only one MarketingContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
-        'Only one PathContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+        'Only one PathContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
       SessionContext:
-        'Only one SessionContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
+        'Only one SessionContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
     },
   },
   BROWSER: {
@@ -118,23 +118,23 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
     },
     GLOBAL_CONTEXT_DUPLICATED: {
       ApplicationContext:
-        'Only one ApplicationContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
+        'Only one ApplicationContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
       CookieIdContext:
-        'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
+        'Only one CookieIdContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
-        'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+        'Only one HttpContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
-        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+        'Only one IdentityContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       InputValueContext:
-        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+        'Only one InputValueContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
       LocaleContext:
-        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
+        'Only one LocaleContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
-        'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
+        'Only one MarketingContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
-        'Only one PathContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+        'Only one PathContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
       SessionContext:
-        'Only one SessionContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
+        'Only one SessionContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
     },
   },
   REACT: {
@@ -160,23 +160,23 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
     },
     GLOBAL_CONTEXT_DUPLICATED: {
       ApplicationContext:
-        'Only one ApplicationContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
+        'Only one ApplicationContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
       CookieIdContext:
-        'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
+        'Only one CookieIdContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
-        'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+        'Only one HttpContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
-        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+        'Only one IdentityContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       InputValueContext:
-        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+        'Only one InputValueContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
       LocaleContext:
-        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
+        'Only one LocaleContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
-        'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
+        'Only one MarketingContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
-        'Only one PathContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+        'Only one PathContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
       SessionContext:
-        'Only one SessionContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
+        'Only one SessionContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
     },
   },
   REACT_NATIVE: {
@@ -202,23 +202,23 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
     },
     GLOBAL_CONTEXT_DUPLICATED: {
       ApplicationContext:
-        'Only one ApplicationContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
+        'Only one ApplicationContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
       CookieIdContext:
-        'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
+        'Only one CookieIdContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
-        'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+        'Only one HttpContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
-        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+        'Only one IdentityContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       InputValueContext:
-        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+        'Only one InputValueContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
       LocaleContext:
-        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
+        'Only one LocaleContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
-        'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
+        'Only one MarketingContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
-        'Only one PathContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+        'Only one PathContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
       SessionContext:
-        'Only one SessionContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
+        'Only one SessionContext{{contextIds}} should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/SessionContext.',
     },
   },
 };
