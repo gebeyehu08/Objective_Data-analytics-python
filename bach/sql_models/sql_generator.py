@@ -128,8 +128,9 @@ def _to_sql_materialized_node(
     queries = _to_cte_sql(dialect=dialect, compiler_cache=compiler_cache, model=model)
     queries = _filter_duplicate_ctes(queries)
     if len(queries) == 0:
-        # _to_cte_sql should never return an empty list, but this make it clear we have a len > 0 below.
-        raise Exception('Internal error. No models to compile')
+        # _to_cte_sql only returns an empty list in synthetic test scenarios, where there is a source node,
+        # but it's not referenced.
+        return ''
 
     if len(queries) == 1:
         return _materialize(dialect=dialect, sql_query=queries[0].sql, model=model)
@@ -153,9 +154,7 @@ def _materialize(dialect: Dialect, sql_query: str, model: SqlModel) -> str:
 
     materialization = model.materialization
     quoted_name = model_to_quoted_name(dialect, model)
-    if materialization == Materialization.CTE:
-        return sql_query
-    if materialization == Materialization.QUERY:
+    if materialization in [Materialization.CTE, Materialization.QUERY]:
         return sql_query
     if materialization == Materialization.VIEW:
         return f'create view {quoted_name} as {sql_query}'
@@ -167,7 +166,7 @@ def _materialize(dialect: Dialect, sql_query: str, model: SqlModel) -> str:
         if is_bigquery(dialect):
             return f'CREATE TEMP TABLE {quoted_name} AS {sql_query}'
         raise DatabaseNotSupportedException(dialect, f'Cannot create temporary table for {dialect.name}')
-    if materialization == Materialization.VIRTUAL_NODE:
+    if materialization in [Materialization.VIRTUAL_NODE, Materialization.SOURCE]:
         return ''
     raise Exception(f'Unsupported Materialization value: {materialization}')
 

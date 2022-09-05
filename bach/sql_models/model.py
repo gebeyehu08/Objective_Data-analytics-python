@@ -48,6 +48,7 @@ class Materialization(Enum):
     """ A QUERY can be used as a CTE, but is also a stand-alone query."""
     QUERY = MaterializationType('query', is_statement=True, is_cte=True, has_lasting_effect=False)
     VIEW = MaterializationType('view', is_statement=True, is_cte=False, has_lasting_effect=True)
+    SOURCE = MaterializationType('source', is_statement=False, is_cte=False, has_lasting_effect=False)
     TABLE = MaterializationType('table', is_statement=True, is_cte=False, has_lasting_effect=True)
     """
     TEMP TABLE is a temporary table that is limited to the current session, or a table that is guaranteed to
@@ -684,17 +685,17 @@ class SqlModel(Generic[T]):
         return hash(self.hash)
 
 
-class BaseTableModelBuilder(SqlModelBuilder):
+class SourceTableModelBuilder(SqlModelBuilder):
     def __init__(self,name: str):
-        self._sql = None
-        self._generic_name = name
         super().__init__()
-
+        self._sql = ''
+        self._generic_name = name
         self.set_materialization_name(name)
+        self.set_materialization(Materialization.SOURCE)
 
     @property
     def sql(self):
-        return ""
+        return ''
 
 class CustomSqlModelBuilder(SqlModelBuilder):
     """
