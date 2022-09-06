@@ -6,7 +6,10 @@ from bach.series import SeriesDict
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
 
-pytestmark = [pytest.mark.skip_postgres]  # SeriesDict is not supported on Postgres at all.
+pytestmark = [
+    pytest.mark.skip_postgres('SeriesDict is not supported on Postgres at all'),
+    pytest.mark.skip_athena(' SeriesDict is not supported on Athena at all')
+]
 
 
 def test_basic_value_to_expression(engine):
