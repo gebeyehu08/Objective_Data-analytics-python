@@ -132,7 +132,7 @@ def test_set_const_time(engine):
     check_set_const(engine, constants, SeriesTime)
 
 
-@pytest.mark.skip_athena()  # TODO: Athena
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_set_const_timedelta(engine):
     constants = [
         np.datetime64('2005-02-25T03:30') - np.datetime64('2005-01-25T03:30'),
