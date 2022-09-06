@@ -128,9 +128,9 @@ def _to_sql_materialized_node(
     queries = _to_cte_sql(dialect=dialect, compiler_cache=compiler_cache, model=model)
     queries = _filter_duplicate_ctes(queries)
     if len(queries) == 0:
-        # _to_cte_sql only returns an empty list in synthetic test scenarios, where there is a source node,
-        # but it's not referenced.
-        return ''
+        # _to_cte_sql only returns an empty list when there is a source node,
+        # but it's not referenced. We can't generate anything in that scenario.
+        raise Exception('No models to compile')
 
     if len(queries) == 1:
         return _materialize(dialect=dialect, sql_query=queries[0].sql, model=model)

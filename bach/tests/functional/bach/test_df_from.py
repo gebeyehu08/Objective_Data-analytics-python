@@ -67,8 +67,8 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.materialization == Materialization.SOURCE
-    # no query needed to create this data
-    assert to_sql(dialect=engine.dialect, model=df.base_node) == ''
+    with pytest.raises(Exception, match="No models to compile"):
+        to_sql(dialect=engine.dialect, model=df.base_node)
     assert df.base_node.references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 
