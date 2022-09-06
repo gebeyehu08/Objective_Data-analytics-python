@@ -95,35 +95,39 @@ export type NativePressableCommonProps = NativeCommonProps & {
 export type NativeLinkCommonProps = NativePressableCommonProps & Partial<Pick<HTMLAnchorElement, 'href'>>;
 
 /**
- * The props of TrackedLinkContext. Extends TrackedContextProps with LinkContext specific properties.
+ * Base props of all TrackedContexts.
  */
-export type TrackedLinkContextProps<T> = T &
-  NativeLinkCommonProps & {
-    objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivLinkContextProps;
+export type TrackedContextObjectivProp = ObjectivComponentProp & ObjectivIdProps;
+export type TrackedContextProps<T, O = TrackedContextObjectivProp> = T &
+  NativeCommonProps & {
+    objectiv: O;
   };
 
 /**
- * Base props of all TrackedContexts.
+ * The props of TrackedLinkContext. Extends TrackedContextProps with LinkContext specific properties.
  */
-export type TrackedContextProps<T> = T &
-  NativeCommonProps & {
-    objectiv: ObjectivComponentProp & ObjectivIdProps;
+export type TrackedLinkContextObjectivProp = ObjectivComponentProp & ObjectivIdProps & ObjectivLinkContextProps;
+export type TrackedLinkContextProps<T, O = TrackedLinkContextObjectivProp> = T &
+  NativeLinkCommonProps & {
+    objectiv: O;
   };
 
 /**
  * The props of TrackedContexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
  */
-export type TrackedShowableContextProps<T> = T &
+export type TrackedShowableContextObjectivProp = ObjectivComponentProp & ObjectivIdProps & ObjectivVisibilityProps;
+export type TrackedShowableContextProps<T, O = TrackedShowableContextObjectivProp> = T &
   NativeCommonProps & {
-    objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivVisibilityProps;
+    objectiv: O;
   };
 
 /**
  * The props of TrackedPressableContext. Extends TrackedContextProps with extra pressable related properties.
  */
-export type TrackedPressableContextProps<T> = T &
+export type TrackedPressableContextObjectivProp = ObjectivComponentProp & ObjectivIdProps;
+export type TrackedPressableContextProps<T, O = TrackedPressableContextObjectivProp> = T &
   NativePressableCommonProps & {
-    objectiv: ObjectivComponentProp & ObjectivIdProps;
+    objectiv: O;
   };
 
 /**
