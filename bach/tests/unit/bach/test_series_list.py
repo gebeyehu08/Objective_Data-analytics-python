@@ -9,7 +9,8 @@ from sql_models.util import is_bigquery, is_postgres, DatabaseNotSupportedExcept
 from tests.unit.bach.util import get_fake_df_test_data
 
 
-@pytest.mark.skip_postgres
+@pytest.mark.skip_postgres('SeriesList is not (yet) supported on Postgres')
+@pytest.mark.skip_athena(' SeriesList is not supported on Athena')
 def test_supported_value_to_literal(dialect):
 
     result_empty = SeriesList.supported_value_to_literal(dialect, [], ['string'])
