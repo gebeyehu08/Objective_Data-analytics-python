@@ -73,9 +73,10 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
     def get_contexts(self, name: str) -> 'SeriesGlobalContext':
         """
         Returns an array of contexts from an Objectiv stack where `_type` matches the
-        UpperCamelCase context and created from `name` e.g. 'identity' becomes 'IdentityContext'.
+        UpperCamelCase context created from `name` e.g. if `name` is 'input_value', then this returns all
+        contexts where the `_type` field has value 'InputValueContext'.
 
-        @param name:    The name of the context-array to retrieve
+        :param name: The name of the context-array to retrieve, in snake_case
         """
         upper_camel_name = "".join([c.capitalize() for c in name.split('_')]) + 'Context'
 
