@@ -11,6 +11,7 @@ from sql_models.util import is_bigquery, is_postgres, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 @pytest.mark.parametrize("materialization", [Materialization.CTE, 'temp_table'])
 def test_materialize(engine, materialization):
     bt = get_df_with_test_data(engine)['city'] + ' '

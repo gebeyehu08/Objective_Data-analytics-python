@@ -14,6 +14,7 @@ from sql_models.model import CustomSqlModelBuilder, SqlModel
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def _create_test_table(engine: Engine, table_name: str):
     # TODO: insert data too, and check in the tests below that we get that data back in the DataFrame

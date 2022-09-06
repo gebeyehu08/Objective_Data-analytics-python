@@ -9,6 +9,7 @@ from tests.functional.bach.test_data_and_utils import get_df_with_test_data, ass
 from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier
 
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def test_database_create_table(engine, unique_table_test_name: str):
     df = get_df_with_test_data(engine)

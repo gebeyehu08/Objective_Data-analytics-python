@@ -148,6 +148,7 @@ def test_astype_to_timestamp(engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_astype_to_time(engine):
     bt = get_df_with_test_data(engine)
     bt = bt[[]]

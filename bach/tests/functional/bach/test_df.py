@@ -168,6 +168,7 @@ def test_round(engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_quantile(engine) -> None:
     pdf = pd.DataFrame(
         data={

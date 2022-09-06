@@ -197,6 +197,7 @@ def test_merge_variable_different_types(engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_get_all_variable_usage(engine):
     df1 = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'inhabitants']]
     assert df1.get_all_variable_usage() == []
