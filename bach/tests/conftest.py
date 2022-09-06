@@ -4,19 +4,16 @@ Copyright 2022 Objectiv B.V.
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the 'engine' and 'dialect' parameters for
 test functions that have either of those.
-By default such a test function will get a Postgres dialect or engine. But if --big-query or --all is
-specified on the commandline, then it will (also) get a BigQuery dialect or engine. For specific
-tests, it is possible to disable postgres or bigquery testing, see 'marks' section below.
-
-Additionally we define a 'pg_engine' fixture here that always return a Postgres engine. This fixture should
-not be used for new functions tho! After fully implementing BigQuery it will be removed.
+By default such a test function will get a Postgres dialect or engine. But if --big-query, --athena or --all
+is specified on the commandline, then it will (also) get a BigQuery/Athena dialect or engine. For specific
+tests, it is possible to disable testing for certain databases, see 'marks' section below.
 
 ### Marks and Test Categorization
 A lot of functionality needs to be tested for multiple databases. The 'engine' and 'dialects' fixtures
 mentioned above help with that. Additionally we have some marks (`@pytest.mark.<type>`) to make it explicit
 which databases we expect tests to run against.
 
-We broadly want 5 categories of tests:
+We broadly want 4 categories of tests:
 * unit-test: These don't interact with a database
   * unit-tests that are tested with multiple database dialects (1)
   * unit-tests that are database-dialect independent (2)
@@ -96,16 +93,6 @@ _RECORDED_TEST_TABLES_PER_ENGINE: [Engine, List[str]] = defaultdict(list)
 
 
 @pytest.fixture()
-def pg_engine(request: SubRequest) -> Engine:
-    if DB.POSTGRES not in _ENGINE_CACHE:
-        # Skip tests using this fixture when running only for big_query or athena
-        pytest.skip()
-
-    # TODO: port all tests that use this to be multi-database. Or explicitly mark them as skip-bigquery
-    return _ENGINE_CACHE[DB.POSTGRES]
-
-
-@pytest.fixture()
 def unique_table_test_name(
     request: SubRequest,
     testrun_uid: str,
@@ -122,10 +109,8 @@ def unique_table_test_name(
     """
     if 'engine' in request.fixturenames:
         engine = request.node.funcargs['engine']
-    elif 'pg_engine' in request.fixturenames:
-        engine = _ENGINE_CACHE[DB.POSTGRES]
     else:
-        raise Exception('can only generate table name if test uses engine or pg_engine fixtures.')
+        raise Exception('can only generate table name if test uses engine fixtures.')
 
     # sqlalchemy will raise an error if we exceed this length
     _MAX_LENGTH_TABLE_NAME = 63
