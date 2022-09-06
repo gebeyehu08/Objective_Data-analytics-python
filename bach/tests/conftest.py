@@ -22,15 +22,14 @@ We broadly want 5 categories of tests:
   * unit-tests that are database-dialect independent (2)
 * functional-tests: These interact with a database
   *  functional-tests that run against all supported databases (3)
-  *  functional-tests that run against all supported databases except Postgres (4)
-  *  functional-tests that run against all supported databases except BigQuery (5)
+  *  functional-tests that run against all supported databases except some specific databases (4)
 
 1 and 3 are the default for tests. These either get 'engine' or 'dialect' as fixture and run against all
 databases. Category 2 are tests that test generic code that is not geared to a specific database.
-Category 4 and 5 are for functionality that we explicitly not support on some databases.
+Category 4 is for functionality that we explicitly not support on some databases.
 
-Category 2, 4, and 5 are the exception, these need to be marked with the `db_independent`, `skip_postgres`,
-or `skip_bigquery` marks.
+Category 2 and 4 are the exception, these need to be marked with the `db_independent`, `skip_postgres`,
+`skip_bigquery` or `skip_athena` marks.
 
 ### Other
 For all unittests we add a timeout of 1 second. If they take longer they will be stopped and considered
@@ -78,10 +77,12 @@ _DB_ATHENA_WORK_GROUP = _ENV.get('OBJ_DB_ATHENA_WORK_GROUP', 'automated_tests_wo
 
 MARK_DB_INDEPENDENT = 'db_independent'
 MARK_SKIP_POSTGRES = 'skip_postgres'
+MARK_SKIP_ATHENA = 'skip_athena'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
-# Temporary mark 'athena' will be used to annotate tests that work on Athena.
-# Once all tests work on athena we'll ignore the mark, after which we can remove it.
+# Temporary marks
 MARK_ATHENA_SUPPORTED = 'athena_supported'
+MARK_SKIP_ATHENA_TODO = 'skip_athena_todo'
+MARK_SKIP_BIGQUERY_TODO = 'skip_bigquery_todo'
 
 
 class DB(Enum):
@@ -198,16 +199,20 @@ def pytest_generate_tests(metafunc: Metafunc):
     # see: https://docs.pytest.org/en/6.2.x/reference.html#collection-hooks
     markers = list(metafunc.definition.iter_markers())
     skip_postgres = any(mark.name == MARK_SKIP_POSTGRES for mark in markers)
+    skip_athena = any(mark.name == MARK_SKIP_ATHENA for mark in markers)
     skip_bigquery = any(mark.name == MARK_SKIP_BIGQUERY for mark in markers)
-    athena_support = any(mark.name == MARK_ATHENA_SUPPORTED for mark in markers)
+    athena_supported = any(mark.name == MARK_ATHENA_SUPPORTED for mark in markers)
+
+    skip_athena_todo = any(mark.name == MARK_SKIP_ATHENA_TODO for mark in markers)
+    skip_bigquery_todo = any(mark.name == MARK_SKIP_BIGQUERY_TODO for mark in markers)
 
     engines = []
     for name, engine_dialect in _ENGINE_CACHE.items():
         if name == DB.POSTGRES and skip_postgres:
             continue
-        if name == DB.BIGQUERY and skip_bigquery:
+        if name == DB.BIGQUERY and (skip_bigquery or skip_bigquery_todo):
             continue
-        if name == DB.ATHENA and not athena_support:
+        if name == DB.ATHENA and (not athena_supported or skip_athena or skip_athena_todo):
             continue
         engines.append(engine_dialect)
 
