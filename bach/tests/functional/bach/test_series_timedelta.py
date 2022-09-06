@@ -244,7 +244,8 @@ def test_timedelta_dt_components(engine) -> None:
     pd.testing.assert_frame_equal(expected, result, check_names=False)
 
 
-@pytest.mark.skip_postgres
+@pytest.mark.skip_postgres('BigQuery specific test')
+@pytest.mark.skip_athena('BigQuery specific test')
 def test_mean_bigquery_remove_nano_precision(engine) -> None:
     pdf = pd.DataFrame(
         {
