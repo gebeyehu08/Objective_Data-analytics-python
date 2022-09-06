@@ -23,7 +23,7 @@ declare global {
 /**
  * Anchor click handler factory parameters
  */
-export type AnchorClickHandlerParameters = {
+export type AnchorClickHandlerParameters<T = HTMLAnchorElement> = {
   /**
    * TrackingContext can be retrieved either from LocationWrapper render-props or via useTrackingContext.
    */
@@ -42,48 +42,50 @@ export type AnchorClickHandlerParameters = {
   /**
    * Custom onClick handler that may have been passed to the Tracked Component. Will be invoked after tracking.
    */
-  onClick?: (event: React.MouseEvent) => void;
+  onClick?: (event: React.MouseEvent<T>) => void;
 };
 
 /**
  * Anchor click handler factory
  */
-export const makeAnchorClickHandler = (props: AnchorClickHandlerParameters) => async (event: React.MouseEvent) => {
-  if (!props.waitUntilTracked) {
-    // Track PressEvent: non-blocking.
-    trackPressEvent(props.trackingContext);
+export function makeAnchorClickHandler<T>(props: AnchorClickHandlerParameters<T>) {
+  return async (event: React.MouseEvent<T>) => {
+    if (!props.waitUntilTracked) {
+      // Track PressEvent: non-blocking.
+      trackPressEvent(props.trackingContext);
 
-    // Execute onClick prop, if any.
-    props.onClick && props.onClick(event);
-  } else {
-    const nativeEvent = event.nativeEvent;
+      // Execute onClick prop, if any.
+      props.onClick && props.onClick(event);
+    } else {
+      const nativeEvent = event.nativeEvent;
 
-    if (nativeEvent[EVENT_REDISPATCHED_PROPERTY]) {
-      // This is a redispatched event so skip it
-      return;
+      if (nativeEvent[EVENT_REDISPATCHED_PROPERTY]) {
+        // This is a redispatched event so skip it
+        return;
+      }
+
+      // Prevent event from being handled by the user agent.
+      event.preventDefault();
+
+      // Track PressEvent: best-effort blocking.
+      await trackPressEvent({
+        ...props.trackingContext,
+        options: {
+          // Best-effort: wait for Queue to be empty. Times out to max 1s on very slow networks.
+          waitForQueue: true,
+          // Regardless whether waiting resulted in PressEvent being tracked, flush the Queue.
+          flushQueue: true,
+        },
+      });
+
+      // Execute onClick prop, if any.
+      props.onClick && props.onClick(event);
+
+      // Resume navigation by redispatching a clone of the original event
+      const eventClone = new (nativeEvent.constructor as any)(nativeEvent.type, nativeEvent);
+      eventClone[EVENT_REDISPATCHED_PROPERTY] = true;
+      const target = event.currentTarget || event.target;
+      target.dispatchEvent(eventClone);
     }
-
-    // Prevent event from being handled by the user agent.
-    event.preventDefault();
-
-    // Track PressEvent: best-effort blocking.
-    await trackPressEvent({
-      ...props.trackingContext,
-      options: {
-        // Best-effort: wait for Queue to be empty. Times out to max 1s on very slow networks.
-        waitForQueue: true,
-        // Regardless whether waiting resulted in PressEvent being tracked, flush the Queue.
-        flushQueue: true,
-      },
-    });
-
-    // Execute onClick prop, if any.
-    props.onClick && props.onClick(event);
-
-    // Resume navigation by redispatching a clone of the original event
-    const eventClone = new (nativeEvent.constructor as any)(nativeEvent.type, nativeEvent);
-    eventClone[EVENT_REDISPATCHED_PROPERTY] = true;
-    const target = event.currentTarget || event.target;
-    target.dispatchEvent(eventClone);
-  }
-};
+  };
+}
