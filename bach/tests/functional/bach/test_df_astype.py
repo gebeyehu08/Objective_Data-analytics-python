@@ -164,6 +164,7 @@ def test_astype_to_time(engine):
         ]
     )
 
+
 @pytest.mark.parametrize('dtype', ('json', 'json_postgres'))
 def test_astype_to_json(engine, dtype):
     if not is_postgres(engine) and dtype != 'json':

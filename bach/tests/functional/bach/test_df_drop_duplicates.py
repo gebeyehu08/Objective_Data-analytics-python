@@ -35,14 +35,14 @@ def test_df_basic_drop_duplicates(engine) -> None:
     )
     pd.testing.assert_frame_equal(pdf.drop_duplicates(), result.to_pandas(), check_names=False)
 
-    result_w_ignore_index = df.drop_duplicates(ignore_index=True).sort_values(by='a')
+    result_w_ignore_index = df.drop_duplicates(ignore_index=True).sort_values(by=['a', 'b'])
     assert_equals_data(
         result_w_ignore_index,
         expected_columns=['a', 'b'],
         expected_data=expected_pdf[['a', 'b']].to_numpy().tolist(),
     )
     pd.testing.assert_frame_equal(
-        pdf.drop_duplicates(ignore_index=True).sort_values(by='a'),
+        pdf.drop_duplicates(ignore_index=True).sort_values(by=['a', 'b']),
         result_w_ignore_index.to_pandas(),
         check_names=False,
     )
