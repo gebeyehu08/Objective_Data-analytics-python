@@ -12,7 +12,6 @@ from bach.expression import Expression
 
 @pytest.mark.skip_bigquery('Athena specific test; test_supported_value_to_literal() below covers BigQuery')
 @pytest.mark.skip_postgres('Athena specific test; test_supported_value_to_literal() below covers Postgres')
-@pytest.mark.athena_supported
 def test_supported_value_to_literal_athena(dialect):
     def assert_call(value, expected_token_value: float):
         result = SeriesTime.supported_value_to_literal(dialect=dialect, value=value, dtype='time')
@@ -114,7 +113,6 @@ def test_supported_value_to_literal(dialect):
     assert SeriesTime.supported_value_to_literal(dialect, None, dtype) == Expression.construct('NULL')
 
 
-@pytest.mark.athena_supported
 def test_supported_value_to_literal_str_non_happy_path(dialect):
     dtype = 'timestamp'
     with pytest.raises(ValueError, match=r'Not a valid string literal: .* for time'):

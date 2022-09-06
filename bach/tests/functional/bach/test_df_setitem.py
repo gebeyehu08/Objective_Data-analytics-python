@@ -68,7 +68,7 @@ def check_set_const(
         assert_db_types(bt, db_types)
 
 
-@pytest.mark.athena_supported()
+
 def test_set_const_int(engine):
     constants = [
         np.int64(4),
@@ -79,7 +79,7 @@ def test_set_const_int(engine):
     check_set_const(engine, constants, SeriesInt64)
 
 
-@pytest.mark.athena_supported()
+
 def test_set_const_float(engine):
     constants = [
         5.1,
@@ -90,7 +90,6 @@ def test_set_const_float(engine):
     # special cases.
 
 
-@pytest.mark.athena_supported()
 def test_set_const_bool(engine):
     constants = [
         True,
@@ -99,7 +98,6 @@ def test_set_const_bool(engine):
     check_set_const(engine, constants, SeriesBoolean)
 
 
-@pytest.mark.athena_supported()
 def test_set_const_str(engine):
     constants = [
         'keatsen'
@@ -140,7 +138,7 @@ def test_set_const_timedelta(engine):
     check_set_const(engine, constants, SeriesTimedelta)
 
 
-@pytest.mark.athena_supported()
+
 def test_set_const_json(engine):
     constants = [
         ['a', 'b', 'c'],

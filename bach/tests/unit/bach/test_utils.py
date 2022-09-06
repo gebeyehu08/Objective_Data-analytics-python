@@ -22,7 +22,6 @@ class ColNameValid(NamedTuple):
     bigquery: bool
 
 
-@pytest.mark.athena_supported()
 def test_is_valid_column_name(dialect):
     tests = [
         #            column name                              PG     Athena BQ

@@ -13,7 +13,6 @@ from sql_models.util import is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data,\
     get_df_with_food_data
 
-pytestmark = pytest.mark.athena_supported()
 
 def floor_datetime(engine, dt: datetime.datetime) -> datetime.datetime:
     pdt = pd.Timestamp.fromtimestamp(dt.timestamp())

@@ -77,7 +77,6 @@ MARK_SKIP_POSTGRES = 'skip_postgres'
 MARK_SKIP_ATHENA = 'skip_athena'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
 # Temporary marks
-MARK_ATHENA_SUPPORTED = 'athena_supported'
 MARK_SKIP_ATHENA_TODO = 'skip_athena_todo'
 MARK_SKIP_BIGQUERY_TODO = 'skip_bigquery_todo'
 
