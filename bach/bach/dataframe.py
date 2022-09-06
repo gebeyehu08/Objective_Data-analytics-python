@@ -22,7 +22,7 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
-from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
+from sql_models.model import SqlModel, Materialization, RefPath, SourceTableModelBuilder
 
 from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres, \
@@ -565,21 +565,8 @@ class DataFrame:
                 table_name=table_name,
             )
 
-        # We generate sql of the form (with quote characters depending on the database):
-        # 'SELECT "column_1", ... , "column_N" FROM "table_name"'
-        sql_params = {'table_name': quote_identifier(engine.dialect, table_name)}
-        # use placeholders for columns in order to avoid conflicts when extracting spec references
-        column_stmt = ','.join(f'{{col_{col_index}}}' for col_index in range(len(dtypes)))
-        column_placeholders = {
-            f'col_{col_index}': quote_identifier(engine.dialect, col_name)
-            for col_index, col_name in enumerate(dtypes.keys())
-        }
-        sql_params.update(column_placeholders)
-
-        sql = f'SELECT {column_stmt} FROM {{table_name}}'
-        model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
-        sql_model = model_builder(**sql_params)
-
+        # We just generate a reference to the base table
+        sql_model = SourceTableModelBuilder(table_name)()
         return cls._from_node(
             engine=engine,
             model=sql_model,

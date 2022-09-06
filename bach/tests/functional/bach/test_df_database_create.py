@@ -5,6 +5,7 @@ from random import randrange
 
 import pytest
 
+from sql_models.model import Materialization
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier
@@ -35,14 +36,13 @@ def test_database_create_table(engine, unique_table_test_name: str):
     )
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
 
-    # check that df_from_table actually queries the table
+    # check that df_from_table does not query the table
     dialect = engine.dialect
     assert df_from_table.base_node != df.base_node
     assert len(df_from_table.base_node.references) == 0
-    new_sql = to_sql(dialect=dialect, model=df_from_table.base_node)
-    quoted_table_name = quote_identifier(dialect, table_name)
-    expected_sql_fragment = f'FROM {quoted_table_name}'
-    assert expected_sql_fragment in new_sql
+    assert df_from_table.base_node.materialization == Materialization.SOURCE
+    with pytest.raises(Exception, match="No models to compile"):
+        to_sql(dialect=dialect, model=df_from_table.base_node)
 
     # Second test: try to write table, but with overwrite=False. We expect an error
     df['y'] = random_value
