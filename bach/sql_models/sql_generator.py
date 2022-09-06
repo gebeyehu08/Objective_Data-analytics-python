@@ -261,8 +261,13 @@ def model_to_name(dialect: Dialect, model: SqlModel):
     """
     Get the name for the cte/table/view that will be generated from this model, quoted and escaped.
     """
-    # max length of an identifier name in Postgres is normally 63 characters. We'll use that as a cutoff
-    # if we don't know better
+    if model.materialization == Materialization.SOURCE:
+        if model.materialization_name is None:
+            raise Exception('SqlModel with SOURCE materialization must have materialization_name set.')
+        return model.materialization_name
+
+    # max length of an identifier name in Postgres is normally 63 characters.
+    # We'll use that as a cutoff if we don't know better
     if is_bigquery(dialect):
         max_length = 1023
     else:
