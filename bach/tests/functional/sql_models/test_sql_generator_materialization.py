@@ -3,8 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 from typing import List, Any, Tuple, Dict, Optional
 
-import sqlalchemy
-from sqlalchemy.dialects.postgresql.base import PGDialect
+import pytest
 from sqlalchemy.engine import Engine
 
 from sql_models.graph_operations import find_node, replace_node_in_graph
@@ -13,7 +12,9 @@ from sql_models.sql_generator import to_sql_materialized_nodes, GeneratedSqlStat
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, RefValueModel
 
 
-def test_execute_multi_statement_sql_materialization(pg_engine):
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_execute_multi_statement_sql_materialization(engine):
     # Graph, with values calculated by the query shown above each node
     #
     #                                              16
@@ -26,7 +27,7 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     #            vm2 <---/
     #
 
-    dialect = PGDialect()  # TODO: BigQuery
+    dialect = engine.dialect
     # Create original graph, with all materializations as CTE
     vm1 = ValueModel.build(key='a', val=1)
     rvm1 = RefValueModel.build(ref=vm1, val=5)
@@ -45,7 +46,7 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(dialect=dialect, start_node=graph, include_start_node=True)
     assert len(sql_statements) == 1
-    result = run_queries(engine=pg_engine, sql_statements=sql_statements)
+    result = run_queries(engine=engine, sql_statements=sql_statements)
     assert result['graph'] == expected
 
     # Test: modify materialization of node 'jm2' in the graph
@@ -59,7 +60,7 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(dialect, graph)
     assert len(sql_statements) == 2
-    result = run_queries(engine=pg_engine, sql_statements=sql_statements)
+    result = run_queries(engine=engine, sql_statements=sql_statements)
     assert result['graph'] == expected
 
     # Test: modify materialization of nodes 'jm1' and 'rvm2' in the graph
@@ -76,7 +77,7 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(dialect, graph)
     assert len(sql_statements) == 4
-    result = run_queries(engine=pg_engine, sql_statements=sql_statements)
+    result = run_queries(engine=engine, sql_statements=sql_statements)
     assert result['graph'] == expected
 
     # Test: modify materialization of nodes 'rvm1' in the graph, to 'QUERY' meaning it should be a separate
@@ -89,7 +90,7 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(dialect, graph)
     assert len(sql_statements) == 5
-    result = run_queries(engine=pg_engine, sql_statements=sql_statements)
+    result = run_queries(engine=engine, sql_statements=sql_statements)
     assert result == {
         'JoinModel___217a4aca3f6eb18bcd833bb6d8fc4953': None,
         'JoinModel___3e090538453c4ba34d586639715a3db2': None,
@@ -105,7 +106,9 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     }
 
 
-def test_materialized_shared_ctes(pg_engine):
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_materialized_shared_ctes(engine):
     # Graph: jm1 and jm2 are materialized, vm2 is shared between the two
     #    1
     #   vm1 <---\     3
@@ -116,7 +119,7 @@ def test_materialized_shared_ctes(pg_engine):
     #     3       +-- jm2* <--/
     #   vm3 <---/
 
-    dialect = PGDialect()  # TODO: BigQuery
+    dialect = engine.dialect
     # Create original graph, with all materializations as CTE
     vm1 = ValueModel.build(key='a', val=1)
     vm2 = ValueModel.build(key='a', val=2)
@@ -132,7 +135,7 @@ def test_materialized_shared_ctes(pg_engine):
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(dialect, graph)
     assert len(sql_statements) == 3
-    result = run_queries(engine=pg_engine, sql_statements=sql_statements)
+    result = run_queries(engine=engine, sql_statements=sql_statements)
     assert result == {
         'graph': (
             ['key', 'value'],
