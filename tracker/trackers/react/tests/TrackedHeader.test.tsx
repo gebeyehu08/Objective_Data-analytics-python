@@ -77,10 +77,10 @@ describe('TrackedHeader', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedHeader id={'Header 1'}>
+        <TrackedHeader objectiv={{ id: 'Header 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedHeader>
-        <TrackedHeader id={'Header 2'} normalizeId={false}>
+        <TrackedHeader id={'Header 2'} objectiv={{ normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedHeader>
       </ObjectivProvider>
@@ -124,8 +124,8 @@ describe('TrackedHeader', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
             <TrackedHeader id={'☹️'} />
           </TrackedDiv>
         </TrackedRootLocationContext>
@@ -134,7 +134,7 @@ describe('TrackedHeader', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 

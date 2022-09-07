@@ -28,8 +28,8 @@ describe('TrackedInputCheckbox', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputCheckbox value={'value-1'} />
+        <TrackedInputCheckbox objectiv={{ id: 'value-1' }} />
         <TrackedInputCheckbox type={'checkbox'} value={'value-2'} />
-        {/* @ts-ignore silence the warning on the wrong type */}
         <TrackedInputCheckbox type={'text'} id={'input-id'} value={'value-3'} />
       </ObjectivProvider>
     );
@@ -81,8 +81,8 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox data-testid={'test-checkbox-1'} name={'name'} trackValue={true} />
-        <TrackedInputCheckbox data-testid={'test-checkbox-2'} value={'value'} trackValue={true} />
+        <TrackedInputCheckbox data-testid={'test-checkbox-1'} name={'name'} objectiv={{ trackValue: true }} />
+        <TrackedInputCheckbox data-testid={'test-checkbox-2'} value={'value'} objectiv={{ trackValue: true }} />
       </ObjectivProvider>
     );
 
@@ -157,7 +157,12 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox id={'input-id'} data-testid={'test-checkbox'} value={'value'} eventHandler={'onBlur'} />
+        <TrackedInputCheckbox
+          id={'input-id'}
+          data-testid={'test-checkbox'}
+          value={'value'}
+          objectiv={{ eventHandler: 'onBlur' }}
+        />
       </ObjectivProvider>
     );
 
@@ -192,8 +197,8 @@ describe('TrackedInputCheckbox', () => {
           id={'input-id-1'}
           data-testid={'test-checkbox-1'}
           value={'value-1'}
-          eventHandler={'onChange'}
           onChange={onChangeSpy}
+          objectiv={{ eventHandler: 'onChange' }}
         />
       </ObjectivProvider>
     );
@@ -228,7 +233,7 @@ describe('TrackedInputCheckbox', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputCheckbox id={'Input id 1'} data-testid={'test-checkbox-1'} value={'test'} />
-        <TrackedInputCheckbox normalizeId={false} data-testid={'test-checkbox-2'} value={'Input id 2'} />
+        <TrackedInputCheckbox data-testid={'test-checkbox-2'} value={'Input id 2'} objectiv={{ normalizeId: false }} />
       </ObjectivProvider>
     );
 
@@ -270,7 +275,7 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInputCheckbox id={'☹️'} />
           </TrackedDiv>
@@ -280,7 +285,7 @@ describe('TrackedInputCheckbox', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
@@ -290,7 +295,7 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInputCheckbox value={''} />
           </TrackedDiv>
@@ -300,7 +305,7 @@ describe('TrackedInputCheckbox', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
@@ -328,7 +333,7 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox value={'test 1'} id={'input-id'} ref={ref} />
+        <TrackedInputCheckbox value={'test 1'} ref={ref} />
       </ObjectivProvider>
     );
 
@@ -352,8 +357,8 @@ describe('TrackedInputCheckbox', () => {
         <TrackedInputCheckbox
           value={'some-value'}
           data-testid={'test-input'}
-          eventHandler={'onBlur'}
           onBlur={onBlurSpy}
+          objectiv={{ eventHandler: 'onBlur' }}
         />
       </ObjectivProvider>
     );
@@ -388,8 +393,8 @@ describe('TrackedInputCheckbox', () => {
         <TrackedInputCheckbox
           value={'some-value'}
           data-testid={'test-input'}
-          eventHandler={'onClick'}
           onClick={onClickSpy}
+          objectiv={{ eventHandler: 'onClick' }}
         />
       </ObjectivProvider>
     );
@@ -419,7 +424,11 @@ describe('TrackedInputCheckbox', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputCheckbox data-testid={'test-checkbox'} value={'value'} trackValue={true} stateless={true} />
+        <TrackedInputCheckbox
+          data-testid={'test-checkbox'}
+          value={'value'}
+          objectiv={{ trackValue: true, stateless: true }}
+        />
       </ObjectivProvider>
     );
 

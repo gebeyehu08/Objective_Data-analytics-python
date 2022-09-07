@@ -2,38 +2,44 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { ContentContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
-import React from 'react';
+import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { TrackedContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in a ContentContext.
  */
-export const TrackedContentContext = React.forwardRef<HTMLElement, TrackedContextProps>((props, ref) => {
-  const { id, Component, forwardId = false, normalizeId = true, ...otherProps } = props;
-  const locationStack = useLocationStack();
+export const TrackedContentContext = forwardRef(
+  <T extends unknown>(props: TrackedContextProps<T>, ref: Ref<unknown>) => {
+    const {
+      objectiv: { Component, id, normalizeId = true },
+      ...nativeProps
+    } = props;
+    const locationStack = useLocationStack();
 
-  let contentId: string | null = id;
-  if (normalizeId) {
-    contentId = makeIdFromString(contentId);
-  }
+    // Attempt to auto detect id
+    const contentId = makeId(id ?? nativeProps.id, normalizeId);
 
-  const componentProps = {
-    ...otherProps,
-    ...(ref ? { ref } : {}),
-    ...(forwardId ? { id } : {}),
-  };
+    const componentProps = {
+      ...nativeProps,
+      ...(ref ? { ref } : {}),
+    };
 
-  if (!contentId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate a valid id for ContentContext @ ${locationPath}. Please provide the \`id\` property.`
-      );
+    if (!contentId) {
+      if (globalThis.objectiv.devTools) {
+        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+        globalThis.objectiv.devTools.TrackerConsole.error(
+          `｢objectiv｣ Could not generate a valid id for ContentContext @ ${locationPath}. Please provide the \`objectiv.id\` property.`
+        );
+      }
+      return <Component {...componentProps} />;
     }
-    return React.createElement(Component, componentProps);
-  }
 
-  return <ContentContextWrapper id={contentId}>{React.createElement(Component, componentProps)}</ContentContextWrapper>;
-});
+    return (
+      <ContentContextWrapper id={contentId}>
+        <Component {...componentProps} />
+      </ContentContextWrapper>
+    );
+  }
+) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;

@@ -3,16 +3,16 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import { makeIdFromString } from '@objectiv/tracker-browser';
+import { makeId } from '@objectiv/tracker-browser';
 
 /**
- * A PipeTransform to convert the given string in an id-like string using Core Tracker makeIdFromString
+ * A PipeTransform to convert the given string in an id-like string using Core Tracker makeId
  */
 @Pipe({
-  name: 'makeIdFromString',
+  name: 'makeId',
 })
-export class MakeIdFromString implements PipeTransform {
-  transform(inputString: string): string | null {
-    return makeIdFromString(inputString);
+export class MakeId implements PipeTransform {
+  transform(input: string | number, normalize: boolean = true): string | null {
+    return makeId(input, normalize);
   }
 }
