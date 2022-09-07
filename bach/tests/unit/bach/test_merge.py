@@ -2,7 +2,6 @@
 Copyright 2021 Objectiv B.V.
 """
 import pytest
-from sqlalchemy.dialects.postgresql.base import PGDialect
 
 from bach.expression import Expression
 from bach.merge import (

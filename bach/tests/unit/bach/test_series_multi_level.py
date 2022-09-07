@@ -5,9 +5,8 @@ from bach.expression import Expression, MultiLevelExpression
 from sql_models.util import is_postgres, is_bigquery
 from tests.unit.bach.util import get_fake_df_test_data
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
-
+@pytest.mark.db_independent('tested function does not care about engine or dialect')
 def test_series_numeric_interval_levels_dtypes() -> None:
     supported_dtypes = SeriesNumericInterval.get_supported_level_dtypes()
     assert 'lower' in supported_dtypes
@@ -20,6 +19,7 @@ def test_series_numeric_interval_levels_dtypes() -> None:
     assert supported_dtypes['bounds'] == ('string', )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_get_instance(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     params = {
@@ -52,6 +52,7 @@ def test_series_numeric_interval_get_instance(dialect) -> None:
     assert numeric_interval.bounds.name == '_interval_bounds'
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_from_value(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
 
@@ -82,6 +83,7 @@ def test_series_numeric_interval_from_value(dialect) -> None:
     assert '(]' in result.bounds.expression.to_sql(dialect)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_copy_override(dialect) -> None:
     bt = get_fake_df_test_data(dialect)[['inhabitants']].agg(['min', 'max'])
     bt = bt.materialize()
@@ -108,6 +110,7 @@ def test_series_numeric_interval_copy_override(dialect) -> None:
     assert '[)' in result.bounds.expression.to_sql(dialect)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_parse_level_value(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     numeric_interval = SeriesNumericInterval.from_value(
@@ -131,6 +134,7 @@ def test_series_numeric_interval_parse_level_value(dialect) -> None:
     assert 'inhabitants' in result.expression.to_sql(dialect)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_expression(dialect) -> None:
     inhabitants = get_fake_df_test_data(dialect)['inhabitants']
     numeric_interval = SeriesNumericInterval.from_value(
@@ -154,6 +158,7 @@ def test_series_numeric_expression(dialect) -> None:
         raise Exception()
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_get_column_expression(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     numeric_interval = SeriesNumericInterval.from_value(
@@ -182,6 +187,7 @@ def test_series_numeric_interval_get_column_expression(dialect) -> None:
         raise Exception()
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_as_index_unstack(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     bt['num_interval'] = SeriesNumericInterval.from_value(
@@ -199,6 +205,7 @@ def test_series_numeric_interval_as_index_unstack(dialect) -> None:
         bt['inhabitants'].unstack()
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_arithmetic_operations(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     bt['num_interval'] = SeriesNumericInterval.from_value(
@@ -218,6 +225,7 @@ def test_series_numeric_interval_arithmetic_operations(dialect) -> None:
         bt['num_interval'] + bt['num_interval']
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_as_independent_subquery(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     bt['num_interval'] = SeriesNumericInterval.from_value(
@@ -245,6 +253,7 @@ def test_series_numeric_interval_as_independent_subquery(dialect) -> None:
         bt['inhabitants'].isin(bt['num_interval'])
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_equals(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     bt['num_interval'] = SeriesNumericInterval.from_value(
@@ -271,6 +280,7 @@ def test_series_numeric_interval_equals(dialect) -> None:
     assert not bt['num_interval'].equals(bt['inhabitants'])
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_isnull(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     bt['num_interval'] = SeriesNumericInterval.from_value(
@@ -289,6 +299,7 @@ def test_series_numeric_interval_isnull(dialect) -> None:
     assert result.equals(expected)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_notnull(dialect) -> None:
     bt = get_fake_df_test_data(dialect)
     bt['num_interval'] = SeriesNumericInterval.from_value(
@@ -307,6 +318,7 @@ def test_series_numeric_interval_notnull(dialect) -> None:
     assert result.equals(expected)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_numeric_interval_fillna(dialect) -> None:
     bt = get_fake_df_test_data(dialect)[['inhabitants']]
     bt['num_interval'] = SeriesNumericInterval.from_value(
