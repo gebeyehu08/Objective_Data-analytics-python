@@ -1688,7 +1688,7 @@ class DataFrame:
 
         group_by: GroupBy
         if isinstance(by, tuple):
-            if not is_postgres(self.engine):
+            if not (is_athena(self.engine) or is_postgres(self.engine)):
                 raise DatabaseNotSupportedException(
                     self.engine,
                     f'GroupingSets are not supported for this SQL dialect. Only grouping by one or more '
@@ -1702,7 +1702,7 @@ class DataFrame:
             return DataFrame._groupby_to_frame(df, group_by)
 
         if isinstance(by, list) and len([b for b in by if isinstance(b, (tuple, list))]) > 0:
-            if not is_postgres(self.engine):
+            if not (is_athena(self.engine) or is_postgres(self.engine)):
                 raise DatabaseNotSupportedException(
                     self.engine,
                     f'GroupingLists are not supported for this SQL dialect. Only grouping by one or more '
