@@ -124,6 +124,7 @@ def test_group_by_multiple_syntax(engine):
         }
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_group_by_expression(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     btg = bt.groupby(bt['city'].str[:1])
@@ -538,6 +539,7 @@ def test_grouping_set_basics(pg_engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_groupby_frame_split_series_aggregation(engine):
     bt = get_df_with_test_data(engine, full_data_set=False)[['municipality', 'inhabitants', 'founding']]
     btg1 = bt.groupby(['municipality'])
@@ -687,6 +689,7 @@ def test_materialize_on_double_aggregation(engine):
     numpy.testing.assert_almost_equal(value, 2413.5)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_groupby_w_multi_level_series(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     bt['lower'] = 0

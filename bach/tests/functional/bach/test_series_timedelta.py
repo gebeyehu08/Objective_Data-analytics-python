@@ -121,6 +121,7 @@ def test_to_pandas(engine):
     assert bt[['td']].to_numpy()[0] == [27744277000000000]
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_timedelta_operations(engine):
     pdf = pd.DataFrame(
         data={

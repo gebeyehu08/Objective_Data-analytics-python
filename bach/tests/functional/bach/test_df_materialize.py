@@ -17,6 +17,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df
 
 @pytest.mark.parametrize("inplace", [False, True])
 @pytest.mark.parametrize("materialization", [Materialization.CTE, 'temp_table'])
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_materialize(inplace: bool, materialization: Union[Materialization, str], engine: Engine):
     bt = get_df_with_test_data(engine)[['city', 'founding']]
     bt['city'] = bt['city'] + ' '

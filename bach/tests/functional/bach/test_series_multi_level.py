@@ -4,6 +4,8 @@ import pytest
 from bach import DataFrame
 from bach.series.series_multi_level import SeriesNumericInterval
 
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
+
 
 @pytest.fixture()
 def interval_data_pdf() -> pd.DataFrame:

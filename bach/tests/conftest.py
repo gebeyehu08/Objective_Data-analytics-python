@@ -201,7 +201,6 @@ def pytest_generate_tests(metafunc: Metafunc):
     skip_postgres = any(mark.name == MARK_SKIP_POSTGRES for mark in markers)
     skip_athena = any(mark.name == MARK_SKIP_ATHENA for mark in markers)
     skip_bigquery = any(mark.name == MARK_SKIP_BIGQUERY for mark in markers)
-    athena_supported = any(mark.name == MARK_ATHENA_SUPPORTED for mark in markers)
 
     skip_athena_todo = any(mark.name == MARK_SKIP_ATHENA_TODO for mark in markers)
     skip_bigquery_todo = any(mark.name == MARK_SKIP_BIGQUERY_TODO for mark in markers)
@@ -212,7 +211,7 @@ def pytest_generate_tests(metafunc: Metafunc):
             continue
         if name == DB.BIGQUERY and (skip_bigquery or skip_bigquery_todo):
             continue
-        if name == DB.ATHENA and (not athena_supported or skip_athena or skip_athena_todo):
+        if name == DB.ATHENA and (skip_athena or skip_athena_todo):
             continue
         engines.append(engine_dialect)
 

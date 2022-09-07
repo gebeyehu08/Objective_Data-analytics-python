@@ -3,6 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 import re
 
+import pytest
+
 from sql_models.model import Materialization
 from sql_models.sql_generator import to_sql, to_sql_materialized_nodes, GeneratedSqlStatement
 from sql_models.util import is_bigquery
@@ -10,6 +12,7 @@ from tests.unit.sql_models.test_graph_operations import get_simple_test_graph
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, assert_roughly_equal_sql
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_simple_to_sql(dialect):
     # simple test that a simple graph compiles, and gets the expected sql with both
     # to_sql and to_sql_materialized_nodes

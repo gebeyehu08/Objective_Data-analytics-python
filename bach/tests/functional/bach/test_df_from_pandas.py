@@ -49,6 +49,8 @@ TYPES_COLUMNS = ['int_column', 'float_column', 'bool_column', 'datetime_column',
                  'dict_column', 'timedelta_column', 'mixed_column']
 
 
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
+
 def test_from_pandas_table(pg_engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     bt = DataFrame.from_pandas(

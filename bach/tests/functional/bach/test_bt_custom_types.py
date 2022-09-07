@@ -35,6 +35,7 @@ class ReversedStringType(Series):
             return Expression.construct(f'reverse(cast({{}} as {cls.get_db_dtype(dialect)}))', expression)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_custom_type(monkeypatch, engine):
     # make sure monkeypatch the type-registry, as it should be restored after this test finishes.
     monkeypatch.setattr('bach.types._registry', TypeRegistry())
