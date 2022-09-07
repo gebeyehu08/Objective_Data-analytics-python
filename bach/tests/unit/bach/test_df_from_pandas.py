@@ -32,7 +32,7 @@ def test__assert_column_names_valid_generic(dialect):
     with pytest.raises(ValueError, match='Not all columns names are strings'):
         _assert_column_names_valid(dialect=dialect, df=pdf)
 
-@pytest.mark.athena_supported()
+
 def test__assert_column_names_valid_db_specific(dialect):
     # test whether column names are allowed for specific dialects
     # We'll just test a few combinations here

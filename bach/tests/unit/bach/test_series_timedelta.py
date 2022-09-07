@@ -13,7 +13,6 @@ from bach.expression import Expression
 
 @pytest.mark.skip_bigquery('Athena specific test; test_supported_value_to_literal() below covers BigQuery')
 @pytest.mark.skip_postgres('Athena specific test; test_supported_value_to_literal() below covers Postgres')
-@pytest.mark.athena_supported
 def test_supported_value_to_literal_athena(dialect):
     def assert_call(value, expected_token_value: float):
         result = SeriesTimedelta.supported_value_to_literal(dialect, value, dtype=SeriesTimedelta.dtype)

@@ -18,7 +18,6 @@ import pytest
 
 pytestmark = [
     pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True),
-    pytest.mark.athena_supported()
 ]
 
 

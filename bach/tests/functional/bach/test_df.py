@@ -8,7 +8,6 @@ from bach import DataFrame, SeriesBoolean
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-@pytest.mark.athena_supported
 def test_basic(engine):
     bt = get_df_with_test_data(engine)
     assert_equals_data(
@@ -25,7 +24,6 @@ def test_basic(engine):
     )
 
 
-@pytest.mark.athena_supported
 def test_head(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     bt = bt.sort_index()

@@ -15,7 +15,6 @@ from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE
     CODES_SUPPORTED_IN_ALL_DIALECTS, STRINGS_SUPPORTED_IN_ALL_DIALECTS
 
 
-@pytest.mark.athena_supported()
 @pytest.mark.parametrize("asstring", [True, False])
 def test_date_comparator(asstring: bool, engine):
     mt = get_df_with_food_data(engine)[['date']]
@@ -49,7 +48,6 @@ def test_date_comparator(asstring: bool, engine):
     )
 
 
-@pytest.mark.athena_supported()
 def test_date_format(engine, recwarn):
     timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000)
     date = datetime.date(2022, 1, 1)
@@ -147,7 +145,6 @@ def test_date_format_all_supported_pg_codes(engine, recwarn):
     assert len(recwarn) > 0
 
 
-@pytest.mark.athena_supported()
 def test_date_trunc(engine):
     mt = get_df_with_food_data(engine)
     mt['date'] = mt['date'].astype('date')
@@ -231,7 +228,6 @@ def test_date_trunc(engine):
         mt['time'].dt.date_trunc('hour')
 
 
-@pytest.mark.athena_supported()
 def test_date_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', (None, 'timedelta')],
@@ -242,7 +238,6 @@ def test_date_arithmetic(engine):
     types_plus_min(engine, data, datetime.date(2021, 7, 23), 'date')
 
 
-@pytest.mark.athena_supported()
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['d'] = datetime.date(2020, 3, 11)
