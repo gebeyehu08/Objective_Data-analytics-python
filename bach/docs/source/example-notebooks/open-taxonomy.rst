@@ -13,7 +13,7 @@ dataset that is validated against the `open analytics taxonomy <https://objectiv
 
 It's also available in a 
 `notebook <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/open-taxonomy-how-to.ipynb>`_
-to run on your own data, or you can instead `run the Demo </docs/home/quickstart-guide/>`_ to quickly try it 
+to run on your own data, or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it 
 out.
 
 The Objectiv :doc:`Bach API <../bach/api-reference/index>` is strongly pandas-like, to provide a familiar 
@@ -475,7 +475,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/quickstart-guide#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
 
 .. doctest:: open-taxonomy
 	:skipif: engine is None
