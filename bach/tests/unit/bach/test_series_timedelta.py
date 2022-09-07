@@ -11,8 +11,8 @@ from bach import SeriesTimedelta
 from bach.expression import Expression
 
 
-@pytest.mark.skip_bigquery
-@pytest.mark.skip_postgres
+@pytest.mark.skip_bigquery('Athena specific test; test_supported_value_to_literal() below covers BigQuery')
+@pytest.mark.skip_postgres('Athena specific test; test_supported_value_to_literal() below covers Postgres')
 @pytest.mark.athena_supported
 def test_supported_value_to_literal_athena(dialect):
     def assert_call(value, expected_token_value: float):
@@ -41,6 +41,7 @@ def test_supported_value_to_literal_athena(dialect):
     assert SeriesTimedelta.supported_value_to_literal(dialect, None, dtype=dtype) == Expression.construct('NULL')
 
 
+@pytest.mark.skip_athena('Athena is skipped because timedelta values are represented with floats.')
 def test_supported_value_to_literal(dialect):
     def assert_call(value, expected_token_value: str):
         result = SeriesTimedelta.supported_value_to_literal(dialect, value, dtype=SeriesTimedelta.dtype)

@@ -199,7 +199,8 @@ def test_get_item_mixed_groupby(engine):
         grouped_other[grouped_sum > grouped_other_sum]
 
 
-@pytest.mark.skip_postgres
+@pytest.mark.skip_postgres('Test uses BigQuery-only Series type')
+@pytest.mark.skip_athena('Test uses BigQuery-only Series type')
 def test_get_item_w_dict_series(engine):
     df = get_df_with_test_data(engine)[['city']]
     struct = {

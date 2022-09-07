@@ -31,13 +31,10 @@ def test_column_names(engine):
     assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
 
 
+@pytest.mark.skip_bigquery_todo('#1209 We do not yet support special characters in column names on BigQuery')
+@pytest.mark.skip_athena_todo('#1209 We do not yet support special characters in column names on Athena')
 def test_column_names_merge(engine):
     # When merging we construct a specific sql query that names each column, so test that separately here
-
-    # Don't test this for BigQuery, as it won't allow the weird names. See test_column_names() above.
-    if is_bigquery(engine):
-        return
-
     bt = _get_dataframe_with_weird_column_names(engine)
     bt2 = get_df_with_test_data(engine)[['city']]
     bt = bt.merge(bt2, on='city')

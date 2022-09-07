@@ -122,7 +122,8 @@ def test_date_format(engine, recwarn):
     )
 
 
-@pytest.mark.skip_bigquery
+@pytest.mark.skip_bigquery('Postgres specific test')
+@pytest.mark.skip_athena('Postgres specific test')
 def test_date_format_all_supported_pg_codes(engine, recwarn):
     # We use recwarn here, because some of the format codes we support on Postgres are not supported on other
     # databases. Those format codes will raise a warning.

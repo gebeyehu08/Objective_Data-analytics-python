@@ -204,7 +204,8 @@ def test_set_series_column(engine):
     assert filtered_bt.town == filtered_bt['town']
 
 
-@pytest.mark.skip_bigquery("Bigquery doesn't support spaces in column names")
+@pytest.mark.skip_bigquery_todo('#1209 We do not yet support spaces in column names on BigQuery')
+@pytest.mark.skip_athena_todo('#1209 We do not yet support spaces in column names on Athena')
 def test_set_series_column_name_with_spaces(engine):
     bt = get_df_with_test_data(engine)
     bt['spaces in column'] = bt['founding']
