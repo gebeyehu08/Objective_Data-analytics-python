@@ -99,10 +99,10 @@ def _to_sql_list_models(dialect: Dialect, models: List[SqlModel]) -> List[Genera
     """
     result: List[GeneratedSqlStatement] = []
     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
-    _check_names_unique(models)
+    _check_names_unique(dialect, models)
     for model in models:
         generated_sql = GeneratedSqlStatement(
-            name=model_to_name(model),
+            name=model_to_name(dialect, model),
             sql=_to_sql_materialized_node(
                 dialect=dialect,
                 model=model,
@@ -128,8 +128,9 @@ def _to_sql_materialized_node(
     queries = _to_cte_sql(dialect=dialect, compiler_cache=compiler_cache, model=model)
     queries = _filter_duplicate_ctes(queries)
     if len(queries) == 0:
-        # _to_cte_sql should never return an empty list, but this make it clear we have a len > 0 below.
-        raise Exception('Internal error. No models to compile')
+        # _to_cte_sql only returns an empty list when there is a source node,
+        # but it's not referenced. We can't generate anything in that scenario.
+        raise Exception('No models to compile')
 
     if len(queries) == 1:
         return _materialize(dialect=dialect, sql_query=queries[0].sql, model=model)
@@ -153,9 +154,7 @@ def _materialize(dialect: Dialect, sql_query: str, model: SqlModel) -> str:
 
     materialization = model.materialization
     quoted_name = model_to_quoted_name(dialect, model)
-    if materialization == Materialization.CTE:
-        return sql_query
-    if materialization == Materialization.QUERY:
+    if materialization in [Materialization.CTE, Materialization.QUERY]:
         return sql_query
     if materialization == Materialization.VIEW:
         return f'create view {quoted_name} as {sql_query}'
@@ -167,7 +166,7 @@ def _materialize(dialect: Dialect, sql_query: str, model: SqlModel) -> str:
         if is_bigquery(dialect):
             return f'CREATE TEMP TABLE {quoted_name} AS {sql_query}'
         raise DatabaseNotSupportedException(dialect, f'Cannot create temporary table for {dialect.name}')
-    if materialization == Materialization.VIRTUAL_NODE:
+    if materialization in [Materialization.VIRTUAL_NODE, Materialization.SOURCE]:
         return ''
     raise Exception(f'Unsupported Materialization value: {materialization}')
 
@@ -183,13 +182,13 @@ class SemiCompiledTuple(NamedTuple):
     sql: str
 
 
-def _check_names_unique(models: Iterable[SqlModel]):
+def _check_names_unique(dialect: Dialect, models: Iterable[SqlModel]):
     """
     Check that there are no duplicate names in the list of models. Raises an error if duplicates are found.
     """
     seen: Set[str] = set()
     for model in models:
-        name = model_to_name(model)
+        name = model_to_name(dialect, model)
         if name in seen:
             raise ValueError(f'Names of SqlModels need to be unique throughout the graph.'
                              f'Duplicate found: "{name}"')
@@ -258,15 +257,25 @@ def _to_cte_sql(dialect: Dialect,
     return result
 
 
-def model_to_name(model: SqlModel):
+def model_to_name(dialect: Dialect, model: SqlModel):
     """
     Get the name for the cte/table/view that will be generated from this model, quoted and escaped.
     """
-    # max length of an identifier name in Postgres is normally 63 characters. We'll use that as a cutoff
-    # here.
+    if model.materialization == Materialization.SOURCE:
+        if model.materialization_name is None:
+            raise Exception('SqlModel with SOURCE materialization must have materialization_name set.')
+        return model.materialization_name
+
+    # max length of an identifier name in Postgres is normally 63 characters.
+    # We'll use that as a cutoff if we don't know better
+    if is_bigquery(dialect):
+        max_length = 1023
+    else:
+        max_length = 63
+
     if model.materialization_name is not None:
-        return model.materialization_name[0:63]
-    name = f'{model.generic_name[0:28]}___{model.hash}'
+        return model.materialization_name[0:max_length]
+    name = f'{model.generic_name[0:(max_length-35)]}___{model.hash}'
     return name
 
 
@@ -274,7 +283,7 @@ def model_to_quoted_name(dialect: Dialect, model: SqlModel):
     """
     Get the name for the cte/table/view that will be generated from this model, quoted and escaped.
     """
-    return quote_identifier(dialect, model_to_name(model))
+    return quote_identifier(dialect, model_to_name(dialect, model))
 
 
 def _single_model_to_sql(dialect: Dialect,
@@ -292,10 +301,18 @@ def _single_model_to_sql(dialect: Dialect,
     """
     if model.hash in compiler_cache:
         return compiler_cache[model.hash]
+
+    result: List[SemiCompiledTuple] = []
     sql = model.sql
+    if sql == '':
+        # If the SQL is completely empty, this is the first node that we're selecting from.
+        # We only need to store it in order to select from the materialization name
+        compiler_cache[model.hash] = result
+        return result
+
     # If there are any format strings in the placeholder values that need escaping, they should have been
     # escaped by now.
-    # Otherwise this will cause trouble the next time we call format() below for the references
+    # Otherwise, this will cause trouble the next time we call format() below for the references
     sql = _format_sql(sql=sql, values=model.placeholders_formatted, model=model)
     # {{id}} (==REFERENCE_UNIQUE_FIELD) is a special placeholder that gets the unique model identifier,
     # which can be used in templates to make sure that if a model gets used multiple times,
@@ -304,7 +321,7 @@ def _single_model_to_sql(dialect: Dialect,
     _reference_names[REFERENCE_UNIQUE_FIELD] = model.hash
     sql = _format_sql(sql=sql, values=_reference_names, model=model)
     ctes = raw_sql_to_selects(sql)
-    result: List[SemiCompiledTuple] = []
+
     for cte in ctes[:-1]:
         # For all CTEs the name should be set. Only for the final select (== cte[-1]) it will be None.
         assert cte.name is not None

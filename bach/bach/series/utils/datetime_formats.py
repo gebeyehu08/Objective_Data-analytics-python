@@ -2,9 +2,55 @@
 Copyright 2022 Objectiv B.V.
 """
 import re
+import string
 import warnings
 
-# https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+
+CODES_SUPPORTED_IN_ALL_DIALECTS = {
+    # These are the codes that we support for all database dialects.
+
+    # week codes
+    '%a',  # WEEKDAY_ABBREVIATED
+    '%A',  # WEEKDAY_FULL_NAME
+
+    # day codes
+    '%d',  # DAY_OF_MONTH
+    '%j',  # DAY_OF_YEAR
+
+    # month codes
+    '%b',  # MONTH_ABBREVIATED
+    '%B',  # MONTH_FULL_NAME
+    '%m',  # MONTH_NUMBER
+
+    # year codes
+    '%y',  # YEAR_WITHOUT_CENTURY
+    '%Y',  # YEAR_WITH_CENTURY
+
+    # time unit codes
+    '%H',  # HOUR24
+    '%I',  # HOUR12
+    '%M',  # MINUTE
+    '%S',  # SECOND
+
+    # format codes
+    '%F',  # YEAR_MONTH_DAY
+    '%R',  # HOUR_MINUTE
+    '%T',  # HOUR_MINUTE_SECOND
+
+    # special characters
+    '%%',  # PERCENT_CHAR
+}
+
+STRINGS_SUPPORTED_IN_ALL_DIALECTS = [
+    # These are the combinations of codes that we support for all database dialects, even if some of the
+    # individual codes are not supported.
+    # When adding more strings here: Strings must be sorted longest to shortest, and all strings must
+    # start with a percentage sign.
+
+    '%S.%f',  # <seconds>.<microsecnds>
+]
+
+
 _SUPPORTED_C_STANDARD_CODES = {
     # week codes
     '%a',  # WEEKDAY_ABBREVIATED
@@ -30,7 +76,6 @@ _SUPPORTED_C_STANDARD_CODES = {
     '%C',  # CENTURY
     '%Q',  # QUARTER
     '%D',  # MONTH_DAY_YEAR
-    '%F',  # YEAR_MONTH_DAY
 
     # iso 8601 codes
     '%G',  # ISO_8601_YEAR_WITH_CENTURY
@@ -52,6 +97,7 @@ _SUPPORTED_C_STANDARD_CODES = {
     '%Z',  # TIME_ZONE_NAME
 
     # format codes
+    '%F',  # YEAR_MONTH_DAY
     '%R',  # HOUR_MINUTE
     '%T',  # HOUR_MINUTE_SECOND
 
@@ -91,6 +137,7 @@ _C_STANDARD_CODES_X_POSTGRES_DATE_CODES = {
     "%Z": "TZ",
     "%R": "HH24:MI",
     "%T": "HH24:MI:SS",
+    "%%": "%",
 }
 
 
@@ -135,7 +182,6 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
         return f'"{date_format}"'
 
     tokenized_c_codes = sorted(set(grouped_codes_matches), key=len, reverse=True)
-    unsupported_c_codes = set()
     single_c_code_regex = re.compile(rf'{codes_base_pattern}')
 
     new_date_format_tokens = []
@@ -155,23 +201,66 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
         codes_to_replace = single_c_code_regex.findall(token)
         replaced_codes = []
         for to_repl_code in codes_to_replace:
-            if to_repl_code not in _C_STANDARD_CODES_X_POSTGRES_DATE_CODES:
-                unsupported_c_codes.add(to_repl_code)
-                replaced_codes.append(to_repl_code)
-                continue
-
-            # get correspondent postgres code
-            replaced_codes.append(_C_STANDARD_CODES_X_POSTGRES_DATE_CODES[to_repl_code])
+            # get correspondent postgres code if it exists, otherwise include to_repl_code unchanged.
+            replaced_codes.append(_C_STANDARD_CODES_X_POSTGRES_DATE_CODES.get(to_repl_code, to_repl_code))
 
         new_date_format_tokens.append('""'.join(replaced_codes))
 
-    if unsupported_c_codes:
-        warnings.warn(
-            message=f'There are no equivalent codes for {sorted(unsupported_c_codes)}.',
-            category=UserWarning,
-        )
-
     return ''.join(new_date_format_tokens)
+
+
+def parse_c_code_to_athena_code(date_format: str) -> str:
+    """
+    Parses a date format string, and return a string that's compatible with Athena's date_format() function.
+
+    Some python format codes are different on Athena, or might even raise an error. Such codes are converted
+    or escaped; using the returned string with Athena's date_format will never raise an error.
+
+    Codes in CODES_SUPPORTED_IN_ALL_DIALECTS are guaranteed to be correctly represented in the returned
+    format string. If date_format contains codes that are not in that set, then the returned format might
+    evaluate to a different string than the original date_format would with python's strftime() function.
+    """
+    # Athena code spec: https://prestodb.io/docs/0.217/functions/datetime.html
+    # Python code spec: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+    c_code_to_athena_mapping = {
+        # if there is no code, i.e. a lone '%' that's not followed by an alphabetic character, then that
+        # should yield '%'. So we want to generate '%%'
+        '%': '%%',
+        # List supported codes that are not in CODES_SUPPORTED_IN_ALL_DIALECTS
+        '%f': '%f',
+        # Actual mappings
+        '%A': '%W',
+        '%M': '%i',
+        '%B': '%M',
+        '%F': '%Y-%m-%d',
+        '%R': '%H:%i',
+    }
+    codes_to_consider = set(string.ascii_letters + '%')
+    result = []
+    i = 0
+    while i < len(date_format):
+        current = date_format[i]
+        i += 1
+        if current != '%':
+            # This is not the start of a code sequence, just a regular character.
+            result.append(current)
+        else:
+            # This is the start of a code sequence.
+            if i < len(date_format) and date_format[i] in codes_to_consider:
+                current = current + date_format[i]
+                i += 1
+            if current not in CODES_SUPPORTED_IN_ALL_DIALECTS and current not in c_code_to_athena_mapping:
+                # If Athena encounters a code it does not support, then it will do either of:
+                # 1) raise an error for a number of specifically not supported codes (%D, %U, %u, %V, %w, %X)
+                # 2) only include the second character in the result, but strip the '%' off.
+                # The general behaviour of strftime() in python is to just include the ignored code,
+                # including the leading '%'. We want to mimic that by always escaping unknown codes.
+                result.append(f'%{current}')
+            else:
+                # map c-codes to athena specific codes
+                current = c_code_to_athena_mapping.get(current, current)
+                result.append(current)
+    return ''.join(result)
 
 
 def parse_c_code_to_bigquery_code(date_format: str) -> str:
@@ -180,10 +269,50 @@ def parse_c_code_to_bigquery_code(date_format: str) -> str:
     """
     if '%S.%f' in date_format:
         date_format = re.sub(r'%S\.%f', '%E6S', date_format)
+    return date_format
 
-    if '%f' in date_format:
+
+def warn_non_supported_format_codes(date_format: str):
+    """
+    Checks that all formatting codes in date_format are listed in CODES_SUPPORTED_IN_ALL_DIALECTS or are
+    part of a string that's listed in STRINGS_SUPPORTED_IN_ALL_DIALECTS.
+
+    If one or more non-listed codes are found, a UserWarning is emitted.
+    """
+    unsupported_c_codes = set()
+    i = 0
+    while i < len(date_format):
+        current = date_format[i]
+        i += 1
+        if current != '%':  # This is not the start of a code sequence, just a regular character.
+            continue
+
+        # This is the start of a code sequence.
+        # See if any of the STRINGS_SUPPORTED_IN_ALL_DIALECTS start at this character
+        for supported_string in STRINGS_SUPPORTED_IN_ALL_DIALECTS:
+            # Get a string from date_format with the same length as supported_string starting at the current
+            # position.
+            sub_str_start = i - 1
+            sub_str_end = sub_str_start + len(supported_string)
+            sub_str = date_format[sub_str_start:sub_str_end]
+            if sub_str == supported_string:
+                # Match: we know this string is good, and can skip to the end of it.
+                i = sub_str_end
+                break  # skip the 'else:' clause of this for loop
+        else:
+            # If we get here, that means that none of the strings in STRINGS_SUPPORTED_IN_ALL_DIALECTS
+            # start at the current character.
+            # See if the code that starts here is listed in CODES_SUPPORTED_IN_ALL_DIALECTS
+            if i < len(date_format):
+                current = current + date_format[i]
+                i += 1
+            if current not in CODES_SUPPORTED_IN_ALL_DIALECTS:
+                unsupported_c_codes.add(current)
+    if unsupported_c_codes:
+        message = f'These formatting codes are not generally supported: ' \
+                  f'{", ".join(sorted(unsupported_c_codes))}.' \
+                  f'They might not work reliably on some or all database platforms..'
         warnings.warn(
-            message=f'There are no equivalent codes for %f.',
+            message=message,
             category=UserWarning,
         )
-    return date_format

@@ -4,33 +4,29 @@ Copyright 2022 Objectiv B.V.
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the 'engine' and 'dialect' parameters for
 test functions that have either of those.
-By default such a test function will get a Postgres dialect or engine. But if --big-query or --all is
-specified on the commandline, then it will (also) get a BigQuery dialect or engine. For specific
-tests, it is possible to disable postgres or bigquery testing, see 'marks' section below.
-
-Additionally we define a 'pg_engine' fixture here that always return a Postgres engine. This fixture should
-not be used for new functions tho! After fully implementing BigQuery it will be removed.
+By default such a test function will get a Postgres dialect or engine. But if --big-query, --athena or --all
+is specified on the commandline, then it will (also) get a BigQuery/Athena dialect or engine. For specific
+tests, it is possible to disable testing for certain databases, see 'marks' section below.
 
 ### Marks and Test Categorization
 A lot of functionality needs to be tested for multiple databases. The 'engine' and 'dialects' fixtures
 mentioned above help with that. Additionally we have some marks (`@pytest.mark.<type>`) to make it explicit
 which databases we expect tests to run against.
 
-We broadly want 5 categories of tests:
+We broadly want 4 categories of tests:
 * unit-test: These don't interact with a database
   * unit-tests that are tested with multiple database dialects (1)
   * unit-tests that are database-dialect independent (2)
 * functional-tests: These interact with a database
   *  functional-tests that run against all supported databases (3)
-  *  functional-tests that run against all supported databases except Postgres (4)
-  *  functional-tests that run against all supported databases except BigQuery (5)
+  *  functional-tests that run against all supported databases except some specific databases (4)
 
 1 and 3 are the default for tests. These either get 'engine' or 'dialect' as fixture and run against all
 databases. Category 2 are tests that test generic code that is not geared to a specific database.
-Category 4 and 5 are for functionality that we explicitly not support on some databases.
+Category 4 is for functionality that we explicitly not support on some databases.
 
-Category 2, 4, and 5 are the exception, these need to be marked with the `db_independent`, `skip_postgres`,
-or `skip_bigquery` marks.
+Category 2 and 4 are the exception, these need to be marked with the `db_independent`, `skip_postgres`,
+`skip_bigquery` or `skip_athena` marks.
 
 ### Other
 For all unittests we add a timeout of 1 second. If they take longer they will be stopped and considered
@@ -78,10 +74,11 @@ _DB_ATHENA_WORK_GROUP = _ENV.get('OBJ_DB_ATHENA_WORK_GROUP', 'automated_tests_wo
 
 MARK_DB_INDEPENDENT = 'db_independent'
 MARK_SKIP_POSTGRES = 'skip_postgres'
+MARK_SKIP_ATHENA = 'skip_athena'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
-# Temporary mark 'athena' will be used to annotate tests that work on Athena.
-# Once all tests work on athena we'll ignore the mark, after which we can remove it.
-MARK_ATHENA_SUPPORTED = 'athena_supported'
+# Temporary marks
+MARK_SKIP_ATHENA_TODO = 'skip_athena_todo'
+MARK_SKIP_BIGQUERY_TODO = 'skip_bigquery_todo'
 
 
 class DB(Enum):
@@ -92,16 +89,6 @@ class DB(Enum):
 
 _ENGINE_CACHE: Dict[DB, Engine] = {}
 _RECORDED_TEST_TABLES_PER_ENGINE: [Engine, List[str]] = defaultdict(list)
-
-
-@pytest.fixture()
-def pg_engine(request: SubRequest) -> Engine:
-    if DB.POSTGRES not in _ENGINE_CACHE:
-        # Skip tests using this fixture when running only for big_query or athena
-        pytest.skip()
-
-    # TODO: port all tests that use this to be multi-database. Or explicitly mark them as skip-bigquery
-    return _ENGINE_CACHE[DB.POSTGRES]
 
 
 @pytest.fixture()
@@ -121,10 +108,8 @@ def unique_table_test_name(
     """
     if 'engine' in request.fixturenames:
         engine = request.node.funcargs['engine']
-    elif 'pg_engine' in request.fixturenames:
-        engine = _ENGINE_CACHE[DB.POSTGRES]
     else:
-        raise Exception('can only generate table name if test uses engine or pg_engine fixtures.')
+        raise Exception('can only generate table name if test uses engine fixtures.')
 
     # sqlalchemy will raise an error if we exceed this length
     _MAX_LENGTH_TABLE_NAME = 63
@@ -198,16 +183,19 @@ def pytest_generate_tests(metafunc: Metafunc):
     # see: https://docs.pytest.org/en/6.2.x/reference.html#collection-hooks
     markers = list(metafunc.definition.iter_markers())
     skip_postgres = any(mark.name == MARK_SKIP_POSTGRES for mark in markers)
+    skip_athena = any(mark.name == MARK_SKIP_ATHENA for mark in markers)
     skip_bigquery = any(mark.name == MARK_SKIP_BIGQUERY for mark in markers)
-    athena_support = any(mark.name == MARK_ATHENA_SUPPORTED for mark in markers)
+
+    skip_athena_todo = any(mark.name == MARK_SKIP_ATHENA_TODO for mark in markers)
+    skip_bigquery_todo = any(mark.name == MARK_SKIP_BIGQUERY_TODO for mark in markers)
 
     engines = []
     for name, engine_dialect in _ENGINE_CACHE.items():
         if name == DB.POSTGRES and skip_postgres:
             continue
-        if name == DB.BIGQUERY and skip_bigquery:
+        if name == DB.BIGQUERY and (skip_bigquery or skip_bigquery_todo):
             continue
-        if name == DB.ATHENA and not athena_support:
+        if name == DB.ATHENA and (skip_athena or skip_athena_todo):
             continue
         engines.append(engine_dialect)
 

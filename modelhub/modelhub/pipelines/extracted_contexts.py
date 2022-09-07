@@ -226,19 +226,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                 taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
                 df_cp[key] = taxonomy_col
 
-            gc_series = (
-                df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
-            )
-            # Extract the requested global contexts
-            for gc in self._global_contexts:
-                df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
-
-            df_cp = df_cp.drop(columns=[
-                ObjectivSupportedColumns.GLOBAL_CONTEXTS.value,
-                self._taxonomy_column.name
-            ])
-
-            # rename series to objectiv supported
+            # rename series to objectiv supported before extracting global contexts, as there may be overlap
             df_cp = df_cp.rename(
                 columns={
                     'cookie_id': ObjectivSupportedColumns.USER_ID.value,
@@ -246,16 +234,21 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                     '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
                 },
             )
-        else:
-            for gc, col in self._global_contexts_column_mapping.items():
-                if gc == 'location_stack':
-                    df_cp[gc] = (
-                        df_cp[col].elements[0].elements['location_stack']
-                        .astype('objectiv_location_stack')
-                    )
-                else:
-                    df_cp[gc] = df_cp[col].astype('objectiv_global_context')
 
+            gc_series = (
+                df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
+            )
+            # Extract the requested global contexts
+            for gc in self._global_contexts:
+                if gc in df_cp.data:
+                    raise ValueError(f'column {gc} already existing in df, can not extract global context')
+                df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
+
+            df_cp = df_cp.drop(columns=[
+                ObjectivSupportedColumns.GLOBAL_CONTEXTS.value,
+                self._taxonomy_column.name
+            ])
+        else:
             df_cp = df_cp.rename(
                 columns={
                     'se_action': ObjectivSupportedColumns.EVENT_TYPE.value,
@@ -263,6 +256,17 @@ class ExtractedContextsPipeline(BaseDataPipeline):
                     'network_userid': ObjectivSupportedColumns.USER_ID.value,
                 }
             )
+
+            for gc, col in self._global_contexts_column_mapping.items():
+                if gc in df_cp.data:
+                    raise ValueError(f'column {gc} already existing in df, can not extract global context')
+                if gc == 'location_stack':
+                    df_cp[gc] = (
+                        df_cp[col].elements[0].elements['location_stack']
+                        .astype('objectiv_location_stack')
+                    )
+                else:
+                    df_cp[gc] = df_cp[col].astype('objectiv_global_context')
 
             df_cp = df_cp.drop(columns=list(self._global_contexts_column_mapping.values()))
 

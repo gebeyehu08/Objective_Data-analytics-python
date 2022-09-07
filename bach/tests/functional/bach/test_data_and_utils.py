@@ -237,6 +237,7 @@ def assert_equals_data(
     _date_freq = 'ms' if is_athena(bt.engine) else 'us'
     for i, df_row in enumerate(db_values):
         expected_row = expected_data[i]
+        assert len(df_row) == len(expected_row)
         for j, val in enumerate(df_row):
             actual = copy(val)
             expected = copy(expected_row[j])

@@ -9,6 +9,7 @@ from sql_models.graph_operations import get_graph_nodes_info
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def test_get_sample(engine, unique_table_test_name):
     # For reliable asserts (see below) we need more rows than the standard dataset of 11 rows has.

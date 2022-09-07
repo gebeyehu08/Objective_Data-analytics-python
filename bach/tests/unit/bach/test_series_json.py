@@ -7,8 +7,8 @@ from bach.series.series_json import JsonBigQueryAccessorImpl
 from tests.unit.bach.util import get_fake_df
 
 
-
-@pytest.mark.skip_postgres
+@pytest.mark.skip_postgres('BigQuery specific test')
+@pytest.mark.skip_athena('BigQuery specific test')
 def test_bq_get_slice_partial_expr(dialect):
     # Here we test the _get_slice_partial_expr function of the BigQuery specific JsonBigQueryAccessor. So
     # skipping all other dialects

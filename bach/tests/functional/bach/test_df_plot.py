@@ -3,15 +3,18 @@ Copyright 2022 Objectiv B.V.
 """
 from decimal import Decimal
 
+import pytest
 from matplotlib.testing.decorators import check_figures_equal
 from psycopg2._range import NumericRange
 
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 # generates and compares 2 matplotlib figures (png, pdf)
 # For more information https://matplotlib.org/3.5.0/api/testing_api.html#module-matplotlib.testing
+
 
 @check_figures_equal(extensions=['png', 'pdf'])
 def test_plot_hist_basic(engine, fig_test, fig_ref) -> None:

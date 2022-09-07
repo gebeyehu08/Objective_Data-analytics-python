@@ -10,13 +10,14 @@ from sqlalchemy.engine import Engine
 from bach import SeriesUuid
 from sql_models.graph_operations import get_graph_nodes_info
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, is_postgres
+from sql_models.util import is_bigquery, is_postgres, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data, \
     get_df_with_json_data
 
 
 @pytest.mark.parametrize("inplace", [False, True])
 @pytest.mark.parametrize("materialization", [Materialization.CTE, 'temp_table'])
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_materialize(inplace: bool, materialization: Union[Materialization, str], engine: Engine):
     bt = get_df_with_test_data(engine)[['city', 'founding']]
     bt['city'] = bt['city'] + ' '
@@ -46,7 +47,7 @@ def test_materialize(inplace: bool, materialization: Union[Materialization, str]
     # have an expression that's simply the name of the column for all data columns, as the complex expression
     # has been moved to the new underlying base_node.
     for series_name in bt.data_columns:
-        if is_postgres(engine):
+        if is_postgres(engine) or is_athena(engine):
             expected_to_sql = f'"{series_name}"'
         elif is_bigquery(engine):
             expected_to_sql = f'`{series_name}`'
