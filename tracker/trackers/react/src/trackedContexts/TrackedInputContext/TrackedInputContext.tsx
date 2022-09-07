@@ -13,7 +13,8 @@ import { TrackedValueBasedInputContext } from './TrackedValueBasedInputContext';
 /**
  * TrackedInputContext has a few additional properties to configure it.
  */
-export type TrackedInputContextProps = (ComponentProps<'input'> | ComponentProps<'select'>) & {
+export type TrackedInputContextObjectivProp = ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
+export type TrackedInputContextProps<O = TrackedInputContextObjectivProp> = (ComponentProps<'input'> | ComponentProps<'select'>) & {
   /**
    * Type prop needs to be redefined here, because it doesn't overlap between input and select
    */
@@ -22,7 +23,7 @@ export type TrackedInputContextProps = (ComponentProps<'input'> | ComponentProps
   /**
    * The Objectiv configuration object
    */
-  objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
+  objectiv: O;
 };
 
 /**
