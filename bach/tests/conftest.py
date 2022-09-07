@@ -131,10 +131,10 @@ def pytest_addoption(parser: Parser):
 
     # This function will automatically be called by pytest at the start of a test run, see:
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
-    parser.addoption('--postgres', action='store_true', help='run the functional tests for Postgres')
-    parser.addoption('--big-query', action='store_true', help='run the functional tests for BigQuery')
-    parser.addoption('--athena', action='store_true', help='run the functional tests for Athena')
-    parser.addoption('--all', action='store_true', help='run the functional tests for all databases.')
+    parser.addoption('--postgres', action='store_true', help='run the tests for Postgres')
+    parser.addoption('--big-query', action='store_true', help='run the tests for BigQuery')
+    parser.addoption('--athena', action='store_true', help='run the tests for Athena')
+    parser.addoption('--all', action='store_true', help='run the tests for all databases.')
 
 
 def pytest_sessionstart(session: Session):

@@ -46,7 +46,7 @@ def get_dtypes_from_table(
     if is_postgres(engine):
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
     elif is_bigquery(engine):
-        meta_data_table, table_name = _get_meta_data_table_from_table_name(table_name)
+        meta_data_table, table_name = _get_bq_meta_data_table_from_table_name(table_name)
     else:
         raise DatabaseNotSupportedException(engine)
     sql = f"""
@@ -58,7 +58,7 @@ def get_dtypes_from_table(
     return _get_dtypes_from_information_schema_query(engine=engine, query=sql)
 
 
-def _get_meta_data_table_from_table_name(table_name) -> Tuple[str, str]:
+def _get_bq_meta_data_table_from_table_name(table_name) -> Tuple[str, str]:
     """
     From a BigQuery table name, get the meta-data table name that contains the column information for that
     table, and the short table name.
