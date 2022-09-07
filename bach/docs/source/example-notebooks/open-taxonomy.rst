@@ -315,8 +315,8 @@ From the marketing context, for example, we can therefore also get the 'source' 
 
 When instantiating the model hub, global contexts are added using the name of the context without the word
 'Context' and converted to 'snake_case' (the name of the context split before every capital letter and
-joining them with `_`). I.e. 'HttpContext' becomes 'http' and 'InputValueContext' becomes 'input_value' when
-added as `global_context`:
+joined with an underscore), i.e. 'HttpContext' becomes 'http' and 'InputValueContext' becomes 'input_value' 
+when added to `global_contexts`:
 
 .. code-block:: python
 
