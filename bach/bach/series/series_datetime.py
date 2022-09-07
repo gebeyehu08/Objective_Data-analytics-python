@@ -64,7 +64,7 @@ class DateTimeOperation:
         Allow formatting of this Series (to a string type).
 
         :param format_str: The format to apply to the date/time column. See Supported Format Codes below for
-        more information on what is supported.
+            more information on what is supported.
 
         :returns: a SeriesString containing the formatted date.
 
@@ -76,6 +76,7 @@ class DateTimeOperation:
         The subset of codes that are supported across all databases is:
             `%A`, `%B`, `%F`, `%H`, `%I`, `%M`, `%R`, `%S`, `%T`, `%Y`, `%a`, `%b`, `%d`, `%j`, `%m`, `%y`,
             `%%`
+
         Additionally one specific combination is supported: `%S.%f`
 
         **Example**

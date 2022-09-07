@@ -486,17 +486,8 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	>>> press_events = df[df.event_type == 'PressEvent'].sort_values('moment', ascending=False)
 	>>> display_sql_as_markdown(press_events)
 	sql
-	WITH "from_table___7a4057e80babeec1c65913e0a773d65d" AS (
-	        SELECT "value",
-	               "event_id",
-	               "day",
-	               "moment",
-	               "cookie_id"
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___1016c1af615206d9b3365d2b01e23e06" AS (
-	        SELECT "value" AS "value",
-	               "event_id" AS "event_id",
+	WITH "getitem_where_boolean___f92bdc71cddb7f9b81ac2cdb4704ff35" AS (
+	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
 	               "cookie_id" AS "user_id",
@@ -506,10 +497,10 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               cast("value"->>'time' AS bigint) AS "time",
 	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",
 	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing"
-	          FROM "from_table___7a4057e80babeec1c65913e0a773d65d"
+	          FROM "data"
 	         WHERE ((("day" >= cast('2022-06-01' AS date))) AND (("day" <= cast('2022-06-30' AS date))))
 	       ),
-	       "context_data___126ced4e10b558840eda7c82baf90344" AS (
+	       "context_data___0759f5311fed0efedf7414a86d3b98cc" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -519,9 +510,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "stack_event_types" AS "stack_event_types",
 	               "application" AS "application",
 	               "marketing" AS "marketing"
-	          FROM "getitem_where_boolean___1016c1af615206d9b3365d2b01e23e06"
+	          FROM "getitem_where_boolean___f92bdc71cddb7f9b81ac2cdb4704ff35"
 	       ),
-	       "session_starts___082530754548ac1c50d02151b10fa8fc" AS (
+	       "session_starts___f9b9e531f71d1a32f060d7eaeeaf259e" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -534,9 +525,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
-	          FROM "context_data___126ced4e10b558840eda7c82baf90344"
+	          FROM "context_data___0759f5311fed0efedf7414a86d3b98cc"
 	       ),
-	       "session_id_and_count___7f171f8d35e7062947b95b49f3e420ec" AS (
+	       "session_id_and_count___53c8cadbeb95a0cfb2c62b683ec62d05" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -551,9 +542,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	                    ELSE cast(NULL AS bigint)
 	                     END AS "session_start_id",
 	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___082530754548ac1c50d02151b10fa8fc"
+	          FROM "session_starts___f9b9e531f71d1a32f060d7eaeeaf259e"
 	       ),
-	       "objectiv_sessionized_data___f44ac0d78c4b2fc46336fd69bb34d488" AS (
+	       "objectiv_sessionized_data___498c4b8bb62268d87cf3f755d64fb0ec" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -568,9 +559,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "is_one_session" AS "is_one_session",
 	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___7f171f8d35e7062947b95b49f3e420ec"
+	          FROM "session_id_and_count___53c8cadbeb95a0cfb2c62b683ec62d05"
 	       ),
-	       "getitem_where_boolean___894a74057851db4fec74eaeb0b6f29bf" AS (
+	       "getitem_where_boolean___0bfa91dd039ab531a9a97022615a5196" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -584,7 +575,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "marketing" AS "marketing",
 	               "application"->0->>'id' AS "application_id",
 	               "marketing"->0->>'source' AS "marketing_source"
-	          FROM "objectiv_sessionized_data___f44ac0d78c4b2fc46336fd69bb34d488"
+	          FROM "objectiv_sessionized_data___498c4b8bb62268d87cf3f755d64fb0ec"
 	         WHERE ("event_type" = 'PressEvent')
 	       ) SELECT "event_id" AS "event_id",
 	       "day" AS "day",
@@ -599,9 +590,10 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	       "marketing" AS "marketing",
 	       "application_id" AS "application_id",
 	       "marketing_source" AS "marketing_source"
-	  FROM "getitem_where_boolean___894a74057851db4fec74eaeb0b6f29bf"
+	  FROM "getitem_where_boolean___0bfa91dd039ab531a9a97022615a5196"
 	 ORDER BY "moment" DESC NULLS LAST
 	<BLANKLINE>
+
 
 Where to go next
 ----------------
