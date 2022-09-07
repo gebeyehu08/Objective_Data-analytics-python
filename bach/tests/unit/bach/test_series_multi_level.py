@@ -6,7 +6,7 @@ from sql_models.util import is_postgres, is_bigquery
 from tests.unit.bach.util import get_fake_df_test_data
 
 
-@pytest.mark.db_independent('tested function does not care about engine or dialect')
+@pytest.mark.db_independent
 def test_series_numeric_interval_levels_dtypes() -> None:
     supported_dtypes = SeriesNumericInterval.get_supported_level_dtypes()
     assert 'lower' in supported_dtypes
