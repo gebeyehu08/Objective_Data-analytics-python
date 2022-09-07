@@ -17,7 +17,7 @@ This example is also available in a `notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/sklearn-example.ipynb>`_
 to run on your own data or use our
 `quickstart
-<https://objectiv.io/docs/home/try-the-demo/>`_ to try it out with demo data in 5 minutes.
+<https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
 
 First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
 :doc:`getting started in your notebook <../get-started-in-your-notebook>`.

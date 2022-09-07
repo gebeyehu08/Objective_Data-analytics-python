@@ -11,7 +11,7 @@ Open model hub basics
 In this example, we briefly demonstrate how you can use pre-built models from the open model hub in
 conjunction with, :ref:`Bach <bach>`, our modeling library. It's also available in a `notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-demo-notebook.ipynb>`_
-to run on your own data or use our `quickstart <https://objectiv.io/docs/home/try-the-demo/>`_ to try it 
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
 out with demo data in 5 minutes.
 
 This example uses real, unaltered data that was collected from https://objectiv.io with Objectiv’s Tracker. All models
