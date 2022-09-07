@@ -10,7 +10,7 @@ from psycopg2._range import NumericRange
 
 from bach import Series, SeriesAbstractNumeric, SeriesNumericInterval
 from bach.partitioning import GroupingList, GroupingSet, Rollup, Cube
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
@@ -420,7 +420,7 @@ def test_rollup_basics(engine):
 
     result_expression = btr.group_by.get_group_by_column_expression().to_sql(engine.dialect)
 
-    if is_postgres(engine):
+    if is_postgres(engine) or is_athena(engine):
         expected_expression = 'rollup ("municipality", "city")'
     elif is_bigquery(engine):
         expected_expression = 'rollup (`municipality`, `city`)'

@@ -3,8 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from sql_models.util import extract_format_fields, quote_identifier, quote_string, is_postgres,\
-    is_bigquery
+from sql_models.util import extract_format_fields, quote_identifier, quote_string, is_postgres, \
+    is_bigquery, is_athena
 
 
 @pytest.mark.db_independent
@@ -26,8 +26,9 @@ def test_extract_format_fields_nested():
 
 
 def test_quote_identifier(dialect):
-    if is_postgres(dialect):
-        # https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+    if is_postgres(dialect) or is_athena(dialect):
+        # Postgres spec: https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+        # Athena spec: https://prestodb.io/docs/0.217/language/reserved.html
         assert quote_identifier(dialect, 'test') == '"test"'
         assert quote_identifier(dialect, 'te"st') == '"te""st"'
         assert quote_identifier(dialect, '"te""st"') == '"""te""""st"""'

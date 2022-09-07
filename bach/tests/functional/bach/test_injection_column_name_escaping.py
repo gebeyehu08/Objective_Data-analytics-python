@@ -4,13 +4,13 @@ Copyright 2021 Objectiv B.V.
 import pytest
 from sqlalchemy.engine import Engine
 
-from sql_models.util import is_bigquery
+from sql_models.util import is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
 def test_column_names(engine):
-    # BigQuery doesn't allow 'weird' characters, so we just expect an error about the names.
-    if is_bigquery(engine):
+    # Athena and BigQuery don't allow 'weird' characters, so we just expect an error about the names.
+    if is_athena(engine) or is_bigquery(engine):
         with pytest.raises(ValueError, match='Column name ".*" is not valid for SQL dialect'):
             bt = _get_dataframe_with_weird_column_names(engine)
         return

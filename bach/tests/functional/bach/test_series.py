@@ -7,7 +7,7 @@ import pytest
 
 from bach import DataFrame, SeriesString, SeriesInt64
 from bach.expression import Expression
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, assert_equals_data, df_to_list,
     get_df_with_railway_data, get_df_with_food_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
@@ -678,7 +678,7 @@ def test__set_item_with_merge_w_conflict_names(engine) -> None:
     assert result.base_node.references['left_node'] == df1.base_node
     assert result.base_node.references['right_node'] == df2.base_node
 
-    if is_postgres(dialect):
+    if is_postgres(dialect) or is_athena(dialect):
         assert '("b" - "a__data_column") - "c"' == result.expression.to_sql(dialect)
     elif is_bigquery(dialect):
         assert '(`b` - `a__data_column`) - `c`' == result.expression.to_sql(dialect)
@@ -692,7 +692,7 @@ def test__set_item_with_merge_w_conflict_names(engine) -> None:
     result2 = (result + df1['c']) * df1['c'] - df2['c']
     assert result2.base_node.references['left_node'] == df1.base_node
     assert result2.base_node.references['right_node'] == df2.base_node
-    if is_postgres(dialect):
+    if is_postgres(dialect) or is_athena(dialect):
         assert '(((("b" - "a__data_column") - "c__other") + "c") * "c") - "c__other"' == result2.expression.to_sql(
             dialect)
     elif is_bigquery(dialect):
