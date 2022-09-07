@@ -9,9 +9,12 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df
 from tests.functional.bach.test_savepoints import remove_created_db_objects
 
 
+
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
 @pytest.mark.xdist_group(name="db_writers")
-def test_savepoint_materialization(pg_engine):
-    df = get_df_with_test_data(engine=pg_engine)
+def test_savepoint_materialization(engine):
+    df = get_df_with_test_data(engine=engine)
 
     engine = df.engine
     df.set_savepoint("savepoint1")

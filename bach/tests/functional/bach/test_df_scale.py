@@ -1,3 +1,4 @@
+import pytest
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from tests.functional.bach.test_data_and_utils import (
@@ -115,11 +116,11 @@ def test_standard_scale(engine) -> None:
     )
 
 
-def test_min_max_scale(pg_engine) -> None:
+def test_min_max_scale(engine) -> None:
     numerical_cols = ['skating_order', 'inhabitants', 'founding']
     all_cols = ['city'] + numerical_cols
     pdf = get_pandas_df(TEST_DATA_CITIES_FULL, CITIES_COLUMNS)
-    bt = get_df_with_test_data(engine=pg_engine, full_data_set=True)[all_cols]
+    bt = get_df_with_test_data(engine=engine, full_data_set=True)[all_cols]
     # bt = bt.sort_index()  # TODO: This breaks later on, it shouldn't.
                             #  Required to make this test deterministicly pass/fail
 

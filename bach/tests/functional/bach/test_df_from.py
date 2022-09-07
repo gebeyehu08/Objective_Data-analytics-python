@@ -81,10 +81,10 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
-def test_from_model_basic(pg_engine, unique_table_test_name):
+@pytest.mark.skip_bigquery_todo()
+def test_from_model_basic(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
-    engine = pg_engine
     table_name = unique_table_test_name
     _create_test_table(engine, table_name)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
@@ -129,12 +129,12 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
-def test_from_model_column_ordering(pg_engine, unique_table_test_name):
+@pytest.mark.skip_bigquery_todo()
+def test_from_model_column_ordering(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_model_ordering(), but tests creating the dataframe with
     # from_model instead of from_table
 
     # Create a Dataframe in which the index is not the first column in the table.
-    engine = pg_engine
     table_name = unique_table_test_name
     _create_test_table(engine, table_name)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()

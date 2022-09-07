@@ -378,11 +378,10 @@ def test_dataframe_agg_numeric_only(engine):
             'inhabitants_sum': 'int64'
         }
 
-
-def test_cube_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_cube_basics(engine):
     # TODO: BigQuery
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
 
     # instant stonks through variable naming
     btc = bt.cube(['municipality', 'city'])
@@ -448,11 +447,11 @@ def test_rollup_basics(engine):
     )
 
 
-def test_grouping_list_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_grouping_list_basics(engine):
     # TODO: BigQuery
     # This is not the greatest test, but at least it tests the interface.
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
     btl1 = bt.groupby([['municipality'], ['city']])
     btl2 = bt.groupby([['municipality'], 'city'])
     btl3 = bt.groupby(['municipality', ['city']])
@@ -482,11 +481,11 @@ def test_grouping_list_basics(pg_engine):
     )
 
 
-def test_grouping_set_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_grouping_set_basics(engine):
     # TODO: BigQuery
     # This is not the greatest test, but at least it tests the interface.
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
     bts1 = bt.groupby((('municipality'), ('city')))
     bts2 = bt.groupby((('municipality'), 'city'))
     bts3 = bt.groupby(('municipality', ('city')))

@@ -80,8 +80,9 @@ def test_df_numerical_describe(engine) -> None:
     )
 
 
-def test_include_mixed(pg_engine) -> None:
-    df = get_df_with_test_data(engine=pg_engine)
+@pytest.mark.skip_bigquery_todo()
+def test_include_mixed(engine) -> None:
+    df = get_df_with_test_data(engine=engine)
     # duplicate last row. This will make the `mode` well-defined for all columns
     df = df.append(df.sort_index()[2:3])
 

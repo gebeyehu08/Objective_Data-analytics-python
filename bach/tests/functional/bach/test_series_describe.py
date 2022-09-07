@@ -48,9 +48,10 @@ def test_numerical_describe(engine) -> None:
     pd.testing.assert_series_equal(expected, result.to_pandas(), check_dtype=False)
 
 
-def test_describe_datetime(pg_engine) -> None:
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_describe_datetime(engine) -> None:
     # TODO: Athena and BigQuery. All engines have different string datetime formats
-    engine = pg_engine
     p_series = pd.Series(
         data=[np.datetime64("2000-01-01"), np.datetime64("2010-01-01"), np.datetime64("2010-01-01")],
         name='dt',

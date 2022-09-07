@@ -55,7 +55,6 @@ def check_set_const(
     for column_name in column_names:
         assert isinstance(bt[column_name], expected_series)
 
-    db_types = {}
     if not is_bigquery(engine):
         # For BigQuery we cannot check the data type of an expression, as it doesn't offer a function for
         # that. For all other databases, we check that the actual type in the database matches the type

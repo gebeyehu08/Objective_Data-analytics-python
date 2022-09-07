@@ -41,8 +41,12 @@ def test_series__getitem__(engine):
         non_existing_value_ref.value
 
 
-def test_positional_slicing(pg_engine):
-    bt = get_df_with_test_data(engine=pg_engine, full_data_set=True)['inhabitants'].sort_values()
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_positional_slicing(engine):
+    # TODO: make work with BigQuery and Athena.
+    # See for inspiration: tests.functional.bach.test_df_getitem.test_positional_slicing
+    bt = get_df_with_test_data(engine=engine, full_data_set=True)['inhabitants'].sort_values()
 
     class ReturnSlice:
         def __getitem__(self, key):
@@ -236,8 +240,10 @@ def test_aggregation(engine):
         s.agg(['sum','sum'])
 
 
-def test_type_agnostic_aggregation_functions(pg_engine):
-    bt = get_df_with_test_data(engine=pg_engine, full_data_set=True)
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_type_agnostic_aggregation_functions(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=True)
     btg = bt.groupby()
 
     # type agnostic aggregations
@@ -366,8 +372,9 @@ def test_series_inherit_flag(engine):
     assert not bts_derived.expression.has_aggregate_function
 
 
-def test_series_independant_subquery_any_value_all_values(pg_engine):
-    bt = get_df_with_test_data(engine=pg_engine, full_data_set=True)
+@pytest.mark.skip_bigquery_todo()
+def test_series_independant_subquery_any_value_all_values(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=True)
     s = bt.inhabitants.max() // 4
 
     bt[bt.inhabitants > s.any_value()].head()
@@ -488,8 +495,9 @@ def test_series_dropna(engine) -> None:
     )
 
 
-def test_series_unstack(pg_engine):
-    engine = pg_engine
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_series_unstack(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
 
     stacked_bt = bt.groupby(['city','municipality']).inhabitants.sum()
