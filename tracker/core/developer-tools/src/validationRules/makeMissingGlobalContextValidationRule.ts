@@ -2,18 +2,21 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { GlobalContextErrorType, GlobalContextValidationRuleFactory, TrackerEvent } from '@objectiv/tracker-core';
+import {
+  GlobalContextErrorType,
+  MissingGlobalContextValidationRuleFactory,
+  TrackerEvent,
+} from '@objectiv/tracker-core';
 import { EventRecorder } from '../EventRecorder';
 import { GlobalContextErrorMessages } from '../generated/ContextErrorMessages';
 import { TrackerConsole } from '../TrackerConsole';
 
 /**
- * A generic configurable Rule that can verify, and console error, whether the given `context` is:
- * - present in Global Contexts
- * - optionally, present only once
+ * A generic configurable Rule that can verify and console error, when the given global `context` is missing
  */
-export const makeGlobalContextValidationRule: GlobalContextValidationRuleFactory = (parameters) => {
-  const validationRuleName = `GlobalContextValidationRule`;
+export const makeMissingGlobalContextValidationRule: MissingGlobalContextValidationRuleFactory = (parameters) => {
+  const validationRuleName = `MissingGlobalContextValidationRule`;
+  const errorType = GlobalContextErrorType.GLOBAL_CONTEXT_MISSING;
 
   TrackerConsole.groupCollapsed(
     `｢objectiv:${parameters.logPrefix?.concat(':')}${validationRuleName}｣ Initialized. Context: ${
@@ -39,14 +42,7 @@ export const makeGlobalContextValidationRule: GlobalContextValidationRuleFactory
 
       const matches = event.global_contexts.filter((context) => context._type === this.contextName);
 
-      let errorType: GlobalContextErrorType | null = null;
       if (!matches.length) {
-        errorType = GlobalContextErrorType.GLOBAL_CONTEXT_MISSING;
-      } else if (this.once && matches.length > 1) {
-        errorType = GlobalContextErrorType.GLOBAL_CONTEXT_DUPLICATED;
-      }
-
-      if (errorType) {
         const errorMessagePrefix = `｢objectiv${this.logPrefix ? ':' + this.logPrefix : ''}｣`;
         const errorMessageTemplate = GlobalContextErrorMessages[this.platform][errorType][this.contextName];
         const errorMessageBody = errorMessageTemplate.replace(/{{eventName}}/g, event._type);

@@ -28,16 +28,34 @@ export type ContextValidationRuleParameters<ContextType extends GlobalContextNam
   };
 
 /**
- * GlobalContextValidationRule config object.
+ * MissingGlobalContextValidationRule config object.
  */
-export type GlobalContextValidationRuleParameters = ContextValidationRuleParameters<GlobalContextName>;
+export type MissingGlobalContextValidationRuleParameters = Omit<
+  ContextValidationRuleParameters<GlobalContextName>,
+  'once'
+>;
+
+/**
+ * UniqueGlobalContextValidationRule config object.
+ */
+export type UniqueGlobalContextValidationRuleParameters = Omit<
+  ContextValidationRuleParameters<GlobalContextName>,
+  'once' | 'contextName'
+>;
 
 /**
  * GlobalContextValidationRule factory.
  */
-export type GlobalContextValidationRuleFactory = (
-  parameters: GlobalContextValidationRuleParameters
-) => GlobalContextValidationRuleParameters & TrackerValidationRuleInterface;
+export type MissingGlobalContextValidationRuleFactory = (
+  parameters: MissingGlobalContextValidationRuleParameters
+) => MissingGlobalContextValidationRuleParameters & TrackerValidationRuleInterface;
+
+/**
+ * UniqueGlobalContextValidationRule factory.
+ */
+export type UniqueGlobalContextValidationRuleFactory = (
+  parameters: UniqueGlobalContextValidationRuleParameters
+) => UniqueGlobalContextValidationRuleParameters & TrackerValidationRuleInterface;
 
 /**
  * LocationStack order matters, the LocationContextValidationRule config supports specifying a required position.
