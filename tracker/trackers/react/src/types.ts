@@ -2,37 +2,37 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { AllHTMLAttributes, ComponentType, ReactHTML } from 'react';
+import { ComponentProps, ElementType, MouseEventHandler, PropsWithChildren, ReactHTML } from 'react';
 
 /**
- * Generic enriching the given type with a `Component` property that can be either a React Component or a JSX element.
+ * Props to specify Component and componentRef to a TrackedContext.
  */
-export type WithComponentProp<T> = T & { Component: ComponentType<T> | keyof ReactHTML };
+export type ObjectivComponentProp = {
+  /**
+   * Either an Element or a JSX tag, such as 'div', 'input', etc.
+   */
+  Component: ElementType | keyof ReactHTML;
+};
 
 /**
- * The props of all HTMLElement TrackedContexts.
+ * Props to specify tracking id related options to a TrackedContext.
  */
-export type TrackedContextProps<T = HTMLElement> = WithComponentProp<AllHTMLAttributes<T>> & {
+export type ObjectivIdProps = {
   /**
-   * The unique id of the LocationContext
+   * The identifier of the LocationContext
    */
-  id: string;
+  id?: string;
 
   /**
-   * Whether to forward the given id to the given Component
-   */
-  forwardId?: boolean;
-
-  /**
-   * Whether to normalize the given id, default to true
+   * Optional. Default to `true`. Whether to normalize the given id.
    */
   normalizeId?: boolean;
 };
 
 /**
- * The props of Contexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
+ * Props to specify tracking visibility related options to a TrackedContext.
  */
-export type TrackedShowableContextProps = TrackedContextProps & {
+export type ObjectivVisibilityProps = {
   /**
    * Whether to track visibility events automatically when this prop changes state.
    */
@@ -40,64 +40,121 @@ export type TrackedShowableContextProps = TrackedContextProps & {
 };
 
 /**
- * The props of TrackedPressableContext. Extends TrackedContextProps with then `isVisible` property.
+ * Props to specify tracking link related options to a LinkContext.
  */
-export type TrackedPressableContextProps = Omit<TrackedContextProps, 'id'> & {
+export type ObjectivLinkContextProps = {
   /**
-   * The unique id of the LocationContext. Optional because we will attempt to auto-detect it.
+   * The destination of this link, required by LinkContext
    */
-  id?: string;
+  href?: string;
 
   /**
-   * The title is used to generate a unique identifier. Optional because we will attempt to auto-detect it.
-   */
-  title?: string;
-
-  /**
-   * Whether to forward the given title to the given Component.
-   */
-  forwardTitle?: boolean;
-};
-
-/**
- * Overrides TrackedContextProps to not require an id, assuming that semantically there should be only one Element
- */
-export type SingletonTrackedElementProps = Omit<TrackedContextProps, 'Component' | 'id'> & {
-  /**
-   * Optional identifier to be provided only in case of uniqueness collisions, defaults to 'footer'
-   */
-  id?: string;
-};
-
-/**
- * Some extra options that may be useful for special cases, e.g. anchors without texts or external hrefs.
- * This is mainly used for TrackedContexts and Custom Components.
- *
- * TODO switch to this way of setting options, as opposed to the current prop merging
- */
-export type ObjectivTrackingOptions = {
-  /**
-   * Whether to block and wait for the Tracker having sent the event, e.g. an external or a full page refresh link.
+   * Whether to block and wait for the Tracker having sent the event. Eg: a button redirecting to a new location.
    */
   waitUntilTracked?: boolean;
-
-  /**
-   * The unique id of the LinkContext. Required for links without any title nor text.
-   */
-  contextId?: string;
-
-  /**
-   * Whether to normalize the given id, default to true.
-   */
-  normalizeId?: boolean;
 };
 
 /**
- * The prop containing Objectiv Tracking Options.
+ * These props allow configuring how values are tracked for TrackedInputContext and derived Tracked Elements.
  */
-export type TrackingOptionsProp = {
+export type ObjectivValueTrackingProps = {
   /**
-   * All Objectiv tracking related options reside under this prop.
+   * Optional. Whether to track the 'value' attribute. Default to false.
+   * When enabled, an InputValueContext will be pushed into the Global Contexts of the InputChangeEvent.
    */
-  objectiv?: ObjectivTrackingOptions;
+  trackValue?: boolean;
+
+  /**
+   * Optional. Whether to trigger events only when values actually changed. Default to false.
+   * For example, this allows tracking tabbing (e.g. onBlur and value did not change), which is normally prevented.
+   */
+  stateless?: boolean;
+
+  /**
+   * Optional. Which event handler to use. Default is 'onBlur'.
+   * Valid values: `onBlur`, `onChange` or `onClick`.
+   */
+  eventHandler?: 'onBlur' | 'onChange' | 'onClick';
+};
+
+/**
+ * These props are common to all TrackedContexts.
+ */
+export type NativeCommonProps = PropsWithChildren<Partial<Pick<HTMLElement, 'id' | 'title'>>>;
+
+/**
+ * These props are common to all pressables, e.g. button and anchors.
+ */
+export type NativePressableCommonProps = NativeCommonProps & {
+  onClick?: MouseEventHandler;
+};
+
+/**
+ * These props are common to all links, e.g. anchors.
+ */
+export type NativeLinkCommonProps = NativePressableCommonProps & Partial<Pick<HTMLAnchorElement, 'href'>>;
+
+/**
+ * Base props of all TrackedContexts.
+ */
+export type TrackedContextObjectivProp = ObjectivComponentProp & ObjectivIdProps;
+export type TrackedContextProps<T, O = TrackedContextObjectivProp> = T &
+  NativeCommonProps & {
+    objectiv: O;
+  };
+
+/**
+ * The props of TrackedLinkContext. Extends TrackedContextProps with LinkContext specific properties.
+ */
+export type TrackedLinkContextObjectivProp = ObjectivComponentProp & ObjectivIdProps & ObjectivLinkContextProps;
+export type TrackedLinkContextProps<T, O = TrackedLinkContextObjectivProp> = T &
+  NativeLinkCommonProps & {
+    objectiv: O;
+  };
+
+/**
+ * The props of TrackedContexts supporting Visibility events. Extends TrackedContextProps with then `isVisible` property.
+ */
+export type TrackedShowableContextObjectivProp = ObjectivComponentProp & ObjectivIdProps & ObjectivVisibilityProps;
+export type TrackedShowableContextProps<T, O = TrackedShowableContextObjectivProp> = T &
+  NativeCommonProps & {
+    objectiv: O;
+  };
+
+/**
+ * The props of TrackedPressableContext. Extends TrackedContextProps with extra pressable related properties.
+ */
+export type TrackedPressableContextObjectivProp = ObjectivComponentProp & ObjectivIdProps;
+export type TrackedPressableContextProps<T, O = TrackedPressableContextObjectivProp> = T &
+  NativePressableCommonProps & {
+    objectiv: O;
+  };
+
+/**
+ * Base props of all TrackedElements. They don't include ComponentProp, as we hard-code that for these components.
+ * We also try to auto-detect the identifier from the native `id` property, if present
+ */
+export type TrackedElementProps<T> = T & {
+  objectiv?: ObjectivIdProps;
+};
+
+/**
+ * Overrides TrackedContextProps to make the objectiv prop and all of its attributes optional.
+ */
+export type TrackedElementWithOptionalIdProps<T> = T & {
+  objectiv?: ObjectivIdProps;
+};
+
+/**
+ * Props used for TrackedInputs
+ */
+export type TrackedInputProps = ComponentProps<'input'> & {
+  objectiv?: ObjectivIdProps & ObjectivValueTrackingProps;
+};
+
+/**
+ * Props used for TrackedSelect
+ */
+export type TrackedSelectProps = ComponentProps<'select'> & {
+  objectiv?: ObjectivIdProps & ObjectivValueTrackingProps;
 };

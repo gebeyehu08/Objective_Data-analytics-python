@@ -2,10 +2,10 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen } from '@testing-library/react';
-import React, { createRef } from 'react';
+import { fireEvent, getByText, render } from '@testing-library/react';
+import React, { ComponentProps, createRef } from 'react';
 import {
   ObjectivProvider,
   ReactTracker,
@@ -34,22 +34,26 @@ describe('TrackedMediaPlayerContext', () => {
     jest.spyOn(logTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
-    const TrackedButton = () => {
+    const TrackedButton = ({ text = 'Trigger Event' }: { text?: string }) => {
       const trackPressEvent = usePressEventTracker();
-      return <video onClick={() => trackPressEvent()}>Trigger Event</video>;
+      return <div onClick={() => trackPressEvent()}>{text}</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id'}>
-          <TrackedButton />
+        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'video-id-1' }}>
+          <TrackedButton text={'Trigger Event 1'} />
+        </TrackedMediaPlayerContext>
+        <TrackedMediaPlayerContext id={'video-id-2'} objectiv={{ Component: 'video' }}>
+          <TrackedButton text={'Trigger Event 2'} />
         </TrackedMediaPlayerContext>
       </ObjectivProvider>
     );
 
-    fireEvent.click(getByText(container, /trigger event/i));
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -63,7 +67,19 @@ describe('TrackedMediaPlayerContext', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.MediaPlayerContext,
-            id: 'video-id',
+            id: 'video-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.MediaPlayerContext,
+            id: 'video-id-2',
           }),
         ]),
       })
@@ -82,10 +98,10 @@ describe('TrackedMediaPlayerContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'Video id 1'}>
+        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'Video id 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedMediaPlayerContext>
-        <TrackedMediaPlayerContext Component={'video'} id={'Video id 2'} normalizeId={false}>
+        <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: 'Video id 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedMediaPlayerContext>
       </ObjectivProvider>
@@ -133,9 +149,9 @@ describe('TrackedMediaPlayerContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedMediaPlayerContext Component={'video'} id={'☹️'} />
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedMediaPlayerContext objectiv={{ Component: 'video', id: '☹️' }} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -143,35 +159,17 @@ describe('TrackedMediaPlayerContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for MediaPlayerContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for MediaPlayerContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
-  });
-
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id-1'} data-testid={'test-video-1'}>
-          test
-        </TrackedMediaPlayerContext>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id-2'} forwardId={true} data-testid={'test-video-2'}>
-          test
-        </TrackedMediaPlayerContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-video-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-video-2').getAttribute('id')).toBe('video-id-2');
   });
 
   it('should allow forwarding refs', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-    const ref = createRef<HTMLDivElement>();
+    const ref = createRef<HTMLVideoElement>();
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMediaPlayerContext Component={'video'} id={'video-id'} ref={ref}>
+        <TrackedMediaPlayerContext<ComponentProps<'video'>> ref={ref} objectiv={{ Component: 'video', id: 'video-id' }}>
           test
         </TrackedMediaPlayerContext>
       </ObjectivProvider>

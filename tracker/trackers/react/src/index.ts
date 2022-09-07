@@ -13,7 +13,6 @@ globalThis.objectiv.versions.set(pkg.name, pkg.version);
 export * from '@objectiv/tracker-react-core';
 
 export * from './common/factories/makeAnchorClickHandler';
-export * from './common/factories/makeIdFromTrackedAnchorProps';
 export * from './common/factories/makeReactTrackerDefaultPluginsList';
 export * from './common/factories/makeReactTrackerDefaultQueue';
 export * from './common/factories/makeReactTrackerDefaultTransport';

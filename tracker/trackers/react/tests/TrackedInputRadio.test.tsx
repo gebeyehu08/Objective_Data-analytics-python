@@ -28,8 +28,8 @@ describe('TrackedInputRadio', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputRadio value={'value-1'} />
+        <TrackedInputRadio objectiv={{ id: 'value-1' }} />
         <TrackedInputRadio type={'radio'} value={'value-2'} />
-        {/* @ts-ignore silence the warning on the wrong type */}
         <TrackedInputRadio type={'text'} id={'input-id'} value={'value-3'} />
       </ObjectivProvider>
     );
@@ -81,8 +81,8 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio data-testid={'test-radio-1'} name={'name'} trackValue={true} />
-        <TrackedInputRadio data-testid={'test-radio-2'} value={'value'} trackValue={true} />
+        <TrackedInputRadio data-testid={'test-radio-1'} name={'name'} objectiv={{ trackValue: true }} />
+        <TrackedInputRadio data-testid={'test-radio-2'} value={'value'} objectiv={{ trackValue: true }} />
       </ObjectivProvider>
     );
 
@@ -157,7 +157,12 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio id={'input-id'} data-testid={'test-radio'} value={'value'} eventHandler={'onBlur'} />
+        <TrackedInputRadio
+          id={'input-id'}
+          data-testid={'test-radio'}
+          value={'value'}
+          objectiv={{ eventHandler: 'onBlur' }}
+        />
       </ObjectivProvider>
     );
 
@@ -192,9 +197,9 @@ describe('TrackedInputRadio', () => {
           id={'input-id-1'}
           data-testid={'test-radio-1'}
           value={'value-1'}
-          eventHandler={'onChange'}
           name={'radios'}
           onChange={onChangeSpy}
+          objectiv={{ eventHandler: 'onChange' }}
         />
       </ObjectivProvider>
     );
@@ -232,8 +237,7 @@ describe('TrackedInputRadio', () => {
           id={'input-id-1'}
           data-testid={'test-radio-1'}
           value={'value-1'}
-          eventHandler={'onBlur'}
-          stateless={false}
+          objectiv={{ eventHandler: 'onBlur', stateless: false }}
         />
       </ObjectivProvider>
     );
@@ -257,7 +261,12 @@ describe('TrackedInputRadio', () => {
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedInputRadio id={'Input id 1'} data-testid={'test-radio-1'} value={'text'} />
-        <TrackedInputRadio id={'Input id 2'} normalizeId={false} data-testid={'test-radio-2'} value={'text'} />
+        <TrackedInputRadio
+          id={'Input id 2'}
+          data-testid={'test-radio-2'}
+          value={'text'}
+          objectiv={{ normalizeId: false }}
+        />
       </ObjectivProvider>
     );
 
@@ -299,7 +308,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInputRadio id={'☹️'} />
           </TrackedDiv>
@@ -309,7 +318,7 @@ describe('TrackedInputRadio', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext:radio @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:radio @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
@@ -319,7 +328,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInputRadio value={''} />
           </TrackedDiv>
@@ -329,7 +338,7 @@ describe('TrackedInputRadio', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext:radio @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:radio @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
@@ -339,7 +348,7 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio value={'test 1'} id={'input-id'} ref={ref} />
+        <TrackedInputRadio value={'test 1'} ref={ref} />
       </ObjectivProvider>
     );
 
@@ -360,7 +369,12 @@ describe('TrackedInputRadio', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInputRadio value={'some-value'} data-testid={'test-input'} eventHandler={'onBlur'} onBlur={onBlurSpy} />
+        <TrackedInputRadio
+          value={'some-value'}
+          data-testid={'test-input'}
+          onBlur={onBlurSpy}
+          objectiv={{ eventHandler: 'onBlur' }}
+        />
       </ObjectivProvider>
     );
 
@@ -394,8 +408,8 @@ describe('TrackedInputRadio', () => {
         <TrackedInputRadio
           value={'some-value'}
           data-testid={'test-input'}
-          eventHandler={'onClick'}
           onClick={onClickSpy}
+          objectiv={{ eventHandler: 'onChange' }}
         />
       </ObjectivProvider>
     );
@@ -429,8 +443,7 @@ describe('TrackedInputRadio', () => {
           id={'input-id'}
           data-testid={'test-radio'}
           value={'value'}
-          trackValue={true}
-          eventHandler={'onClick'}
+          objectiv={{ eventHandler: 'onClick', trackValue: true }}
         />
       </ObjectivProvider>
     );
