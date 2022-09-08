@@ -231,33 +231,42 @@ export class Tracker implements TrackerInterface {
   }
 
   /**
+   * Executes all Plugins and Transport `initialize` callbacks and, if we have one, starts the Queue runner.
+   */
+  initialize() {
+    if(!this.active) {
+      return;
+    }
+
+    // Execute all plugins `initialize` callback. Plugins may use this to register automatic event listeners
+    new TrackerPlugins(this.plugins).initialize(this);
+
+    // Initialize transports
+    this.transport && this.transport.initialize && this.transport.initialize(this);
+
+    // If we have a Queue and a usable Transport, start Queue runner
+    if (this.queue && this.transport && this.transport.isUsable()) {
+      // Bind the handle function to its Transport instance to preserve its scope
+      const processFunction = this.transport.handle.bind(this.transport);
+
+      // Set the queue processFunction to transport.handle method: the queue will run Transport.handle for each batch
+      this.queue.setProcessFunction(processFunction);
+
+      globalThis.objectiv.devTools?.TrackerConsole.log(
+        `%c｢objectiv:Tracker:${this.trackerId}｣ ${this.queue.queueName} is ready to run ${this.transport.transportName}`,
+        'font-weight:bold'
+      );
+    }
+  }
+
+  /**
    * Setter for the Tracker Instance `active` state, initializes Plugins and Transport and starts the Queue runner
    */
   setActive(newActiveState: boolean) {
     if (newActiveState !== this.active) {
       this.active = newActiveState;
 
-      if (this.active) {
-        // Execute all plugins `initialize` callback. Plugins may use this to register automatic event listeners
-        new TrackerPlugins(this.plugins).initialize(this);
-
-        // Initialize transports
-        this.transport && this.transport.initialize && this.transport.initialize(this);
-
-        // If we have a Queue and a usable Transport, start Queue runner
-        if (this.queue && this.transport && this.transport.isUsable()) {
-          // Bind the handle function to its Transport instance to preserve its scope
-          const processFunction = this.transport.handle.bind(this.transport);
-
-          // Set the queue processFunction to transport.handle method: the queue will run Transport.handle for each batch
-          this.queue.setProcessFunction(processFunction);
-
-          globalThis.objectiv.devTools?.TrackerConsole.log(
-            `%c｢objectiv:Tracker:${this.trackerId}｣ ${this.queue.queueName} is ready to run ${this.transport.transportName}`,
-            'font-weight:bold'
-          );
-        }
-      }
+      this.initialize();
 
       globalThis.objectiv.devTools?.TrackerConsole.log(
         `%c｢objectiv:Tracker:${this.trackerId}｣ New state: ${this.active ? 'active' : 'inactive'}`,
