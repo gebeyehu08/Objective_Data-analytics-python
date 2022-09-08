@@ -144,7 +144,7 @@ export class Tracker implements TrackerInterface {
   readonly generateGUID: () => string;
 
   // Trackers are automatically activated, unless differently specified via config, during construction.
-  active: boolean = false;
+  active: boolean;
 
   // Contexts interface
   readonly location_stack: AbstractLocationContext[];
@@ -167,6 +167,7 @@ export class Tracker implements TrackerInterface {
     this.endpoint = trackerConfig.endpoint;
     this.plugins = makeCoreTrackerDefaultPluginsList();
     this.generateGUID = trackerConfig.generateGUID ?? generateGUID;
+    this.active = trackerConfig.active ?? true;
 
     // Process ContextConfigs
     let new_location_stack: AbstractLocationContext[] = trackerConfig.location_stack ?? [];
@@ -200,8 +201,8 @@ export class Tracker implements TrackerInterface {
           });
     }
 
-    // Change tracker state. If active it will initialize Plugins and start the Queue runner.
-    this.setActive(trackerConfig.active ?? true);
+    // Initialize Plugins, Transport and Queue runner
+    this.initialize();
 
     // Add Tracker to the TrackerRepository
     globalThis.objectiv.TrackerRepository.add(this);
@@ -234,7 +235,7 @@ export class Tracker implements TrackerInterface {
    * Executes all Plugins and Transport `initialize` callbacks and, if we have one, starts the Queue runner.
    */
   initialize() {
-    if(!this.active) {
+    if (!this.active) {
       return;
     }
 

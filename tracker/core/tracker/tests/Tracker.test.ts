@@ -89,6 +89,7 @@ describe('Tracker', () => {
     const testTracker = new Tracker({
       applicationId: 'app-id',
       transport: testTransport,
+      endpoint: 'localhost',
     });
     await expect(testTracker.waitForQueue()).resolves.toBe(true);
     expect(testTracker).toBeInstanceOf(Tracker);
@@ -650,6 +651,13 @@ describe('Without developer tools', () => {
         { pluginName: 'Plugin', isUsable: () => true },
       ],
     });
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+  });
+
+  it('should not console.log when the Tracker changes active state', () => {
+    const tracker = new Tracker({ applicationId: 'app-id', active: false });
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+    tracker.setActive(true);
     expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
   });
 });

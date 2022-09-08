@@ -57,7 +57,7 @@ export class TrackerTransportSwitch implements TrackerTransportInterface {
    * Simply proxy the `handle` method to the usable TrackerTransport, if any
    */
   initialize(tracker: TrackerInterface): void {
-    this.firstUsableTransport && this.firstUsableTransport.initialize && this.firstUsableTransport?.initialize(tracker);
+    this.firstUsableTransport && this.firstUsableTransport.initialize && this.firstUsableTransport.initialize(tracker);
   }
 
   /**

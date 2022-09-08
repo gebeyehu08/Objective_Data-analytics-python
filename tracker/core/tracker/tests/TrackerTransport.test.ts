@@ -228,7 +228,9 @@ describe('TrackerTransport complex configurations', () => {
 
 describe('TrackerTransportRetry', () => {
   it('should generate exponential timeouts', () => {
-    const retryTransport = new TrackerTransportRetry({ transport: new ConfigurableMockTransport({ isUsable: false }) });
+    const mockTransport = new ConfigurableMockTransport({ isUsable: true });
+    const retryTransport = new TrackerTransportRetry({ transport: mockTransport });
+    new Tracker({ applicationId: 'app-id', transport: retryTransport });
     const retryTransportAttempt = new TrackerTransportRetryAttempt(retryTransport, [testEvent]);
     const timeouts = Array.from(Array(10).keys()).map(
       retryTransportAttempt.calculateNextTimeoutMs.bind(retryTransport)
