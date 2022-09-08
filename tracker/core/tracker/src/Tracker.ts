@@ -3,6 +3,7 @@
  */
 
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
+import { ClientSessionContextPlugin } from "./ClientSessionContextPlugin";
 import { ContextsConfig } from './Context';
 import { generateGUID, waitForPromise } from './helpers';
 import { TrackerEvent, TrackerEventAttributes } from './TrackerEvent';
@@ -106,7 +107,9 @@ export type TrackerConfig = ContextsConfig & {
  * The default list of Plugins of Core Tracker
  */
 export const makeCoreTrackerDefaultPluginsList = () => {
-  const plugins: TrackerPluginInterface[] = [];
+  const plugins: TrackerPluginInterface[] = [
+    new ClientSessionContextPlugin()
+  ];
 
   if (globalThis.objectiv.devTools) {
     plugins.push(globalThis.objectiv.devTools.OpenTaxonomyValidationPlugin);
@@ -132,11 +135,14 @@ export type TrackEventOptions = {
 };
 
 /**
- * TrackerInterface implements Contexts and TrackerConfig, with the exception that platform becomes required.
+ * TrackerInterface implements Contexts and TrackerConfig.
+ * Override properties that are initialized during constructions as required, such as platform, active and anonymous.
  */
 export type TrackerInterface = Contexts &
   TrackerConfig & {
     platform: TrackerPlatform;
+    active: boolean;
+    anonymous: boolean;
   };
 
 /**

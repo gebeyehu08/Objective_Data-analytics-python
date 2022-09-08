@@ -28,6 +28,7 @@ export * from './generated/EventFactories';
 export * from './generated/EventNames';
 
 export * from './cleanObjectFromInternalProperties';
+export * from './ClientSessionContextPlugin';
 export * from './Context';
 export * from './ContextValidationRules';
 export * from './ErrorMessages';
