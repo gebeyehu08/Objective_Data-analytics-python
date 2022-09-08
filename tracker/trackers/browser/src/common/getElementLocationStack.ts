@@ -44,7 +44,7 @@ export const getElementLocationStack = (parameters: { element: TrackedElement; t
 
     // Add Plugins mutations to the locationStack - global_contexts are not a concern, so we pass an empty array
     if (tracker) {
-      new TrackerPlugins(tracker.plugins).enrich({ location_stack: locationStack, global_contexts: [] })
+      new TrackerPlugins(tracker.plugins).enrich({ location_stack: locationStack, global_contexts: [] });
     }
   } catch (error) {
     trackerErrorHandler(error, parameters);

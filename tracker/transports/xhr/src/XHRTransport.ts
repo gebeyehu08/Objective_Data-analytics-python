@@ -32,6 +32,12 @@ export class XHRTransport implements TrackerTransportInterface {
 
   initialize(tracker: TrackerInterface) {
     this.endpoint = tracker.endpoint;
+
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Endpoint: ${this.endpoint}`);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
+    }
   }
 
   async handle(...args: NonEmptyArray<TransportableEvent>): Promise<any> {

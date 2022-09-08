@@ -12,9 +12,6 @@ import { XHRTransport } from '@objectiv/transport-xhr';
 export const makeBrowserTrackerDefaultTransport = (): TrackerTransportInterface =>
   new TrackerTransportRetry({
     transport: new TrackerTransportSwitch({
-      transports: [
-        new FetchTransport(),
-        new XHRTransport(),
-      ],
+      transports: [new FetchTransport(), new XHRTransport()],
     }),
   });

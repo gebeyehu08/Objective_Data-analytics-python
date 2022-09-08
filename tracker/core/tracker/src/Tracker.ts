@@ -200,9 +200,6 @@ export class Tracker implements TrackerInterface {
           });
     }
 
-    // Initialize transports
-    this.transport && this.transport.initialize && this.transport.initialize(this);
-
     // Change tracker state. If active it will initialize Plugins and start the Queue runner.
     this.setActive(trackerConfig.active ?? true);
 
@@ -234,7 +231,7 @@ export class Tracker implements TrackerInterface {
   }
 
   /**
-   * Setter for the Tracker Instance `active` state, initializes Plugins and starts the Queue runner
+   * Setter for the Tracker Instance `active` state, initializes Plugins and Transport and starts the Queue runner
    */
   setActive(newActiveState: boolean) {
     if (newActiveState !== this.active) {
@@ -243,6 +240,9 @@ export class Tracker implements TrackerInterface {
       if (this.active) {
         // Execute all plugins `initialize` callback. Plugins may use this to register automatic event listeners
         new TrackerPlugins(this.plugins).initialize(this);
+
+        // Initialize transports
+        this.transport && this.transport.initialize && this.transport.initialize(this);
 
         // If we have a Queue and a usable Transport, start Queue runner
         if (this.queue && this.transport && this.transport.isUsable()) {
