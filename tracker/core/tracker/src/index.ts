@@ -20,7 +20,7 @@ globalThis.objectiv.versions.set(pkg.name, pkg.version);
 /**
  * Create a client session. This can be used to detect whether a user deleted its cookies in the middle of a session.
  */
-globalThis.objectiv.clientSessionId = generateGUID();
+globalThis.objectiv.clientSessionId = `client-${generateGUID()}`;
 
 export * from './generated/ContextFactories';
 export * from './generated/ContextNames';

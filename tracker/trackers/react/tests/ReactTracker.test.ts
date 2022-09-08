@@ -251,10 +251,9 @@ describe('ReactTracker', () => {
        */
       const testTracker1 = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
       testTracker1.global_contexts.push(makeIdentityContext(identityMetadata));
-      expect(testTracker1.global_contexts).toHaveLength(2);
+      expect(testTracker1.global_contexts).toHaveLength(1);
       expect(testTracker1.global_contexts).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ _type: GlobalContextName.HttpContext }),
           expect.objectContaining({ _type: GlobalContextName.IdentityContext, ...identityMetadata }),
         ])
       );
@@ -268,10 +267,7 @@ describe('ReactTracker', () => {
        * Test #2 - Add the IdentityContext to any Event Tracker method
        */
       const testTracker2 = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
-      expect(testTracker2.global_contexts).toHaveLength(1);
-      expect(testTracker2.global_contexts).toEqual(
-        expect.arrayContaining([expect.objectContaining({ _type: GlobalContextName.HttpContext })])
-      );
+      expect(testTracker2.global_contexts).toHaveLength(0);
       const trackedEvent2 = await trackSuccessEvent({
         tracker: testTracker2,
         message: 'Login successful',
