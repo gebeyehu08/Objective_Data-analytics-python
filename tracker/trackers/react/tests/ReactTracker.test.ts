@@ -115,6 +115,8 @@ describe('ReactTracker', () => {
       expect(testTracker).toBeInstanceOf(ReactTracker);
       expect(testTracker.plugins).toEqual(
         expect.arrayContaining([
+          expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
+          expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
           expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
           expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
           expect.objectContaining({ pluginName: 'PathContextFromURLPlugin' }),
@@ -123,7 +125,7 @@ describe('ReactTracker', () => {
       );
     });
 
-    it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
+    it('should allow disabling all plugins, exception made for the Core ones', () => {
       const testTracker = new ReactTracker({
         applicationId: 'app-id',
         endpoint: 'localhost',
@@ -133,7 +135,10 @@ describe('ReactTracker', () => {
         trackRootLocationContextFromURL: false,
       });
       expect(testTracker).toBeInstanceOf(ReactTracker);
-      expect(testTracker.plugins).toEqual([expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' })]);
+      expect(testTracker.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+      ]);
     });
 
     it('should allow customizing a plugin, without affecting the existing ones', () => {
@@ -148,6 +153,7 @@ describe('ReactTracker', () => {
       });
       expect(testTracker).toBeInstanceOf(ReactTracker);
       expect(testTracker.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
@@ -169,6 +175,7 @@ describe('ReactTracker', () => {
 
       expect(trackerClone).toBeInstanceOf(ReactTracker);
       expect(trackerClone.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),

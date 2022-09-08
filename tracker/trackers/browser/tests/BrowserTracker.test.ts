@@ -118,6 +118,8 @@ describe('BrowserTracker', () => {
       expect(testTracker).toBeInstanceOf(BrowserTracker);
       expect(testTracker.plugins).toEqual(
         expect.arrayContaining([
+          expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
+          expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
           expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
           expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
           expect.objectContaining({ pluginName: 'PathContextFromURLPlugin' }),
@@ -126,7 +128,7 @@ describe('BrowserTracker', () => {
       );
     });
 
-    it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
+    it('should allow disabling all plugins, exception made for the Core ones', () => {
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
         transport: new LogTransport(),
@@ -136,7 +138,10 @@ describe('BrowserTracker', () => {
         trackRootLocationContextFromURL: false,
       });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
-      expect(testTracker.plugins).toEqual([expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' })]);
+      expect(testTracker.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+      ]);
     });
 
     it('should allow customizing a plugin, without affecting the existing ones', () => {
@@ -151,6 +156,7 @@ describe('BrowserTracker', () => {
       });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
       expect(testTracker.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
@@ -172,6 +178,7 @@ describe('BrowserTracker', () => {
 
       expect(trackerClone).toBeInstanceOf(BrowserTracker);
       expect(trackerClone.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),

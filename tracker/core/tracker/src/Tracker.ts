@@ -3,7 +3,7 @@
  */
 
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
-import { ClientSessionContextPlugin } from "./ClientSessionContextPlugin";
+import { ClientSessionContextPlugin } from './ClientSessionContextPlugin';
 import { ContextsConfig } from './Context';
 import { generateGUID, waitForPromise } from './helpers';
 import { TrackerEvent, TrackerEventAttributes } from './TrackerEvent';
@@ -107,9 +107,7 @@ export type TrackerConfig = ContextsConfig & {
  * The default list of Plugins of Core Tracker
  */
 export const makeCoreTrackerDefaultPluginsList = () => {
-  const plugins: TrackerPluginInterface[] = [
-    new ClientSessionContextPlugin()
-  ];
+  const plugins: TrackerPluginInterface[] = [new ClientSessionContextPlugin()];
 
   if (globalThis.objectiv.devTools) {
     plugins.push(globalThis.objectiv.devTools.OpenTaxonomyValidationPlugin);
@@ -234,8 +232,9 @@ export class Tracker implements TrackerInterface {
           this.location_stack
         )})`
       );
-      globalThis.objectiv.devTools.TrackerConsole.log(`Active: ${this.active}`);
       globalThis.objectiv.devTools.TrackerConsole.log(`Application ID: ${this.applicationId}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Active: ${this.active ? 'true' : 'false'}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Anonymous: ${this.anonymous ? 'true' : 'false'}`);
       globalThis.objectiv.devTools.TrackerConsole.log(`Queue: ${this.queue?.queueName ?? 'none'}`);
       globalThis.objectiv.devTools.TrackerConsole.log(`Transport: ${this.transport?.transportName ?? 'none'}`);
       globalThis.objectiv.devTools.TrackerConsole.log(`Endpoint: ${this.endpoint ?? 'none'}`);

@@ -2,10 +2,10 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { ContextsConfig } from "./Context";
-import { makeSessionContext } from "./generated/ContextFactories";
-import { TrackerInterface } from "./Tracker";
-import { TrackerPluginInterface } from "./TrackerPluginInterface";
+import { ContextsConfig } from './Context';
+import { makeSessionContext } from './generated/ContextFactories';
+import { TrackerInterface } from './Tracker';
+import { TrackerPluginInterface } from './TrackerPluginInterface';
 
 /**
  * The ClientSessionContextPlugin adds a SessionContext as GlobalContext before events are transported.
