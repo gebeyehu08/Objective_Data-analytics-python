@@ -2,18 +2,19 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { isNonEmptyArray, NonEmptyArray, TrackerTransportInterface, TransportableEvent } from '@objectiv/tracker-core';
+import {
+  isNonEmptyArray,
+  NonEmptyArray,
+  TrackerInterface,
+  TrackerTransportInterface,
+  TransportableEvent,
+} from '@objectiv/tracker-core';
 import { defaultXHRFunction } from './defaultXHRFunction';
 
 /**
  * The configuration of the XHRTransport class
  */
 export type XHRTransportConfig = {
-  /**
-   * The collector endpoint URL.
-   */
-  endpoint?: string;
-
   /**
    * Optional. Override the default XMLHttpRequestFunction implementation with a custom one.
    */
@@ -25,13 +26,12 @@ export type XHRTransportConfig = {
  * Optionally supports specifying a custom `xmlHttpRequestFunction`.
  */
 export class XHRTransport implements TrackerTransportInterface {
-  readonly endpoint?: string;
   readonly transportName = 'XHRTransport';
-  readonly xmlHttpRequestFunction: typeof defaultXHRFunction;
+  xmlHttpRequestFunction: typeof defaultXHRFunction = defaultXHRFunction;
+  endpoint?: string;
 
-  constructor(config: XHRTransportConfig) {
-    this.endpoint = config.endpoint;
-    this.xmlHttpRequestFunction = config.xmlHttpRequestFunction ?? defaultXHRFunction;
+  initialize(tracker: TrackerInterface) {
+    this.endpoint = tracker.endpoint;
   }
 
   async handle(...args: NonEmptyArray<TransportableEvent>): Promise<any> {

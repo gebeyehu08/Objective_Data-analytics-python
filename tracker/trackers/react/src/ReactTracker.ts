@@ -13,11 +13,6 @@ import { makeReactTrackerDefaultTransport } from './common/factories/makeReactTr
  */
 export type ReactTrackerConfig = Omit<TrackerConfig, 'platform'> & {
   /**
-   * The collector endpoint URL.
-   */
-  endpoint?: string;
-
-  /**
    * Optional. Whether to track ApplicationContext automatically. Enabled by default.
    */
   trackApplicationContext?: boolean;
@@ -95,7 +90,7 @@ export class ReactTracker extends Tracker {
     if (trackerConfig.endpoint) {
       config = {
         ...config,
-        transport: makeReactTrackerDefaultTransport(config),
+        transport: makeReactTrackerDefaultTransport(),
         queue: config.queue ?? makeReactTrackerDefaultQueue(config),
       };
     }

@@ -3,7 +3,13 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateGUID, isTransportSendError, makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
+import {
+  generateGUID,
+  isTransportSendError,
+  makeTransportSendError,
+  Tracker,
+  TrackerEvent,
+} from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { defaultFetchFunction, defaultFetchOptions, FetchTransport } from '../src';
 
@@ -32,8 +38,11 @@ describe('FetchTransport', () => {
     jest.useRealTimers();
   });
 
+  const testTracker = new Tracker({ applicationId: 'test', endpoint: MOCK_ENDPOINT });
+
   it('should send using `fetch` API with the default fetch function', async () => {
-    const testTransport = new FetchTransport({ endpoint: MOCK_ENDPOINT });
+    const testTransport = new FetchTransport();
+    testTransport.initialize(testTracker);
     expect(testTransport.isUsable()).toBe(true);
     await testTransport.handle(testEvent);
     expect(fetch).toHaveBeenCalledWith(MOCK_ENDPOINT, {
@@ -55,10 +64,10 @@ describe('FetchTransport', () => {
         'Content-Type': 'application/json',
       },
     };
-    const testTransport = new FetchTransport({
-      endpoint: MOCK_ENDPOINT,
-      fetchFunction: ({ endpoint, events }) => defaultFetchFunction({ endpoint, events, options: customOptions }),
-    });
+    const testTransport = new FetchTransport();
+    testTransport.fetchFunction = ({ endpoint, events }) =>
+      defaultFetchFunction({ endpoint, events, options: customOptions });
+    testTransport.initialize(testTracker);
     await testTransport.handle(testEvent);
     expect(fetch).toHaveBeenCalledWith(MOCK_ENDPOINT, {
       body: JSON.stringify({
@@ -72,9 +81,8 @@ describe('FetchTransport', () => {
 
   it('should be safe to call with an empty array of Events for devs without TS', async () => {
     // Create our Fetch Transport Instance
-    const testTransport = new FetchTransport({
-      endpoint: MOCK_ENDPOINT,
-    });
+    const testTransport = new FetchTransport();
+    testTransport.initialize(testTracker);
 
     // @ts-ignore purposely disable TS and call the handle method anyway
     await testTransport.handle();
@@ -85,7 +93,8 @@ describe('FetchTransport', () => {
 
   it('should reject with TransportSendError on http status !== 200', async () => {
     // Create our Fetch Transport Instance
-    const testTransport = new FetchTransport({ endpoint: MOCK_ENDPOINT });
+    const testTransport = new FetchTransport();
+    testTransport.initialize(testTracker);
 
     fetchMock.mockResponse('oops', { status: 500 });
 
@@ -100,9 +109,8 @@ describe('FetchTransport', () => {
 
   it('should reject with TransportSendError on network failures', async () => {
     // Create our Fetch Transport Instance
-    const testTransport = new FetchTransport({
-      endpoint: MOCK_ENDPOINT,
-    });
+    const testTransport = new FetchTransport();
+    testTransport.initialize(testTracker);
 
     fetchMock.mockReject();
 

@@ -78,6 +78,11 @@ export type TrackerConfig = ContextsConfig & {
   transport?: TrackerTransportInterface;
 
   /**
+   * Optional. The collector endpoint URL.
+   */
+  endpoint?: string;
+
+  /**
    * Optional. Additional Plugins to add (or replace) to the default list of Plugins of the tracker.
    */
   plugins?: TrackerPluginInterface[];
@@ -134,6 +139,7 @@ export class Tracker implements TrackerInterface {
   readonly trackerId: string;
   readonly queue?: TrackerQueueInterface;
   readonly transport?: TrackerTransportInterface;
+  readonly endpoint?: string;
   readonly plugins: TrackerPluginInterface[];
   readonly generateGUID: () => string;
 
@@ -158,6 +164,7 @@ export class Tracker implements TrackerInterface {
     this.trackerId = trackerConfig.trackerId ?? trackerConfig.applicationId;
     this.queue = trackerConfig.queue;
     this.transport = trackerConfig.transport;
+    this.endpoint = trackerConfig.endpoint;
     this.plugins = makeCoreTrackerDefaultPluginsList();
     this.generateGUID = trackerConfig.generateGUID ?? generateGUID;
 
@@ -193,6 +200,9 @@ export class Tracker implements TrackerInterface {
           });
     }
 
+    // Initialize transports
+    this.transport && this.transport.initialize && this.transport.initialize(this);
+
     // Change tracker state. If active it will initialize Plugins and start the Queue runner.
     this.setActive(trackerConfig.active ?? true);
 
@@ -209,6 +219,7 @@ export class Tracker implements TrackerInterface {
       globalThis.objectiv.devTools.TrackerConsole.log(`Application ID: ${this.applicationId}`);
       globalThis.objectiv.devTools.TrackerConsole.log(`Queue: ${this.queue?.queueName ?? 'none'}`);
       globalThis.objectiv.devTools.TrackerConsole.log(`Transport: ${this.transport?.transportName ?? 'none'}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Endpoint: ${this.endpoint ?? 'none'}`);
       globalThis.objectiv.devTools.TrackerConsole.group(`Plugins:`);
       globalThis.objectiv.devTools.TrackerConsole.log(this.plugins.map((plugin) => plugin.pluginName).join(', '));
       globalThis.objectiv.devTools.TrackerConsole.groupEnd();

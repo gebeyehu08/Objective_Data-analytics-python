@@ -40,7 +40,7 @@ export class AngularTracker extends Tracker {
     if (trackerConfig.endpoint) {
       config = {
         ...config,
-        transport: makeBrowserTrackerDefaultTransport(config),
+        transport: makeBrowserTrackerDefaultTransport(),
         queue: config.queue ?? makeBrowserTrackerDefaultQueue(config),
       };
     }

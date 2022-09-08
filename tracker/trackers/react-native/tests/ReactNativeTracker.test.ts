@@ -40,9 +40,7 @@ describe('ReactNativeTracker', () => {
         new ReactNativeTracker({
           applicationId: 'app-id',
           endpoint: 'localhost',
-          transport: new FetchTransport({
-            endpoint: 'localhost',
-          }),
+          transport: new FetchTransport(),
         })
     );
   });
@@ -86,7 +84,7 @@ describe('ReactNativeTracker', () => {
   it('should instantiate with given `transport`', () => {
     const testTracker = new ReactNativeTracker({
       applicationId: 'app-id',
-      transport: new FetchTransport({ endpoint: 'localhost' }),
+      transport: new FetchTransport(),
     });
     expect(testTracker).toBeInstanceOf(ReactNativeTracker);
     expect(testTracker.transport).toBeInstanceOf(FetchTransport);

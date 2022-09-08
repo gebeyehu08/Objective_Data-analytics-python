@@ -49,9 +49,7 @@ describe('BrowserTracker', () => {
         new BrowserTracker({
           applicationId: 'app-id',
           endpoint: 'localhost',
-          transport: new FetchTransport({
-            endpoint: 'localhost',
-          }),
+          transport: new FetchTransport(),
         })
     );
   });

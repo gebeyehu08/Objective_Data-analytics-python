@@ -13,11 +13,6 @@ import { makeReactNativeTrackerDefaultTransport } from './common/factories/makeR
  */
 export type ReactNativeTrackerConfig = Omit<TrackerConfig, 'platform'> & {
   /**
-   * The collector endpoint URL.
-   */
-  endpoint?: string;
-
-  /**
    * Optional. Whether to track ApplicationContext automatically. Enabled by default.
    */
   trackApplicationContext?: boolean;
@@ -72,7 +67,7 @@ export class ReactNativeTracker extends Tracker {
     if (trackerConfig.endpoint) {
       config = {
         ...config,
-        transport: makeReactNativeTrackerDefaultTransport(config),
+        transport: makeReactNativeTrackerDefaultTransport(),
         queue: config.queue ?? makeReactNativeTrackerDefaultQueue(),
       };
     }
