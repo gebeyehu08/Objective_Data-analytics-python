@@ -494,8 +494,9 @@ class Aggregate:
         """
 
         by = [data['moment']]
-        series_json_array = data.groupby(groupby)[location].sort_by_series(
-            by=by, ascending=True).to_json_array()
+        series = data.groupby(groupby)[location].sort_by_series(by=by, ascending=True)
+        series_json_array = cast(bach.SeriesString, series).to_json_array()
+
         drop_loc = series_json_array.json[-1].materialize()
 
         if percentage:
