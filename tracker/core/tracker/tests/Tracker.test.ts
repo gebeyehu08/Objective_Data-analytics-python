@@ -38,7 +38,7 @@ describe('Tracker', () => {
     const testTracker = new Tracker(trackerConfig);
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toBe(undefined);
-    expect(testTracker.plugins.plugins).toEqual([
+    expect(testTracker.plugins).toEqual([
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
         initialized: true,
@@ -93,7 +93,7 @@ describe('Tracker', () => {
     await expect(testTracker.waitForQueue()).resolves.toBe(true);
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toStrictEqual(testTransport);
-    expect(testTracker.plugins.plugins).toEqual([
+    expect(testTracker.plugins).toEqual([
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
         initialized: true,
@@ -294,6 +294,17 @@ describe('Tracker', () => {
       ]);
     });
 
+    it('should console.log when a Tracker Plugin gets overridden', () => {
+      new Tracker({
+        applicationId: 'app-id',
+        plugins: [{ pluginName: 'OpenTaxonomyValidationPlugin', isUsable: () => true }],
+      });
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Plugin OpenTaxonomyValidationPlugin replaced by a new instance.`,
+        'font-weight:bold;color:orange;'
+      );
+    });
+
     it('should execute all plugins implementing the initialize callback', () => {
       const pluginC: TrackerPluginInterface = { pluginName: 'pC', isUsable: () => true, initialize: jest.fn() };
       const pluginD: TrackerPluginInterface = { pluginName: 'pD', isUsable: () => true, initialize: jest.fn() };
@@ -377,26 +388,21 @@ describe('Tracker', () => {
         applicationId: 'app-id',
         transport: testTransport,
       });
-      testTracker.plugins.plugins = [];
       jest.resetAllMocks();
       testTracker.setActive(false);
       testTracker.setActive(true);
       testTracker.setActive(false);
       testTracker.trackEvent(testEvent);
       expect(testTransport.handle).not.toHaveBeenCalled();
-      expect(MockConsoleImplementation.log).toHaveBeenCalledTimes(3);
-      expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
-        1,
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
         `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
         'font-weight: bold'
       );
-      expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
-        2,
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
         `%c｢objectiv:Tracker:app-id｣ New state: active`,
         'font-weight: bold'
       );
-      expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
-        3,
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
         `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
         'font-weight: bold'
       );
@@ -633,6 +639,17 @@ describe('Without developer tools', () => {
     expect(testTracker.transport).toStrictEqual(testTransport);
     expect(testTracker.location_stack).toStrictEqual([]);
     expect(testTracker.global_contexts).toStrictEqual([]);
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+  });
+
+  it('should not console.log when a Tracker Plugin gets overridden', () => {
+    new Tracker({
+      applicationId: 'app-id',
+      plugins: [
+        { pluginName: 'Plugin', isUsable: () => true },
+        { pluginName: 'Plugin', isUsable: () => true },
+      ],
+    });
     expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
   });
 });

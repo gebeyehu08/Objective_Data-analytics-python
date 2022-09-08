@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ContextsConfig, isPluginsArray, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
+import { ContextsConfig, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
 import { makeBrowserTrackerDefaultPluginsList } from './common/factories/makeBrowserTrackerDefaultPluginsList';
 import { makeBrowserTrackerDefaultQueue } from './common/factories/makeBrowserTrackerDefaultQueue';
 import { makeBrowserTrackerDefaultTransport } from './common/factories/makeBrowserTrackerDefaultTransport';
@@ -72,12 +72,8 @@ export class BrowserTracker extends Tracker {
       };
     }
 
-    // Configure to use provided `plugins` or automatically create a Plugins instance with some sensible web defaults
-    if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
-      config.plugins = [...makeBrowserTrackerDefaultPluginsList(trackerConfig), ...(trackerConfig.plugins ?? [])];
-    } else {
-      config.plugins = trackerConfig.plugins;
-    }
+    // Add default plugins for Browser
+    config.plugins = [...makeBrowserTrackerDefaultPluginsList(trackerConfig), ...(config.plugins ?? [])];
 
     // Initialize core Tracker
     super(config, ...contextConfigs);

@@ -78,9 +78,9 @@ export type TrackerConfig = ContextsConfig & {
   transport?: TrackerTransportInterface;
 
   /**
-   * Optional. Additional Plugins to add to the default list of Plugins of the tracker.
+   * Optional. Additional Plugins to add (or replace) to the default list of Plugins of the tracker.
    */
-  plugins?: TrackerPlugins | TrackerPluginInterface[];
+  plugins?: TrackerPluginInterface[];
 
   /**
    * Optional. Determines if the TrackerInstance.trackEvent will process Events or not.
@@ -102,15 +102,6 @@ export const makeCoreTrackerDefaultPluginsList = () => {
 };
 
 /**
- * A type guard to determine if trackerConfig plugins is an array of plugins
- */
-export const isPluginsArray = (
-  plugins?: TrackerPlugins | TrackerPluginInterface[]
-): plugins is TrackerPluginInterface[] => {
-  return Array.isArray(plugins);
-};
-
-/**
  * The parameters object of Tracker.waitForQueue(parameters?: WaitForQueueParameters).
  */
 export type WaitForQueueParameters = {
@@ -127,13 +118,10 @@ export type TrackEventOptions = {
 };
 
 /**
- * TrackerInterface implements Contexts and TrackerConfig, with the exception that plugins are not just an array of
- * Plugin instances, but they are wrapped in a TrackerPlugins instance.
- * It also enforces a platform to be specified by all implementations.
+ * TrackerInterface implements Contexts and TrackerConfig, with the exception that platform becomes required.
  */
 export type TrackerInterface = Contexts &
-  Omit<TrackerConfig, 'plugins'> & {
-    plugins: TrackerPlugins;
+  TrackerConfig & {
     platform: TrackerPlatform;
   };
 
@@ -146,7 +134,7 @@ export class Tracker implements TrackerInterface {
   readonly trackerId: string;
   readonly queue?: TrackerQueueInterface;
   readonly transport?: TrackerTransportInterface;
-  readonly plugins: TrackerPlugins;
+  readonly plugins: TrackerPluginInterface[];
   readonly generateGUID: () => string;
 
   // Trackers are automatically activated, unless differently specified via config, during construction.
@@ -170,6 +158,7 @@ export class Tracker implements TrackerInterface {
     this.trackerId = trackerConfig.trackerId ?? trackerConfig.applicationId;
     this.queue = trackerConfig.queue;
     this.transport = trackerConfig.transport;
+    this.plugins = makeCoreTrackerDefaultPluginsList();
     this.generateGUID = trackerConfig.generateGUID ?? generateGUID;
 
     // Process ContextConfigs
@@ -182,15 +171,18 @@ export class Tracker implements TrackerInterface {
     this.location_stack = new_location_stack;
     this.global_contexts = new_global_contexts;
 
-    // Process plugins
-    if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
-      this.plugins = new TrackerPlugins({
-        tracker: this,
-        plugins: [...makeCoreTrackerDefaultPluginsList(), ...(trackerConfig.plugins ?? [])],
-      });
-    } else {
-      this.plugins = trackerConfig.plugins;
-    }
+    // Process plugins, warn if any gets overridden
+    trackerConfig.plugins?.forEach((newPlugin) => {
+      const existingPluginIndex = this.plugins.findIndex((plugin) => plugin.pluginName === newPlugin.pluginName);
+      if (existingPluginIndex >= 0) {
+        this.plugins.splice(existingPluginIndex, 1);
+        globalThis.objectiv.devTools?.TrackerConsole.log(
+          `%c｢objectiv:Tracker:${this.trackerId}｣ Plugin ${newPlugin.pluginName} replaced by a new instance.`,
+          'font-weight:bold;color:orange;'
+        );
+      }
+      this.plugins.push(newPlugin);
+    });
 
     // Inject EventRecorder as Transport, if available. Either group it with the existing transport or set it.
     if (globalThis.objectiv.devTools?.EventRecorder.enabled) {
@@ -218,9 +210,7 @@ export class Tracker implements TrackerInterface {
       globalThis.objectiv.devTools.TrackerConsole.log(`Queue: ${this.queue?.queueName ?? 'none'}`);
       globalThis.objectiv.devTools.TrackerConsole.log(`Transport: ${this.transport?.transportName ?? 'none'}`);
       globalThis.objectiv.devTools.TrackerConsole.group(`Plugins:`);
-      globalThis.objectiv.devTools.TrackerConsole.log(
-        this.plugins.plugins.map((plugin) => plugin.pluginName).join(', ')
-      );
+      globalThis.objectiv.devTools.TrackerConsole.log(this.plugins.map((plugin) => plugin.pluginName).join(', '));
       globalThis.objectiv.devTools.TrackerConsole.groupEnd();
       globalThis.objectiv.devTools.TrackerConsole.group(`Location Stack:`);
       globalThis.objectiv.devTools.TrackerConsole.log(this.location_stack);
@@ -241,7 +231,7 @@ export class Tracker implements TrackerInterface {
 
       if (this.active) {
         // Execute all plugins `initialize` callback. Plugins may use this to register automatic event listeners
-        this.plugins.initialize(this);
+        new TrackerPlugins(this.plugins).initialize(this);
 
         // If we have a Queue and a usable Transport, start Queue runner
         if (this.queue && this.transport && this.transport.isUsable()) {
@@ -304,11 +294,13 @@ export class Tracker implements TrackerInterface {
       return trackerEvent;
     }
 
+    const trackerPlugins = new TrackerPlugins(this.plugins);
+
     // Execute all plugins `enrich` callback. Plugins may enrich or add Contexts to the TrackerEvent
-    this.plugins.enrich(trackerEvent);
+    trackerPlugins.enrich(trackerEvent);
 
     // Execute all plugins `validate` callback. In dev mode this will log to the console any issues.
-    this.plugins.validate(trackerEvent);
+    trackerPlugins.validate(trackerEvent);
 
     // Hand over TrackerEvent to TrackerTransport or TrackerQueue, if enabled and usable.
     if (this.transport && this.transport.isUsable()) {
