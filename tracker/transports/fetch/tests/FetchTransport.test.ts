@@ -55,6 +55,33 @@ describe('FetchTransport', () => {
     });
   });
 
+  it('should send to endpoint/anonymous when the tracker is in anonymous mode', async () => {
+    const testTransport = new FetchTransport();
+    const testTracker = new Tracker({
+      applicationId: 'test',
+      endpoint: MOCK_ENDPOINT,
+      anonymous: true,
+      transport: testTransport,
+    });
+
+    expect(testTracker.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+    expect(testTransport.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+    await testTracker.trackEvent(testEvent);
+    expect(fetch).toHaveBeenCalledWith(MOCK_ENDPOINT + '/anonymous', expect.objectContaining(defaultFetchOptions));
+
+    testTracker.setAnonymous(false);
+    expect(testTracker.endpoint).toBe(MOCK_ENDPOINT);
+    expect(testTransport.endpoint).toBe(MOCK_ENDPOINT);
+    await testTracker.trackEvent(testEvent);
+    expect(fetch).toHaveBeenCalledWith(MOCK_ENDPOINT, expect.objectContaining(defaultFetchOptions));
+
+    testTracker.setAnonymous(true);
+    expect(testTracker.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+    expect(testTransport.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+    await testTracker.trackEvent(testEvent);
+    expect(fetch).toHaveBeenCalledWith(MOCK_ENDPOINT + '/anonymous', expect.objectContaining(defaultFetchOptions));
+  });
+
   it('should send using `fetch` API with the provided customized fetch function', async () => {
     const customOptions: RequestInit = {
       ...defaultFetchOptions,

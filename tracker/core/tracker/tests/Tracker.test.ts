@@ -396,17 +396,63 @@ describe('Tracker', () => {
       testTracker.trackEvent(testEvent);
       expect(testTransport.handle).not.toHaveBeenCalled();
       expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
-        `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
+        `%c｢objectiv:Tracker:app-id｣ Active: false`,
         'font-weight: bold'
       );
       expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
-        `%c｢objectiv:Tracker:app-id｣ New state: active`,
+        `%c｢objectiv:Tracker:app-id｣ Active: false`,
         'font-weight: bold'
       );
       expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
-        `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
+        `%c｢objectiv:Tracker:app-id｣ Active: false`,
         'font-weight: bold'
       );
+    });
+
+    it('should console.log when Tracker changes anonymous state', () => {
+      const testTransport = new LogTransport();
+      jest.spyOn(testTransport, 'handle');
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        transport: testTransport,
+      });
+      jest.resetAllMocks();
+      testTracker.setAnonymous(false);
+      testTracker.setAnonymous(true);
+      testTracker.setAnonymous(false);
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Anonymous: false`,
+        'font-weight: bold'
+      );
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Anonymous: false`,
+        'font-weight: bold'
+      );
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Anonymous: false`,
+        'font-weight: bold'
+      );
+    });
+
+    it('should switch endpoint to /anonymous when anonymous state is set to true', () => {
+      const testTransport = new LogTransport();
+      jest.spyOn(testTransport, 'handle');
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        transport: testTransport,
+        endpoint: 'test',
+      });
+      jest.resetAllMocks();
+      expect(testTracker.endpoint).toBe('test');
+      testTracker.setAnonymous(true);
+      expect(testTracker.endpoint).toBe('test/anonymous');
+    });
+
+    it('should return undefined if endpoint has not been set', () => {
+      const testTracker = new Tracker({ applicationId: 'app-id' });
+      expect(testTracker.endpoint).toBe(undefined);
+      testTracker.setAnonymous(true);
+      expect(testTracker.endpoint).toBe(undefined);
     });
 
     it('should wait and/or flush the queue according to the given options', async () => {
@@ -658,6 +704,13 @@ describe('Without developer tools', () => {
     const tracker = new Tracker({ applicationId: 'app-id', active: false });
     expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
     tracker.setActive(true);
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+  });
+
+  it('should not console.log when the Tracker changes anonymous state', () => {
+    const tracker = new Tracker({ applicationId: 'app-id', anonymous: false });
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+    tracker.setAnonymous(true);
     expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
   });
 });

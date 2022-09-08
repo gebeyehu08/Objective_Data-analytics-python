@@ -123,11 +123,11 @@ describe('TrackerRepository', () => {
     jest.resetAllMocks();
     globalThis.objectiv.TrackerRepository.activateAll();
     expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
-      '%c｢objectiv:Tracker:app-id-1｣ New state: active',
+      '%c｢objectiv:Tracker:app-id-1｣ Active: true',
       'font-weight: bold'
     );
     expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
-      '%c｢objectiv:Tracker:app-id-3｣ New state: active',
+      '%c｢objectiv:Tracker:app-id-3｣ Active: true',
       'font-weight: bold'
     );
   });
@@ -141,12 +141,12 @@ describe('TrackerRepository', () => {
     expect(MockConsoleImplementation.log).toHaveBeenCalledTimes(2);
     expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
       1,
-      '%c｢objectiv:Tracker:app-id-1｣ New state: inactive',
+      '%c｢objectiv:Tracker:app-id-1｣ Active: false',
       'font-weight: bold'
     );
     expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
       2,
-      '%c｢objectiv:Tracker:app-id-3｣ New state: inactive',
+      '%c｢objectiv:Tracker:app-id-3｣ Active: false',
       'font-weight: bold'
     );
   });

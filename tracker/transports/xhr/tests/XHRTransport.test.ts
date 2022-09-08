@@ -54,6 +54,27 @@ describe('XHRTransport', () => {
     await testTransport.handle(testEvent);
   });
 
+  it('should send to endpoint/anonymous when the tracker is in anonymous mode', async () => {
+    const testTransport = new XHRTransport();
+    const testTracker = new Tracker({
+      applicationId: 'test',
+      endpoint: MOCK_ENDPOINT,
+      anonymous: true,
+      transport: testTransport,
+    });
+
+    expect(testTracker.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+    expect(testTransport.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+
+    testTracker.setAnonymous(false);
+    expect(testTracker.endpoint).toBe(MOCK_ENDPOINT);
+    expect(testTransport.endpoint).toBe(MOCK_ENDPOINT);
+
+    testTracker.setAnonymous(true);
+    expect(testTracker.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+    expect(testTransport.endpoint).toBe(MOCK_ENDPOINT + '/anonymous');
+  });
+
   it('should send using `xhr` with the default xhr function - 500 error example', async () => {
     const testTransport = new XHRTransport();
     testTransport.initialize(testTracker);

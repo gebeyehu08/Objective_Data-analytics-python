@@ -28,6 +28,7 @@ describe('TrackerProvider', () => {
     tracker: {
       platform: TrackerPlatform.CORE,
       active: true,
+      anonymous: false,
       applicationId: 'app-id',
       generateGUID: expect.any(Function),
       global_contexts: [],
