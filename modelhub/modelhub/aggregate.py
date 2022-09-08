@@ -476,3 +476,34 @@ class Aggregate:
             plt.show()
 
         return retention_matrix
+
+    @staticmethod
+    def drop_off_locations(data: bach.DataFrame,
+                           location: str = 'feature_nice_name',
+                           groupby: GroupByType = 'user_id',
+                           percentage=False) -> bach.DataFrame:
+        """
+         Get the locations from where users drop off.
+
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param location: from where users drop off.
+        :param groupby: sets the column(s) to group by.
+        :param percentage: if True calculate the percentage.
+
+        return dataframe with location from where the users drop off and the count.
+        """
+
+        by = [data['moment']]
+        series_json_array = data.groupby(groupby)[location].sort_by_series(
+            by=by, ascending=True).to_json_array()
+        drop_loc = series_json_array.json[-1].materialize()
+
+        if percentage:
+            total_count = drop_loc.count().value
+            drop_loc = (drop_loc.value_counts() / total_count) * 100
+            drop_loc = drop_loc.to_frame().rename(
+                columns={'value_counts': 'percentage'})
+            drop_loc = drop_loc.sort_values(by='percentage', ascending=False)
+            return drop_loc
+
+        return drop_loc.value_counts().to_frame()
