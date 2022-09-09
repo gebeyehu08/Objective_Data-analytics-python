@@ -315,24 +315,16 @@ by finding all *last used* features by non-converted users, and calculating thei
 .. doctest:: funnel-discovery
 	:skipif: engine is None
 
-	>>> # get the last used feature in the location_stack before dropping off
-	>>> drop_loc = df_non_converted.sort_values('moment').groupby('user_id')['feature_nice_name'].to_json_array().json[-1].materialize()
-	>>> total_count = drop_loc.count().value
-
-.. doctest:: funnel-discovery
-	:skipif: engine is None
-
-	>>> # show the last used features by non-converted users, sorted by their usage share compared to all features
-	>>> drop_loc_percent = (drop_loc.value_counts() / total_count) * 100
-	>>> drop_loc_percent = drop_loc_percent.to_frame().rename(columns={'value_counts': 'drop_percentage'})
-	>>> drop_loc_percent.sort_values(by='drop_percentage', ascending=False).head()
-	                                                                                               drop_percentage
+	>>> # get the last used features by non-converted users, sorted by their usage share compared to all features
+	>>> modelhub.aggregate.drop_off_locations(df_non_converted, groupby='user_id', percentage=True).head()
+	                                                                                                    percentage
 	feature_nice_name
-	Pressable: hamburger located at Root Location: home => Navigation: navbar-top                        17.792422
-	Pressable: before located at Root Location: home => Content: capture-data => Content: data...        13.097199
-	Pressable: after located at Root Location: home => Content: capture-data => Content: data-...         9.802306
-	Pressable: before located at Root Location: home => Content: modeling => Content: modeling...         7.413509
-	Pressable: after located at Root Location: home => Content: modeling => Content: modeling-...         6.507414
+	Pressable: after located at Root Location: home => Content: capture-data => Content: data-...	     12.273476
+	Pressable: after located at Root Location: home => Content: modeling => Content: modeling-...	      9.884679
+	Link: about-us located at Root Location: home => Navigation: navbar-top	                              5.271829
+	Pressable: hamburger located at Root Location: home => Navigation: navbar-top	                      5.024712
+	Pressable: before located at Root Location: home => Content: capture-data => Content: data...	      4.283361
+
 
 .. admonition:: Reference
 	:class: api-reference
@@ -416,19 +408,15 @@ this time when they came from a marketing campaign.
 .. doctest:: funnel-discovery
 	:skipif: engine is None
 
-	>>> drop_loc = df_marketing_non_converted.sort_values('moment').groupby('user_id')['feature_nice_name'].to_json_array().json[-1].materialize()
-	>>> total_count = drop_loc.count().value
-	>>> 
-	>>> drop_loc_percent = (drop_loc.value_counts() / total_count) * 100
-	>>> drop_loc_percent = drop_loc_percent.to_frame().rename(columns={'value_counts': 'drop_percentage'})
-	>>> drop_loc_percent.sort_values(by='drop_percentage', ascending=False).head()
-	                                                                               drop_percentage
+	>>> modelhub.aggregate.drop_off_locations(df_marketing_non_converted, groupby='user_id', percentage=True).head()
+	                                                                                               percentage
 	feature_nice_name
-	Pressable: hamburger located at Root Location: home => Navigation: navbar-top        23.728814
-	Pressable: hamburger located at Root Location: blog => Navigation: navbar-top        11.864407
-	Link: star-us-on-github located at Root Location: home => Navigation: hero           10.169492
-	Link: star-us-on-github located at Root Location: home => Content: hero              10.169492
-	Link: logo located at Root Location: blog => Navigation: navbar-top                   8.474576
+	Link: logo located at Root Location: blog => Navigation: navbar-top	                        10.169492
+	Pressable: hamburger located at Root Location: home => Navigation: navbar-top	                 8.474576
+	Link: star-us-on-github located at Root Location: home => Content: hero	                         8.474576
+	Link: star-us-on-github located at Root Location: home => Navigation: hero	                 8.474576
+	Link: github located at Root Location: home => Navigation: navbar-top => Overlay: hamburge...	 5.084746
+
 
 Visualize the sequences in a Sankey diagram for non-converted users from a marketing campaign
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

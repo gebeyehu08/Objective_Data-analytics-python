@@ -850,24 +850,20 @@ Funnel Discovery: drop-off for users from marketing
 	>>> # select the events of these non converted users
 	>>> df_funnel_non_converted = df_funnel_non_converted[~df_funnel_non_converted['user_id'].isin(funnel_converted_users)]
 	>>> # get the last used feature in the location_stack before dropping off
-	>>> drop_loc = df_funnel_non_converted.sort_values('moment').groupby('user_id')['feature_nice_name'].to_json_array().json[-1].materialize()
-	>>> total_count = drop_loc.count().value
-	>>> # show the last used features by non-converted users, sorted by their usage share compared to all features
-	>>> drop_loc_percent = (drop_loc.value_counts() / total_count) * 100
-	>>> drop_loc_percent = drop_loc_percent.to_frame().rename(columns={'value_counts': 'drop_percentage'})
-	>>> drop_loc_percent.sort_values(by='drop_percentage', ascending=False).head(10)
-	                                                                                               drop_percentage
+	>>> modelhub.aggregate.drop_off_locations(df_funnel_non_converted, groupby='user_id', percentage=True).head(10)
+	                                                                                                         percentage
 	feature_nice_name
-	Root Location: home                                                                                  90.796020
-	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...         3.980100
-	Root Location: blog                                                                                   1.741294
-	Link: logo located at Root Location: blog => Navigation: navbar-top                                   0.995025
-	Link: about-us located at Root Location: home => Navigation: navbar-top                               0.746269
-	Link: logo located at Root Location: home => Navigation: navbar-top                                   0.497512
-	Link: slack located at Root Location: home => Navigation: navbar-top                                  0.248756
-	Link: jobs located at Root Location: home => Navigation: navbar-top                                   0.248756
-	Link: faq located at Root Location: home => Navigation: navbar-top                                    0.248756
-	Link: spin-up-the-demo located at Root Location: home => Content: hero                                0.248756
+	Root Location: home	                                                                                 70.398010
+	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...	          7.960199
+	Link: about-us located at Root Location: home => Navigation: navbar-top	                                  4.477612
+	Link: spin-up-the-demo located at Root Location: home => Content: hero	                                  3.980100
+	Link: docs located at Root Location: home => Navigation: navbar-top	                                  2.487562
+	Link: logo located at Root Location: home => Navigation: navbar-top	                                  1.741294
+	Link: blog located at Root Location: home => Navigation: navbar-top	                                  1.492537
+	Link: spin-up-the-demo located at Root Location: home => Content: try-it	                          1.243781
+	Link: docs-taxonomy located at Root Location: home => Content: taxonomy	                                  0.995025
+	Content: post-release-objectiv-now-has-support-for-deepnote located at Root Location: blog	          0.746269
+
 
 .. admonition:: Reference
 	:class: api-reference
