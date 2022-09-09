@@ -23,4 +23,4 @@
 "@objectiv/transport-xhr": patch
 ---
 
-Anonymous mode tracking
+Experimental Tracker SDKs with anonymous mode
