@@ -479,22 +479,36 @@ class Aggregate:
 
     @staticmethod
     def drop_off_locations(data: bach.DataFrame,
-                           location: str = 'feature_nice_name',
-                           groupby: GroupByType = 'user_id',
+                           location_stack: 'SeriesLocationStack' = None,
+                           groupby: Union[List[Union[str, Series]], str, Series] = 'user_id',
                            percentage=False) -> bach.DataFrame:
         """
          Get the locations from where users drop off.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location: from where users drop off.
+        :param location_stack: the location stack
+            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
+            - if None - the whole location stack is taken.
         :param groupby: sets the column(s) to group by.
         :param percentage: if True calculate the percentage.
 
         return dataframe with location from where the users drop off and the count.
         """
 
+        data = data.copy()
+
+        if location_stack is not None:
+            data['__feature_nice_name'] = location_stack.ls.nice_name
+        else:
+            data['__feature_nice_name'] = data.location_stack.ls.nice_name
+
+        # need to drop missing values because we don't
+        # want to get as a last step None value
+        data = data.dropna(subset='__feature_nice_name')
+
         by = [data['moment']]
-        series = data.groupby(groupby)[location].sort_by_series(by=by, ascending=True)
+        series = data.groupby(groupby)['__feature_nice_name'].sort_by_series(by=by,
+                                                                             ascending=True)
         series_json_array = cast(bach.SeriesString, series).to_json_array()
 
         drop_loc = series_json_array.json[-1].materialize()
