@@ -318,7 +318,7 @@ by finding all *last used* features by non-converted users, and calculating thei
 	>>> # get the last used features by non-converted users, sorted by their usage share compared to all features
 	>>> modelhub.aggregate.drop_off_locations(df_non_converted, groupby='user_id', percentage=True).head()
 	                                                                                                    percentage
-	feature_nice_name
+	__feature_nice_name
 	Pressable: after located at Root Location: home => Content: capture-data => Content: data-...	     12.273476
 	Pressable: after located at Root Location: home => Content: modeling => Content: modeling-...	      9.884679
 	Link: about-us located at Root Location: home => Navigation: navbar-top	                              5.271829
@@ -410,7 +410,7 @@ this time when they came from a marketing campaign.
 
 	>>> modelhub.aggregate.drop_off_locations(df_marketing_non_converted, groupby='user_id', percentage=True).head()
 	                                                                                               percentage
-	feature_nice_name
+	__feature_nice_name
 	Link: logo located at Root Location: blog => Navigation: navbar-top	                        10.169492
 	Pressable: hamburger located at Root Location: home => Navigation: navbar-top	                 8.474576
 	Link: star-us-on-github located at Root Location: home => Content: hero	                         8.474576

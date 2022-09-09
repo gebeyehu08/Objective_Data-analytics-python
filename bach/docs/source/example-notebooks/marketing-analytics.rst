@@ -852,7 +852,7 @@ Funnel Discovery: drop-off for users from marketing
 	>>> # get the last used feature in the location_stack before dropping off
 	>>> modelhub.aggregate.drop_off_locations(df_funnel_non_converted, groupby='user_id', percentage=True).head(10)
 	                                                                                                         percentage
-	feature_nice_name
+	__feature_nice_name
 	Root Location: home	                                                                                 70.398010
 	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...	          7.960199
 	Link: about-us located at Root Location: home => Navigation: navbar-top	                                  4.477612
