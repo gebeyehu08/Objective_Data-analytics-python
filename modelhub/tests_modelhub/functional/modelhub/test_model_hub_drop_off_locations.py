@@ -12,14 +12,15 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 def test_drop_off_locations(db_params):
 
     df, modelhub = get_objectiv_dataframe_test(db_params)
-    df['feature_nice_name'] = df.location_stack.ls.nice_name
 
-    bts = modelhub.agg.drop_off_locations(df, location='feature_nice_name')
+    # default values
+    bts = modelhub.agg.drop_off_locations(df)
+
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts.feature_nice_name.astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[8:10]
 
-    coulmns = ['feature_nice_name', 'value_counts', 'sort_str']
+    coulmns = ['__feature_nice_name', 'value_counts', 'sort_str']
     assert_equals_data(
         bts[coulmns],
         expected_columns=coulmns,
@@ -47,12 +48,13 @@ def test_drop_off_locations(db_params):
     )
 
     # groupby
-    bts = modelhub.agg.drop_off_locations(df, groupby=['user_id', 'day'],
-                                          location='feature_nice_name', percentage=False)
+    bts = modelhub.agg.drop_off_locations(df,
+                                          groupby=['user_id', 'day'],
+                                          percentage=False)
 
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts.feature_nice_name.astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[8:10]
     assert_equals_data(
         bts[coulmns],
         expected_columns=coulmns,
@@ -89,12 +91,12 @@ def test_drop_off_locations(db_params):
     )
 
     # percentage
-    bts = modelhub.agg.drop_off_locations(df, location='feature_nice_name', percentage=True)
+    bts = modelhub.agg.drop_off_locations(df, percentage=True)
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts.feature_nice_name.astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[8:10]
 
-    coulmns = ['feature_nice_name', 'percentage', 'sort_str']
+    coulmns = ['__feature_nice_name', 'percentage', 'sort_str']
     assert_equals_data(
         bts[coulmns],
         expected_columns=coulmns,
@@ -114,6 +116,36 @@ def test_drop_off_locations(db_params):
             [
                 'Link: cta-repo-button located at Web Document: #document => Section: header',
                 25, 'ta'
+            ],
+        ],
+        use_to_pandas=True,
+        order_by=['sort_str'],
+    )
+
+    # location_stack
+    location_stack = df.location_stack.json[{'url': 'https://objectiv.io/'}:]
+    bts = modelhub.agg.drop_off_locations(df, location_stack=location_stack)
+
+    # adding sorting column
+    bts = bts.reset_index()
+    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[-2]
+
+    coulmns = ['__feature_nice_name', 'value_counts', 'sort_str']
+    assert_equals_data(
+        bts[coulmns],
+        expected_columns=coulmns,
+        expected_data=[
+            [
+                'Link: About Us located at Web Document: #document => Section: navbar-top',
+                1, 'p'
+            ],
+            [
+                'Link: cta-repo-button located at Web Document: #document => Section: header',
+                1, 'r'
+            ],
+            [
+                'Link: About Us located at Web Document: #document => Section: navbar-top'
+                ' => Overlay: hamburger-menu', 1, 'u'
             ],
         ],
         use_to_pandas=True,
