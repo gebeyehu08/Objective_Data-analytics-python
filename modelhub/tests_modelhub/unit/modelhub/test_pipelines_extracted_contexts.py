@@ -6,7 +6,7 @@ import pytest
 
 from bach import DataFrame
 
-from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline, _get_taxonomy_column_definition
+from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline, get_extracted_context_pipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
     DBParams
 
@@ -16,8 +16,8 @@ def patch_extracted_contexts_validations(monkeypatch, db_params):
     engine = create_engine_from_db_params(db_params)
 
     if db_params.format == DBParams.Format.OBJECTIV:
-        patch_db_dtypes ={
-            _get_taxonomy_column_definition(engine).name: _get_taxonomy_column_definition(engine).dtype
+        patch_db_dtypes = {
+            'value': 'json'
         }
     elif db_params.format == DBParams.Format.SNOWPLOW:
         patch_db_dtypes = {
@@ -59,7 +59,7 @@ def test_get_base_dtypes(db_params) -> None:
     else:
         raise Exception()
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
+    pipeline = get_extracted_context_pipeline(engine, db_params.table_name, global_contexts=[])
     result = pipeline._base_dtypes
 
     assert expected == result

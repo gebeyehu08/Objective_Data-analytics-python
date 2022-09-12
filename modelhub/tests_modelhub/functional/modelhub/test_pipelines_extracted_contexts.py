@@ -11,7 +11,7 @@ import pytest
 from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-from modelhub import ExtractedContextsPipeline
+from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline, get_extracted_context_pipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
     DBParams
 
@@ -105,7 +105,7 @@ def get_expected_context_pandas_df(
 
 def _get_extracted_contexts_pipeline(db_params, global_contexts=[]) -> ExtractedContextsPipeline:
     engine = create_engine_from_db_params(db_params)
-    return ExtractedContextsPipeline(engine=engine, table_name=db_params.table_name,
+    return get_extracted_context_pipeline(engine=engine, table_name=db_params.table_name,
                                      global_contexts=global_contexts)
 
 
@@ -162,22 +162,28 @@ def test_get_initial_data(db_params) -> None:
         raise Exception()
 
 
-def test_process_taxonomy_data(db_params) -> None:
+def test_process_data(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
     df = context_pipeline._get_initial_data()
-    df = context_pipeline._process_taxonomy_data(df)
+
+    if is_bigquery(engine):
+        assert 'day' not in df.data
+
+        assert 'moment' not in df.data
+
+    df = context_pipeline._process_data(df)
+    assert 'day' in df.data
+    assert 'moment' in df.data
+
+
     df = context_pipeline._convert_dtypes(df)
     result = df.reset_index(drop=True)
 
     expected_series = [
         'user_id', 'event_type', 'stack_event_types', 'location_stack', 'event_id', 'day', 'moment',
     ]
-    if is_bigquery(engine):
-        # day and moment are parsed after processing base data
-        expected_series = expected_series[:-2]
-
 
     result = result.sort_values(by='event_id')[expected_series].to_pandas()
     expected = (
@@ -192,39 +198,8 @@ def test_process_taxonomy_data(db_params) -> None:
     )
 
 
-def test_apply_extra_processing(db_params) -> None:
-    context_pipeline = _get_extracted_contexts_pipeline(db_params)
-    engine = context_pipeline._engine
-
-    df = context_pipeline._get_initial_data()
-    df = context_pipeline._process_taxonomy_data(df)
-    result = context_pipeline._apply_extra_processing(df)
-
-    if not is_bigquery(engine):
-        assert df == result
-        return None
-
-    assert 'day' not in df.data
-    assert 'day' in result.data
-
-    assert 'moment' not in df.data
-    assert 'moment' in result.data
-
-    expected_data = (
-        get_expected_context_pandas_df(engine, db_format=db_params.format)[['day', 'moment']]
-        .values.tolist()
-    )
-
-    assert_equals_data(
-        result.sort_values(by='event_id')[['day', 'moment']],
-        expected_columns=['day', 'moment'],
-        expected_data=expected_data,
-        use_to_pandas=True,
-    )
-
-
 @pytest.mark.skip_postgres
-def test_apply_extra_processing_duplicated_event_ids(db_params) -> None:
+def test_process_data_duplicated_event_ids(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
