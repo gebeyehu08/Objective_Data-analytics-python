@@ -54,6 +54,7 @@ def test_string_slice(engine):
         slice(None, 3), slice(3, None), slice(None, -3), slice(-3, None),
         # slices with out of range indexes
         slice(1000, 40), slice(-1000, -40), slice(200, -3), slice(-100, 10),
+        slice(-100, -2), slice(-1, -1), slice(-10, -1)
     ]
 
     expected_data = {
@@ -174,6 +175,21 @@ def test_string_lower_upper(engine) -> None:
         ]
     )
 
+
+@pytest.mark.athena_supported
+def test_string_len(engine) -> None:
+    df = get_df_with_test_data(engine)
+    df['city_len'] = df['city'].str.len()
+
+    assert_equals_data(
+        df[['city', 'city_len']],
+        expected_columns=['_index_skating_order', 'city', 'city_len'],
+        expected_data=[
+            [1, 'Ljouwert', 8],
+            [2, 'Snits', 5],
+            [3, 'Drylts', 6],
+        ]
+    )
 
 @pytest.mark.athena_supported
 def test_to_json_array(engine):

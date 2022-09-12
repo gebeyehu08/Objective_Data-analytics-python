@@ -27,12 +27,11 @@ class StringOperation:
     def __getitem__(self, key: Union[int, slice]) -> 'SeriesString':
         """
         Get a python string slice using DB functions. Format follows standard slice format
-        Note: this is called 'slice' to not destroy index selection logic
         :param key: an int for a single character, or a slice for some nice slicing
         :return: SeriesString with the slice applied
         """
         if key and not isinstance(key, (int, slice)):
-            raise ValueError(f'Type not supported {type(key)}')
+            raise TypeError(f'Type not supported {type(key)}')
 
         start = key.start if isinstance(key, slice) else key
 
@@ -48,105 +47,63 @@ class StringOperation:
         base_expr = self._base.expression
         len_series = self._base.str.len()
 
-        # just return the full string
+        # value[:]
         if start is None and stop is None:
             return base_expr
 
-        # normalize start offset, since SQL substr is ordinal
-        start_off = 1 if not start else start + 1
+        # For value[x:y], where  x and y have the same sign and x > y > 0.
+        # result will always be empty str
+        if start and stop and start * stop > 0 and start >= stop:
+            return Expression.string_value('')
 
-        if start_off > 0:
-            start_offset_expr = ConstValueExpression.construct(str(start_off))
-        elif start_off < 0:
-            start_offset_expr = Expression.construct(
-                f'({{}} - {abs(start_off)})', len_series
-            )
-        else:
-            # start position is -1
-            start_offset_expr = len_series.expression
+        # get the equivalent SQL index for each PYTHON slice index
+        start_index_expr = self._python_index_to_sql_index_expr(start)
+        stop_index_expr = self._python_index_to_sql_index_expr(stop)
 
-        # Case 1: no substr length, therefore return all characters after start offset
         if stop is None:
-            return Expression.construct('substr({}, {})', base_expr, start_offset_expr)
-
-        stop_off = stop + 1
-
-        # Case 2. Stop Offset is Zero
-        # This means we are trying str[x:-1], which is excluding the last char
-        if not stop_off:
-            return Expression.construct(
-                'substr({}, {}, {} - 1)', base_expr, start_offset_expr, len_series,
+            substr_len_expr = len_series.expression
+        else:
+            substr_len_expr = Expression.construct(
+                'greatest(({}) - ({}), 0)',
+                stop_index_expr, start_index_expr,
             )
 
-        # Case 3: Both offsets have the same sign
+        return Expression.construct('substr({}, {}, {})', base_expr, start_index_expr, substr_len_expr)
 
-        if start_off * stop_off > 0:
-            # return empty string if start offset is greater or equal to stop_off
-            if start_off >= stop_off:
-                return Expression.string_value('')
+    def _python_index_to_sql_index_expr(self, index: Optional[int]) -> Expression:
+        """
+        returns expression for converting pythonic index to SQL ordinal index.
 
-            # stop_off - start_off will always return positive, because stop_off > start_off
-            substr_expr = Expression.construct(
-                f'substr({{}}, {{}}, {stop_off - start_off})',
-                base_expr, start_offset_expr,
-            )
+        .. note::
+            if provided index is None, then SQL index will default to 1.
 
-            # if both values are negative and start offset exceeds the negative index range,
-            # we should return empty string
-            if start_off < stop_off < 0:
-                substr_expr = Expression.construct(
-                    f'CASE WHEN {start_off} > {{}} THEN {{}} ELSE {{}} END',
-                    len_series * -1,
-                    substr_expr,
-                    Expression.string_value('')
-                )
-
-            return substr_expr
-
-        # Case 4. Negative Stop Offset and Positive Start Offset
-        # This means that we need to get the respective positive index of the stop offset by
-        # len(str) - |stop_offset|
-        # Where substr length: (len(str) - |stop_offset|) - start_offset > 0
-
+        .. note::
+           if provided index exceeds negative range (|index| > len(value)), then SQL index
+           will default to 1.
+        """
+        # converts python index to its equivalent SQL (positive) index.
         # for example:
         #
         #          -8  -7  -6  -5  -4  -3  -2  -1
         #           O | B | J | E | C | T | I | V
         #  sql      1   2   3   4   5   6   7   8
         # python    0   1   2   3   4   5   6   7
+
         #
-        # For start == 1 and stop == -6, then the positive stop offset is:  8 - |-6 + 1| = 3
-        # and substr length: 3 - (1 + 1) = 1.
+        # python     sql
+        #   0         1
+        #  -6         3
+        # -10         1
 
-        if stop_off < 0:
-            substr_len_exp = Expression.construct(
-                f'({{}} - {abs(stop_off)}) - {{}}', len_series, start_offset_expr,
-            )
-
-        # Case 5. Positive Stop Offset and Negative Start Offset
-        # For this case we just need to get the positive index of the start offset by
-        # len(str) - |start_offset|
-        # Where substr length: stop_offset - (len(str) - |start_offset|)  > 0
+        if index is None or index >= 0:
+            sql_index = 0 if index is None else index
+            index_expr = ConstValueExpression.construct(str(sql_index))
+        # if index is negative, we need to get its respective positive index
         else:
-            substr_len_exp = Expression.construct(f'({stop_off} - {{}})',  start_offset_expr)
+            index_expr = Expression.construct(f'greatest({{}} - {abs(index)}, 0)', self.len())
 
-            # since start_offset is negative, if it exceeds the negative index range of the string,
-            # we should start by default from 1. (postgres does it by default)
-            if not is_postgres(self._base.engine):
-                start_offset_expr = Expression.construct(
-                    'CASE WHEN {} < {} THEN 1 ELSE {} END',
-                    start_offset_expr, len_series * -1, start_offset_expr,
-                )
-
-        # wrap substr expression in case when, since substr length must be > 0
-        return Expression.construct(
-            f'CASE WHEN {{}} > 0 THEN substr({{}}, {{}}, {{}}) ELSE {{}} END',
-            substr_len_exp,
-            base_expr,
-            start_offset_expr,
-            substr_len_exp,
-            Expression.string_value(''),
-        )
+        # SQL starts from 1, therefore we need to normalize python start index
+        return Expression.construct('{} + 1', index_expr)
 
     def slice(self, start=None, stop=None) -> 'SeriesString':
         """
