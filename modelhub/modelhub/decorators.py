@@ -24,6 +24,7 @@ class ModelFunctionType(Protocol):
 
 def use_only_required_objectiv_series(
     required_series: Optional[List[str]] = None,
+    required_global_contexts: Optional[List[str]] = None,
     include_series_from_params: Optional[List[str]] = None,
 ):
     """
@@ -31,6 +32,7 @@ def use_only_required_objectiv_series(
     to generate new aggregated series based on supported objectiv columns.
 
     :param required_series: A list of objectiv series names that the DataFrame must have
+    :param required_global_contexts: A list of objectiv_global_context series that the DataFrame must have
     :param include_series_from_params: A list of parameters containing series names to be considered
     in the dataframe.
 
@@ -55,7 +57,8 @@ def use_only_required_objectiv_series(
             from modelhub.util import check_objectiv_dataframe, ObjectivSupportedColumns
             check_objectiv_dataframe(
                 df=data,
-                columns_to_check=required_series,
+                columns_to_check=required_series or [],
+                global_contexts_to_check=required_global_contexts,
                 check_index=True,
                 check_dtypes=True,
                 with_md_dtypes=True,
@@ -65,7 +68,9 @@ def use_only_required_objectiv_series(
                 func, data, include_series_from_params, *args, **kwargs,
             )
             series_to_include = (
-                set(required_series or ObjectivSupportedColumns.get_data_columns()) | set(extra_series)
+                set(required_series or ObjectivSupportedColumns.get_data_columns())
+                | set(required_global_contexts or [])
+                | set(extra_series)
             )
             data = data[[s for s in data.data_columns if s in series_to_include]]
             return func(_self, data, *args, **kwargs)

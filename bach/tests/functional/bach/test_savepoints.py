@@ -11,8 +11,10 @@ from sql_models.model import Materialization
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
 
-def test_add_savepoint(pg_engine):
-    df = get_df_with_test_data(engine=pg_engine)
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_add_savepoint(engine):
+    df = get_df_with_test_data(engine=engine)
     sps = Savepoints()
     sps.add_savepoint('test', df, Materialization.TABLE)
     df2 = df.groupby('municipality').min()
@@ -28,8 +30,10 @@ def test_add_savepoint(pg_engine):
     assert len(sps.all) == 2
 
 
-def test_add_savepoint_double(pg_engine):
-    df = get_df_with_test_data(engine=pg_engine)
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_add_savepoint_double(engine):
+    df = get_df_with_test_data(engine=engine)
     sps = Savepoints()
     df = df.materialize()
     sps.add_savepoint('first', df, Materialization.TABLE)
@@ -37,8 +41,10 @@ def test_add_savepoint_double(pg_engine):
         sps.add_savepoint('second', df, Materialization.QUERY)
 
 
-def test_write_to_db_queries_only(pg_engine, testrun_uid):
-    df = get_df_with_test_data(engine=pg_engine)
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_write_to_db_queries_only(engine, testrun_uid):
+    df = get_df_with_test_data(engine=engine)
     engine = df.engine
     sps = Savepoints()
     sps.add_savepoint('the_name', df, Materialization.QUERY)
@@ -65,8 +71,9 @@ def test_write_to_db_queries_only(pg_engine, testrun_uid):
     )
 
 
-def test_write_to_db_create_objects(pg_engine, testrun_uid: str):
-    engine = pg_engine
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_write_to_db_create_objects(engine, testrun_uid: str):
     dialect = engine.dialect
     df = get_df_with_test_data(engine)
     engine = df.engine

@@ -55,7 +55,6 @@ def check_set_const(
     for column_name in column_names:
         assert isinstance(bt[column_name], expected_series)
 
-    db_types = {}
     if not is_bigquery(engine):
         # For BigQuery we cannot check the data type of an expression, as it doesn't offer a function for
         # that. For all other databases, we check that the actual type in the database matches the type
@@ -69,7 +68,7 @@ def check_set_const(
         assert_db_types(bt, db_types)
 
 
-@pytest.mark.athena_supported()
+
 def test_set_const_int(engine):
     constants = [
         np.int64(4),
@@ -80,7 +79,7 @@ def test_set_const_int(engine):
     check_set_const(engine, constants, SeriesInt64)
 
 
-@pytest.mark.athena_supported()
+
 def test_set_const_float(engine):
     constants = [
         5.1,
@@ -91,7 +90,6 @@ def test_set_const_float(engine):
     # special cases.
 
 
-@pytest.mark.athena_supported()
 def test_set_const_bool(engine):
     constants = [
         True,
@@ -100,7 +98,6 @@ def test_set_const_bool(engine):
     check_set_const(engine, constants, SeriesBoolean)
 
 
-@pytest.mark.athena_supported()
 def test_set_const_str(engine):
     constants = [
         'keatsen'
@@ -132,6 +129,7 @@ def test_set_const_time(engine):
     check_set_const(engine, constants, SeriesTime)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_set_const_timedelta(engine):
     constants = [
         np.datetime64('2005-02-25T03:30') - np.datetime64('2005-01-25T03:30'),
@@ -140,7 +138,7 @@ def test_set_const_timedelta(engine):
     check_set_const(engine, constants, SeriesTimedelta)
 
 
-@pytest.mark.athena_supported()
+
 def test_set_const_json(engine):
     constants = [
         ['a', 'b', 'c'],
@@ -204,7 +202,8 @@ def test_set_series_column(engine):
     assert filtered_bt.town == filtered_bt['town']
 
 
-@pytest.mark.skip_bigquery("Bigquery doesn't support spaces in column names")
+@pytest.mark.skip_bigquery_todo('#1209 We do not yet support spaces in column names on BigQuery')
+@pytest.mark.skip_athena_todo('#1209 We do not yet support spaces in column names on Athena')
 def test_set_series_column_name_with_spaces(engine):
     bt = get_df_with_test_data(engine)
     bt['spaces in column'] = bt['founding']

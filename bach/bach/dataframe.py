@@ -10,6 +10,7 @@ from typing import (
 
 import numpy
 import pandas
+import sqlparse
 from sqlalchemy.engine import Engine
 
 from bach.expression import Expression, SingleValueExpression, VariableToken, ColumnReferenceToken
@@ -21,10 +22,11 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
-from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
+from sql_models.model import SqlModel, Materialization, RefPath, SourceTableModelBuilder
 
 from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
+from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres, \
+    is_athena
 
 if TYPE_CHECKING:
     from bach.partitioning import Window, GroupBy
@@ -563,21 +565,8 @@ class DataFrame:
                 table_name=table_name,
             )
 
-        # We generate sql of the form (with quote characters depending on the database):
-        # 'SELECT "column_1", ... , "column_N" FROM "table_name"'
-        sql_params = {'table_name': quote_identifier(engine.dialect, table_name)}
-        # use placeholders for columns in order to avoid conflicts when extracting spec references
-        column_stmt = ','.join(f'{{col_{col_index}}}' for col_index in range(len(dtypes)))
-        column_placeholders = {
-            f'col_{col_index}': quote_identifier(engine.dialect, col_name)
-            for col_index, col_name in enumerate(dtypes.keys())
-        }
-        sql_params.update(column_placeholders)
-
-        sql = f'SELECT {column_stmt} FROM {{table_name}}'
-        model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
-        sql_model = model_builder(**sql_params)
-
+        # We just generate a reference to the base table
+        sql_model = SourceTableModelBuilder(table_name)()
         return cls._from_node(
             engine=engine,
             model=sql_model,
@@ -1699,7 +1688,7 @@ class DataFrame:
 
         group_by: GroupBy
         if isinstance(by, tuple):
-            if not is_postgres(self.engine):
+            if not (is_athena(self.engine) or is_postgres(self.engine)):
                 raise DatabaseNotSupportedException(
                     self.engine,
                     f'GroupingSets are not supported for this SQL dialect. Only grouping by one or more '
@@ -1713,7 +1702,7 @@ class DataFrame:
             return DataFrame._groupby_to_frame(df, group_by)
 
         if isinstance(by, list) and len([b for b in by if isinstance(b, (tuple, list))]) > 0:
-            if not is_postgres(self.engine):
+            if not (is_athena(self.engine) or is_postgres(self.engine)):
                 raise DatabaseNotSupportedException(
                     self.engine,
                     f'GroupingLists are not supported for this SQL dialect. Only grouping by one or more '
@@ -2118,26 +2107,7 @@ class DataFrame:
         if isinstance(limit, int):
             limit = slice(0, limit)
 
-        limit_str: Optional[str] = None
-        if limit is not None:
-            if limit.step is not None:
-                raise NotImplementedError("Step size not supported in slice")
-            if (limit.start is not None and limit.start < 0) or \
-                    (limit.stop is not None and limit.stop < 0):
-                raise NotImplementedError("Negative start or stop not supported in slice")
-
-            if limit.start is not None:
-                if limit.stop is not None:
-                    if limit.stop <= limit.start:
-                        raise ValueError('limit.stop <= limit.start')
-                    limit_str = f'limit {limit.stop - limit.start} offset {limit.start}'
-                else:
-                    limit_str = f'limit all offset {limit.start}'
-            else:
-                if limit.stop is not None:
-                    limit_str = f'limit {limit.stop}'
-
-        limit_clause = Expression.construct('' if limit_str is None else f'{limit_str}')
+        limit_clause = self._get_limit_clause(limit)
         where_clause = where_clause if where_clause else Expression.construct('')
         group_by_clause = None
 
@@ -2187,6 +2157,43 @@ class DataFrame:
             variables=self.variables
         )
 
+    def _get_limit_clause(self, limit: Optional[slice]) -> Expression:
+        """
+        Give a SQL limit expression based on the provided slice.
+        """
+        if limit is None:
+            return Expression.construct('')
+
+        # Validation
+        if limit.step is not None:
+            raise NotImplementedError("Step size not supported in slice")
+        if (limit.start is not None and limit.start < 0) or \
+                (limit.stop is not None and limit.stop < 0):
+            raise NotImplementedError("Negative start or stop not supported in slice")
+        if limit.start is not None and limit.stop is not None and limit.stop <= limit.start:
+            raise ValueError('limit.stop <= limit.start')
+
+        if limit.start is None and limit.stop is not None:
+            return Expression.construct(f'limit {limit.stop}')
+
+        if limit.start is not None:
+            # BigQuery does not support 'limit all', and 'offset' has to come after 'limit'
+            # See https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax
+            #   #limit_and_offset_clause
+            if is_bigquery(self.engine):
+                if limit.stop is not None:
+                    return Expression.construct(f'limit {limit.stop - limit.start} offset {limit.start}')
+                big_number = 2**63-1  # use a big number, because 'all' is not supported
+                return Expression.construct(f'limit {big_number} offset {limit.start}')
+
+            # Other databases
+            else:
+                if limit.stop is not None:
+                    return Expression.construct(f'offset {limit.start} limit {limit.stop - limit.start}')
+                return Expression.construct(f'offset {limit.start} limit all')
+        # Both limit.start and limit.stop are None
+        return Expression.construct('')
+
     def view_sql(self, limit: Union[int, slice] = None) -> str:
         """
         Translate the current state of this DataFrame into a SQL query.
@@ -2205,6 +2212,8 @@ class DataFrame:
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
 
         sql = to_sql(dialect=dialect, model=model)
+        # https://sqlparse.readthedocs.io/en/latest/api/#formatting-of-sql-statements
+        sql = sqlparse.format(sql, reindent_aligned=True, keyword_case='upper')
         return sql
 
     def merge(

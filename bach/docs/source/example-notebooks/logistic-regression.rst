@@ -12,7 +12,7 @@ The open model hub supports logistic regression on Bach data objects. A logistic
 
 This example is also available in a `notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-logistic-regression.ipynb>`_
-to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/try-the-demo/>`_ to try it 
 out with demo data in 5 minutes.
 
 First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
@@ -133,4 +133,10 @@ Get the sql statement for the _full_ data set including the predicted values.
 
     print(features_set_full.view_sql())
 
-This demonstrates the core functionality of the Logistic Regression model in the open model hub. Stay tuned for more metrics for assessing the fit of the model, as well as simplifying splitting the data into training and testing data sets.
+The SQL for any analysis can be exported with this one command, so you can use models in production directly 
+to simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+
+This demonstrates the core functionality of the Logistic Regression model in the open model hub. Stay tuned 
+for more metrics for assessing the fit of the model, as well as simplifying splitting the data into training 
+and testing data sets.

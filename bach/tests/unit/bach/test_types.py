@@ -59,6 +59,7 @@ def _test_validate_is_dtype_false(dtype: Any, matches=None):
         validate_is_dtype(dtype)
 
 
+@pytest.mark.db_independent
 def test_validate_dtype_value():
     validate_dtype_value(static_dtype='bool', instance_dtype='bool', value=True)
     validate_dtype_value(static_dtype='bool', instance_dtype='bool', value=False)

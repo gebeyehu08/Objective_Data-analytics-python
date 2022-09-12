@@ -16,7 +16,7 @@ data set prepared in Bach can be used for machine learning with sklearn
 
 This example is also available in a `notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/feature-engineering.ipynb>`_
-to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/try-the-demo/>`_ to try it 
 out with demo data in 5 minutes.
 
 First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
@@ -32,7 +32,10 @@ We start with showing the first couple of rows from the data set and describing 
     df.head()
 
 Columns of interest are 'user_id', this is what we will aggregate to. 'moment' contains timestamp info for the
-events. :ref:`global_contexts` and the :ref:`location_stack` contain most of the event specific data.
+events. Global contexts (not present in this example) and the 'location_stack' contain most of the event 
+specific data. The global contexts that you want to use in the analysis need to be set when instantiating 
+the model hub. See the :ref:`open taxonomy example <location-stack-and-global-contexts>` for 
+how to use the location stack and global contexts.
 
 .. code-block:: python
 

@@ -110,9 +110,9 @@ def test_append_w_list_dfs(engine) -> None:
         for i in range(3)
     ]
 
-    result = caller_df.append(other_dfs).sort_values('a')
+    result = caller_df.append(other_dfs).sort_values(['a', 'd'])
 
-    expected = caller_pdf.append([other_pdf] * 3).sort_values('a')
+    expected = caller_pdf.append([other_pdf] * 3).sort_values(['a', 'd'])
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_names=False)
 
@@ -126,16 +126,16 @@ def test_append_w_list_dfs(engine) -> None:
             [3, 4, 'd', None, None],
             [4, 5, 'e', None, None],
             [0, None, None, 6, 'f'],
-            [1, None, None, 7, 'g'],
-            [2, None, None, 8, 'h'],
-            [3, None, None, 9, 'i'],
+            [0, None, None, 6, 'f'],
             [0, None, None, 6, 'f'],
             [1, None, None, 7, 'g'],
-            [2, None, None, 8, 'h'],
-            [3, None, None, 9, 'i'],
-            [0, None, None, 6, 'f'],
+            [1, None, None, 7, 'g'],
             [1, None, None, 7, 'g'],
             [2, None, None, 8, 'h'],
+            [2, None, None, 8, 'h'],
+            [2, None, None, 8, 'h'],
+            [3, None, None, 9, 'i'],
+            [3, None, None, 9, 'i'],
             [3, None, None, 9, 'i'],
         ],
     )

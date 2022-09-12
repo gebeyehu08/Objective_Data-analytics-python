@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from bach import Series, DataFrame
 
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_categorical_describe(engine) -> None:
     series = get_df_with_test_data(engine, full_data_set=True)['municipality']
     result = series.describe()
@@ -26,6 +28,7 @@ def test_categorical_describe(engine) -> None:
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena  (does not support float as column name)
 def test_numerical_describe(engine) -> None:
     p_series = pd.Series(data=[1, 2, 3, 4, 5, 6, 7, 8, 1], name='numbers')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).numbers
@@ -45,8 +48,10 @@ def test_numerical_describe(engine) -> None:
     pd.testing.assert_series_equal(expected, result.to_pandas(), check_dtype=False)
 
 
-def test_describe_datetime(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_describe_datetime(engine) -> None:
+    # TODO: Athena and BigQuery. All engines have different string datetime formats
     p_series = pd.Series(
         data=[np.datetime64("2000-01-01"), np.datetime64("2010-01-01"), np.datetime64("2010-01-01")],
         name='dt',
