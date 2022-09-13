@@ -73,9 +73,9 @@ _OBJ_COOKIE = 'obj_user_id'
 # default cookie duration is 1 year, can be overridden by setting `COOKIE_DURATION`
 _OBJ_COOKIE_DURATION = int(os.environ.get('COOKIE_DURATION', 60 * 60 * 24 * 365 * 1))
 # default cookie samesite is Lax, can be overridden by setting `COOKIE_SAMESITE`
-_OBJ_COOKIE_SAMESITE = str(os.environ.get('COOKIE_SAMESITE', 'Lax'))
+_OBJ_COOKIE_SAMESITE = str(os.environ.get('COOKIE_SAMESITE', 'None'))
 # default cookie secure is False, can be overridden by setting `COOKIE_SECURE`
-_OBJ_COOKIE_SECURE = bool(os.environ.get('COOKIE_SECURE', False))
+_OBJ_COOKIE_SECURE = bool(os.environ.get('COOKIE_SECURE', True))
 
 # Maximum number of events that a worker will process in a single batch. Only relevant in async mode
 WORKER_BATCH_SIZE = 200

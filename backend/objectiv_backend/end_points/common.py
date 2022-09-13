@@ -5,6 +5,7 @@ import uuid
 import flask
 from flask import Response
 from objectiv_backend.common.config import get_collector_config
+from objectiv_backend.schema.schema import CookieIdContext
 
 
 def get_json_response(status: int, msg: str, anonymous_mode: bool = False, client_session_id: str = None) -> Response:
@@ -21,18 +22,36 @@ def get_json_response(status: int, msg: str, anonymous_mode: bool = False, clien
     if not anonymous_mode:
         cookie_config = get_collector_config().cookie
         if cookie_config:
-            if client_session_id:
-                cookie_id = client_session_id
-            else:
-                # only try to get one, if none was provided
-                cookie_id = get_cookie_id()
+            if not client_session_id:
+                client_session_id = ''
+            cookie_id_context = get_cookie_id_context(anonymous_mode=anonymous_mode, client_session_id=client_session_id)
+            cookie_id = cookie_id_context.cookie_id
+
             response.set_cookie(key=cookie_config.name, value=f'{cookie_id}',
                                 max_age=cookie_config.duration, samesite=cookie_config.samesite,
                                 secure=cookie_config.secure)
     return response
 
 
-def get_cookie_id() -> str:
+def get_cookie_id_context(anonymous_mode: bool, client_session_id: str) -> CookieIdContext:
+
+    print(f'getting id mode: {anonymous_mode}, client: {client_session_id}')
+
+    if anonymous_mode:
+        cookie_id = client_session_id
+        cookie_source = 'client'
+    else:
+        cookie_id = get_cookie_id_from_cookie(generate_if_not_set=(client_session_id is None))
+        if not cookie_id:
+            cookie_id = client_session_id
+            cookie_source = 'client'
+        else:
+            cookie_source = 'backend'
+
+    return CookieIdContext(id=cookie_source, cookie_id=cookie_id)
+
+
+def get_cookie_id_from_cookie(generate_if_not_set: bool = False) -> str:
     """
     Get the tracking cookie uuid from the current request.
     If no tracking cookie is present in the current request, a random uuid is generated.
@@ -44,16 +63,18 @@ def get_cookie_id() -> str:
     cookie_config = get_collector_config().cookie
     if not cookie_config:
         raise Exception('Cookies are not configured')  # This is a bug. We shouldn't call this function.
-    cookie_id = flask.request.cookies.get(cookie_config.name)
+    cookie_id = flask.request.cookies.get(cookie_config.name, None)
+
     if not cookie_id:
         # There's no cookie in the request, perhaps we already generated one earlier in this request
         cookie_id = flask.g.get('G_COOKIE_ID')
 
-    if not cookie_id:
+    if not cookie_id and generate_if_not_set:
         # There's no cookie in the request, and we have not yet generated one
         # use uuid4 (random), so there is no predictability and bad actors cannot ruin sessions of others
         cookie_id = str(uuid.uuid4())
         flask.g.G_COOKIE_ID = cookie_id
         print(f'Generating cookie_id: {cookie_id}')
 
-    return str(cookie_id)
+    if cookie_id:
+        return str(cookie_id)
