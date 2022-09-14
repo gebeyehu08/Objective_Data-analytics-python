@@ -3,6 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 import uuid
 import flask
+from typing import Optional
 from flask import Response
 from objectiv_backend.common.config import get_collector_config
 from objectiv_backend.schema.schema import CookieIdContext
@@ -51,7 +52,7 @@ def get_cookie_id_context(anonymous_mode: bool, client_session_id: str) -> Cooki
     return CookieIdContext(id=cookie_source, cookie_id=cookie_id)
 
 
-def get_cookie_id_from_cookie(generate_if_not_set: bool = False) -> str:
+def get_cookie_id_from_cookie(generate_if_not_set: bool = False) -> Optional[str]:
     """
     Get the tracking cookie uuid from the current request.
     If no tracking cookie is present in the current request, a random uuid is generated.
@@ -76,5 +77,4 @@ def get_cookie_id_from_cookie(generate_if_not_set: bool = False) -> str:
         flask.g.G_COOKIE_ID = cookie_id
         print(f'Generating cookie_id: {cookie_id}')
 
-    if cookie_id:
-        return str(cookie_id)
+    return cookie_id
