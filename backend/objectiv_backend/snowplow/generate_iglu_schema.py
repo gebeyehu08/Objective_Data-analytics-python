@@ -36,16 +36,17 @@ def get_properties_for_context(schema: Dict[str, Any], context_type: str, hierar
     if 'properties' in context:
         for property_name in context['properties']:
 
+            context_property_type = context['properties'][property_name]['type']
             # if optional is not set, we assume this property is required
             if 'optional' not in context['properties'][property_name] or \
                     not context['properties'][property_name]['optional']:
-                property_type = ['string']
+                property_type = [context_property_type]
 
                 if property_name not in required_properties:
                     required_properties.append(property_name)
             else:
                 # to mimic the optional properties, we add 'null' as type
-                property_type = ['string', 'null']
+                property_type = [context_property_type, 'null']
             properties[property_name] = {
                 "type": property_type,
                 "description": clean(context['properties'][property_name]['description'])
