@@ -96,7 +96,6 @@ describe('ReactNativeTracker', () => {
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
       expect(testTracker.plugins).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
           expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
           expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         ])
@@ -110,10 +109,7 @@ describe('ReactNativeTracker', () => {
         trackApplicationContext: false,
       });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
-      expect(testTracker.plugins).toEqual([
-        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
-        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
-      ]);
+      expect(testTracker.plugins).toEqual([expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' })]);
     });
 
     it('should add Plugins `plugins` has been specified', () => {
@@ -150,7 +146,6 @@ describe('ReactNativeTracker', () => {
       });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
       expect(testTracker.plugins).toEqual([
-        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'RootLocationContextFromURLPlugin' }),
@@ -170,7 +165,6 @@ describe('ReactNativeTracker', () => {
 
       expect(trackerClone).toBeInstanceOf(ReactNativeTracker);
       expect(trackerClone.plugins).toEqual([
-        expect.objectContaining({ pluginName: 'ClientSessionContextPlugin' }),
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
       ]);

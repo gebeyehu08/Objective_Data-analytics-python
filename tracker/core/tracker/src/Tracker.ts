@@ -3,7 +3,6 @@
  */
 
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
-import { ClientSessionContextPlugin } from './ClientSessionContextPlugin';
 import { ContextsConfig } from './Context';
 import { generateGUID, waitForPromise } from './helpers';
 import { TrackerEvent, TrackerEventAttributes } from './TrackerEvent';
@@ -107,7 +106,7 @@ export type TrackerConfig = ContextsConfig & {
  * The default list of Plugins of Core Tracker
  */
 export const makeCoreTrackerDefaultPluginsList = () => {
-  const plugins: TrackerPluginInterface[] = [new ClientSessionContextPlugin()];
+  const plugins: TrackerPluginInterface[] = [];
 
   if (globalThis.objectiv.devTools) {
     plugins.push(globalThis.objectiv.devTools.OpenTaxonomyValidationPlugin);

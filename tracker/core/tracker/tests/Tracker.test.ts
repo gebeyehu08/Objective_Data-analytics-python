@@ -40,10 +40,6 @@ describe('Tracker', () => {
     expect(testTracker.transport).toBe(undefined);
     expect(testTracker.plugins).toEqual([
       {
-        pluginName: 'ClientSessionContextPlugin',
-        anonymous: false,
-      },
-      {
         pluginName: 'OpenTaxonomyValidationPlugin',
         initialized: true,
         validationRules: [
@@ -99,10 +95,6 @@ describe('Tracker', () => {
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toStrictEqual(testTransport);
     expect(testTracker.plugins).toEqual([
-      {
-        pluginName: 'ClientSessionContextPlugin',
-        anonymous: false,
-      },
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
         initialized: true,
@@ -367,7 +359,7 @@ describe('Tracker', () => {
       expect(testTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: testEvent._type }));
     });
 
-    it('in anonymous mode events should carry a SessionContext in their global contexts', () => {
+    it('events should not carry a SessionContext in their global contexts', () => {
       const testTransport = new LogTransport();
       jest.spyOn(testTransport, 'handle');
       const testTracker = new Tracker({ applicationId: 'app-id', transport: testTransport, anonymous: true });
@@ -375,10 +367,9 @@ describe('Tracker', () => {
       expect(testTransport.handle).toHaveBeenCalledWith(
         expect.objectContaining({
           _type: testEvent._type,
-          global_contexts: expect.arrayContaining([
+          global_contexts: expect.not.arrayContaining([
             expect.objectContaining({
               _type: GlobalContextName.SessionContext,
-              id: objectiv.clientSessionId,
             }),
           ]),
         })
@@ -392,39 +383,6 @@ describe('Tracker', () => {
           global_contexts: expect.not.arrayContaining([
             expect.objectContaining({
               _type: GlobalContextName.SessionContext,
-              id: objectiv.clientSessionId,
-            }),
-          ]),
-        })
-      );
-    });
-
-    it('in regular mode events should not carry a SessionContext in their global contexts', () => {
-      const testTransport = new LogTransport();
-      jest.spyOn(testTransport, 'handle');
-      const testTracker = new Tracker({ applicationId: 'app-id', transport: testTransport, anonymous: false });
-      testTracker.trackEvent(testEvent);
-      expect(testTransport.handle).toHaveBeenCalledWith(
-        expect.objectContaining({
-          _type: testEvent._type,
-          global_contexts: expect.not.arrayContaining([
-            expect.objectContaining({
-              _type: GlobalContextName.SessionContext,
-              id: objectiv.clientSessionId,
-            }),
-          ]),
-        })
-      );
-
-      testTracker.setAnonymous(true);
-      testTracker.trackEvent(testEvent);
-      expect(testTransport.handle).toHaveBeenCalledWith(
-        expect.objectContaining({
-          _type: testEvent._type,
-          global_contexts: expect.arrayContaining([
-            expect.objectContaining({
-              _type: GlobalContextName.SessionContext,
-              id: objectiv.clientSessionId,
             }),
           ]),
         })

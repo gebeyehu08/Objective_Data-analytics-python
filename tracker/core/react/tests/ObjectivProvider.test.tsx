@@ -44,10 +44,6 @@ describe('ObjectivProvider', () => {
       location_stack: [],
       plugins: [
         {
-          pluginName: 'ClientSessionContextPlugin',
-          anonymous: false,
-        },
-        {
           pluginName: 'OpenTaxonomyValidationPlugin',
           initialized: true,
           validationRules: [
