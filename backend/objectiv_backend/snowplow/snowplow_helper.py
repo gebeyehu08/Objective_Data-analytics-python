@@ -196,7 +196,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         data["sid"] = cookie_id
     elif cookie_source == 'backend':
         # Unique identifier for a user, based on a cookie from the collector, so only set if the source was a cookie
-        data["nuid"] = cookie_id,
+        data["nuid"] = cookie_id
 
     payload = {
         "schema": snowplow_payload_data_schema,
