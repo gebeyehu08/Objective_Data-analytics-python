@@ -172,14 +172,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
 
     cookie_id = cookie_context.get('cookie_id', '')
 
-    if cookie_context.get('id') == 'client':
-        client_session_id = cookie_id
-    else:
-        client_session_id = ''
-
-    payload = {
-        "schema": snowplow_payload_data_schema,
-        "data": [{
+    data = {
             "e": "se",  # mandatory: event type: structured event
             "p": "web",  # mandatory: platform
             "tv": "0.0.5",  # mandatory: tracker version
@@ -196,8 +189,14 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "stm": str(event['transport_time']),  # Timestamp when event was sent by client device to collector
             "ttm": str(event['time']),  # User-set exact timestamp
             "nuid": cookie_id,  # Unique identifier for a user, based on a cookie from the collector
-            "sid": client_session_id  # Unique identifier (UUID) for this visit of this user_id to this domain
-        }]
+        }
+    if cookie_context.get('id') == 'client':
+        # only set domain_sessionid if we have a client_side id
+        data["sid"] = cookie_id
+
+    payload = {
+        "schema": snowplow_payload_data_schema,
+        "data": [data]
     }
     return CollectorPayload(
         schema=snowplow_collector_payload_schema,
