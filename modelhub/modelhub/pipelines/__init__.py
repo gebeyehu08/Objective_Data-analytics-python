@@ -3,7 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 from modelhub.pipelines.extracted_contexts import (
     get_extracted_context_pipeline,
-    ExtractedContextsPipeline,
+    BaseExtractedContextsPipeline,
     PostgresExtractedContextsPipeline,
     BigQueryExtractedContextsPipeline,
 )
