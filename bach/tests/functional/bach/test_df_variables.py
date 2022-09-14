@@ -5,7 +5,7 @@ import pytest
 
 from bach.dataframe import DtypeNamePair, DefinedVariable, DataFrame
 from sql_models.model import CustomSqlModelBuilder
-from sql_models.util import is_bigquery, is_postgres
+from sql_models.util import is_bigquery, is_postgres, is_athena
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data, \
     get_df_with_food_data
 
@@ -197,6 +197,7 @@ def test_merge_variable_different_types(engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_get_all_variable_usage(engine):
     df1 = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'inhabitants']]
     assert df1.get_all_variable_usage() == []
@@ -223,7 +224,7 @@ def test_get_all_variable_usage(engine):
     # materialize will change the ref_paths, and migrate the 'second' variable to the base_node
     str_old_value = 'test'
 
-    if is_postgres(engine):
+    if is_postgres(engine) or is_athena(engine):
         str_old_value = f"'{str_old_value}'"
     elif is_bigquery(engine):
         str_old_value = f'"""{str_old_value}"""'

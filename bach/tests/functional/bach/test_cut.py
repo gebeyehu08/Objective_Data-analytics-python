@@ -1,10 +1,13 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from bach import Series, DataFrame
 from bach.operations.cut import CutOperation, QCutOperation
 from sql_models.util import quote_identifier
 from tests.functional.bach.test_data_and_utils import assert_equals_data
+
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 PD_TESTING_SETTINGS = {
     'check_dtype': False,

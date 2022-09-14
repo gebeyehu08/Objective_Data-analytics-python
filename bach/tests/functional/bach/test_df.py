@@ -8,7 +8,6 @@ from bach import DataFrame, SeriesBoolean
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-@pytest.mark.athena_supported
 def test_basic(engine):
     bt = get_df_with_test_data(engine)
     assert_equals_data(
@@ -23,6 +22,22 @@ def test_basic(engine):
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268]
         ]
     )
+
+
+def test_head(engine):
+    bt = get_df_with_test_data(engine, full_data_set=True)
+    bt = bt.sort_index()
+    result = bt.head()
+    expected_df = pd.DataFrame({
+        '_index_skating_order': [1, 2, 3, 4, 5],
+        'skating_order': [1, 2, 3, 4, 5],
+        'city': ['Ljouwert', 'Snits', 'Drylts', 'Sleat', 'Starum'],
+        'municipality': ['Leeuwarden', 'Súdwest-Fryslân', 'Súdwest-Fryslân', 'De Friese Meren',
+                         'Súdwest-Fryslân'],
+        'inhabitants': [93485, 33520, 3055, 700, 960],
+        'founding': [1285, 1456, 1268, 1426, 1061]
+    }).set_index('_index_skating_order')
+    pd.testing.assert_frame_equal(result, expected_df)
 
 
 def test_del_item(engine):
@@ -151,6 +166,7 @@ def test_round(engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_quantile(engine) -> None:
     pdf = pd.DataFrame(
         data={

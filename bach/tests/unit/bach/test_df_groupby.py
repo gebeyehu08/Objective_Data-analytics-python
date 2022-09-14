@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 import pytest
 
-from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_athena, is_bigquery, DatabaseNotSupportedException
 from tests.unit.bach.util import get_fake_df_test_data
 
 
@@ -28,7 +28,7 @@ def test_unmaterializable_groupby_boolean_functions(dialect):
 def test_on_argument_sets(dialect):
     df = get_fake_df_test_data(dialect)
     group_by_argument = ('municipality',)
-    if is_postgres(dialect):  # supported
+    if is_postgres(dialect) or is_athena(dialect):  # supported
         dfg = df.groupby(group_by_argument)
         assert dfg.group_by is not None
     elif is_bigquery(dialect):  # not supported
@@ -41,7 +41,7 @@ def test_on_argument_sets(dialect):
 def test_on_argument_lists(dialect):
     df = get_fake_df_test_data(dialect)
     group_by_argument = [['municipality',]]
-    if is_postgres(dialect):  # supported
+    if is_postgres(dialect) or is_athena(dialect):  # supported
         dfg = df.groupby(group_by_argument)
         assert dfg.group_by is not None
     elif is_bigquery(dialect):  # not supported

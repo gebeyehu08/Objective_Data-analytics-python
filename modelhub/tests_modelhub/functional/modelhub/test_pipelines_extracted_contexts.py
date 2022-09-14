@@ -60,20 +60,28 @@ def get_expected_context_pandas_df(
 
     field_name_mapping = {}
     for context_name in global_contexts or []:
-        capitalized_name = context_name.capitalize()+'Context'
+        capitalized_name = "".join([c.capitalize() for c in context_name.split('_')])+'Context'
         field_name_mapping[capitalized_name] = context_name
 
     data = get_parsed_objectiv_data(engine)
 
     # Append requested global contexts, and remove the all containing one
     for i, row in enumerate(data):
+        # cookie_id can also be a global context name, make sure it's not overwritten
+        row['user_id'] = row['cookie_id']
+        del(row['cookie_id'])
+
         # create one column for every requested context, for every row
         row_context_data = {c: [] for c in field_name_mapping.values()}
         for row_context_item in row['value']['global_contexts']:
             if row_context_item['_type'] in field_name_mapping:
                 toplevel_field_name = field_name_mapping[row_context_item['_type']]
                 if db_format == DBParams.Format.SNOWPLOW:
-                    del(row_context_item['_type'])
+                    # SP format does not carry types
+                    if '_type' in row_context_item:
+                        del(row_context_item['_type'])
+                    if '_types' in row_context_item:
+                        del(row_context_item['_types'])
                 row_context_data[toplevel_field_name].append(row_context_item)
         row['value'] = {**row['value'], **row_context_data}
         del(row['value']['global_contexts'])
@@ -84,7 +92,7 @@ def get_expected_context_pandas_df(
     context_pdf['event_id'] = pdf['event_id']
     context_pdf['day'] = pdf['day']
     context_pdf['moment'] = pdf['moment']
-    context_pdf['user_id'] = pdf['cookie_id']
+    context_pdf['user_id'] = pdf['user_id']
     context_pdf = context_pdf.rename(
         columns={
             '_type': 'event_type',
@@ -102,13 +110,15 @@ def _get_extracted_contexts_pipeline(db_params, global_contexts=[]) -> Extracted
 
 
 def test_get_pipeline_result(db_params) -> None:
-    context_pipeline = _get_extracted_contexts_pipeline(db_params, global_contexts=['identity'])
+    # select cookie_id context since it's gc column overlaps with cookie_id uuid column on pg.
+    # cookie_id_context also has a multi-part name, so we test that immediately as well. Exciting :)
+    context_pipeline = _get_extracted_contexts_pipeline(db_params, global_contexts=['identity', 'cookie_id'])
     engine = context_pipeline._engine
 
     result = context_pipeline().sort_values(by='event_id').to_pandas()
 
     expected = get_expected_context_pandas_df(
-        engine, global_contexts=['identity'], db_format=db_params.format
+        engine, global_contexts=['identity', 'cookie_id'], db_format=db_params.format
     )
     pd.testing.assert_frame_equal(expected, result)
 

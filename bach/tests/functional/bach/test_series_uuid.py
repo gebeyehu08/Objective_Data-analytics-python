@@ -13,9 +13,6 @@ from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, run_query, get_df_with_test_data
 
 
-pytestmark = pytest.mark.athena_supported()
-
-
 def test_uuid_value_to_expression(engine):
     bt = get_df_with_test_data(engine)[['city']]
     bt['x'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')

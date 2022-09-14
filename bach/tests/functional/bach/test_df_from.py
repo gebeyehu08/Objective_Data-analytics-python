@@ -10,10 +10,12 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
-from sql_models.model import CustomSqlModelBuilder, SqlModel
+from sql_models.model import CustomSqlModelBuilder, SqlModel, Materialization
+from sql_models.sql_generator import to_sql
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
+pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def _create_test_table(engine: Engine, table_name: str):
     # TODO: insert data too, and check in the tests below that we get that data back in the DataFrame
@@ -65,8 +67,9 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df.is_materialized
     assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
-    # todo: in the future introduce a special SqlModel type 'source', so we don't even need a first model
-    # with a query and we can just query directly from the source table.
+    assert df.base_node.materialization == Materialization.SOURCE
+    with pytest.raises(Exception, match="No models to compile"):
+        to_sql(dialect=engine.dialect, model=df.base_node)
     assert df.base_node.references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 
@@ -78,10 +81,10 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
-def test_from_model_basic(pg_engine, unique_table_test_name):
+@pytest.mark.skip_bigquery_todo()
+def test_from_model_basic(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
-    engine = pg_engine
     table_name = unique_table_test_name
     _create_test_table(engine, table_name)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
@@ -92,8 +95,6 @@ def test_from_model_basic(pg_engine, unique_table_test_name):
     assert df.is_materialized
     assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
-    # todo: in the future introduce a special SqlModel type 'source', so we don't even need a first model
-    # with a query and we can just query directly from the source table.
     assert df.base_node.references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 
@@ -128,12 +129,12 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
-def test_from_model_column_ordering(pg_engine, unique_table_test_name):
+@pytest.mark.skip_bigquery_todo()
+def test_from_model_column_ordering(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_model_ordering(), but tests creating the dataframe with
     # from_model instead of from_table
 
     # Create a Dataframe in which the index is not the first column in the table.
-    engine = pg_engine
     table_name = unique_table_test_name
     _create_test_table(engine, table_name)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()

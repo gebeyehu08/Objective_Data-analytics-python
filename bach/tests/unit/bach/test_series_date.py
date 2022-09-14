@@ -9,8 +9,6 @@ import pytest
 from bach import SeriesDate
 from bach.expression import Expression
 
-pytestmark = pytest.mark.athena_supported()
-
 
 def test_supported_value_to_literal(dialect):
     def assert_call(value, expected_token_value: str):

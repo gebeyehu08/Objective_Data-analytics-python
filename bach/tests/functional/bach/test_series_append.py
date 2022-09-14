@@ -1,3 +1,5 @@
+import pytest
+
 from bach import Series
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
@@ -23,6 +25,7 @@ def test_series_append_same_dtype(engine) -> None:
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: remove '.0' from stringified float
 def test_series_append_different_dtype(engine) -> None:
     bt = get_df_with_test_data(engine, full_data_set=False)[['city', 'inhabitants', 'founding']]
     bt['founding'] = bt['founding'].astype('float64')

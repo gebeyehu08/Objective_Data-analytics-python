@@ -2,14 +2,10 @@
 Copyright 2021 Objectiv B.V.
 """
 import datetime
-
-import pytest
-
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
-@pytest.mark.athena_supported()
 def test_time_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', (None, None)],
@@ -20,7 +16,6 @@ def test_time_arithmetic(engine):
     types_plus_min(engine, data, datetime.time(13, 11, 5), 'time')
 
 
-@pytest.mark.athena_supported()
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['t'] = datetime.time(23, 11, 5, 123456)

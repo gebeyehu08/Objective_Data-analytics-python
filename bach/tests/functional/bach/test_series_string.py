@@ -112,6 +112,7 @@ def test_add_string_series(engine):
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_get_dummies(engine) -> None:
     bt = get_df_with_test_data(engine)
     result = bt['city'].get_dummies()
@@ -152,7 +153,6 @@ def test_string_replace(engine) -> None:
     assert_equals_data(result_df, expected_columns=expected_columns, expected_data=expected_data)
 
 
-@pytest.mark.athena_supported
 def test_string_lower_upper(engine) -> None:
     df = get_df_with_test_data(engine, full_data_set=True)
     df['municipality_lower'] = df['municipality'].str.lower()

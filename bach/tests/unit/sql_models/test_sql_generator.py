@@ -2,7 +2,6 @@
 Copyright 2021 Objectiv B.V.
 """
 import pytest
-from sqlalchemy.dialects.postgresql.base import PGDialect
 
 from sql_models.model import SqlModelBuilder, CustomSqlModelBuilder
 from sql_models.sql_generator import to_sql
@@ -127,9 +126,8 @@ class MultiplierWithId(SqlModelBuilder):
         '''
 
 
-def test_model_thrice_simple():
-    # TODO: bigquery
-    dialect = PGDialect()
+@pytest.mark.skip_bigquery_todo()
+def test_model_thrice_simple(dialect):
     model = Double.build(
         source=Double(
             source=Double(
