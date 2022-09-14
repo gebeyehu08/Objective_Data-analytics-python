@@ -3,7 +3,6 @@ Copyright 2021 Objectiv B.V.
 """
 import uuid
 import flask
-from typing import Optional
 from flask import Response
 from objectiv_backend.common.config import get_collector_config
 from objectiv_backend.schema.schema import CookieIdContext
