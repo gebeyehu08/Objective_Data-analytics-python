@@ -170,6 +170,13 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     https://objectiv.io/docs/taxonomy/reference
     """
 
+    cookie_id = cookie_context.get('cookie_id', '')
+
+    if cookie_context.get('id') == 'client':
+        client_session_id = cookie_id
+    else:
+        client_session_id = ''
+
     payload = {
         "schema": snowplow_payload_data_schema,
         "data": [{
@@ -187,7 +194,9 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "ip": http_context.get('remote_address', ''),  # IP address
             "dtm": str(event['corrected_time']),  # Timestamp when event occurred, as recorded by client device
             "stm": str(event['transport_time']),  # Timestamp when event was sent by client device to collector
-            "ttm": str(event['time'])  # User-set exact timestamp
+            "ttm": str(event['time']),  # User-set exact timestamp
+            "nuid": cookie_id,  # Unique identifier for a user, based on a cookie from the collector
+            "sid": client_session_id  # Unique identifier (UUID) for this visit of this user_id to this domain
         }]
     }
     return CollectorPayload(
@@ -204,7 +213,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         headers=[],
         contentType='application/json',
         hostname='',
-        networkUserId=cookie_context.get('id', '')
+        networkUserId=cookie_id
     )
 
 
