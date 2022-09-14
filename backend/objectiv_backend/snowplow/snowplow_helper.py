@@ -74,7 +74,7 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
     #     cookie_context = get_context(event, 'CookieIdContext')
     # except ValueError:
     #     cookie_context = {}
-    # _event['cookie_id'] = cookie_context.get('id', '')
+    # _event['cookie_id'] = cookie_context.get('cookie_id', '')
     # self_describing_contexts.append(make_snowplow_context(schema, _event))
 
     snowplow_contexts_schema = config.schema_contexts
@@ -150,7 +150,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     
     ## Global context properties
     ApplicationContext.id       -> aid      -> app_id
-    CookieIdContext.id          -> payload  -> network_userid 
+    CookieIdContext.cookie_id   -> payload  -> network_userid 
     HttpContext.referrer        -> refr     -> page_referrer
     HttpContext.remote_address  -> ip       -> user_ipaddress
     PathContext.id              -> url      -> page_url
