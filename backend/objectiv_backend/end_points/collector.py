@@ -4,12 +4,12 @@ from datetime import datetime
 import flask
 import time
 from urllib.parse import urlparse, parse_qs
-from typing import List
+from typing import List, Callable
 import hashlib
 import psycopg2
 from flask import Response, Request
 
-from objectiv_backend.common.config import get_collector_config
+from objectiv_backend.common.config import get_collector_config, AnonymousModeConfig
 from objectiv_backend.common.types import EventData, EventDataList, EventList
 from objectiv_backend.common.db import get_db_connection
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
@@ -22,7 +22,7 @@ from objectiv_backend.workers.pg_storage import insert_events_into_nok_data
 from objectiv_backend.workers.worker_entry import process_events_entry
 from objectiv_backend.workers.worker_finalize import insert_events_into_data
 
-from objectiv_backend.schema.schema import HttpContext, CookieIdContext, MarketingContext
+from objectiv_backend.schema.schema import HttpContext, MarketingContext
 
 # Some limits on the inputs we accept
 DATA_MAX_SIZE_BYTES = 1_000_000
@@ -49,7 +49,13 @@ def collect(anonymous_mode: bool = False) -> Response:
 
     # check for SessionContext to get client session id
     if 'client_session_id' in event_data:
-        client_session_id = event_data['client_session_id'][7:]
+        # TEMPORARY: we remove the first 7 characters from the string ('client-'), because we only want the uuid
+        # part of the client_session_id. This can go when the tracker provides a proper uuid
+        # TODO: remove the string slicing
+        if event_data['client_session_id'].startswith('client-'):
+            client_session_id = event_data['client_session_id'][7:]
+        else:
+            client_session_id = event_data['client_session_id']
     else:
         client_session_id = None
 
@@ -61,11 +67,7 @@ def collect(anonymous_mode: bool = False) -> Response:
     config = get_collector_config()
     if anonymous_mode:
         # in anonymous mode we hash certain properties, as defined in config.anonymous_mode.to_hash
-        for event in events:
-            for context_type in config.anonymous_mode.to_hash:
-                for context in get_contexts(event, context_type):
-                    for context_property in config.anonymous_mode.to_hash[context_type]:
-                        context[context_property] = hashlib.md5(str(context[context_property]).encode()).hexdigest()
+        anonymize_events(events, config.anonymous_mode)
 
     if not get_collector_config().async_mode:
         ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
@@ -77,6 +79,25 @@ def collect(anonymous_mode: bool = False) -> Response:
         write_async_events(events=events)
         return _get_collector_response(error_count=0, event_count=len(events),
                                        client_session_id=client_session_id)
+
+
+def hash_property(property_to_hash: str) -> str:
+    return hashlib.md5(str(property_to_hash).encode()).hexdigest()
+
+
+def anonymize_events(events: EventDataList, config: AnonymousModeConfig, hash_method: Callable = hash_property):
+    """
+    Modify events in the list, by hashing the fields as specified in the config
+    :param events: List of events to anonymize
+    :param config: AnonymousModeConfig,
+    :param hash_method: Callable to hash property with
+    :return:
+    """
+    for event in events:
+        for context_type in config.to_hash:
+            for context in get_contexts(event, context_type):
+                for context_property in config.to_hash[context_type]:
+                    context[context_property] = hash_method(context[context_property])
 
 
 def _get_event_data(request: Request) -> EventList:

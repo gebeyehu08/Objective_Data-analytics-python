@@ -42,6 +42,7 @@ def get_cookie_id_context(anonymous_mode: bool, client_session_id: str) -> Cooki
         cookie_source = 'client'
     else:
         cookie_id = get_cookie_id_from_cookie(generate_if_not_set=(client_session_id is None))
+        print(f'got {cookie_id} from get_cookie')
         if not cookie_id:
             cookie_id = client_session_id
             cookie_source = 'client'

@@ -171,6 +171,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     """
 
     cookie_id = cookie_context.get('cookie_id', '')
+    cookie_source = cookie_context.get('id', '')
 
     data = {
             "e": "se",  # mandatory: event type: structured event
@@ -188,11 +189,14 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "dtm": str(event['corrected_time']),  # Timestamp when event occurred, as recorded by client device
             "stm": str(event['transport_time']),  # Timestamp when event was sent by client device to collector
             "ttm": str(event['time']),  # User-set exact timestamp
-            "nuid": cookie_id,  # Unique identifier for a user, based on a cookie from the collector
+
         }
-    if cookie_context.get('id') == 'client':
+    if cookie_source == 'client':
         # only set domain_sessionid if we have a client_side id
         data["sid"] = cookie_id
+    elif cookie_source == 'backend':
+        # Unique identifier for a user, based on a cookie from the collector, so only set if the source was a cookie
+        data["nuid"] = cookie_id,
 
     payload = {
         "schema": snowplow_payload_data_schema,
@@ -212,7 +216,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         headers=[],
         contentType='application/json',
         hostname='',
-        networkUserId=cookie_id
+        networkUserId=cookie_id if cookie_source == 'backend' else None
     )
 
 

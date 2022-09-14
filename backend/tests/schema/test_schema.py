@@ -1,6 +1,5 @@
 import json
 from typing import Dict, Any
-from copy import deepcopy
 
 from objectiv_backend.schema.schema import make_event_from_dict, make_context, \
     ContentContext, HttpContext, MarketingContext

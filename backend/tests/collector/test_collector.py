@@ -1,8 +1,15 @@
 import json
 
-from objectiv_backend.end_points.collector import add_http_context_to_event, add_marketing_context_to_event
+import pytest
+import flask
+from objectiv_backend.app import create_app
+
+from objectiv_backend.end_points.collector import add_http_context_to_event, add_marketing_context_to_event, \
+    get_cookie_id_context, anonymize_events, hash_property
+from objectiv_backend.end_points.common import get_json_response
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
-from tests.schema.test_schema import CLICK_EVENT_JSON, make_event_from_dict, order_dict
+from objectiv_backend.common.config import AnonymousModeConfig
+from tests.schema.test_schema import CLICK_EVENT_JSON, make_event_from_dict, order_dict, make_context
 
 
 class Request(object):
@@ -153,3 +160,117 @@ def test_enrich_marketing_context():
 
     # check serialized jsons match for set and unset optionals
     assert json.dumps(order_dict(generated_marketing_context)) == marketing_context_json
+
+
+@pytest.fixture
+def app_context():
+    """create the app and return the request context as a fixture
+       so that this process does not need to be repeated in each test
+    """
+    app = create_app()
+    return app.test_request_context
+
+
+def test_cookie_id_context_creation(mocker, app_context):
+    with app_context():
+        event_list = json.loads(CLICK_EVENT_JSON)
+        client_session_id = event_list['client_session_id']
+
+        # in anonymous mode, the id should always be client
+        context = get_cookie_id_context(anonymous_mode=True, client_session_id=client_session_id)
+        assert context.id == 'client'
+        assert context.cookie_id == client_session_id
+
+        # Pure Anonymous mode
+        # mock the flask request property, this is used to retrieve cookies
+        request_mock = mocker.patch.object(flask, 'request')
+
+        # Promotion of anonymous to normal
+        # in normal mode, the id should be client if there's no cookie, and a valid client_session_id
+        # we use the mock to never return a cookie (but None)
+        request_mock.cookies.get = lambda param, default: None
+        context = get_cookie_id_context(anonymous_mode=False, client_session_id=client_session_id)
+        assert context.id == 'client'
+        assert context.cookie_id == client_session_id
+
+        # Pure normal mode
+        # normal mode with a cookie set, the mock returns a value for the requested cookie, so
+        # the id should be 'backend'
+        cookie_id = 'd227e473-b177-4cdc-9f49-a96e59dc00k13'
+        request_mock.cookies.get = lambda param, default: cookie_id
+        context = get_cookie_id_context(anonymous_mode=False, client_session_id=client_session_id)
+        assert context.id == 'backend'
+        assert context.cookie_id == cookie_id
+
+
+def test_cookie_set(mocker, app_context):
+    with app_context():
+        # Pure Anonymous mode
+        # mock the flask request property, this is used to retrieve cookies
+        request_mock = mocker.patch.object(flask, 'request')
+        request_mock.cookies.get = lambda param, default: None
+        event_list = json.loads(CLICK_EVENT_JSON)
+        msg = 'test'
+
+        client_session_id = event_list['client_session_id']
+        status = 200
+
+        # in anonymous mode we should never set cookies
+        response = get_json_response(status=status, msg=msg, anonymous_mode=True, client_session_id=client_session_id)
+        assert not response.headers.get('Set-Cookie', None)
+
+        # in normal mode, with no cookie set, it should set the cookie to the client_session_id
+        response = get_json_response(status=status, msg=msg, anonymous_mode=False, client_session_id=client_session_id)
+        cookie = response.headers.get('Set-Cookie', None)
+        assert cookie
+        # manually get cookie value. this looks something like:
+        # obj_user_id=d227e473-b177-4cdc-9f49-a96e59dbcf0c; Expires=Thu, 14 Sep 2023 13:55:24 GMT; Max-Age=31536000; Secure; Path=/; SameSite=None
+        assert cookie.split(';')[0].split('=')[1] == client_session_id
+
+        # in normal mode, with no cookie set, it should set the cookie to the client_session_id
+        cookie_id = 'd227e473-b177-4cdc-9f49-a96e59dc00k13'
+        request_mock.cookies.get = lambda param, default: cookie_id
+        response = get_json_response(status=status, msg=msg, anonymous_mode=False, client_session_id=None)
+        cookie = response.headers.get('Set-Cookie', None)
+        assert cookie
+        assert cookie.split(';')[0].split('=')[1] == cookie_id
+
+
+def test_anonymous_mode_anonymization():
+
+    config = AnonymousModeConfig(
+        to_hash={
+            'HttpContext': {
+                'remote_address',
+                'user_agent'
+            }
+        }
+    )
+
+    context_vars = {
+        '_type': 'HttpContext',
+        'id': 'test-http-context-id',
+        'referrer': 'test-referrer',
+        'remote_address': 'test-address',
+        'user_agent': 'test-user_agent'
+    }
+    context = make_context(**context_vars)
+
+    # add created context to event
+    event_list = json.loads(CLICK_EVENT_JSON)
+    event = make_event_from_dict(event_list['events'][0])
+    add_global_context_to_event(event, context)
+
+    events = [event]
+    anonymize_events(events=events, config=config)
+
+    # retrieve http context from event
+    http_context = get_contexts(event, 'HttpContext')[0]
+
+    # check values are in fact changed
+    assert http_context['remote_address'] != context_vars['remote_address']
+    assert http_context['user_agent'] != context_vars['user_agent']
+
+    # check if we have indeed properly hashed the vars
+    assert http_context['user_agent'] == '49901a043486b776d3e9e0aa2b6bf1c1'
+    assert hash_property(context_vars['user_agent']) == '49901a043486b776d3e9e0aa2b6bf1c1'
