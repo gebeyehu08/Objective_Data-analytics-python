@@ -17,7 +17,7 @@
         },
         "hit_number": {
             "type": [
-                "string"
+                "integer"
             ],
             "description": "Hit counter relative to the current session, this event originated in."
         }

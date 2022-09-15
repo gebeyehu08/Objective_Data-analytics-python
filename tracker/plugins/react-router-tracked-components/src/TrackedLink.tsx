@@ -2,59 +2,34 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import {
-  LinkContextWrapper,
-  makeAnchorClickHandler,
-  makeIdFromTrackedAnchorProps,
-  useLocationStack,
-} from '@objectiv/tracker-react';
-import React from 'react';
+import { TrackedLinkContext, TrackedLinkContextObjectivProp } from '@objectiv/tracker-react';
+import React, { ComponentProps } from 'react';
 import { Link, LinkProps, useHref } from 'react-router-dom';
-import { ReactRouterTrackingOptionsProp } from './types';
 
 /**
- * Wrapped Link will accept all LinkProps and, optionally, ReactRouterTrackingOptionsProp.
+ * An overridden version of TrackedLinkProps with a customized objectiv prop:
+ * - No `objectiv.Component` attribute, as it's hard-coded to Link
+ * - No `objectiv.href` attribute, as we can retrieve one automatically via the `useHref` hook
+ * - The objectiv prop itself is optional as there are no required attributes left
  */
-export type TrackedLinkProps = LinkProps & ReactRouterTrackingOptionsProp;
+export type TrackedLinkProps = LinkProps & {
+  objectiv?: Omit<TrackedLinkContextObjectivProp, 'Component' | 'href'>;
+};
 
 /**
- * Wraps Link in a LinkContext and automatically instruments tracking PressEvent on click.
+ * Wraps Link in a TrackedLinkContext which automatically instruments tracking PressEvent on click.
  */
-export const TrackedLink = React.forwardRef<HTMLAnchorElement, TrackedLinkProps>((props, ref) => {
-  const { objectiv, ...otherProps } = props;
-
-  // Use ReactRouter hooks to generate the `href` prop.
-  const linkContextHref = useHref(props.to);
-
-  // Attempt to generate an id for LinkContext by looking at `id`, `title`, `children` and `objectiv.contextId` props.
-  const linkContextId = makeIdFromTrackedAnchorProps({ ...props, ...objectiv });
-
-  // If we couldn't generate an `id`, log the issue and return a regular Link component.
-  const locationStack = useLocationStack();
-  if (!linkContextId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate id for LinkContext @ ${locationPath}. Either add the \`title\` prop or specify an id manually via the  \`id\` option of the \`objectiv\` prop.`
-      );
-    }
-    return <Link {...otherProps} ref={ref} />;
-  }
-
-  return (
-    <LinkContextWrapper id={linkContextId} href={linkContextHref}>
-      {(trackingContext) => (
-        <Link
-          {...otherProps}
-          ref={ref}
-          onClick={makeAnchorClickHandler({
-            trackingContext,
-            anchorHref: linkContextHref,
-            waitUntilTracked: props.reloadDocument,
-            onClick: props.onClick,
-          })}
-        />
-      )}
-    </LinkContextWrapper>
-  );
-});
+export const TrackedLink = React.forwardRef<HTMLAnchorElement, TrackedLinkProps>(
+  ({ objectiv, ...nativeProps }, ref) => (
+    <TrackedLinkContext<ComponentProps<typeof Link>>
+      {...nativeProps}
+      ref={ref}
+      objectiv={{
+        ...objectiv,
+        Component: Link,
+        href: useHref(nativeProps.to),
+        waitUntilTracked: objectiv?.waitUntilTracked ?? nativeProps.reloadDocument,
+      }}
+    />
+  )
+);

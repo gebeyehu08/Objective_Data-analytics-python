@@ -2,42 +2,44 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import { MediaPlayerContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
-import React from 'react';
+import React, { forwardRef, PropsWithRef, Ref } from 'react';
 import { TrackedContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in a MediaPlayerContext.
  */
-export const TrackedMediaPlayerContext = React.forwardRef<HTMLElement, TrackedContextProps>((props, ref) => {
-  const { id, Component, forwardId = false, normalizeId = true, ...otherProps } = props;
-  const locationStack = useLocationStack();
+export const TrackedMediaPlayerContext = forwardRef(
+  <T extends unknown>(props: TrackedContextProps<T>, ref: Ref<unknown>) => {
+    const {
+      objectiv: { Component, id, normalizeId = true },
+      ...nativeProps
+    } = props;
+    const locationStack = useLocationStack();
 
-  let mediaPlayerId: string | null = id;
-  if (normalizeId) {
-    mediaPlayerId = makeIdFromString(mediaPlayerId);
-  }
+    // Attempt to auto detect id
+    const mediaPlayerId = makeId(id ?? nativeProps.id, normalizeId);
 
-  const componentProps = {
-    ...otherProps,
-    ...(ref ? { ref } : {}),
-    ...(forwardId ? { id } : {}),
-  };
+    const componentProps = {
+      ...nativeProps,
+      ...(ref ? { ref } : {}),
+    };
 
-  if (!mediaPlayerId) {
-    if (globalThis.objectiv.devTools) {
-      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
-      globalThis.objectiv.devTools.TrackerConsole.error(
-        `｢objectiv｣ Could not generate a valid id for MediaPlayerContext @ ${locationPath}. Please provide the \`id\` property.`
-      );
+    if (!mediaPlayerId) {
+      if (globalThis.objectiv.devTools) {
+        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+        globalThis.objectiv.devTools.TrackerConsole.error(
+          `｢objectiv｣ Could not generate a valid id for MediaPlayerContext @ ${locationPath}. Please provide the \`objectiv.id\` property.`
+        );
+      }
+      return <Component {...componentProps} />;
     }
-    return React.createElement(Component, componentProps);
-  }
 
-  return (
-    <MediaPlayerContextWrapper id={mediaPlayerId}>
-      {React.createElement(Component, componentProps)}
-    </MediaPlayerContextWrapper>
-  );
-});
+    return (
+      <MediaPlayerContextWrapper id={mediaPlayerId}>
+        <Component {...componentProps} />
+      </MediaPlayerContextWrapper>
+    );
+  }
+) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;

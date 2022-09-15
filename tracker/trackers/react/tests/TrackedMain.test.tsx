@@ -41,7 +41,7 @@ describe('TrackedMain', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedMain>
+        <TrackedMain objectiv={{ id: 'main' }}>
           <TrackedButton />
         </TrackedMain>
       </ObjectivProvider>
@@ -80,7 +80,7 @@ describe('TrackedMain', () => {
         <TrackedMain id={'Main 1'}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedMain>
-        <TrackedMain id={'Main 2'} normalizeId={false}>
+        <TrackedMain id={'Main 2'} objectiv={{ normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedMain>
       </ObjectivProvider>
@@ -124,8 +124,8 @@ describe('TrackedMain', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
             <TrackedMain id={'☹️'} />
           </TrackedDiv>
         </TrackedRootLocationContext>
@@ -134,7 +134,7 @@ describe('TrackedMain', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 

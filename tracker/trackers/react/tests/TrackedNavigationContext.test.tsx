@@ -2,10 +2,10 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen } from '@testing-library/react';
-import React, { createRef } from 'react';
+import { fireEvent, getByText, render } from '@testing-library/react';
+import React, { ComponentProps, createRef } from 'react';
 import {
   ObjectivProvider,
   ReactTracker,
@@ -41,7 +41,7 @@ describe('TrackedNavigationContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNavigationContext Component={'nav'} id={'nav-id'}>
+        <TrackedNavigationContext objectiv={{ Component: 'nav', id: 'nav-id' }}>
           <TrackedButton />
         </TrackedNavigationContext>
       </ObjectivProvider>
@@ -82,10 +82,10 @@ describe('TrackedNavigationContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNavigationContext Component={'nav'} id={'Nav 1'}>
+        <TrackedNavigationContext objectiv={{ Component: 'nav', id: 'Nav 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedNavigationContext>
-        <TrackedNavigationContext Component={'nav'} id={'Nav 2'} normalizeId={false}>
+        <TrackedNavigationContext objectiv={{ Component: 'nav', id: 'Nav 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedNavigationContext>
       </ObjectivProvider>
@@ -129,9 +129,9 @@ describe('TrackedNavigationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedNavigationContext Component={'nav'} id={'☹️'} />
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedNavigationContext objectiv={{ Component: 'nav', id: '☹️' }} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -139,26 +139,8 @@ describe('TrackedNavigationContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for NavigationContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for NavigationContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
-  });
-
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedNavigationContext Component={'nav'} id={'nav-id-1'} data-testid={'test-nav-1'}>
-          test
-        </TrackedNavigationContext>
-        <TrackedNavigationContext Component={'nav'} id={'nav-id-2'} forwardId={true} data-testid={'test-nav-2'}>
-          test
-        </TrackedNavigationContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-nav-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-nav-2').getAttribute('id')).toBe('nav-id-2');
   });
 
   it('should allow forwarding refs', () => {
@@ -167,7 +149,7 @@ describe('TrackedNavigationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNavigationContext Component={'nav'} id={'nav-id'} ref={ref}>
+        <TrackedNavigationContext<ComponentProps<'nav'>> ref={ref} objectiv={{ Component: 'nav', id: 'nav-id' }}>
           test
         </TrackedNavigationContext>
       </ObjectivProvider>

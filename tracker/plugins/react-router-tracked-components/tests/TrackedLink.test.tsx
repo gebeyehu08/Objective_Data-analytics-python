@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName, Tracker } from '@objectiv/tracker-core';
 import {
   ObjectivProvider,
@@ -81,7 +81,7 @@ describe('TrackedLink', () => {
       { id: 'test', href: '/?p=val#/hash' },
     ],
     [
-      { to: '/', children: '🏡', objectiv: { contextId: 'emoji' } },
+      { to: '/', children: '🏡', objectiv: { id: 'emoji' } },
       { id: 'emoji', href: '/' },
     ],
   ];
@@ -119,7 +119,7 @@ describe('TrackedLink', () => {
     render(
       <BrowserRouter>
         <ObjectivProvider tracker={tracker}>
-          <TrackedRootLocationContext Component={'div'} id={'root'}>
+          <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
             <TrackedDiv id={'content'}>
               <TrackedLink to={'/'}>🏡</TrackedLink>
             </TrackedDiv>
@@ -130,7 +130,7 @@ describe('TrackedLink', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate id for LinkContext @ RootLocation:root / Content:content. Either add the `title` prop or specify an id manually via the  `id` option of the `objectiv` prop.'
+      '｢objectiv｣ Could not generate a valid id for LinkContext @ RootLocation:root / Content:content. Please provide either the `title` or the `objectiv.id` property manually.'
     );
   });
 
@@ -191,8 +191,11 @@ describe('TrackedLink', () => {
     const { container } = render(
       <BrowserRouter>
         <ObjectivProvider tracker={tracker}>
-          <TrackedLink data-testid={'test'} to="/some-url" reloadDocument={true} onClick={clickSpy}>
-            Press me
+          <TrackedLink data-testid={'test-1'} to="/some-url-1" reloadDocument={true} onClick={clickSpy}>
+            Press me 1
+          </TrackedLink>
+          <TrackedLink data-testid={'test-2'} to="/some-url-2" onClick={clickSpy} objectiv={{ waitUntilTracked: true }}>
+            Press me 2
           </TrackedLink>
         </ObjectivProvider>
       </BrowserRouter>
@@ -200,7 +203,7 @@ describe('TrackedLink', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.click(getByTestId(container, 'test'));
+    fireEvent.click(getByTestId(container, 'test-1'));
 
     await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
 
@@ -212,7 +215,29 @@ describe('TrackedLink', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.LinkContext,
-            id: 'press-me',
+            id: 'press-me-1',
+            href: '/some-url-1',
+          }),
+        ]),
+      })
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(getByTestId(container, 'test-2'));
+
+    await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'press-me-2',
+            href: '/some-url-2',
           }),
         ]),
       })

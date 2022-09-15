@@ -8,14 +8,14 @@ from sqlalchemy.engine import Dialect
 
 from bach.partitioning import get_order_by_expression
 from bach.series import Series
-from bach.expression import Expression, AggregateFunctionExpression, get_variable_tokens
+from bach.expression import Expression, AggregateFunctionExpression, get_variable_tokens, ConstValueExpression
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres
+from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres, is_athena
 
 if TYPE_CHECKING:
-    from bach.series import SeriesBoolean
+    from bach.series import SeriesBoolean, SeriesInt64
     from bach import DataFrame, SortColumn, SeriesJson
 
 
@@ -24,64 +24,86 @@ class StringOperation:
     def __init__(self, base: 'SeriesString'):
         self._base = base
 
-    def __getitem__(self, start: Union[int, slice]) -> 'SeriesString':
+    def __getitem__(self, key: Union[int, slice]) -> 'SeriesString':
         """
         Get a python string slice using DB functions. Format follows standard slice format
-        Note: this is called 'slice' to not destroy index selection logic
-        :param item: an int for a single character, or a slice for some nice slicing
+        :param key: an int for a single character, or a slice for some nice slicing
         :return: SeriesString with the slice applied
         """
-        if isinstance(start, (int, type(None))):
-            item = slice(start, start + 1)
-        elif isinstance(start, slice):
-            item = start
+        if key and not isinstance(key, (int, slice)):
+            raise TypeError(f'Type not supported {type(key)}')
+
+        start = key.start if isinstance(key, slice) else key
+
+        if isinstance(key, slice):
+            stop = key.stop
         else:
-            raise ValueError(f'Type not supported {type(start)}')
+            # if key == -1, then we should just return last character, otherwise stop on the next character
+            stop = key + 1 if key != -1 else None
 
-        expression = self._base.expression
+        return self._base.copy_override(expression=self._get_substr_expression(start=start, stop=stop))
 
-        if item.start is not None and item.start < 0:
-            expression = Expression.construct(f'right({{}}, {abs(item.start)})', expression)
-            if item.stop is not None:
-                if item.stop <= 0 and item.stop > item.start:
-                    # we needed to check stop <= 0, because that would mean we're going the wrong direction
-                    # and that's not supported
-                    expression = Expression.construct(f'left({{}}, {item.stop - item.start})', expression)
-                else:
-                    expression = Expression.construct("''")
+    def _get_substr_expression(self, start=None, stop=None) -> Expression:
+        base_expr = self._base.expression
+        len_series = self._base.str.len()
 
-        elif item.stop is not None and item.stop < 0:
-            # we need to get the full string, minus abs(stop) chars with possibly item.start as an offset
-            offset = 1 if item.start is None else item.start + 1
-            length_offset = item.stop - (offset - 1)
-            expression = Expression.construct(
-                f'substr({{}}, {offset}, greatest(0, length({{}}){length_offset}))',
-                expression, expression
+        # value[:]
+        if start is None and stop is None:
+            return base_expr
+
+        # For value[x:y], where  x and y have the same sign and x > y > 0.
+        # result will always be empty str
+        if start and stop and start * stop > 0 and start >= stop:
+            return Expression.string_value('')
+
+        # get the equivalent SQL index for each PYTHON slice index
+        start_index_expr = self._python_index_to_sql_index_expr(start)
+        stop_index_expr = self._python_index_to_sql_index_expr(stop)
+
+        if stop is None:
+            substr_len_expr = len_series.expression
+        else:
+            substr_len_expr = Expression.construct(
+                'greatest(({}) - ({}), 0)',
+                stop_index_expr, start_index_expr,
             )
 
-        else:
-            # positives only
-            if item.stop is None:
-                if item.start is None:
-                    # full string, what are we doing here?
-                    # current expression is okay.
-                    pass
-                else:
-                    # full string starting at start
-                    expression = Expression.construct(f'substr({{}}, {item.start + 1})', expression)
-            else:
-                if item.start is None:
-                    expression = Expression.construct(f'left({{}}, {item.stop})', expression)
-                else:
-                    if item.stop > item.start:
-                        expression = Expression.construct(
-                            f'substr({{}}, {item.start + 1}, {item.stop - item.start})',
-                            expression
-                        )
-                    else:
-                        expression = Expression.construct("''")
+        return Expression.construct('substr({}, {}, {})', base_expr, start_index_expr, substr_len_expr)
 
-        return self._base.copy_override(expression=expression)
+    def _python_index_to_sql_index_expr(self, index: Optional[int]) -> Expression:
+        """
+        returns expression for converting pythonic index to SQL ordinal index.
+
+        .. note::
+            if provided index is None, then SQL index will default to 1.
+
+        .. note::
+           if provided index exceeds negative range (|index| > len(value)), then SQL index
+           will default to 1.
+        """
+        # converts python index to its equivalent SQL (positive) index.
+        # for example:
+        #
+        #          -8  -7  -6  -5  -4  -3  -2  -1
+        #           O | B | J | E | C | T | I | V
+        #  sql      1   2   3   4   5   6   7   8
+        # python    0   1   2   3   4   5   6   7
+
+        #
+        # python     sql
+        #   0         1
+        #  -6         3
+        # -10         1
+
+        if index is None or index >= 0:
+            sql_index = 0 if index is None else index
+            index_expr = ConstValueExpression.construct(str(sql_index))
+        # if index is negative, we need to get its respective positive index
+        else:
+            index_expr = Expression.construct(f'greatest({{}} - {abs(index)}, 0)', self.len())
+
+        # SQL starts from 1, therefore we need to normalize python start index
+        return Expression.construct('{} + 1', index_expr)
 
     def slice(self, start=None, stop=None) -> 'SeriesString':
         """
@@ -155,6 +177,17 @@ class StringOperation:
         return self._base.copy_override(
             expression=Expression.construct('lower({})', self._base)
         )
+
+    def len(self) -> 'SeriesInt64':
+        """
+        gets the lengths of string values.
+
+        :return: SeriesInt64
+        """
+        from bach.series import SeriesInt64
+        return self._base.copy_override(
+            expression=Expression.construct('length({})', self._base)
+        ).copy_override_type(SeriesInt64)
 
 
 class SeriesString(Series):
@@ -288,6 +321,8 @@ class SeriesString(Series):
             expression = Expression.construct('to_jsonb({})', array_agg_expression)
         elif is_bigquery(self.engine):
             expression = Expression.construct('to_json_string({})', array_agg_expression)
+        elif is_athena(self.engine):
+            expression = Expression.construct('cast({} as json)', array_agg_expression)
         else:
             raise DatabaseNotSupportedException(self.engine)
 

@@ -73,7 +73,7 @@ describe('TrackedNavLink', () => {
       { id: 'test', href: '/?p=val#/hash' },
     ],
     [
-      { to: '/', children: '🏡', objectiv: { contextId: 'emoji' } },
+      { to: '/', children: '🏡', objectiv: { id: 'emoji' } },
       { id: 'emoji', href: '/' },
     ],
   ];
@@ -113,7 +113,7 @@ describe('TrackedNavLink', () => {
     render(
       <BrowserRouter>
         <ObjectivProvider tracker={tracker}>
-          <TrackedRootLocationContext Component={'div'} id={'root'}>
+          <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
             <TrackedDiv id={'content'}>
               <TrackedNavLink to={'/'}>🏡</TrackedNavLink>
             </TrackedDiv>
@@ -124,7 +124,7 @@ describe('TrackedNavLink', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate id for LinkContext @ RootLocation:root / Content:content. Either add the `title` prop or specify an id manually via the  `id` option of the `objectiv` prop.'
+      '｢objectiv｣ Could not generate a valid id for LinkContext @ RootLocation:root / Content:content. Please provide either the `title` or the `objectiv.id` property manually.'
     );
   });
 
@@ -187,8 +187,16 @@ describe('TrackedNavLink', () => {
     const { container } = render(
       <BrowserRouter>
         <ObjectivProvider tracker={tracker}>
-          <TrackedNavLink data-testid={'test'} to="/some-url" reloadDocument={true} onClick={clickSpy}>
-            Press me
+          <TrackedNavLink data-testid={'test-1'} to="/some-url-1" reloadDocument={true} onClick={clickSpy}>
+            Press me 1
+          </TrackedNavLink>
+          <TrackedNavLink
+            data-testid={'test-2'}
+            to="/some-url-2"
+            onClick={clickSpy}
+            objectiv={{ waitUntilTracked: true }}
+          >
+            Press me 2
           </TrackedNavLink>
         </ObjectivProvider>
       </BrowserRouter>
@@ -196,7 +204,7 @@ describe('TrackedNavLink', () => {
 
     jest.resetAllMocks();
 
-    fireEvent.click(getByTestId(container, 'test'));
+    fireEvent.click(getByTestId(container, 'test-1'));
 
     await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
 
@@ -208,7 +216,29 @@ describe('TrackedNavLink', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.LinkContext,
-            id: 'press-me',
+            id: 'press-me-1',
+            href: '/some-url-1',
+          }),
+        ]),
+      })
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(getByTestId(container, 'test-2'));
+
+    await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'press-me-2',
+            href: '/some-url-2',
           }),
         ]),
       })

@@ -11,15 +11,16 @@ import {
   TrackerPlatform,
 } from '@objectiv/tracker-core';
 import { TrackerConsole } from '../src/TrackerConsole';
-import { makeGlobalContextValidationRule } from '../src/validationRules/makeGlobalContextValidationRule';
 import { makeLocationContextValidationRule } from '../src/validationRules/makeLocationContextValidationRule';
+import { makeMissingGlobalContextValidationRule } from '../src/validationRules/makeMissingGlobalContextValidationRule';
+import { makeUniqueGlobalContextValidationRule } from '../src/validationRules/makeUniqueGlobalContextValidationRule';
 
 TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('Validation Rules', () => {
-  describe('GlobalContextValidationRules', () => {
+  describe('MissingGlobalContextValidationRules', () => {
     it('Should skip validation if the given `eventMatches` returns false', () => {
-      const testGlobalContextValidationRule = makeGlobalContextValidationRule({
+      const testGlobalContextValidationRule = makeMissingGlobalContextValidationRule({
         platform: TrackerPlatform.CORE,
         contextName: GlobalContextName.PathContext,
         eventMatches: () => false,
@@ -35,7 +36,7 @@ describe('Validation Rules', () => {
     });
 
     it('Should TrackerConsole.error if given contextName is missing', () => {
-      const testGlobalContextValidationRule = makeGlobalContextValidationRule({
+      const testGlobalContextValidationRule = makeMissingGlobalContextValidationRule({
         platform: TrackerPlatform.CORE,
         contextName: GlobalContextName.PathContext,
       });
@@ -55,7 +56,7 @@ describe('Validation Rules', () => {
     });
 
     it('Should prefix TrackerConsole.error messages with logPrefix', () => {
-      const testGlobalContextValidationRule = makeGlobalContextValidationRule({
+      const testGlobalContextValidationRule = makeMissingGlobalContextValidationRule({
         platform: TrackerPlatform.CORE,
         contextName: GlobalContextName.PathContext,
         logPrefix: 'TestPrefix',
@@ -74,12 +75,28 @@ describe('Validation Rules', () => {
         'color:red'
       );
     });
+  });
 
-    it('Should TrackerConsole.error if given contextName is present more than once', () => {
-      const testGlobalContextValidationRule = makeGlobalContextValidationRule({
+  describe('UniqueGlobalContextValidationRules', () => {
+    it('Should skip validation if the given `eventMatches` returns false', () => {
+      const testGlobalContextValidationRule = makeUniqueGlobalContextValidationRule({
         platform: TrackerPlatform.CORE,
-        contextName: GlobalContextName.PathContext,
-        once: true,
+        eventMatches: () => false,
+      });
+
+      jest.resetAllMocks();
+
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() })
+      );
+
+      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
+    });
+
+    it('Should prefix TrackerConsole.error messages with logPrefix', () => {
+      const testGlobalContextValidationRule = makeUniqueGlobalContextValidationRule({
+        platform: TrackerPlatform.CORE,
+        logPrefix: 'TestPrefix',
       });
 
       jest.resetAllMocks();
@@ -98,8 +115,52 @@ describe('Validation Rules', () => {
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
-        '%c｢objectiv｣ Error: Only one PathContext should be present in Global Contexts of PressEvent.\n' +
+        '%c｢objectiv:TestPrefix｣ Error: Only one PathContext(id: test) should be present in Global Contexts of PressEvent.\n' +
           'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+        'color:red'
+      );
+    });
+
+    it('Should TrackerConsole.error if any global context is present more than once', () => {
+      const testGlobalContextValidationRule = makeUniqueGlobalContextValidationRule({
+        platform: TrackerPlatform.CORE,
+      });
+
+      jest.resetAllMocks();
+
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({
+          _type: 'PressEvent',
+          global_contexts: [
+            {
+              __instance_id: generateGUID(),
+              __global_context: true,
+              _type: GlobalContextName.InputValueContext,
+              id: 'test',
+            },
+            {
+              __instance_id: generateGUID(),
+              __global_context: true,
+              _type: GlobalContextName.InputValueContext,
+              id: 'test',
+            },
+            { __instance_id: generateGUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
+            { __instance_id: generateGUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
+          ],
+          id: generateGUID(),
+          time: Date.now(),
+        })
+      );
+
+      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(2);
+      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
+        '%c｢objectiv｣ Error: Only one PathContext(id: test) should be present in Global Contexts of PressEvent.\n' +
+          'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+        'color:red'
+      );
+      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
+        '%c｢objectiv｣ Error: Only one InputValueContext(id: test) should be present in Global Contexts of PressEvent.\n' +
+          'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
         'color:red'
       );
     });
