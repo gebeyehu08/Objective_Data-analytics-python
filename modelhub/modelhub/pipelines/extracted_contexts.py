@@ -35,7 +35,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         3. _extract_requested_global_contexts: Creates a series per requested global context. Extraction
            depends if child supports snowplow flat format or GLOBAL_CONTEXT series.
         4. _convert_dtypes: Will convert all required context series to their correct dtype
-        5. _apply_date_filter: Applies start_date and end_date filter, if required.
+        5. _apply_filters: Applies start_date and end_date filter, if required.
 
     Final bach DataFrame will be later validated, it must include:
         - all context series defined in ObjectivSupportedColumns
@@ -44,6 +44,8 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
     DATE_FILTER_COLUMN = ObjectivSupportedColumns.DAY.value
 
     BASE_REQUIRED_DB_DTYPES: Dict[str, StructuredDtype] = {}
+
+    IS_DUPLICATED_EVENT_SERIES_NAME = '__duplicated_event'
 
     def __init__(self, engine: Engine, table_name: str, global_contexts: List[str]):
         super().__init__()
@@ -85,7 +87,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         context_df = self._extract_requested_global_contexts(context_df)
 
         context_df = self._convert_dtypes(df=context_df)
-        context_df = self._apply_date_filter(df=context_df, **kwargs)
+        context_df = self._apply_filters(df=context_df, **kwargs)
 
         context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
         context_df = context_df[context_columns + self._global_contexts]
@@ -139,7 +141,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
             with_md_dtypes=True
         )
 
-    def _apply_date_filter(
+    def _apply_filters(
         self,
         df: bach.DataFrame,
         start_date: Optional[str] = None,
@@ -147,14 +149,21 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         **kwargs,
     ) -> bach.DataFrame:
         """
-        Filters dataframe by a date range.
+        Apply different filters on the dataframe.
+        Currently only event deduplication and date range are supported.
 
         returns bach DataFrame
         """
         df_cp = df.copy()
 
-        if not start_date and not end_date:
+        if (
+            self.IS_DUPLICATED_EVENT_SERIES_NAME not in df.data_columns
+            and not start_date and not end_date
+        ):
             return df_cp
+
+        if not df_cp.is_materialized:
+            df_cp = df_cp.materialize()
 
         date_filters = []
         if start_date:
@@ -162,7 +171,14 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         if end_date:
             date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
 
-        return df_cp[reduce(operator.and_, date_filters)]
+        all_filters = []
+        if date_filters:
+            all_filters.append(reduce(operator.and_, date_filters))
+
+        if self.IS_DUPLICATED_EVENT_SERIES_NAME in df_cp.data_columns:
+            all_filters.append(df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME] == 1)
+
+        return df_cp[reduce(operator.or_, all_filters)]
 
 
 class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
@@ -259,11 +275,8 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
                 'network_userid': ObjectivSupportedColumns.USER_ID.value,
             }
         )
-        df_cp = df_cp.astype(
-            {g_name: bach.SeriesJson.dtype for g_name in self._global_contexts_dtypes.keys()}
-        )
 
-        # Remove duplicated event_ids
+        # Mark duplicated event_ids
         # Unfortunately, some events might share an event ID due to
         # browser pre-cachers or scraping bots sending the same event multiple time. Although,
         # legitimate clients might try to send the same events multiple times,
@@ -273,7 +286,8 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         # primary key index on event-id. On BigQuery such indexes are not possible. Instead, we here filter
         # out duplicate event-ids, keeping the first event
         # based on the time the collector sends it to snowplow.
-        df_cp = df_cp.drop_duplicates(subset=['event_id'], sort_by=['collector_tstamp'], keep='first')
+        window = df_cp.sort_values(by=['collector_tstamp']).groupby(by=['event_id']).window()
+        df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME] = df_cp['event_id'].window_row_number(window=window)
 
         # Snowplow data source has no moment and day columns, therefore we need to generate them
         if df_cp['true_tstamp'].dtype == 'timestamp':
@@ -345,18 +359,22 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
 
         ls_series_name = str(ObjectivSupportedColumns.LOCATION_STACK.value)
 
-        ls_series = df_cp[ls_series_name].copy_override_type(bach.SeriesJson)
-        # TODO: Replace this when bach supports scalar extraction
-        #       as JSON_EXTRACT_SCALAR removes outermost quotes and unescapes the return values
-        df_cp[ls_series_name] = ls_series.copy_override(
-            expression=bach.expression.Expression.construct(
-                "JSON_EXTRACT_SCALAR({}, '$.location_stack')",
-                ls_series.json[0],
-            )
-        ).astype('objectiv_location_stack')
-        df_cp = df_cp.astype({gc: 'objectiv_global_context' for gc in self._global_contexts})
+        # for BQ, location stack series has the following format:
+        # [{'location_stack': '[{...}, {...},...]'}]
+        # therefore we need to extract the first element in the array and afterwards the value
+        # of location_stack
+        ls_series_list = df_cp[ls_series_name].copy_override_type(bach.SeriesList, instance_dtype=[{}])
+        ls_series_dict = ls_series_list.elements[0].copy_override_type(
+            series_type=bach.SeriesDict, instance_dtype={'location_stack': bach.SeriesString.dtype}
+        )
+        df_cp[ls_series_name] = ls_series_dict.elements['location_stack']
 
-        return df_cp
+        return df_cp.astype(
+            {
+                ls_series_name: 'objectiv_location_stack',
+                **{gc: 'objectiv_global_context' for gc in self._global_contexts}
+            }
+        )
 
 
 def get_extracted_context_pipeline(
