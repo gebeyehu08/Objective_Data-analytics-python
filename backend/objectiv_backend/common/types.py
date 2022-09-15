@@ -25,6 +25,6 @@ class FailureReason(Enum):
     DUPLICATE = 'duplicate'
 
 
-class CookieIdSource(Enum):
-    BACKEND = 'backend'
-    CLIENT = 'client'
+class CookieIdSource:
+    BACKEND: str = 'backend'
+    CLIENT: str = 'client'
