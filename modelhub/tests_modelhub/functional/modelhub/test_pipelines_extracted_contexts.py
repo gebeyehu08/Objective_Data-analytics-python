@@ -32,10 +32,11 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
         assert db_format == DBParams.Format.OBJECTIV
         return pd.DataFrame(parsed_data)
 
-    bq_data = []
+    sp_data = []
     for event in parsed_data:
-        if db_format == DBParams.Format.SNOWPLOW :
-            bq_data.append(
+        if db_format == DBParams.Format.SNOWPLOW:
+
+            sp_data.append(
                 {
                     'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
                     'event_id': str(event['event_id']),
@@ -51,7 +52,7 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
         else:
             raise TypeError(f"Unsupported db format {db_format}")
 
-    return pd.DataFrame(bq_data)
+    return pd.DataFrame(sp_data)
 
 
 def get_expected_context_pandas_df(
