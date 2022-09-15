@@ -415,7 +415,7 @@ this time when they came from a marketing campaign.
 	Pressable: hamburger located at Root Location: home => Navigation: navbar-top	                 8.474576
 	Link: star-us-on-github located at Root Location: home => Content: hero	                         8.474576
 	Link: star-us-on-github located at Root Location: home => Navigation: hero	                 8.474576
-	Link: github located at Root Location: home => Navigation: navbar-top => Overlay: hamburge...	 5.084746
+	Link: objectiv-quickstart-guide located at Root Location: home => Content: the-stack-quick...	 5.084746
 
 
 Visualize the sequences in a Sankey diagram for non-converted users from a marketing campaign
