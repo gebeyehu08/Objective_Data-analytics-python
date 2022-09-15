@@ -23,7 +23,7 @@ from modelhub.pipelines.base_pipeline import BaseDataPipeline
 
 class BaseExtractedContextsPipeline(BaseDataPipeline):
     """
-    Abstract pipeline in charge of extracting Objectiv context columns from event data source.
+    Base pipeline in charge of extracting Objectiv context columns from event data source.
     Based on the provided engine, it will perform the proper transformations for generating a bach DataFrame
     that contains all expected series to be used by Modelhub.
 
@@ -171,6 +171,10 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
 
 
 class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
+    """
+    ExtractedContextsPipeline that process Objectiv native format, where global_contexts and location_stack
+    values are required to be extracted from a "taxonomy" json.
+    """
     TAXONOMY_JSON_COLUMN_NAME = 'value'
     TAXONOMY_JSON_FIELD_DTYPES = {
         '_type': bach.SeriesString.dtype,
@@ -227,6 +231,7 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC
         return df_cp.drop(columns=[self.TAXONOMY_JSON_COLUMN_NAME])
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        """ See implementation in parent class :class:`BaseExtractedContextsPipeline` """
         if ObjectivSupportedColumns.GLOBAL_CONTEXTS.value not in df.data_columns:
             raise Exception(
                 f'{self._engine.name} requires flattening for global context extraction, but'
@@ -247,6 +252,11 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC
 
 
 class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
+    """
+    ExtractedContextsPipeline that processes Snowplow flattened format. Format might not be the same
+    for all engines implemented in Snowplow, therefore this class should be extended and each
+    child must be in charge of hanlding their own format.
+    """
     BASE_REQUIRED_DB_DTYPES = {
         'collector_tstamp': bach.SeriesTimestamp.dtype,
         'event_id': bach.SeriesString.dtype,
@@ -257,6 +267,9 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
     }
 
     def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Removes duplicated event_ids and renames initial series name to its respectiv Objectiv series name.
+        """
         df_cp = df.rename(
             columns={
                 'se_action': ObjectivSupportedColumns.EVENT_TYPE.value,
@@ -301,8 +314,14 @@ class PostgresExtractedContextsPipeline(NativeObjectivExtractedContextsPipeline)
 
 
 class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
-
+    """
+    BigQuery Pipeline implementation for SnowplowExtractedContextsPipeline. This pipeline
+    assumes there is a column per global context and a single column for location stack.
+    """
     def _get_global_context_mapping_from_series_names(self, series_names: List[str]):
+        """
+        Returns mapping between db column name and global context name.
+        """
         # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0 -> cookie_id
         # but also contexts_io_objectiv_location_stack_1_0_0 -> location_stack
         global_contexts_column_mapping: Dict[str, str] = {}
@@ -328,6 +347,9 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
     def _get_global_contexts_dtypes_from_db_dtypes(
         self, db_dtypes: Dict[str, StructuredDtype],
     ) -> Dict[str, StructuredDtype]:
+        """
+        Returns mapping between global context columns and expected series dtype for each.
+        """
         gc_mapping = self._get_global_context_mapping_from_series_names(list(db_dtypes.keys()))
         return {
             db_col_name: [{}]
@@ -336,6 +358,7 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         }
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        """ See implementation in parent class :class:`BaseExtractedContextsPipeline` """
         gc_mapping = self._get_global_context_mapping_from_series_names(
             series_names=df.data_columns
         )
@@ -361,6 +384,9 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
 def get_extracted_context_pipeline(
     engine: Engine, table_name: str, global_contexts: List[str]
 ) -> BaseExtractedContextsPipeline:
+    """
+    Returns an instance of ExtractedContextPipeline based on the provided engine.
+    """
     if is_postgres(engine):
         return PostgresExtractedContextsPipeline(engine, table_name, global_contexts)
 
