@@ -115,17 +115,14 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
     @abstractmethod
     def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
         """
-        Extracts supported extracted context series based on initial data and prepares dataframe
-        for global context extraction.
+        Transforms and prepares initial event data for global context extraction.
         """
         raise NotImplemented
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
         """
-        Creates a series per requested global context. If engine does not support snowplow flat format,
-        then df MUST contain GLOBAL_CONTEXTS SeriesJson. In case snowplow flat format is supported,
-        `_global_contexts_column_mapping` will be used for renaming db global context names to equivalent
-        objective global context column names.
+        Creates a new series for location_stack and each requested global context. Provided DataFrame
+        is expected to have the required format based on implementation.
         """
         raise NotImplementedError
 
@@ -253,7 +250,7 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
     """
     ExtractedContextsPipeline that processes Snowplow flattened format. Format might not be the same
     for all engines implemented in Snowplow, therefore this class should be extended and each
-    child must be in charge of hanlding their own format.
+    child must be in charge of handling their own format.
     """
     BASE_REQUIRED_DB_DTYPES = {
         'collector_tstamp': bach.SeriesTimestamp.dtype,
@@ -308,6 +305,10 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
 
 
 class PostgresExtractedContextsPipeline(NativeObjectivExtractedContextsPipeline):
+    """
+    Postgres Pipeline implementation for NativeObjectivExtractedContextsPipeline. Currently, this is the
+    only format supported in Postgres.
+    """
     ...
 
 
