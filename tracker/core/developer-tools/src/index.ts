@@ -16,8 +16,9 @@ import { getLocationPath } from './getLocationPath';
 import { LocationTree } from './LocationTree';
 import { OpenTaxonomyValidationPlugin } from './OpenTaxonomyValidationPlugin';
 import { TrackerConsole } from './TrackerConsole';
-import { makeGlobalContextValidationRule } from './validationRules/makeGlobalContextValidationRule';
 import { makeLocationContextValidationRule } from './validationRules/makeLocationContextValidationRule';
+import { makeMissingGlobalContextValidationRule } from './validationRules/makeMissingGlobalContextValidationRule';
+import { makeUniqueGlobalContextValidationRule } from './validationRules/makeUniqueGlobalContextValidationRule';
 
 /**
  * A global object containing all DeveloperTools
@@ -26,8 +27,9 @@ const developerTools: TrackerDeveloperToolsInterface = {
   EventRecorder,
   getLocationPath,
   LocationTree,
-  makeGlobalContextValidationRule,
   makeLocationContextValidationRule,
+  makeMissingGlobalContextValidationRule,
+  makeUniqueGlobalContextValidationRule,
   OpenTaxonomyValidationPlugin,
   TrackerConsole,
 };

@@ -35,11 +35,10 @@ export class HttpContextPlugin implements TrackerPluginInterface {
 
     if (globalThis.objectiv.devTools) {
       this.validationRules = [
-        globalThis.objectiv.devTools.makeGlobalContextValidationRule({
+        globalThis.objectiv.devTools.makeMissingGlobalContextValidationRule({
           platform,
           logPrefix: this.pluginName,
           contextName: GlobalContextName.HttpContext,
-          once: true,
         }),
       ];
     }

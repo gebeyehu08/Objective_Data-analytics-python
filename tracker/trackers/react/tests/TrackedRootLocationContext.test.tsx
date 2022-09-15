@@ -2,9 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen } from '@testing-library/react';
+import { fireEvent, getByText, render } from '@testing-library/react';
 import React, { createRef } from 'react';
 import { ObjectivProvider, ReactTracker, TrackedRootLocationContext, usePressEventTracker } from '../src';
 
@@ -27,22 +27,26 @@ describe('TrackedRootLocationContext', () => {
     jest.spyOn(logTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
-    const TrackedButton = () => {
+    const TrackedButton = ({ text = 'Trigger Event' }: { text?: string }) => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
+      return <div onClick={() => trackPressEvent()}>{text}</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root-id'}>
-          <TrackedButton />
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root-id-1' }}>
+          <TrackedButton text={'Trigger Event 1'} />
+        </TrackedRootLocationContext>
+        <TrackedRootLocationContext id={'root-id-2'} objectiv={{ Component: 'div' }}>
+          <TrackedButton text={'Trigger Event 2'} />
         </TrackedRootLocationContext>
       </ObjectivProvider>
     );
 
-    fireEvent.click(getByText(container, /trigger event/i));
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -56,7 +60,19 @@ describe('TrackedRootLocationContext', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.RootLocationContext,
-            id: 'root-id',
+            id: 'root-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.RootLocationContext,
+            id: 'root-id-2',
           }),
         ]),
       })
@@ -75,10 +91,10 @@ describe('TrackedRootLocationContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'Root id 1'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'Root id 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedRootLocationContext>
-        <TrackedRootLocationContext Component={'div'} id={'Root id 2'} normalizeId={false}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'Root id 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -126,32 +142,14 @@ describe('TrackedRootLocationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'☹️'} />
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: '☹️' }} />
       </ObjectivProvider>
     );
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for RootLocationContext. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for RootLocationContext. Please provide the `objectiv.id` property.'
     );
-  });
-
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root-id-1'} data-testid={'test-root-1'}>
-          test
-        </TrackedRootLocationContext>
-        <TrackedRootLocationContext Component={'div'} id={'root-id-2'} forwardId={true} data-testid={'test-root-2'}>
-          test
-        </TrackedRootLocationContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-root-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-root-2').getAttribute('id')).toBe('root-id-2');
   });
 
   it('should allow forwarding refs', () => {
@@ -160,7 +158,7 @@ describe('TrackedRootLocationContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root-id'} ref={ref}>
+        <TrackedRootLocationContext ref={ref} objectiv={{ Component: 'div', id: 'root-id' }}>
           test
         </TrackedRootLocationContext>
       </ObjectivProvider>

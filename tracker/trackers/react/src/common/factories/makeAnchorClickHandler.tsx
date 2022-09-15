@@ -23,7 +23,7 @@ declare global {
 /**
  * Anchor click handler factory parameters
  */
-export type AnchorClickHandlerParameters = {
+export type AnchorClickHandlerParameters<T = HTMLAnchorElement> = {
   /**
    * TrackingContext can be retrieved either from LocationWrapper render-props or via useTrackingContext.
    */
@@ -42,14 +42,14 @@ export type AnchorClickHandlerParameters = {
   /**
    * Custom onClick handler that may have been passed to the Tracked Component. Will be invoked after tracking.
    */
-  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
+  onClick?: (event: React.MouseEvent<T>) => void;
 };
 
 /**
  * Anchor click handler factory
  */
-export const makeAnchorClickHandler =
-  (props: AnchorClickHandlerParameters) => async (event: React.MouseEvent<HTMLAnchorElement>) => {
+export function makeAnchorClickHandler<T>(props: AnchorClickHandlerParameters<T>) {
+  return async (event: React.MouseEvent<T>) => {
     if (!props.waitUntilTracked) {
       // Track PressEvent: non-blocking.
       trackPressEvent(props.trackingContext);
@@ -88,3 +88,4 @@ export const makeAnchorClickHandler =
       target.dispatchEvent(eventClone);
     }
   };
+}

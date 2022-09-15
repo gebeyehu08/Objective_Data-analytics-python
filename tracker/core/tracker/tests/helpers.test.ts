@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { isBrowser, isDevMode, makeIdFromString, waitForPromise } from '../src';
+import { isBrowser, isDevMode, makeId, waitForPromise } from '../src';
 
 describe('helpers', () => {
   describe('waitForPromise', () => {
@@ -37,40 +37,36 @@ describe('helpers', () => {
     });
   });
 
-  describe('makeIdFromString', () => {
-    const testCases: [input: string, output: string | null][] = [
-      // @ts-ignore
-      [undefined, null],
-      // @ts-ignore
-      [null, null],
-      // @ts-ignore
-      [0, null],
-      // @ts-ignore
-      [false, null],
-      // @ts-ignore
-      [true, null],
-      // @ts-ignore
-      [[], null],
-      // @ts-ignore
-      [{}, null],
+  describe('makeId', () => {
+    const testCases: [input: unknown, normalize: boolean | undefined, output: string | null][] = [
+      [undefined, true, null],
+      [null, true, null],
+      [false, true, null],
+      [true, true, null],
+      [[], true, null],
+      [{}, true, null],
 
-      ['', null],
-      ['_', null],
-      ['-', null],
-      ['-_', null],
-      ['-_a', 'a'],
-      ['a_-', 'a'],
-      ['a-_a', 'a-_a'],
-      ['AbCdE', 'abcde'],
-      ['Click Me!', 'click-me'],
-      ['X', 'x'],
-      ['What - How', 'what-how'],
-      ['Quite a "LONG" sentence! (annoying uh?)', 'quite-a-long-sentence-annoying-uh'],
+      [0, true, '0'],
+      ['', true, null],
+      ['_', true, null],
+      ['-', true, null],
+      ['-_', true, null],
+      ['-_a', true, 'a'],
+      ['a_-', true, 'a'],
+      ['a-_a', true, 'a-_a'],
+      ['AbCdE', true, 'abcde'],
+      ['Click Me!', true, 'click-me'],
+      ['X', true, 'x'],
+      ['What - How', true, 'what-how'],
+      ['Quite a "LONG" sentence! (annoying uh?)', true, 'quite-a-long-sentence-annoying-uh'],
+      ['Quite a "LONG" sentence! (annoying uh?)', false, 'Quite a "LONG" sentence! (annoying uh?)'],
+      [12345, false, '12345'],
+      [12345, undefined, '12345'],
     ];
 
-    testCases.forEach(([input, output]) =>
-      it(`${JSON.stringify(input)} -> ${JSON.stringify(output)}`, () => {
-        expect(makeIdFromString(input)).toBe(output);
+    testCases.forEach(([input, normalize, output]) =>
+      it(`${JSON.stringify(input)} (normalize: ${normalize ? 'yes' : 'no'}) -> ${JSON.stringify(output)}`, () => {
+        expect(makeId(input, normalize)).toBe(output);
       })
     );
   });

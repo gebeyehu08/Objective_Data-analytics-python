@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 import {
   makeTitleFromChildren,
   PressableContextWrapper,
@@ -30,7 +30,7 @@ export const TrackedPressable = (props: TrackedPressableProps) => {
 
   // Either use the given id or attempt to auto-detect `id` for LinkContext by looking at the `children` prop.
   const title = makeTitleFromChildren(props.children);
-  const contextId = id ?? makeIdFromString(title);
+  const contextId = id ?? makeId(title);
 
   // If we couldn't generate an `id`, log the issue and return an untracked Component.
   const locationStack = useLocationStack();
