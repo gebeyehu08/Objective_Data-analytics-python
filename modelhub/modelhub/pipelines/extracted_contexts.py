@@ -45,7 +45,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
 
     SUPPORTS_SNOWPLOW_FLAT_FORMAT = False
 
-    BASE_REQUIRED_DB_DTYPES: Dict[str, str] = {}
+    BASE_REQUIRED_DB_DTYPES: Dict[str, StructuredDtype] = {}
 
     def __init__(self, engine: Engine, table_name: str, global_contexts: List[str]):
         super().__init__()
@@ -61,13 +61,16 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
 
         self._global_contexts_dtypes = self._get_global_contexts_dtypes_from_db_dtypes(db_dtypes=dtypes)
         self._validate_data_dtypes(
-            expected_dtypes={**self._base_dtypes, **self._global_contexts_dtypes},
+            expected_dtypes=self._base_dtypes,
             current_dtypes=dtypes,
         )
 
     @property
     def _base_dtypes(self) -> Dict[str, StructuredDtype]:
-        return {}
+        return {
+            **self.BASE_REQUIRED_DB_DTYPES,
+            **self._global_contexts_dtypes,
+        }
 
     def _get_global_contexts_dtypes_from_db_dtypes(
         self, db_dtypes: Dict[str, StructuredDtype],
@@ -177,15 +180,13 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC
         'time': bach.SeriesInt64.dtype,
     }
 
-    @property
-    def _base_dtypes(self) -> Dict[str, StructuredDtype]:
-        return {
-            'event_id': bach.SeriesUuid.dtype,
-            'day': bach.SeriesDate.dtype,
-            'moment': bach.SeriesTimestamp.dtype,
-            'cookie_id': bach.SeriesUuid.dtype,
-            'value': bach.SeriesJson.dtype,
-        }
+    BASE_REQUIRED_DB_DTYPES = {
+        'event_id': bach.SeriesUuid.dtype,
+        'day': bach.SeriesDate.dtype,
+        'moment': bach.SeriesTimestamp.dtype,
+        'cookie_id': bach.SeriesUuid.dtype,
+        'value': bach.SeriesJson.dtype,
+    }
 
     def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
         """
@@ -246,16 +247,14 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC
 
 
 class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
-    @property
-    def _base_dtypes(self) -> Dict[str, StructuredDtype]:
-        return {
-            'collector_tstamp': bach.SeriesTimestamp.dtype,
-            'event_id': bach.SeriesString.dtype,
-            'network_userid': bach.SeriesString.dtype,
-            'se_action': bach.SeriesString.dtype,
-            'se_category': bach.SeriesString.dtype,
-            'true_tstamp': bach.SeriesTimestamp.dtype
-        }
+    BASE_REQUIRED_DB_DTYPES = {
+        'collector_tstamp': bach.SeriesTimestamp.dtype,
+        'event_id': bach.SeriesString.dtype,
+        'network_userid': bach.SeriesString.dtype,
+        'se_action': bach.SeriesString.dtype,
+        'se_category': bach.SeriesString.dtype,
+        'true_tstamp': bach.SeriesTimestamp.dtype
+    }
 
     def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
         df_cp = df.rename(
@@ -322,10 +321,7 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
 
             context_name = match.group('ls_context') or match.group('gc_context')
 
-            if context_name in global_contexts_column_mapping:
-                raise Exception(f'Multiple columns found for {context_name} context.')
-
-            global_contexts_column_mapping[context_name] = col
+            global_contexts_column_mapping[col] = context_name
 
         return global_contexts_column_mapping
 
@@ -335,8 +331,8 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         gc_mapping = self._get_global_context_mapping_from_series_names(list(db_dtypes.keys()))
         return {
             db_col_name: [{}]
-            if gc_name in self._global_contexts else [{gc_name: bach.SeriesJson.dtype}]
-            for gc_name, db_col_name in gc_mapping.items()
+            if gc_name in self._global_contexts else [{gc_name: bach.SeriesString.dtype}]
+            for db_col_name, gc_name in gc_mapping.items()
         }
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
@@ -344,15 +340,19 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
             series_names=df.data_columns
         )
 
-        df_cp = df.rename(columns=dict(zip(gc_mapping.values(), gc_mapping.keys())))
+        df_cp = df.rename(columns=gc_mapping)
 
         ls_series_name = str(ObjectivSupportedColumns.LOCATION_STACK.value)
 
         ls_series = df_cp[ls_series_name].copy_override_type(bach.SeriesJson)
-        df_cp[ls_series_name] = (
-            ls_series.elements[0].elements['location_stack'].astype('string')
-            .astype('objectiv_location_stack')
-        )
+        # TODO: Replace this when bach supports scalar extraction
+        #       as JSON_EXTRACT_SCALAR removes outermost quotes and unescapes the return values
+        df_cp[ls_series_name] = ls_series.copy_override(
+            expression=bach.expression.Expression.construct(
+                "JSON_EXTRACT_SCALAR({}, '$.location_stack')",
+                ls_series.json[0],
+            )
+        ).astype('objectiv_location_stack')
         df_cp = df_cp.astype({gc: 'objectiv_global_context' for gc in self._global_contexts})
 
         return df_cp

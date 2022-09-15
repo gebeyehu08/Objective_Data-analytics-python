@@ -6,7 +6,7 @@ import pytest
 
 from bach import DataFrame
 
-from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline, get_extracted_context_pipeline
+from modelhub.pipelines.extracted_contexts import BaseExtractedContextsPipeline, get_extracted_context_pipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
     DBParams
 
@@ -30,7 +30,7 @@ def patch_extracted_contexts_validations(monkeypatch, db_params):
     )
 
     monkeypatch.setattr(
-        'modelhub.pipelines.extracted_contexts.ExtractedContextsPipeline._validate_data_dtypes',
+        'modelhub.pipelines.extracted_contexts.BaseExtractedContextsPipeline._validate_data_dtypes',
         lambda *args, **kwargs: None,
     )
 
@@ -68,7 +68,7 @@ def test_get_base_dtypes(db_params) -> None:
 def test_convert_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
+    pipeline = get_extracted_context_pipeline(engine, db_params.table_name, global_contexts=[])
 
     event = get_parsed_objectiv_data(engine)[0]
     pdf = pd.DataFrame(
