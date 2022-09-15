@@ -165,7 +165,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         return df_cp[reduce(operator.and_, date_filters)]
 
 
-class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
+class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
     """
     ExtractedContextsPipeline that process Objectiv native format, where global_contexts and location_stack
     values are required to be extracted from a "taxonomy" json.
@@ -193,25 +193,12 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC
 
         Returns a bach DataFrame containing each extracted field as series
         """
-
-        if self.TAXONOMY_JSON_COLUMN_NAME not in df.data_columns:
-            raise Exception(
-                f'Cannot extract taxonomy data for {self._engine.name} if {self.TAXONOMY_JSON_COLUMN_NAME} '
-                f'is not present in df.'
-            )
-
         df_cp = df.copy()
-        taxonomy_series = df_cp[self.TAXONOMY_JSON_COLUMN_NAME]
+        taxonomy_series = df_cp[self.TAXONOMY_JSON_COLUMN_NAME].astype(bach.SeriesJson.dtype)
         for key, dtype in self.TAXONOMY_JSON_FIELD_DTYPES.items():
             # parsing element to string and then to dtype will avoid
             # conflicts between casting compatibility
-            if isinstance(taxonomy_series, bach.SeriesJson):
-                taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
-            else:
-                # taxonomy_series is dtype='dict' for BQ. Therefore, we need to explicitly
-                # cast the resultant element as string
-                taxonomy_col = taxonomy_series.elements[key].astype('string')
-
+            taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
             taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
             df_cp[key] = taxonomy_col
 
@@ -304,14 +291,6 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         return df_cp.drop(columns=['true_tstamp', 'collector_tstamp'])
 
 
-class PostgresExtractedContextsPipeline(NativeObjectivExtractedContextsPipeline):
-    """
-    Postgres Pipeline implementation for NativeObjectivExtractedContextsPipeline. Currently, this is the
-    only format supported in Postgres.
-    """
-    ...
-
-
 class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
     """
     BigQuery Pipeline implementation for SnowplowExtractedContextsPipeline. This pipeline
@@ -387,7 +366,8 @@ def get_extracted_context_pipeline(
     Returns an instance of ExtractedContextPipeline based on the provided engine.
     """
     if is_postgres(engine):
-        return PostgresExtractedContextsPipeline(engine, table_name, global_contexts)
+        # currently we only support old format for Postgres
+        return NativeObjectivExtractedContextsPipeline(engine, table_name, global_contexts)
 
     if is_bigquery(engine):
         return BigQueryExtractedContextsPipeline(engine, table_name, global_contexts)
