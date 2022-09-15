@@ -198,7 +198,7 @@ def test_process_data(db_params) -> None:
 
 
 @pytest.mark.skip_postgres
-def test_process_data_duplicated_event_ids(db_params) -> None:
+def test_apply_filters_duplicated_event_ids(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
@@ -222,6 +222,7 @@ def test_process_data_duplicated_event_ids(db_params) -> None:
     )
     df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
     result = context_pipeline._process_data(df)
+    result = context_pipeline._apply_filters(result)
 
     # collector_timestamp will be removed, so will true_tstamp, but the latter will live on as moment
     # so we can use that one to check whether the right event was selected.
@@ -238,7 +239,7 @@ def test_process_data_duplicated_event_ids(db_params) -> None:
     )
 
 
-def test_apply_date_filter(db_params) -> None:
+def test_apply_filters(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
@@ -249,24 +250,24 @@ def test_apply_date_filter(db_params) -> None:
     df = bach.DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     df = df.reset_index(drop=True)
 
-    result = context_pipeline._apply_date_filter(df)
+    result = context_pipeline._apply_filters(df)
     assert df == result
 
     start_date = '2021-12-01'
-    result = context_pipeline._apply_date_filter(df, start_date=start_date).sort_values(by='event_id')
+    result = context_pipeline._apply_filters(df, start_date=start_date).sort_values(by='event_id')
     start_mask = pdf['day'] >= datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
     expected = pdf[start_mask].reset_index(drop=True)
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_index_type=False)
 
     end_date = '2021-12-02'
-    result = context_pipeline._apply_date_filter(df, end_date=end_date).sort_values(by='event_id')
+    result = context_pipeline._apply_filters(df, end_date=end_date).sort_values(by='event_id')
     end_mask = pdf['day'] <= datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
     expected = pdf[end_mask].reset_index(drop=True)
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_index_type=False)
 
-    result = context_pipeline._apply_date_filter(
+    result = context_pipeline._apply_filters(
         df, start_date=start_date, end_date=end_date,
     ).sort_values(by='event_id')
     expected = pdf[start_mask & end_mask].reset_index(drop=True)
