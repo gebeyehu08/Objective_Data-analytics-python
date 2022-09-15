@@ -160,7 +160,7 @@ class CollectorConfig(NamedTuple):
     event_list_schema: EventListSchema
 
 
-def get_config_anonynous_mode() -> AnonymousModeConfig:
+def get_config_anonymous_mode() -> AnonymousModeConfig:
     return AnonymousModeConfig({
         'to_hash': {
             'HttpContext': {
@@ -316,7 +316,7 @@ def init_collector_config():
     global _CACHED_COLLECTOR_CONFIG
     _CACHED_COLLECTOR_CONFIG = CollectorConfig(
         async_mode=_ASYNC_MODE,
-        anonymous_mode=get_config_anonynous_mode(),
+        anonymous_mode=get_config_anonymous_mode(),
         cookie=get_config_cookie(),
         error_reporting=SCHEMA_VALIDATION_ERROR_REPORTING,
         output=get_config_output(),
