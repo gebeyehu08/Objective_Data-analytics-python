@@ -37,9 +37,20 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. doctest:: explore-data
 	:skipif: engine is None
 
+	.. >>> import pandas as pd
+	.. >>> pd.set_option('display.max_columns', None) # show all columns where possible, so dataframes don't get unneccesarily cut off
+	.. >>> pd.set_option('display.expand_frame_repr', False)  # do not output dataframes on multiple lines, but over full width
+	.. >>> from bach.dataframe import DataFrame
+	.. >>> import os
+	.. >>> import sqlalchemy
+	.. >>> DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	.. >>> engine = sqlalchemy.create_engine(DB_URL)
+	.. >>> start_date = '2022-06-01'
+	.. >>> end_date = '2022-06-30'
 	>>> # instantiate the model hub, set the default time aggregation to daily
 	>>> # and get the application & path global contexts
 	>>> from modelhub import ModelHub
+	>>> from bach import display_sql_as_markdown
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'path'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
@@ -261,6 +272,11 @@ simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how 
 dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
 
 .. doctest:: explore-data-features
+	:hide:
+	
+	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+
+.. doctest:: explore-data-features
 	:skipif: engine is None
 
 	>>> # show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
@@ -349,7 +365,6 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	          ) || (CASE WHEN jsonb_array_length("location_stack") > 1 THEN ' located at ' || (SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ') FROM jsonb_array_elements("location_stack") WITH ORDINALITY WHERE ORDINALITY < jsonb_array_length("location_stack") ) ELSE '' END),
 	          "event_type"
 	<BLANKLINE>
-
 
 Where to go next
 ----------------
