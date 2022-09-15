@@ -9,7 +9,6 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df
 from tests.unit.bach.util import get_pandas_df
 
 
-@pytest.mark.athena_supported()
 def test_from_value(engine):
     a = 'a string'
     b = 'a string\'"\'\' "" \\ with quotes'
@@ -34,7 +33,6 @@ def test_from_value(engine):
     )
 
 
-@pytest.mark.athena_supported()
 def test_string_slice(engine):
     bt = get_df_with_test_data(engine)[['city']]
 
@@ -96,7 +94,6 @@ def test_string_slice(engine):
     pd.testing.assert_frame_equal(expected, bt.sort_index().to_pandas())
 
 
-@pytest.mark.athena_supported()
 def test_add_string_series(engine):
     bt = get_df_with_test_data(engine)
     bts = bt['city'] + ' is in the municipality ' + bt['municipality']
@@ -131,7 +128,6 @@ def test_get_dummies(engine) -> None:
     )
 
 
-@pytest.mark.athena_supported()
 def test_string_replace(engine) -> None:
     bt = get_df_with_test_data(engine)
     municipality = bt['municipality'].sort_index()
@@ -176,7 +172,6 @@ def test_string_lower_upper(engine) -> None:
     )
 
 
-@pytest.mark.athena_supported
 def test_string_len(engine) -> None:
     df = get_df_with_test_data(engine)
     df['city_len'] = df['city'].str.len()
@@ -191,7 +186,6 @@ def test_string_len(engine) -> None:
         ]
     )
 
-@pytest.mark.athena_supported
 def test_to_json_array(engine):
     df = get_df_with_test_data(engine, full_data_set=True)
     s_muni = df['municipality']
@@ -211,7 +205,6 @@ def test_to_json_array(engine):
         ]]
     )
 
-@pytest.mark.athena_supported
 def test_to_json_array_sorting_null(engine):
     data = [
         [1, 'x', 'aa'],
@@ -251,7 +244,6 @@ def test_to_json_array_sorting_null(engine):
     )
 
 
-@pytest.mark.athena_supported
 def test_to_json_array_groupby(engine):
     df = get_df_with_test_data(engine, full_data_set=True)
     df = df.reset_index()
