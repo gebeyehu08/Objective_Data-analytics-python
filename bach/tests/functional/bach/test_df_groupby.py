@@ -10,7 +10,7 @@ from psycopg2._range import NumericRange
 
 from bach import Series, SeriesAbstractNumeric, SeriesNumericInterval
 from bach.partitioning import GroupingList, GroupingSet, Rollup, Cube
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
@@ -124,6 +124,7 @@ def test_group_by_multiple_syntax(engine):
         }
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_group_by_expression(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     btg = bt.groupby(bt['city'].str[:1])
@@ -377,11 +378,10 @@ def test_dataframe_agg_numeric_only(engine):
             'inhabitants_sum': 'int64'
         }
 
-
-def test_cube_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_cube_basics(engine):
     # TODO: BigQuery
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
 
     # instant stonks through variable naming
     btc = bt.cube(['municipality', 'city'])
@@ -420,7 +420,7 @@ def test_rollup_basics(engine):
 
     result_expression = btr.group_by.get_group_by_column_expression().to_sql(engine.dialect)
 
-    if is_postgres(engine):
+    if is_postgres(engine) or is_athena(engine):
         expected_expression = 'rollup ("municipality", "city")'
     elif is_bigquery(engine):
         expected_expression = 'rollup (`municipality`, `city`)'
@@ -447,11 +447,11 @@ def test_rollup_basics(engine):
     )
 
 
-def test_grouping_list_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_grouping_list_basics(engine):
     # TODO: BigQuery
     # This is not the greatest test, but at least it tests the interface.
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
     btl1 = bt.groupby([['municipality'], ['city']])
     btl2 = bt.groupby([['municipality'], 'city'])
     btl3 = bt.groupby(['municipality', ['city']])
@@ -481,11 +481,11 @@ def test_grouping_list_basics(pg_engine):
     )
 
 
-def test_grouping_set_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_grouping_set_basics(engine):
     # TODO: BigQuery
     # This is not the greatest test, but at least it tests the interface.
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
     bts1 = bt.groupby((('municipality'), ('city')))
     bts2 = bt.groupby((('municipality'), 'city'))
     bts3 = bt.groupby(('municipality', ('city')))
@@ -538,6 +538,7 @@ def test_grouping_set_basics(pg_engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_groupby_frame_split_series_aggregation(engine):
     bt = get_df_with_test_data(engine, full_data_set=False)[['municipality', 'inhabitants', 'founding']]
     btg1 = bt.groupby(['municipality'])
@@ -687,6 +688,7 @@ def test_materialize_on_double_aggregation(engine):
     numpy.testing.assert_almost_equal(value, 2413.5)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_groupby_w_multi_level_series(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     bt['lower'] = 0

@@ -117,7 +117,8 @@ def test_equals(dialect):
     assert not sleft.equals(sright)
 
 
-@pytest.mark.skip_postgres
+@pytest.mark.skip_postgres('Only relevant with Dict and List types, which are not supported on Postgres')
+@pytest.mark.skip_athena('Only relevant with Dict and List types, which are not supported on Athena')
 def test_equals_instance_dtype(dialect):
     def get_df(index_names: List[str], data_names: List[str]):
         return get_fake_df(dialect=dialect, index_names=index_names, data_names=data_names)

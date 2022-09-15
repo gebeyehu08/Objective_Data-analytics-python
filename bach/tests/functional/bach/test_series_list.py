@@ -7,7 +7,10 @@ from bach.series import SeriesList
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
 
-pytestmark = [pytest.mark.skip_postgres]  # SeriesList is not (yet) supported on Postgres.
+pytestmark = [
+    pytest.mark.skip_postgres('SeriesList is not (yet) supported on Postgres'),
+    pytest.mark.skip_athena(' SeriesList is not supported on Athena')
+]
 
 
 def test_basic_value_to_expression(engine):

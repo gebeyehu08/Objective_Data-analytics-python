@@ -9,7 +9,7 @@ from objectiv_backend.snowplow.schema.ttypes import CollectorPayload  # type: ig
 
 from objectiv_backend.common.config import SnowplowConfig, get_collector_config
 from objectiv_backend.common.event_utils import get_context
-from objectiv_backend.common.types import EventDataList, EventData
+from objectiv_backend.common.types import EventDataList, EventData, CookieIdSource
 from objectiv_backend.schema.validate_events import EventError
 
 from thrift.protocol import TBinaryProtocol
@@ -74,7 +74,7 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
     #     cookie_context = get_context(event, 'CookieIdContext')
     # except ValueError:
     #     cookie_context = {}
-    # _event['cookie_id'] = cookie_context.get('id', '')
+    # _event['cookie_id'] = cookie_context.get('cookie_id', '')
     # self_describing_contexts.append(make_snowplow_context(schema, _event))
 
     snowplow_contexts_schema = config.schema_contexts
@@ -150,7 +150,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     
     ## Global context properties
     ApplicationContext.id       -> aid      -> app_id
-    CookieIdContext.id          -> payload  -> network_userid 
+    CookieIdContext.cookie_id   -> payload  -> network_userid 
     HttpContext.referrer        -> refr     -> page_referrer
     HttpContext.remote_address  -> ip       -> user_ipaddress
     PathContext.id              -> url      -> page_url
@@ -170,9 +170,10 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     https://objectiv.io/docs/taxonomy/reference
     """
 
-    payload = {
-        "schema": snowplow_payload_data_schema,
-        "data": [{
+    cookie_id = cookie_context.get('cookie_id', '')
+    cookie_source = cookie_context.get('id', '')
+
+    data = {
             "e": "se",  # mandatory: event type: structured event
             "p": "web",  # mandatory: platform
             "tv": "0.0.5",  # mandatory: tracker version
@@ -187,8 +188,19 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "ip": http_context.get('remote_address', ''),  # IP address
             "dtm": str(event['corrected_time']),  # Timestamp when event occurred, as recorded by client device
             "stm": str(event['transport_time']),  # Timestamp when event was sent by client device to collector
-            "ttm": str(event['time'])  # User-set exact timestamp
-        }]
+            "ttm": str(event['time']),  # User-set exact timestamp
+
+        }
+    if cookie_source == CookieIdSource.CLIENT:
+        # only set domain_sessionid if we have a client_side id
+        data["sid"] = cookie_id
+    elif cookie_source == CookieIdSource.BACKEND:
+        # Unique identifier for a user, based on a cookie from the collector, so only set if the source was a cookie
+        data["nuid"] = cookie_id
+
+    payload = {
+        "schema": snowplow_payload_data_schema,
+        "data": [data]
     }
     return CollectorPayload(
         schema=snowplow_collector_payload_schema,
@@ -204,7 +216,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         headers=[],
         contentType='application/json',
         hostname='',
-        networkUserId=cookie_context.get('id', '')
+        networkUserId=cookie_id if cookie_source == CookieIdSource.BACKEND else None
     )
 
 

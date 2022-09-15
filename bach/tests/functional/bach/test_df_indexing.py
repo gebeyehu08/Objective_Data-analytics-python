@@ -25,6 +25,7 @@ def indexing_dfs(engine) -> Tuple[pd.DataFrame, DataFrame]:
     return pdf, df
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_basic_indexing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
 
@@ -53,6 +54,7 @@ def test_basic_indexing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_basic_indexing_column_based(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
 
@@ -74,6 +76,7 @@ def test_basic_indexing_column_based(indexing_dfs: Tuple[pd.DataFrame, DataFrame
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_index_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
 
@@ -121,6 +124,7 @@ def test_index_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_basic_set_item_by_label(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
 
@@ -148,6 +152,7 @@ def test_basic_set_item_by_label(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engine) -> None:
     _, df = indexing_dfs
     extra_pdf = pd.DataFrame(
@@ -175,6 +180,7 @@ def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engine) -> None:
     pdf, df = indexing_dfs
     if is_bigquery(df.engine):

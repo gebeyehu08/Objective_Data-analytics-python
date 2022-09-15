@@ -8,7 +8,7 @@ from bach import SortColumn
 from bach.series import Series
 from bach.expression import Expression, WindowFunctionExpression, join_expressions
 from bach.sql_model import BachSqlModel
-from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
 G = TypeVar('G', bound='GroupBy')
 
@@ -44,7 +44,7 @@ class WindowFunction(Enum):
                 self.value not in WindowFunction._BQ_FUNCTIONS_THAT_DO_NOT_SUPPORT_WINDOW_FRAME_CLAUSE.value
             )
 
-        if is_postgres(dialect):
+        if is_athena(dialect) or is_postgres(dialect):
             return True
         raise DatabaseNotSupportedException(dialect)
 

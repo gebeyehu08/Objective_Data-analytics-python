@@ -2,12 +2,14 @@ import json
 import jsonschema
 import base64
 import re
+from copy import deepcopy
 from objectiv_backend.snowplow.schema.ttypes import CollectorPayload
 from objectiv_backend.snowplow.snowplow_helper import make_snowplow_custom_contexts, \
     objectiv_event_to_snowplow_payload, snowplow_schema_violation_json
-from tests.schema.test_schema import CLICK_EVENT_JSON, make_event_from_dict
+from tests.schema.test_schema import CLICK_EVENT_JSON, make_event_from_dict, make_context
 from objectiv_backend.common.config import SnowplowConfig
-from objectiv_backend.common.event_utils import get_context
+from objectiv_backend.common.types import CookieIdSource
+from objectiv_backend.common.event_utils import get_context, add_global_context_to_event
 from objectiv_backend.schema.validate_events import EventError, ErrorInfo
 
 
@@ -60,8 +62,18 @@ def test_make_snowplow_custom_context():
 
 
 def test_objectiv_event_to_snowplow_payload():
+    local_event = deepcopy(event)
 
-    collector_payload = objectiv_event_to_snowplow_payload(event=event, config=config)
+    context_vars = {
+        '_type': 'CookieIdContext',
+        'id': CookieIdSource.CLIENT,
+        'cookie_id': 'abcde-some-fake-uuid'
+    }
+    context = make_context(**context_vars)
+
+    add_global_context_to_event(local_event, context)
+
+    collector_payload = objectiv_event_to_snowplow_payload(event=local_event, config=config)
     # check if we get the proper object
     assert type(collector_payload) == CollectorPayload
 
@@ -74,6 +86,9 @@ def test_objectiv_event_to_snowplow_payload():
 
     # check if we can deserialize the encoded custom context properly
     assert json.loads(base64.b64decode(body['data'][0]['cx']))
+
+    # as the id of the CookieIdContext is set to client, 'sid' should be set
+    assert body['data'][0]['sid'] == context_vars['cookie_id']
 
 
 def test_objectiv_event_to_snowplow_mapping():

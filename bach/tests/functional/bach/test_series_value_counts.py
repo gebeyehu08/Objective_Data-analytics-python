@@ -43,6 +43,7 @@ def test_value_counts_basic(engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_value_counts_w_bins(engine) -> None:
     bins = 4
     inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']

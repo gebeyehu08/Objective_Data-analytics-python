@@ -11,6 +11,10 @@ from bach import DataFrame
 from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
+
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
+
+
 DATA = [
     [None, None, None, None, None, 'a',   datetime(2022, 1, 1)],
     [3,    4,    None, 1,    1,     None, datetime(2022, 1, 2)],

@@ -247,7 +247,6 @@ def test_windowing_functions_agg(engine):
         )
 
 
-
 def test_windowing_functions_basics_argument(engine):
     # just check the results in too many ways, first by calling the aggregation funcs with a window argument
     arg = get_df_with_test_data(engine, full_data_set=True)
@@ -595,6 +594,7 @@ def test_window_functions_not_in_where_having_groupby(engine):
         x = bt[bt.founding_min == 4]
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_window_nav_functions_with_nulls(engine):
     pdf = pd.DataFrame(
         data={

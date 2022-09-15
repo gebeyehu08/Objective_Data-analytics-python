@@ -22,7 +22,6 @@ class ColNameValid(NamedTuple):
     bigquery: bool
 
 
-@pytest.mark.athena_supported()
 def test_is_valid_column_name(dialect):
     tests = [
         #            column name                              PG     Athena BQ
@@ -52,6 +51,7 @@ def test_is_valid_column_name(dialect):
         assert is_valid_column_name(dialect, column_name) is expected
 
 
+@pytest.mark.db_independent
 def test_validate_sorting_expressions() -> None:
     model = BachSqlModel(
         model_spec=CustomSqlModelBuilder(sql='SELECT * FROM test', name='test'),

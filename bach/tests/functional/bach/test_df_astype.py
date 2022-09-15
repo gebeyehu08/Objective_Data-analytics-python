@@ -148,6 +148,7 @@ def test_astype_to_timestamp(engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_astype_to_time(engine):
     bt = get_df_with_test_data(engine)
     bt = bt[[]]
@@ -163,6 +164,7 @@ def test_astype_to_time(engine):
             [3, time(3, 4, 0), time(23, 25, 59)]
         ]
     )
+
 
 @pytest.mark.parametrize('dtype', ('json', 'json_postgres'))
 def test_astype_to_json(engine, dtype):

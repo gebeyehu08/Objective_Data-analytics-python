@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from sql_models.util import is_bigquery
+from sql_models.util import is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 EXPECTED_DATA = [
@@ -30,8 +30,8 @@ def test_rename_complex(engine):
     bt = get_df_with_test_data(engine)
 
     new_name = 'stêd'
-    if is_bigquery(engine):
-        # BigQuery limits the allowed column names.
+    if is_athena(engine) or is_bigquery(engine):
+        # Athena and BigQuery limit the allowed column names.
         # See also tests.unit.bach.test_utils.test_is_valid_column_name
         new_name = 'stad'
 
