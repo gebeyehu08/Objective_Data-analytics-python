@@ -359,6 +359,17 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         return df_cp
 
 
+class AthenaExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
+    BASE_REQUIRED_DB_DTYPES = {
+        **SnowplowExtractedContextsPipeline.BASE_REQUIRED_DB_DTYPES,
+        'contexts': bach.SeriesJson.dtype,
+    }
+
+    def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        """ See implementation in parent class :class:`BaseExtractedContextsPipeline` """
+        print(df)
+
+
 def get_extracted_context_pipeline(
     engine: Engine, table_name: str, global_contexts: List[str]
 ) -> BaseExtractedContextsPipeline:

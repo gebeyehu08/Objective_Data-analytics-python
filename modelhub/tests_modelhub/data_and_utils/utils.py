@@ -81,7 +81,7 @@ def get_parsed_objectiv_data(engine):
         value = json.loads(value)
         # BQ uses time from taxonomy json for getting moment and day
         # therefore time value MUST be the same as moment
-        if is_bigquery(engine):
+        if not is_postgres(engine):
             value['time'] = _convert_moment_to_utc_time(moment)
 
         parsed_data.append(
