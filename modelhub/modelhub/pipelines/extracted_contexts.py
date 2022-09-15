@@ -7,7 +7,7 @@ from abc import abstractmethod, ABC
 from functools import reduce
 
 import bach
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 
 from sql_models.util import is_postgres, is_bigquery
 
