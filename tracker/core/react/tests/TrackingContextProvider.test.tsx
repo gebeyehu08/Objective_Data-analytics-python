@@ -47,12 +47,25 @@ describe('TrackingContextProvider', () => {
             initialized: true,
             validationRules: [
               {
-                validationRuleName: 'GlobalContextValidationRule',
+                validationRuleName: 'UniqueGlobalContextValidationRule',
+                logPrefix: 'OpenTaxonomyValidationPlugin',
+                platform: 'CORE',
+                validate: expect.any(Function),
+              },
+              {
+                validationRuleName: 'MissingGlobalContextValidationRule',
                 logPrefix: 'OpenTaxonomyValidationPlugin',
                 contextName: GlobalContextName.ApplicationContext,
                 platform: 'CORE',
-                once: true,
                 validate: expect.any(Function),
+              },
+              {
+                validationRuleName: 'MissingGlobalContextValidationRule',
+                logPrefix: 'OpenTaxonomyValidationPlugin',
+                contextName: GlobalContextName.PathContext,
+                platform: 'CORE',
+                validate: expect.any(Function),
+                eventMatches: expect.any(Function),
               },
               {
                 validationRuleName: 'LocationContextValidationRule',
@@ -60,15 +73,6 @@ describe('TrackingContextProvider', () => {
                 contextName: LocationContextName.RootLocationContext,
                 platform: 'CORE',
                 position: 0,
-                once: true,
-                validate: expect.any(Function),
-                eventMatches: expect.any(Function),
-              },
-              {
-                validationRuleName: 'GlobalContextValidationRule',
-                logPrefix: 'OpenTaxonomyValidationPlugin',
-                contextName: GlobalContextName.PathContext,
-                platform: 'CORE',
                 once: true,
                 validate: expect.any(Function),
                 eventMatches: expect.any(Function),

@@ -3,7 +3,11 @@
  */
 
 import { LocationStack } from './Context';
-import { GlobalContextValidationRuleFactory, LocationContextValidationRuleFactory } from './ContextValidationRules';
+import {
+  LocationContextValidationRuleFactory,
+  MissingGlobalContextValidationRuleFactory,
+  UniqueGlobalContextValidationRuleFactory,
+} from './ContextValidationRules';
 import { EventRecorderInterface } from './EventRecorderInterface';
 import { LocationTreeInterface } from './LocationTreeInterface';
 import { TrackerConsoleInterface } from './TrackerConsoleInterface';
@@ -16,8 +20,9 @@ export interface TrackerDeveloperToolsInterface {
   EventRecorder: EventRecorderInterface;
   getLocationPath: (locationStack: LocationStack) => string;
   LocationTree: LocationTreeInterface;
-  makeGlobalContextValidationRule: GlobalContextValidationRuleFactory;
   makeLocationContextValidationRule: LocationContextValidationRuleFactory;
+  makeMissingGlobalContextValidationRule: MissingGlobalContextValidationRuleFactory;
+  makeUniqueGlobalContextValidationRule: UniqueGlobalContextValidationRuleFactory;
   OpenTaxonomyValidationPlugin: TrackerPluginInterface;
   TrackerConsole: TrackerConsoleInterface;
 }

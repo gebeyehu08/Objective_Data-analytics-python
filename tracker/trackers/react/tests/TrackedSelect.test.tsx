@@ -90,7 +90,7 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'input-id'} data-testid={'test-select'} trackValue={true}>
+        <TrackedSelect id={'input-id'} data-testid={'test-select'} objectiv={{ trackValue: true }}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -139,7 +139,13 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'input-id'} data-testid={'test-select'} multiple trackValue={true} defaultValue={['2', '4']}>
+        <TrackedSelect
+          id={'input-id'}
+          data-testid={'test-select'}
+          multiple
+          defaultValue={['2', '4']}
+          objectiv={{ trackValue: true }}
+        >
           <option value={1}>A</option>
           <option value={2}>B</option>
           <option value={3}>C</option>
@@ -212,7 +218,7 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'input-id'} data-testid={'test-select'} eventHandler={'onBlur'}>
+        <TrackedSelect id={'input-id'} data-testid={'test-select'} objectiv={{ eventHandler: 'onBlur' }}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -245,7 +251,12 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'input-id'} data-testid={'test-select'} eventHandler={'onClick'} defaultValue={'2'}>
+        <TrackedSelect
+          id={'input-id'}
+          data-testid={'test-select'}
+          defaultValue={'2'}
+          objectiv={{ eventHandler: 'onClick' }}
+        >
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -283,12 +294,18 @@ describe('TrackedSelect', () => {
           <option>2</option>
           <option>3</option>
         </TrackedSelect>
-        <TrackedSelect id={'Input id 2'} normalizeId={false} data-testid={'test-select-2'}>
+        <TrackedSelect id={'Input id 2'} data-testid={'test-select-2'} objectiv={{ normalizeId: false }}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
         </TrackedSelect>
-        <TrackedSelect id={'Input id 3'} multiple normalizeId={false} data-testid={'test-select-3'} onChange={jest.fn}>
+        <TrackedSelect
+          id={'Input id 3'}
+          multiple
+          data-testid={'test-select-3'}
+          onChange={jest.fn}
+          objectiv={{ normalizeId: false }}
+        >
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -346,7 +363,7 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedSelect id={'☹️'}>
               <option>1</option>
@@ -366,11 +383,11 @@ describe('TrackedSelect', () => {
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       1,
-      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       2,
-      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:select @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
@@ -381,12 +398,12 @@ describe('TrackedSelect', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSelect id={'test-id-1'} ref={ref1}>
+        <TrackedSelect ref={ref1}>
           <option>1</option>
           <option>2</option>
           <option>3</option>
         </TrackedSelect>
-        <TrackedSelect id={'test-id-2'} multiple ref={ref2}>
+        <TrackedSelect multiple ref={ref2}>
           <option>A</option>
           <option>B</option>
           <option>C</option>
@@ -437,9 +454,9 @@ describe('TrackedSelect', () => {
           id={'test-id-1'}
           defaultValue={'1'}
           data-testid={'test-select-1'}
-          eventHandler={'onBlur'}
           onBlur={onBlurSpy}
           onChange={jest.fn}
+          objectiv={{ eventHandler: 'onBlur' }}
         >
           <option>1</option>
           <option>2</option>
@@ -449,10 +466,10 @@ describe('TrackedSelect', () => {
           id={'test-id-2'}
           value={'1'}
           data-testid={'test-select-2'}
-          eventHandler={'onBlur'}
           onBlur={onBlurSpy}
           onChange={jest.fn}
           multiple
+          objectiv={{ eventHandler: 'onBlur' }}
         >
           <option>1</option>
           <option>2</option>
@@ -507,8 +524,8 @@ describe('TrackedSelect', () => {
           id={'test-id-1'}
           defaultValue={'1'}
           data-testid={'test-select-1'}
-          eventHandler={'onClick'}
           onClick={onClickSpy}
+          objectiv={{ eventHandler: 'onClick' }}
         >
           <option>1</option>
           <option>2</option>
@@ -518,9 +535,9 @@ describe('TrackedSelect', () => {
           id={'test-id-2'}
           defaultValue={'1'}
           data-testid={'test-select-2'}
-          eventHandler={'onClick'}
           onClick={onClickSpy}
           multiple
+          objectiv={{ eventHandler: 'onClick' }}
         >
           <option>A</option>
           <option>B</option>

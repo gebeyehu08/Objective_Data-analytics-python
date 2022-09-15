@@ -103,7 +103,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
         1,
-        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: Only one ApplicationContext should be present in Global Contexts of TestEvent.\n' +
+        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: Only one ApplicationContext(id: test) should be present in Global Contexts of TestEvent.\n' +
           'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/ApplicationContext.',
         'color:red'
       );
@@ -173,7 +173,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
       OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const eventWithDuplicatedRootLocationContext = new TrackerEvent({
         ...makePressEvent({
-          location_stack: [makeRootLocationContext({ id: '/test' }), makeRootLocationContext({ id: '/test' })],
+          location_stack: [makeRootLocationContext({ id: 'test' }), makeRootLocationContext({ id: 'test' })],
           global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
         }),
         id: generateGUID(),

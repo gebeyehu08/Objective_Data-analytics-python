@@ -19,7 +19,7 @@ export const DefaultErrorMessagesByType: { [type in GlobalContextErrorType | Loc
     '{{contextName}} is missing from Global Contexts of {{eventName}}.\n' +
     'Taxonomy documentation: {{docsURL}}/taxonomy/reference/global-contexts/{{contextName}}.',
   [GlobalContextErrorType.GLOBAL_CONTEXT_DUPLICATED]:
-    'Only one {{contextName}} should be present in Global Contexts of {{eventName}}.\n' +
+    'Only one {{contextName}}{{contextIds}} should be present in Global Contexts of {{eventName}}.\n' +
     'Taxonomy documentation: {{docsURL}}/taxonomy/reference/global-contexts/{{contextName}}.',
   [LocationContextErrorType.LOCATION_CONTEXT_MISSING]:
     '{{contextName}} is missing from Location Stack of {{eventName}}.\n' +

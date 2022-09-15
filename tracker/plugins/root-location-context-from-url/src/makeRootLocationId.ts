@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeId } from '@objectiv/tracker-core';
 
 /**
  * This function is invoked by the Plugin to retrieve the identifier of the RootLocationContext unless a custom one
@@ -11,5 +11,5 @@ import { makeIdFromString } from '@objectiv/tracker-core';
 export const makeRootLocationId = () => {
   const pathname = location.pathname;
 
-  return ['/', ''].includes(pathname) ? 'home' : makeIdFromString(pathname?.split('/')[1]);
+  return ['/', ''].includes(pathname) ? 'home' : makeId(pathname?.split('/')[1]);
 };
