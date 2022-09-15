@@ -9,7 +9,7 @@ from objectiv_backend.snowplow.schema.ttypes import CollectorPayload  # type: ig
 
 from objectiv_backend.common.config import SnowplowConfig, get_collector_config
 from objectiv_backend.common.event_utils import get_context
-from objectiv_backend.common.types import EventDataList, EventData
+from objectiv_backend.common.types import EventDataList, EventData, CookieIdSource
 from objectiv_backend.schema.validate_events import EventError
 
 from thrift.protocol import TBinaryProtocol
@@ -191,10 +191,10 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
             "ttm": str(event['time']),  # User-set exact timestamp
 
         }
-    if cookie_source == 'client':
+    if cookie_source == CookieIdSource.CLIENT:
         # only set domain_sessionid if we have a client_side id
         data["sid"] = cookie_id
-    elif cookie_source == 'backend':
+    elif cookie_source == CookieIdSource.BACKEND:
         # Unique identifier for a user, based on a cookie from the collector, so only set if the source was a cookie
         data["nuid"] = cookie_id
 
@@ -216,7 +216,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         headers=[],
         contentType='application/json',
         hostname='',
-        networkUserId=cookie_id if cookie_source == 'backend' else None
+        networkUserId=cookie_id if cookie_source == CookieIdSource.BACKEND else None
     )
 
 

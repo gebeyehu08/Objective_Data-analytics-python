@@ -9,6 +9,7 @@ from objectiv_backend.end_points.collector import add_http_context_to_event, add
 from objectiv_backend.end_points.common import get_json_response
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
 from objectiv_backend.common.config import AnonymousModeConfig
+from objectiv_backend.common.types import CookieIdSource
 from tests.schema.test_schema import CLICK_EVENT_JSON, make_event_from_dict, order_dict, make_context
 
 
@@ -178,7 +179,7 @@ def test_cookie_id_context_creation(mocker, app_context):
 
         # in anonymous mode, the id should always be client
         context = get_cookie_id_context(anonymous_mode=True, client_session_id=client_session_id)
-        assert context.id == 'client'
+        assert context.id == str(CookieIdSource.CLIENT)
         assert context.cookie_id == client_session_id
 
         # Pure Anonymous mode
@@ -190,7 +191,7 @@ def test_cookie_id_context_creation(mocker, app_context):
         # we use the mock to never return a cookie (but None)
         request_mock.cookies.get = lambda param, default: None
         context = get_cookie_id_context(anonymous_mode=False, client_session_id=client_session_id)
-        assert context.id == 'client'
+        assert context.id == str(CookieIdSource.CLIENT)
         assert context.cookie_id == client_session_id
 
         # Pure normal mode
@@ -199,7 +200,7 @@ def test_cookie_id_context_creation(mocker, app_context):
         cookie_id = 'd227e473-b177-4cdc-9f49-a96e59dc00k13'
         request_mock.cookies.get = lambda param, default: cookie_id
         context = get_cookie_id_context(anonymous_mode=False, client_session_id=client_session_id)
-        assert context.id == 'backend'
+        assert context.id == str(CookieIdSource.BACKEND)
         assert context.cookie_id == cookie_id
 
 

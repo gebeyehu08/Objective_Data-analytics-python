@@ -5,6 +5,7 @@ import uuid
 import flask
 from flask import Response
 from objectiv_backend.common.config import get_collector_config
+from objectiv_backend.common.types import CookieIdSource
 from objectiv_backend.schema.schema import CookieIdContext
 
 
@@ -34,22 +35,24 @@ def get_json_response(status: int, msg: str, anonymous_mode: bool = False, clien
 
 
 def get_cookie_id_context(anonymous_mode: bool, client_session_id: str) -> CookieIdContext:
-
-    print(f'getting id mode: {anonymous_mode}, client: {client_session_id}')
-
+    """
+    Create CookieIdContext, based on mode and presence of client_session_id
+    :param anonymous_mode: bool
+    :param client_session_id: str
+    :return: CookieIdContext
+    """
     if anonymous_mode:
         cookie_id = client_session_id
-        cookie_source = 'client'
+        cookie_source = CookieIdSource.CLIENT
     else:
         cookie_id = get_cookie_id_from_cookie(generate_if_not_set=(client_session_id is None))
-        print(f'got {cookie_id} from get_cookie')
         if not cookie_id:
             cookie_id = client_session_id
-            cookie_source = 'client'
+            cookie_source = CookieIdSource.CLIENT
         else:
-            cookie_source = 'backend'
+            cookie_source = CookieIdSource.BACKEND
 
-    return CookieIdContext(id=cookie_source, cookie_id=cookie_id)
+    return CookieIdContext(id=str(cookie_source), cookie_id=cookie_id)
 
 
 def get_cookie_id_from_cookie(generate_if_not_set: bool = False) -> str:
