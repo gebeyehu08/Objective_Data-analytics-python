@@ -43,8 +43,6 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
     """
     DATE_FILTER_COLUMN = ObjectivSupportedColumns.DAY.value
 
-    SUPPORTS_SNOWPLOW_FLAT_FORMAT = False
-
     BASE_REQUIRED_DB_DTYPES: Dict[str, StructuredDtype] = {}
 
     def __init__(self, engine: Engine, table_name: str, global_contexts: List[str]):
