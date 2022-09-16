@@ -8,15 +8,73 @@
 Logistic Regression
 ===================
 
-The open model hub supports logistic regression on Bach data objects. A logistic regression model can be fitted, values can be predicted and results can be tested directly on the full data set in the database. Note that for fitting the model data is extracted from the database under the hood.
+Data collected with Objectiv is `strictly structured & designed for modeling 
+<https://objectiv.io/docs/taxonomy>`_, making it ideal for various machine learning models, which can be 
+applied directly without cleaning, transformations, or complex tooling.
 
-This example is also available in a `notebook
+This example notebook shows how you can predict user behavior with the `Logistic Regression model in the open 
+model hub <../open-model-hub/models/machine-learning/LogisticRegression/modelhub.LogisticRegression>` on a 
+full dataset collected with Objectiv. Examples of predictions you can create:
+
+- Will a user convert?
+- Will a user start using a specific product feature or area?
+- Will a user have a long active session duration?. 
+
+It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-logistic-regression.ipynb>`_
-to run on your own data or use our `quickstart <https://objectiv.io/docs/home/try-the-demo/>`_ to try it 
-out with demo data in 5 minutes.
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
+or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
+here is the same as in the Demo.
 
-First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
-:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
+Get started
+-----------
+We first have to instantiate the model hub and an Objectiv DataFrame object.
+
+.. doctest::
+	:skipif: engine is None
+
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-03-01'
+	>>> end_date = None
+
+.. we override the timeframe for the doctests below
+	
+.. testsetup:: lr
+	:skipif: engine is None
+
+	start_date = '2022-03-01'
+	end_date = '2022-06-30'
+
+.. doctest:: lr
+	:skipif: engine is None
+
+	>>> # instantiate the model hub, set the default time aggregation to daily
+	>>> # and get the application & path global contexts
+	>>> from modelhub import ModelHub, display_sql_as_markdown
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['root_location'])
+	>>> # get an Objectiv DataFrame within a defined timeframe
+	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
+
+The `location_stack` column, and the columns taken from the global contexts, contain most of the 
+event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
+objects with :doc:`SeriesLocationStack 
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack>` methods, or the `context` 
+accessor for global context columns. See the :doc:`open taxonomy example <./open-taxonomy>` for how to use 
+the `location_stack` and global contexts.
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
+	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
+	* :ref:`Using global context data <location-stack-and-global-contexts>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 
 Creating a feature set to predict user behavior
 -----------------------------------------------
