@@ -57,11 +57,10 @@ in the global contexts and how to access this data for analyses.
 .. doctest:: open-taxonomy
 	:skipif: engine is None
 
-	>>> from modelhub import ModelHub
+	>>> from modelhub import ModelHub, display_sql_as_markdown
 	>>> # instantiate the model hub, set the default time aggregation to daily
 	>>> # and get the global contexts that will be used in this example
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
-	>>> from bach import display_sql_as_markdown
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
@@ -375,8 +374,7 @@ the sampled is written to the database, therefore the `table_name` must be provi
 	:skipif: engine is None
 
 	from modelhub import ModelHub
-	from bach import display_sql_as_markdown
-	def display_sql_as_markdown(arg): 
+	def display_sql_as_markdown(arg):
 		print('sql\\n' + arg.view_sql() + '\\n') # print out SQL instead of an object
 	start_date = '2022-06-01'
 	end_date = '2022-06-30'
@@ -442,7 +440,6 @@ The sample can also be used for grouping and aggregating. The example below coun
 	:skipif: engine is None
 
 	from modelhub import ModelHub
-	from bach import display_sql_as_markdown
 	start_date = '2022-06-01'
 	end_date = '2022-06-30'
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])

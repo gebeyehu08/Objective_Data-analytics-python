@@ -11,6 +11,9 @@ from modelhub.models.funnel_discovery import FunnelDiscovery
 from modelhub.pipelines import *
 from modelhub.series import *
 
+# convenience import to allow users to use this without importing anything from bach
+from bach import display_sql_as_markdown
+
 
 # Here we do a basic version check, to make sure we are on the most recent versions of objectiv-bach and
 # objectiv-modelhub. This is done by querying the backend that holds a cached version of the latest versions

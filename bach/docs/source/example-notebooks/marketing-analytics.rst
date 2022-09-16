@@ -40,8 +40,8 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 
 	>>> # instantiate the model hub, and set the default time aggregation to daily
 	>>> # and set the global contexts that will be used in this example
-	>>> from modelhub import ModelHub
-	>>> from bach import DataFrame, display_sql_as_markdown
+	>>> from modelhub import ModelHub, display_sql_as_markdown
+	>>> from bach import DataFrame
 	>>> from datetime import datetime, timedelta
 	>>> import pandas as pd
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['http', 'marketing', 'application'])
