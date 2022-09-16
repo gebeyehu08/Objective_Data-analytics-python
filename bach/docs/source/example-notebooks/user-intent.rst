@@ -22,7 +22,7 @@ Besides the open model hub, we have to import the following packages for this ex
 
 .. code-block:: python
 
-    from bach import display_sql_as_markdown
+    from modelhub import display_sql_as_markdown
     import bach
     import pandas as pd
     from datetime import timedelta

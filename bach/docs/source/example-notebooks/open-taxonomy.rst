@@ -57,7 +57,7 @@ in the global contexts and how to access this data for analyses.
 .. doctest:: open-taxonomy
 	:skipif: engine is None
 
-	>>> from modelhub import ModelHub
+	>>> from modelhub import ModelHub, display_sql_as_markdown
 	>>> # instantiate the model hub, set the default time aggregation to daily
 	>>> # and get the global contexts that will be used in this example
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
@@ -374,8 +374,7 @@ the sampled is written to the database, therefore the `table_name` must be provi
 	:skipif: engine is None
 
 	from modelhub import ModelHub
-	from bach import display_sql_as_markdown
-	def display_sql_as_markdown(arg): 
+	def display_sql_as_markdown(arg):
 		print('sql\\n' + arg.view_sql() + '\\n') # print out SQL instead of an object
 	start_date = '2022-06-01'
 	end_date = '2022-06-30'
@@ -441,7 +440,6 @@ The sample can also be used for grouping and aggregating. The example below coun
 	:skipif: engine is None
 
 	from modelhub import ModelHub
-	from bach import display_sql_as_markdown
 	start_date = '2022-06-01'
 	end_date = '2022-06-30'
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
@@ -478,6 +476,11 @@ Get the SQL for any analysis
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+
+.. doctest:: open-taxonomy
+	:hide:
+	
+	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
 
 .. doctest:: open-taxonomy
 	:skipif: engine is None
