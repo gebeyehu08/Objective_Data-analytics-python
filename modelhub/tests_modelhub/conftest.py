@@ -24,7 +24,6 @@ Category 4 and 5 are for functionality that we explicitly not support on some da
 Category 4, and 5 are the exception, these need to be marked with the `skip_postgres` or `skip_bigquery` marks.
 """
 import os
-from typing import List
 
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser

@@ -40,15 +40,16 @@ def get_objectiv_data(
         :returns: initial bach DataFrame required by ModelHub.
     """
     from modelhub.pipelines import (
-        ExtractedContextsPipeline, SessionizedDataPipeline, IdentityResolutionPipeline
+        get_extracted_context_pipeline, SessionizedDataPipeline, IdentityResolutionPipeline
     )
 
     global_contexts = global_contexts or []
     if identity_resolution and 'identity' not in global_contexts:
         global_contexts.append('identity')
 
-    contexts_pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name,
-                                                  global_contexts=global_contexts)
+    contexts_pipeline = get_extracted_context_pipeline(
+        engine=engine, table_name=table_name, global_contexts=global_contexts,
+    )
     sessionized_pipeline = SessionizedDataPipeline(session_gap_seconds=session_gap_seconds)
     identity_pipeline = IdentityResolutionPipeline(identity_id=identity_resolution)
 
