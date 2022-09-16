@@ -35,7 +35,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         3. _extract_requested_global_contexts: Creates a series per requested global context. Extraction
            depends if child supports snowplow flat format or GLOBAL_CONTEXT series.
         4. _convert_dtypes: Will convert all required context series to their correct dtype
-        5. _apply_filters: Applies start_date and end_date filter, if required.
+        5. _apply_filters: Applies start_date and end_date filter and event deduplication, if required.
 
     Final bach DataFrame will be later validated, it must include:
         - all context series defined in ObjectivSupportedColumns
@@ -67,15 +67,21 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
 
     @property
     def _base_dtypes(self) -> Dict[str, StructuredDtype]:
+        """
+        Mapping between expected columns and series dtypes the pipeline expects in the initial data.
+        Each child is responsible of defining BASE_REQUIRED_DB_TYPES and the global contexts dtypes expected
+        (if required).
+        """
         return {
             **self.BASE_REQUIRED_DB_DTYPES,
             **self._global_contexts_dtypes,
         }
 
+    @abstractmethod
     def _get_global_contexts_dtypes_from_db_dtypes(
         self, db_dtypes: Dict[str, StructuredDtype],
     ) -> Dict[str, StructuredDtype]:
-        return {}
+        raise NotImplementedError
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
         """
@@ -111,7 +117,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
             table_name=self._table_name,
             engine=self._engine,
             index=[],
-            all_dtypes={**self._base_dtypes, **self._global_contexts_dtypes},
+            all_dtypes=self._base_dtypes,
         )
 
     @abstractmethod
@@ -119,7 +125,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         """
         Transforms and prepares initial event data for global context extraction.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
         """
@@ -162,6 +168,12 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         ):
             return df_cp
 
+        if (
+            self.IS_DUPLICATED_EVENT_SERIES_NAME in df.data_columns
+            and df[self.IS_DUPLICATED_EVENT_SERIES_NAME].dtype != bach.SeriesBoolean.dtype
+        ):
+            raise Exception(f'{self.IS_DUPLICATED_EVENT_SERIES_NAME} must boolean dtype.')
+
         if not df_cp.is_materialized:
             df_cp = df_cp.materialize()
 
@@ -176,7 +188,7 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
             all_filters.append(reduce(operator.and_, date_filters))
 
         if self.IS_DUPLICATED_EVENT_SERIES_NAME in df_cp.data_columns:
-            all_filters.append(df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME] == 1)
+            all_filters.append(~df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME])
 
         return df_cp[reduce(operator.or_, all_filters)]
 
@@ -202,6 +214,11 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
         'cookie_id': bach.SeriesUuid.dtype,
         'value': bach.SeriesJson.dtype,
     }
+
+    def _get_global_contexts_dtypes_from_db_dtypes(
+        self, db_dtypes: Dict[str, StructuredDtype]
+    ) -> Dict[str, StructuredDtype]:
+        return {}
 
     def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
         """
@@ -287,8 +304,9 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         # out duplicate event-ids, keeping the first event
         # based on the time the collector sends it to snowplow.
         window = df_cp.sort_values(by=['collector_tstamp']).groupby(by=['event_id']).window()
-        df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME] = df_cp['event_id'].window_row_number(window=window)
-
+        df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME] = (
+            df_cp['event_id'].window_row_number(window=window) > 1
+        )
         # Snowplow data source has no moment and day columns, therefore we need to generate them
         if df_cp['true_tstamp'].dtype == 'timestamp':
             df_cp['moment'] = df_cp['true_tstamp']
@@ -343,6 +361,10 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         Returns mapping between global context columns and expected series dtype for each.
         """
         gc_mapping = self._get_global_context_mapping_from_series_names(list(db_dtypes.keys()))
+        missing = ({'location_stack'} & set(self._global_contexts)) - set(gc_mapping.values())
+        if missing:
+            raise ValueError(f'Requested global contexts {sorted(missing)} not found in data.')
+
         return {
             db_col_name: [{}]
             if gc_name in self._global_contexts else [{gc_name: bach.SeriesString.dtype}]
