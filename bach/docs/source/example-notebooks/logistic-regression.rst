@@ -12,9 +12,9 @@ Data collected with Objectiv is `strictly structured & designed for modeling
 <https://objectiv.io/docs/taxonomy>`_, making it ideal for various machine learning models, which can be 
 applied directly without cleaning, transformations, or complex tooling.
 
-This example notebook shows how you can predict user behavior with the `Logistic Regression model in the open 
-model hub <../open-model-hub/models/machine-learning/LogisticRegression/modelhub.LogisticRegression>` on a 
-full dataset collected with Objectiv. Examples of predictions you can create:
+This example notebook shows how you can predict user behavior with the :doc:`Logistic Regression model in 
+the open model hub <../open-model-hub/models/machine-learning/LogisticRegression/modelhub.LogisticRegression>` 
+on a full dataset collected with Objectiv. Examples of predictions you can create:
 
 - Will a user convert?
 - Will a user start using a specific product feature or area?
@@ -81,11 +81,11 @@ Creating a feature set to predict user behavior
 For simple demonstration purposes, we'll predict if users on our own `website <https://www.objectiv.io>`_ 
 will reach the `modeling section of our docs <https://objectiv.io/docs/modeling/>`_, by looking at 
 interactions they have with all the main sections on our site, as defined by the `root location
-<https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext/>`.
+<https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext/>`_.
 
 We'll create a dataset that counts the number of clicks per user in each section. Note that this is a simple 
 dataset used just for demonstration purposes of the logistic regression functionality, and not so much the 
-results itself. For ins and outs on feature engineering see the `feature engineering notebook 
+results itself. For ins and outs on feature engineering see the :doc:`feature engineering notebook 
 <./feature-engineering>`.
 
 .. doctest:: lr
