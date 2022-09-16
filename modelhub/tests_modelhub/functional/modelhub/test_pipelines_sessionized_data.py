@@ -7,7 +7,7 @@ from uuid import UUID
 import bach
 import pandas as pd
 from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 from modelhub import SessionizedDataPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
