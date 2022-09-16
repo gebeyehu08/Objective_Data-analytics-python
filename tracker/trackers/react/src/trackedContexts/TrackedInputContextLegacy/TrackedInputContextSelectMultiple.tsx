@@ -12,51 +12,46 @@ import {
 } from '@objectiv/tracker-react-core';
 import React, { ChangeEvent, ComponentProps, FocusEvent, forwardRef, PropsWithRef, Ref, useState } from 'react';
 import { ObjectivComponentProp, ObjectivIdProps, TrackedContextProps, ObjectivValueTrackingProps } from '../../types';
-import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
+import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from '../TrackedInputContextShared';
 
 /**
- * TrackedInputContext implementation for checkboxes.
- * Monitors the `checked` attribute and automatically tracks `InputChangeEvent` when the given Component receives an
- * `onChange` and `checked` changed.
- * Optionally tracks the input's `checked` attribute as InputValueContext.
+ * TrackedInputContext implementation for selects.
  */
-export type TrackedInputContextCheckboxProps = ComponentProps<'input'> & {
+export type TrackedInputContextSelectMultipleProps = ComponentProps<'select'> & {
   objectiv: ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
 };
 
 /**
- * Event definition for TrackedInputContextCheckbox
+ * Event definition for TrackedInputContextSelectMultiple
  */
-export type TrackedInputContextCheckboxEvent =
-  | FocusEvent<HTMLInputElement>
-  | ChangeEvent<HTMLInputElement>
-  | React.MouseEvent<HTMLInputElement>;
+export type TrackedInputContextSelectMultipleEvent =
+  | FocusEvent<HTMLSelectElement>
+  | ChangeEvent<HTMLSelectElement>
+  | React.MouseEvent<HTMLSelectElement>;
 
 /**
- * TrackedInputContextCheckbox implementation
+ * TrackedInputContextSelectMultiple implementation
  */
-export const TrackedInputContextCheckbox = forwardRef(
-  (props: TrackedInputContextCheckboxProps, ref: Ref<HTMLInputElement>) => {
+export const TrackedInputContextSelectMultiple = forwardRef(
+  (props: TrackedInputContextSelectMultipleProps, ref: Ref<HTMLSelectElement>) => {
     const {
       objectiv: { Component, id, normalizeId = true, trackValue = false, stateless = false, eventHandler = 'onChange' },
       ...nativeProps
     } = props;
 
-    const initialValue = nativeProps.checked ?? nativeProps.defaultChecked;
+    const initialValue = nativeProps.value ?? nativeProps.defaultValue;
     const [previousValue, setPreviousValue] = useState<string>(normalizeValue(initialValue));
     const locationStack = useLocationStack();
 
-    // Use the given `id` or the native `id` or attempt to automatically generate one with either `name` or `value`
-    const nameAttribute: string | null = nativeProps.name ? nativeProps.name : null;
-    const valueAttribute: string | null = nativeProps.value ? nativeProps.value.toString() : null;
-    let inputId: string | null = id ?? nativeProps.id ?? nameAttribute ?? valueAttribute;
-    if (inputId && normalizeId) {
-      inputId = makeId(inputId);
+    let selectId: string | null | undefined = id ?? nativeProps.id;
+    if (selectId && normalizeId) {
+      selectId = makeId(selectId);
     }
 
-    const handleEvent = async (event: TrackedInputContextCheckboxEvent, trackingContext: TrackingContext) => {
-      const eventTarget = event.target as HTMLInputElement;
-      const valueToMonitor = normalizeValue(eventTarget.checked);
+    const handleEvent = async (event: TrackedInputContextSelectMultipleEvent, trackingContext: TrackingContext) => {
+      const eventTarget = event.target as HTMLSelectElement;
+      const selectedOptionValues = getSelectOptionValues(eventTarget.selectedOptions);
+      const valueToMonitor = normalizeValue(selectedOptionValues);
 
       if (stateless || previousValue !== valueToMonitor) {
         setPreviousValue(valueToMonitor);
@@ -70,13 +65,15 @@ export const TrackedInputContextCheckbox = forwardRef(
         };
 
         // Add InputValueContext if trackValue has been set
-        if (inputId && trackValue) {
-          eventTrackerParameters.globalContexts.push(
-            makeInputValueContext({
-              id: inputId,
-              value: normalizeValue(eventTarget.checked),
-            })
-          );
+        if (selectId && trackValue) {
+          selectedOptionValues.map((optionValue) => {
+            eventTrackerParameters.globalContexts.push(
+              makeInputValueContext({
+                id: selectId as string,
+                value: optionValue,
+              })
+            );
+          });
         }
 
         trackInputChangeEvent(eventTrackerParameters);
@@ -100,24 +97,23 @@ export const TrackedInputContextCheckbox = forwardRef(
       ...(ref ? { ref } : {}),
     };
 
-    if (!inputId) {
+    if (!selectId) {
       if (globalThis.objectiv.devTools) {
         const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
         globalThis.objectiv.devTools.TrackerConsole.error(
-          `｢objectiv｣ Could not generate a valid id for InputContext:checkbox @ ${locationPath}. Please provide the \`objectiv.id\` property.`
+          `｢objectiv｣ Could not generate a valid id for InputContext:select @ ${locationPath}. Please provide the \`objectiv.id\` property.`
         );
       }
-
       return <Component {...componentProps} />;
     }
 
     return (
-      <InputContextWrapper id={inputId}>
+      <InputContextWrapper id={selectId}>
         {(trackingContext) => (
           <Component
             {...componentProps}
             {...{
-              [eventHandler]: (event: TrackedInputContextCheckboxEvent) => handleEvent(event, trackingContext),
+              [eventHandler]: (event: TrackedInputContextSelectMultipleEvent) => handleEvent(event, trackingContext),
             }}
           />
         )}
@@ -125,3 +121,16 @@ export const TrackedInputContextCheckbox = forwardRef(
     );
   }
 ) as <T>(props: PropsWithRef<TrackedContextProps<T>>) => JSX.Element;
+
+/**
+ * Helper function to convert a HTMLOptionsCollection to string[]
+ */
+const getSelectOptionValues = (options: HTMLCollectionOf<HTMLOptionElement>) => {
+  var selectedOptionValues = [];
+
+  for (let i = 0; i < options.length; i++) {
+    selectedOptionValues.push(options[i].value);
+  }
+
+  return selectedOptionValues;
+};

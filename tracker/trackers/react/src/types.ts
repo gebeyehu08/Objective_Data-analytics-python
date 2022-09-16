@@ -2,7 +2,17 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ComponentProps, ElementType, MouseEventHandler, PropsWithChildren, ReactHTML } from 'react';
+import React, {
+  ChangeEvent,
+  ChangeEventHandler,
+  ComponentProps,
+  ElementType,
+  FocusEvent,
+  FocusEventHandler,
+  MouseEventHandler,
+  PropsWithChildren,
+  ReactHTML,
+} from 'react';
 
 /**
  * Props to specify Component and componentRef to a TrackedContext.
@@ -95,6 +105,26 @@ export type NativePressableCommonProps = NativeCommonProps & {
 export type NativeLinkCommonProps = NativePressableCommonProps & Partial<Pick<HTMLAnchorElement, 'href'>>;
 
 /**
+ * These props are common to all inputs.
+ */
+export type NativeInputCommonProps = NativeCommonProps &
+  Partial<Pick<HTMLInputElement, 'type' | 'checked' | 'defaultChecked'>> &
+  Partial<Pick<HTMLSelectElement, 'multiple'>> &
+  {
+    name?: string,
+    value?: string | number | boolean | string[] | readonly string[],
+    defaultValue?: string | number | boolean | string[] | readonly string[],
+    onClick?: MouseEventHandler;
+    onBlur?: FocusEventHandler;
+    onChange?: ChangeEventHandler;
+  };
+
+/**
+ * Generic Event definition
+ */
+export type TrackedInputContextEvent = FocusEvent | ChangeEvent | React.MouseEvent;
+
+/**
  * Base props of all TrackedContexts.
  */
 export type TrackedContextObjectivProp = ObjectivComponentProp & ObjectivIdProps;
@@ -127,6 +157,18 @@ export type TrackedShowableContextProps<T, O = TrackedShowableContextObjectivPro
 export type TrackedPressableContextObjectivProp = ObjectivComponentProp & ObjectivIdProps;
 export type TrackedPressableContextProps<T, O = TrackedPressableContextObjectivProp> = T &
   NativePressableCommonProps & {
+    objectiv: O;
+  };
+
+/**
+ * The props of TrackedInputContext. Extends TrackedContextProps with extra value related properties.
+ */
+export type TrackedInputContextObjectivProp = ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
+export type TrackedInputContextProps<
+  T,
+  O = TrackedInputContextObjectivProp
+> = T &
+  NativeInputCommonProps & {
     objectiv: O;
   };
 
