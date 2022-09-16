@@ -398,6 +398,7 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
             }
         )
 
+
 def get_extracted_context_pipeline(
     engine: Engine, table_name: str, global_contexts: List[str]
 ) -> BaseExtractedContextsPipeline:
