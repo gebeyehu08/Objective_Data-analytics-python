@@ -19,7 +19,7 @@ tests-athena:
 # against Postgres
 	mypy modelhub
 	pycodestyle modelhub
-	pytest --all -n 8 --dist loadgroup --big-query tests_modelhub
+	pytest --all -n 8 --dist loadgroup --athena tests_modelhub
 
 
 
