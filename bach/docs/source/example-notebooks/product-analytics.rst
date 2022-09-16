@@ -38,8 +38,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. doctest:: product-analytics
 	:skipif: engine is None
 
-	>>> from modelhub import ModelHub
-	>>> from bach import display_sql_as_markdown
+	>>> from modelhub import ModelHub, display_sql_as_markdown
 	>>> from datetime import datetime
 	>>> # instantiate the model hub and set the default time aggregation to daily
 	>>> # and set the global contexts that will be used in this example
@@ -583,7 +582,6 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	:skipif: engine is None
 
 	from modelhub import ModelHub
-	from bach import display_sql_as_markdown
 	from datetime import datetime
 	# instantiate the model hub and set the default time aggregation to daily
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
