@@ -37,5 +37,5 @@ OBJ_DB_ATHENA_WORK_GROUP="automated_tests_work_group"
 # #####################
 # BigQuery settings
 # #####################
-OBJ_DB_BQ_TEST_URL= "bigquery://objectiv-snowplow-test-2/bach_test"
+OBJ_DB_BQ_TEST_URL= "bigquery://objectiv-snowplow-test-2/modelhub_test"
 OBJ_DB_BQ_CREDENTIALS_PATH=

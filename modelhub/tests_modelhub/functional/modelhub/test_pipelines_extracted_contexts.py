@@ -8,7 +8,7 @@ from typing import List
 import bach
 import pandas as pd
 import pytest
-from sql_models.util import is_bigquery
+from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 from modelhub.pipelines.extracted_contexts import BaseExtractedContextsPipeline, get_extracted_context_pipeline
@@ -28,10 +28,11 @@ _EXPECTED_CONTEXT_COLUMNS = [
 
 def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.DataFrame:
     parsed_data = get_parsed_objectiv_data(engine)
-    if not is_bigquery(engine):
+    if is_postgres(engine):
         assert db_format == DBParams.Format.OBJECTIV
         return pd.DataFrame(parsed_data)
 
+    assert db_format == DBParams.Format.SNOWPLOW
     sp_data = []
     for event in parsed_data:
         if db_format == DBParams.Format.SNOWPLOW:
