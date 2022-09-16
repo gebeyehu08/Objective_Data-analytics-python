@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 from objectiv_backend.schema.schema import make_event_from_dict, make_context, \
     ContentContext, HttpContext, MarketingContext
-from objectiv_backend.common.event_utils import add_global_context_to_event, get_context
+from objectiv_backend.common.event_utils import add_global_context_to_event, get_context, remove_global_contexts
 from objectiv_backend.schema.validate_events import validate_structure_event_list, validate_event_adheres_to_schema
 from objectiv_backend.common.config import get_collector_config
 
@@ -65,6 +65,20 @@ def order_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
         else:
             result[key] = value
     return result
+
+
+def test_remove_global_context():
+    event_list = json.loads(CLICK_EVENT_JSON)
+    event = event_list['events'][0]
+
+    remove_global_contexts(event, 'ApplicationContext')
+
+    assert(len(event['global_contexts']) == 1)
+
+    assert(event['global_contexts'] == [{
+        "_type": "PathContext",
+        "id": "http://localhost:3000/"
+    }])
 
 
 def test_make_event_from_dict():
