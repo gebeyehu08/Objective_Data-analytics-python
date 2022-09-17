@@ -20,13 +20,14 @@ import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './Trac
 export const TrackedInputContext = forwardRef(
   <T extends unknown>(props: TrackedInputContextProps<T>, ref: Ref<unknown>) => {
     const {
-      objectiv: { Component, id, normalizeId = true, trackValue = false, stateless = false },
+      objectiv: { Component, id, normalizeId = true, trackValue = false },
       ...nativeProps
     } = props;
 
     const locationStack = useLocationStack();
 
     let eventHandler: 'onBlur' | 'onChange' | 'onClick';
+    let stateless: boolean;
     let initialValue: string | number | boolean | string[] | readonly string[] | undefined;
     let inputId: string | null | undefined;
     let attributeToMonitor: string;
@@ -34,6 +35,7 @@ export const TrackedInputContext = forwardRef(
     if(Component == 'select') {
       inputId = id ?? nativeProps.id;
       eventHandler = props.objectiv.eventHandler ?? 'onChange';
+      stateless = props.objectiv.stateless ?? false;
       initialValue = nativeProps.value ?? nativeProps.defaultValue;
       attributeToMonitor = 'value';
     } else {
@@ -44,12 +46,14 @@ export const TrackedInputContext = forwardRef(
           const valueAttribute: string | null = nativeProps.value ? nativeProps.value.toString() : null;
           inputId = id ?? nativeProps.id ?? nameAttribute ?? valueAttribute;
           eventHandler = props.objectiv.eventHandler ?? 'onChange';
+          stateless = props.objectiv.stateless ?? props.type === 'radio';
           initialValue = nativeProps.checked ?? nativeProps.defaultChecked;
           attributeToMonitor = 'checked';
           break;
         default:
           inputId = id ?? nativeProps.id;
           eventHandler = props.objectiv.eventHandler ?? 'onBlur';
+          stateless = props.objectiv.stateless ?? false;
           initialValue = nativeProps.value ?? nativeProps.defaultValue;
           attributeToMonitor = 'value';
       }
@@ -64,6 +68,8 @@ export const TrackedInputContext = forwardRef(
     const handleEvent = async(event: TrackedInputContextEvent, trackingContext: TrackingContext) => {
       const eventTarget = event.target as any;
       const valueToMonitor = normalizeValue(eventTarget[attributeToMonitor]);
+
+      console.log('lol', previousValue, valueToMonitor)
 
       if (stateless || previousValue !== valueToMonitor) {
         setPreviousValue(valueToMonitor);
@@ -141,16 +147,3 @@ export const TrackedInputContext = forwardRef(
     );
   }
 ) as <T>(props: PropsWithRef<TrackedInputContextProps<T, NativeInputCommonProps>>) => JSX.Element;
-
-/**
- * Helper function to convert a HTMLOptionsCollection to string[]
- */
-const getSelectOptionValues = (options: HTMLCollectionOf<HTMLOptionElement>) => {
-  var selectedOptionValues = [];
-
-  for (let i = 0; i < options.length; i++) {
-    selectedOptionValues.push(options[i].value);
-  }
-
-  return selectedOptionValues;
-};
