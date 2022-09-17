@@ -109,11 +109,10 @@ export type NativeLinkCommonProps = NativePressableCommonProps & Partial<Pick<HT
  */
 export type NativeInputCommonProps = NativeCommonProps &
   Partial<Pick<HTMLInputElement, 'type' | 'checked' | 'defaultChecked'>> &
-  Partial<Pick<HTMLSelectElement, 'multiple'>> &
-  {
-    name?: string,
-    value?: string | number | boolean | string[] | readonly string[],
-    defaultValue?: string | number | boolean | string[] | readonly string[],
+  Partial<Pick<HTMLSelectElement, 'multiple'>> & {
+    name?: string;
+    value?: string | number | boolean | string[] | readonly string[];
+    defaultValue?: string | number | boolean | string[] | readonly string[];
     onClick?: MouseEventHandler;
     onBlur?: FocusEventHandler;
     onChange?: ChangeEventHandler;
@@ -164,10 +163,7 @@ export type TrackedPressableContextProps<T, O = TrackedPressableContextObjectivP
  * The props of TrackedInputContext. Extends TrackedContextProps with extra value related properties.
  */
 export type TrackedInputContextObjectivProp = ObjectivComponentProp & ObjectivIdProps & ObjectivValueTrackingProps;
-export type TrackedInputContextProps<
-  T,
-  O = TrackedInputContextObjectivProp
-> = T &
+export type TrackedInputContextProps<T, O = TrackedInputContextObjectivProp> = T &
   NativeInputCommonProps & {
     objectiv: O;
   };

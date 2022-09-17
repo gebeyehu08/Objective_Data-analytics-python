@@ -10,9 +10,17 @@ import {
   trackInputChangeEvent,
   useLocationStack,
 } from '@objectiv/tracker-react-core';
-import React, { forwardRef, PropsWithRef, Ref, useState } from 'react';
+import React, {
+  ChangeEvent,
+  FocusEvent,
+  forwardRef,
+  MouseEvent,
+  PropsWithRef,
+  Ref,
+  SyntheticEvent,
+  useState,
+} from 'react';
 import { NativeInputCommonProps, TrackedInputContextEvent, TrackedInputContextProps } from '../types';
-import { isBlurEvent, isChangeEvent, isClickEvent, normalizeValue } from './TrackedInputContextShared';
 
 /**
  * Generates a new React Element already wrapped in an InputContext.
@@ -32,7 +40,7 @@ export const TrackedInputContext = forwardRef(
     let inputId: string | null | undefined;
     let attributeToMonitor: string;
 
-    if(Component == 'select') {
+    if (Component == 'select') {
       inputId = id ?? nativeProps.id;
       eventHandler = props.objectiv.eventHandler ?? 'onChange';
       stateless = props.objectiv.stateless ?? false;
@@ -65,14 +73,13 @@ export const TrackedInputContext = forwardRef(
       inputId = makeId(inputId);
     }
 
-    const handleEvent = async(event: TrackedInputContextEvent, trackingContext: TrackingContext) => {
+    const handleEvent = async (event: TrackedInputContextEvent, trackingContext: TrackingContext) => {
       const eventTarget = event.target as any;
-      const valueToMonitor = normalizeValue(eventTarget[attributeToMonitor]);
+      const value = props.multiple ? getOptionValues(eventTarget.selectedOptions) : eventTarget[attributeToMonitor];
+      const normalizedValue = normalizeValue(value);
 
-      console.log('lol', previousValue, valueToMonitor)
-
-      if (stateless || previousValue !== valueToMonitor) {
-        setPreviousValue(valueToMonitor);
+      if (stateless || previousValue !== normalizedValue) {
+        setPreviousValue(normalizedValue);
 
         const eventTrackerParameters: EventTrackerParameters & {
           globalContexts: GlobalContexts;
@@ -81,14 +88,16 @@ export const TrackedInputContext = forwardRef(
           globalContexts: [],
         };
 
-        // Add InputValueContext(s) if trackValue has been set
         if (inputId && trackValue) {
-          eventTrackerParameters.globalContexts.push(
-            makeInputValueContext({
-              id: inputId as string,
-              value: valueToMonitor,
-            })
-          );
+          const values = Array.isArray(value) ? value : [value];
+          values.map((value) => {
+            eventTrackerParameters.globalContexts.push(
+              makeInputValueContext({
+                id: inputId as string,
+                value: normalizeValue(value),
+              })
+            );
+          });
         }
 
         trackInputChangeEvent(eventTrackerParameters);
@@ -116,13 +125,13 @@ export const TrackedInputContext = forwardRef(
       if (globalThis.objectiv.devTools) {
         const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
         let componentType: string = '';
-        if(typeof Component === 'string') {
+        if (typeof Component === 'string') {
           componentType = Component;
-          if(props.type) {
+          if (props.type) {
             componentType = props.type;
           }
         }
-        if(componentType) {
+        if (componentType) {
           componentType = `:${componentType}`;
         }
         globalThis.objectiv.devTools.TrackerConsole.error(
@@ -138,8 +147,7 @@ export const TrackedInputContext = forwardRef(
           <Component
             {...componentProps}
             {...{
-              [eventHandler]: (event: TrackedInputContextEvent) =>
-                handleEvent(event, trackingContext),
+              [eventHandler]: (event: TrackedInputContextEvent) => handleEvent(event, trackingContext),
             }}
           />
         )}
@@ -147,3 +155,67 @@ export const TrackedInputContext = forwardRef(
     );
   }
 ) as <T>(props: PropsWithRef<TrackedInputContextProps<T, NativeInputCommonProps>>) => JSX.Element;
+
+/**
+ * Helper function to convert a HTMLOptionsCollection to string[]
+ */
+const getOptionValues = (options: HTMLCollectionOf<HTMLOptionElement>) => {
+  var selectedOptionValues = [];
+
+  for (let i = 0; i < options.length; i++) {
+    selectedOptionValues.push(options[i].value);
+  }
+
+  return selectedOptionValues;
+};
+
+/**
+ * A type guard to determine whether the given event is a blur event
+ */
+export function isBlurEvent<T = HTMLInputElement | HTMLSelectElement>(
+  event: SyntheticEvent<T>
+): event is FocusEvent<T> {
+  return event.type === 'blur';
+}
+
+/**
+ * A type guard to determine whether the given event is a change event
+ */
+export function isChangeEvent<T = HTMLInputElement | HTMLSelectElement>(
+  event: SyntheticEvent<T>
+): event is ChangeEvent<T> {
+  return event.type === 'change';
+}
+
+/**
+ * A type guard to determine whether the given event is a click event
+ */
+export function isClickEvent<T = HTMLInputElement | HTMLSelectElement>(
+  event: SyntheticEvent<T>
+): event is MouseEvent<T> {
+  return event.type === 'click';
+}
+
+/**
+ * Helper function to parse the value of the monitored attribute.
+ * Ensures the result is a string and normalizes booleans to '0' and '1'
+ */
+export const normalizeValue = (value?: unknown) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? '1' : '0';
+  }
+
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+
+  if (Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+
+  return '';
+};
