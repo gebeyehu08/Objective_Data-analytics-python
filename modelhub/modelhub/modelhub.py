@@ -107,7 +107,7 @@ class ModelHub:
             with NamedTemporaryFile(mode='w') as creds:
                 creds.write(os.environ.get(bq_credentials_env))
                 creds.flush()
-                return create_engine(db_url, credentials_path=bq_credentials_path)
+                return create_engine(db_url, credentials_path=creds.name)
 
         db_url = db_url or os.environ.get('DSN', 'postgresql://objectiv:@localhost:5432/objectiv')
         return create_engine(db_url)
