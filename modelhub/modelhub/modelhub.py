@@ -94,7 +94,7 @@ class ModelHub:
         """
         import os
         if db_url and re.match(r'^bigquery://.+', db_url):
-            if not bq_credentials_path or bq_credentials_env:
+            if not (bq_credentials_path or bq_credentials_env):
                 raise ValueError('BigQuery credentials path or env is required for engine creation.')
 
             if not bq_credentials_env:
