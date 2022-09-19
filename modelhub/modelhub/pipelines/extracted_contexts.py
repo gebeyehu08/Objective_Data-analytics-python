@@ -9,7 +9,7 @@ from functools import reduce
 import bach
 from typing import Optional, Dict, List
 
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 
 import modelhub
 from bach.types import StructuredDtype
@@ -399,6 +399,17 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         )
 
 
+class AthenaQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
+    def _get_global_contexts_dtypes_from_db_dtypes(
+        self, db_dtypes: Dict[str, StructuredDtype]
+    ) -> Dict[str, StructuredDtype]:
+        return {'contexts': bach.SeriesString.dtype}
+
+    def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        contexts_series = df['contexts'].astype('json')
+        return df.to_pandas()
+
+
 def get_extracted_context_pipeline(
     engine: Engine, table_name: str, global_contexts: List[str]
 ) -> BaseExtractedContextsPipeline:
@@ -411,5 +422,8 @@ def get_extracted_context_pipeline(
 
     if is_bigquery(engine):
         return BigQueryExtractedContextsPipeline(engine, table_name, global_contexts)
+
+    if is_athena(engine):
+        return AthenaQueryExtractedContextsPipeline(engine, table_name, global_contexts)
 
     raise Exception(f'There is no ExtractedContextsPipeline subclass for {engine.name}.')
