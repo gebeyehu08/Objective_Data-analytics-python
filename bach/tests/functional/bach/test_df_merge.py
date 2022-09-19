@@ -199,7 +199,6 @@ def test_merge_suffixes(engine):
     mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     result = bt.merge(mt, left_on='_index_skating_order', right_on='skating_order', suffixes=('_AA', '_BB'))
     assert isinstance(result, DataFrame)
-    print(result.view_sql())
     result = result.sort_index()
     assert_equals_data(
         result,
