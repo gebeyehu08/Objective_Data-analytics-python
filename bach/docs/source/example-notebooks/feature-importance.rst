@@ -40,6 +40,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 
 	>>> # instantiate the model hub, set the default time aggregation to daily
 	>>> # and get the application & path global contexts
+	>>> from matplotlib import pyplot as plt
 	>>> from modelhub import ModelHub, display_sql_as_markdown
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['root_location'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
@@ -89,9 +90,36 @@ This lets you adjust the dataset further, or use the model as-is:
 	dataset, only usage from _before_ reaching conversion is counted. 
 - The `model` is the toolkit that can be used to assess the feature importance on our conversion goal.
 
-In this example we first review the dataset before using it for the actual model training (hence the `_temp` 
-suffix). We create a single :doc:`DataFrame <../bach/api-reference/DataFrame/bach.DataFrame>` that has all 
-the features, the target, and a sum of all features.
+.. code-block:: jupyter-notebook
+	
+	>>> y_temp.head()
+
+.. code-block:: jupyter-notebook-out
+	
+	user_id
+	005aa19c-7e80-4960-928c-a0853355ee5f    False
+	0115c0f1-1145-49bd-80a5-66f4548a7a39    False
+	01891784-6333-40f1-8be6-739f3adfdb97    False
+	021f2c2f-f441-4e11-875c-20dc27aaf57e    False
+	02c42c27-1c0d-4e3e-b6c0-403a60e8eb83    False
+	Name: is_converted, dtype: bool
+
+.. code-block:: jupyter-notebook
+	
+	>>> X_temp.head()
+
+.. code-block:: jupyter-notebook-out
+	
+	                                      jobs home join-slack tracking blog about taxonomy privacy
+	user_id
+	005aa19c-7e80-4960-928c-a0853355ee5f  0    0    0          0        0    2     0        0
+	0115c0f1-1145-49bd-80a5-66f4548a7a39  0    1    0          0        0    0     0        0
+	01891784-6333-40f1-8be6-739f3adfdb97  0    9    0          0        0    0     2        0
+	021f2c2f-f441-4e11-875c-20dc27aaf57e  1    3    0          0        1    1     0        0
+	02c42c27-1c0d-4e3e-b6c0-403a60e8eb83  0    0    0          0        0    0     3        0
+
+In our example, we will go into detailed assessment of the model's accuracy, so we won't jumpt to the model 
+results, but instead first look at our data set and prepare a proper data set for the model.
 
 .. code-block:: jupyter-notebook
 
@@ -112,14 +140,41 @@ get the best possible dataset for our model.
 
 	>>> data_set_temp.describe().head()
 
+.. code-block:: jupyter-notebook-out
+
+	       jobs   home join-slack tracking blog   about  taxonomy privacy total_press
+	__stat
+	 count 543.00 543.00   543.00   543.00 543.00 543.00   543.00  543.00      543.00
+	  mean   0.25   2.59     0.00     0.42   0.31   0.37     0.65    0.00        4.59
+	   std   0.87   2.94     0.04     2.12   0.80   0.86     2.51    0.06        5.14
+	   min   0.00   0.00     0.00     0.00   0.00   0.00     0.00    0.00        1.00
+	   max  12.00  27.00     1.00    30.00   9.00   7.00    33.00    1.00       45.00
+
 This shows that we have 543 samples in our data. It also shows that the mean is quite low for most features, 
 and the same is true for the standard deviation. This indicates that the feature usage is not distributed
 very well.
 
 .. code-block:: jupyter-notebook
 
-	>>> print(data_set_temp.is_converted.value_counts().head())
+	>>> data_set_temp.is_converted.value_counts().head()
+
+.. code-block:: jupyter-notebook-out
+
+	is_converted
+	False    469
+	True      74
+	Name: value_counts, dtype: int64
+
+.. code-block:: jupyter-notebook
+
 	>>> (data_set_temp.is_converted.value_counts()/data_set_temp.is_converted.count()).head()
+
+.. code-block:: jupyter-notebook-out
+
+	is_converted
+	False    0.86372
+	True     0.13628
+	Name: value_counts, dtype: float64
 
 The dataset is not balanced in terms of users that did or did not reach conversion: 74 converted users 
 (13.6%). While this is not necessarily a problem, it influences the metric we choose to look at for model
@@ -135,6 +190,9 @@ We can also plot histograms of the features, so we can inspect the distributions
 	>>> 	data_set_temp[data_set_temp.is_converted==True][[name]].plot.hist(bins=20, title='Converted', ax=axis[idx][0])
 	>>> 	data_set_temp[data_set_temp.is_converted==False][[name]].plot.hist(bins=20, title='Not converted', ax=axis[idx][1])
 	>>> plt.tight_layout()
+
+.. image:: ../img/docs/example-notebooks/feature-importance-plot-histograms.png
+  :alt: Histogram plots of features
 
 We see that some features are not useful at all ('join-slack' and 'privacy'), so we will remove them. Moreover
 we think that users that clicking only once in any of the root locations will not provide us with any
@@ -164,6 +222,54 @@ y dataset that we will use in the model.
 
 .. code-block:: jupyter-notebook
 
+	>>> data_set_temp.describe().head()
+
+.. code-block:: jupyter-notebook-out
+
+	jobs   home    tracking blog about taxonomy total_press
+	__stat
+	 count  406.00 406.00 406.00 406.00 406.00 406.00 406.00
+	  mean    0.32   3.20   0.56   0.39   0.47   0.85   5.80
+	   std    0.99   3.17   2.43   0.90   0.97   2.87   5.43
+	   min    0.00   0.00   0.00   0.00   0.00   0.00   2.00
+	   max   12.00  27.00  30.00   9.00   7.00  33.00  45.00
+
+.. code-block:: jupyter-notebook
+
+	>>> data_set_temp.is_converted.value_counts().head()
+
+.. code-block:: jupyter-notebook-out
+
+	is_converted
+	False    339
+	True      67
+	Name: value_counts, dtype: int64
+
+.. code-block:: jupyter-notebook
+
+	>>> (data_set_temp.is_converted.value_counts()/data_set_temp.is_converted.count()).head()
+
+.. code-block:: jupyter-notebook-out
+
+	is_converted
+	False    0.834975
+	True     0.165025
+	Name: value_counts, dtype: float64
+
+.. code-block:: jupyter-notebook
+
+	>>> figure, axis = plt.subplots(len(columns), 2, figsize=(15,30))
+	>>> 
+	>>> for idx, name in enumerate(columns):
+	>>>     data_set_temp[data_set_temp.is_converted==True][[name]].plot.hist(bins=20, title='Converted', ax=axis[idx][0])
+	>>>     data_set_temp[data_set_temp.is_converted==False][[name]].plot.hist(bins=20, title='Not converted', ax=axis[idx][1])
+	>>> plt.tight_layout()
+
+.. image:: ../img/docs/example-notebooks/feature-importance-plot-histograms-filtered.png
+  :alt: Histogram plots of filtered features
+
+.. code-block:: jupyter-notebook
+
 	>>> X = data_set_temp[columns]
 	>>> y = data_set_temp.is_converted
 
@@ -187,6 +293,16 @@ performance of the three models can be retrieved with `model` methods.
 	>>> model.fit(X, y, seed=.4)
 	>>> model.results()
 
+.. code-block:: jupyter-notebook-out
+
+	         coefficients_mean coefficients_std
+	about            -0.403494         0.105327
+	jobs             -0.016932         0.101370
+	home              0.033575         0.017482
+	taxonomy          0.084558         0.042645
+	blog              0.095825         0.104930
+	tracking          0.170703         0.107747
+
 The mean of the coefficients are returned together with the standard deviation. The lower the standard
 deviation, the more stable the coefficients in the various runs. Our results show that 'about' has most
 negative impact on conversion, while 'tracking', 'blog' and 'taxonomy' has the most positive impact.
@@ -195,6 +311,10 @@ negative impact on conversion, while 'tracking', 'blog' and 'taxonomy' has the m
 
 	>>> model.auc()
 
+.. code-block:: jupyter-notebook-out
+
+	0.6935796984854313
+
 The average AUC of our models is 0.69. This is better than a baseline model (0.5 AUC). However, it also
 means that it is not a perfect model and therefore the chosen features alone cannot predict conversion 
 completely.
@@ -202,6 +322,17 @@ completely.
 Amongst others, some things that might improve further models are a larger dataset, other explanatory
 variables (i.e. more detailed locations instead of only root locations), and more information on the users
 (i.e. user referrer as a proxy for user intent).
+
+.. code-block:: jupyter-notebook
+
+	>>> model.results(full=True)
+
+.. code-block:: jupyter-notebook-out
+
+	       jobs     home tracking     blog     about taxonomy
+	0  0.086162 0.013394 0.078106 0.212065 -0.458034 0.053494
+	0 -0.020472 0.043257 0.288966 0.067309 -0.282082 0.133179
+	0 -0.116485 0.044074 0.145039 0.008101 -0.470368 0.067001
 
 Get the SQL for any analysis
 ----------------------------
