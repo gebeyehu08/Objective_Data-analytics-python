@@ -103,9 +103,13 @@ class ModelHub:
             if bq_credentials_env not in os.environ:
                 raise ValueError('BigQuery credentials environment variable name not in env.')
 
+            credentials = os.environ.get(bq_credentials_env)
+            if not credentials:
+                raise ValueError('BigQuery credentials environment variable is empty.')
+
             from tempfile import NamedTemporaryFile
             with NamedTemporaryFile(mode='w') as creds:
-                creds.write(os.environ.get(bq_credentials_env))
+                creds.write(credentials)
                 creds.flush()
                 return create_engine(db_url, credentials_path=creds.name)
 
