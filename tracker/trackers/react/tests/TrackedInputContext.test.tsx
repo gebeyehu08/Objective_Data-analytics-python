@@ -2,6 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { TextField } from '@material-ui/core';
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -67,6 +68,33 @@ describe('TrackedInputContext', () => {
           value={'test'}
           label={'test label'}
           objectiv={{ Component: CustomInput, id: 'input-id' }}
+        />
+      </ObjectivProvider>
+    );
+
+    fireEvent.blur(screen.getByTestId('test-input'));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+  });
+
+  it('should wrap third-party Components', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext<ComponentProps<typeof TextField>>
+          data-testid={'test-input'}
+          value={'test'}
+          helperText={'test helper text'}
+          objectiv={{ Component: TextField, id: 'input-id' }}
         />
       </ObjectivProvider>
     );
