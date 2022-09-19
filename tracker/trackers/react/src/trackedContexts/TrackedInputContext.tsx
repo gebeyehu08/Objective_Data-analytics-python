@@ -20,7 +20,7 @@ import React, {
   SyntheticEvent,
   useState,
 } from 'react';
-import { NativeInputCommonProps, TrackedInputContextEvent, TrackedInputContextProps } from '../types';
+import { TrackedInputContextEvent, TrackedInputContextProps } from '../types';
 
 /**
  * Generates a new React Element already wrapped in an InputContext.
@@ -154,7 +154,7 @@ export const TrackedInputContext = forwardRef(
       </InputContextWrapper>
     );
   }
-) as <T>(props: PropsWithRef<TrackedInputContextProps<T, NativeInputCommonProps>>) => JSX.Element;
+) as <T>(props: PropsWithRef<TrackedInputContextProps<T>>) => JSX.Element;
 
 /**
  * Helper function to convert a HTMLOptionsCollection to string[]
