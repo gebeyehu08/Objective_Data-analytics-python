@@ -129,6 +129,14 @@ results, but instead first look at our data set and prepare a proper data set fo
 	>>> data_set_temp['is_converted'] = y_temp
 	>>> data_set_temp['total_press'] = modelhub.map.sum_feature_rows(X_temp)
 
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.ModelHub.add_conversion_event <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.add_conversion_event>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+	* :doc:`bach.DataFrame.copy <../bach/api-reference/DataFrame/bach.DataFrame.copy>`
+
 Review the dataset
 ------------------
 
@@ -272,6 +280,15 @@ y dataset that we will use in the model.
 
 	>>> X = data_set_temp[columns]
 	>>> y = data_set_temp.is_converted
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`bach.DataFrame.describe <../bach/api-reference/DataFrame/bach.DataFrame.describe>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+	* :doc:`bach.Series.value_counts <../bach/api-reference/Series/bach.Series.value_counts>`
+	* :doc:`bach.Series.count <../bach/api-reference/Series/bach.Series.count>`
+	* :doc:`bach.DataFrame.drop <../bach/api-reference/DataFrame/bach.DataFrame.drop>`
 
 Train and evaluate the model
 ----------------------------
