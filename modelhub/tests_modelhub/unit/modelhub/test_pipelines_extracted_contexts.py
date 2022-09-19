@@ -50,6 +50,7 @@ def test_get_base_dtypes(db_params) -> None:
         expected = {
             'collector_tstamp': 'timestamp',
             'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}],
+            'domain_sessionid': 'string',
             'event_id': 'string',
             'network_userid': 'string',
             'se_action': 'string',
