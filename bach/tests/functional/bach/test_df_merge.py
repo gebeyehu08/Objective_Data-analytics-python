@@ -199,8 +199,11 @@ def test_merge_suffixes(engine):
     mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     result = bt.merge(mt, left_on='_index_skating_order', right_on='skating_order', suffixes=('_AA', '_BB'))
     assert isinstance(result, DataFrame)
+    print(result.view_sql())
+    result = result.sort_index()
     assert_equals_data(
         result,
+        use_to_pandas=True,
         expected_columns=[
             '_index_skating_order_AA',
             '_index_skating_order_BB',
@@ -549,6 +552,7 @@ def test_merge_on_conditions(engine) -> None:
 
     assert_equals_data(
         result.sort_index(),
+        use_to_pandas=True,
         expected_columns=['_index_0_x', '_index_0_y', 'A_x', 'B_x', 'A_y', 'B_y'],
         expected_data=[
             [2, 2, 'c', 250, 'g', 10],
@@ -575,6 +579,7 @@ def test_merge_on_conditions_w_on_data_columns(engine) -> None:
 
     assert_equals_data(
         result.sort_index(),
+        use_to_pandas=True,
         expected_columns=['_index_0_x', '_index_0_y', 'A', 'B_x', 'B_y'],
         expected_data=[
             [1, 1, 'a', 25, 5],
@@ -622,6 +627,7 @@ def test_merge_on_conditions_w_index(engine) -> None:
 
     assert_equals_data(
         result.sort_index(),
+        use_to_pandas=True,
         expected_columns=['_index_0', 'A_x', 'B_x', 'A_y', 'B_y'],
         expected_data=[
             [2, 'c', 250, 'g', 10],

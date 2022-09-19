@@ -141,6 +141,7 @@ def test_basic_set_item_by_label(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -
 
     assert_equals_data(
         df_cp2,
+        use_to_pandas=True,
         expected_columns=['A', 'B', 'C', 'D'],
         expected_data=[
             ['a', 0, 5, 'f'],
@@ -169,6 +170,7 @@ def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame
     df.loc['b', ['B', 'D']] = extra_df['C']
     assert_equals_data(
         df.sort_index(),
+        use_to_pandas=True,
         expected_columns=['A', 'B', 'C', 'D'],
         expected_data=[
             ['a', 0, 5, 'f'],
