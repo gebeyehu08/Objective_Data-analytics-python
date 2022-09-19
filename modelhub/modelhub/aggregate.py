@@ -483,16 +483,17 @@ class Aggregate:
                            groupby: Union[List[Union[str, Series]], str, Series] = 'user_id',
                            percentage=False) -> bach.DataFrame:
         """
-         Get the locations from where users drop off.
+        Find the locations/features where users drop off, and their usage/share.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location_stack: the location stack
-            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
-            - if None - the whole location stack is taken.
+        :param location_stack: the slice of the location stack to consider.
+
+            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
+            - if `None`, the whole location stack is taken.
         :param groupby: sets the column(s) to group by.
         :param percentage: if True calculate the percentage.
 
-        return dataframe with location from where the users drop off and the count.
+        :returns: :py:class:`bach.DataFrame` with the location where users drop off, and the count/percentage.
         """
 
         data = data.copy()
