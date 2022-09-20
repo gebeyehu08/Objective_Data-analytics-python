@@ -223,7 +223,7 @@ Using our intent definitions above, we can now assign a stage of intent to each 
 	:skipif: engine is None
 
 	>>> # calculate buckets duration
-	>>> user_intent_buckets.loc[(user_intent_buckets.explore_inform_duration >= timedelta(0, 100)) & (user_intent_buckets.explore_inform_duration <= timedelta(0, 690)), 'bucket'] = '2 - explore'
+	>>> user_intent_buckets.loc[(user_intent_buckets.explore_inform_duration >= timedelta(0, 90)) & (user_intent_buckets.explore_inform_duration <= timedelta(0, 690)), 'bucket'] = '2 - explore'
 	>>> user_intent_buckets.loc[user_intent_buckets.explore_inform_duration > timedelta(0, 690), 'bucket'] = '3 - implement'
 
 .. admonition:: Reference
@@ -247,8 +247,8 @@ total number of users per intent bucket.
 	>>> user_intent_buckets.reset_index().groupby('bucket').agg({'user_id': 'nunique'}).sort_index().head()
 	               user_id_nunique
 	bucket
-	1 - inform                 498
-	2 - explore                 44
+	1 - inform                 495
+	2 - explore                 47
 	3 - implement               30
 
 Other examples of analyses you could run:
@@ -440,7 +440,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	       "session_duration" AS "session_duration",
 	       "explore_inform_duration" AS "explore_inform_duration",
 	       CASE WHEN ("explore_inform_duration" > cast('P0DT0H11M30S' AS interval)) THEN '3 - implement'
-	            ELSE CASE WHEN ((("explore_inform_duration" >= cast('P0DT0H1M40S' AS interval))) AND (("explore_inform_duration" <= cast('P0DT0H11M30S' AS interval)))) THEN '2 - explore' ELSE '1 - inform' END
+	            ELSE CASE WHEN ((("explore_inform_duration" >= cast('P0DT0H1M30S' AS interval))) AND (("explore_inform_duration" <= cast('P0DT0H11M30S' AS interval)))) THEN '2 - explore' ELSE '1 - inform' END
 	             END AS "bucket"
 	  FROM "merge_sql___32a357c8d28e7fb38db96b6fbeb0c2eb"
 	<BLANKLINE>
