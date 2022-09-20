@@ -1,11 +1,11 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-
+import modelhub
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
 import pytest
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
+from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test, DBParams
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
 
@@ -572,3 +572,66 @@ def test_time_agg(db_params):
         order_by='event_id',
         convert_uuid=True,
     )
+
+
+def test_get_objectiv_dataframe_db_connection(db_params: DBParams):
+    import os
+
+    dsn_orig = os.environ.get('DSN', None)
+    if 'DSN' in os.environ:
+        del (os.environ['DSN'])
+
+    mh = modelhub.ModelHub()
+
+    if 'postgresql' in db_params.url:
+        ## Test standard connection
+        mh.get_objectiv_dataframe(db_url=db_params.url, table_name=db_params.table_name)
+
+        ## Test fallback to DSN
+        os.environ['DSN'] = db_params.url
+        mh.get_objectiv_dataframe(db_url=None)
+
+    elif 'bigquery' in db_params.url:
+        gac_orig = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', None)
+        if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
+            del (os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+        # Check that we get a nice error to help the user
+        with pytest.raises(ValueError, match="credentials or path is required"):
+            mh.get_objectiv_dataframe(db_url=db_params.url)
+
+        mh.get_objectiv_dataframe(
+            db_url=db_params.url,
+            table_name=db_params.table_name,
+            bq_credentials_path=db_params.credentials)
+
+        # test secret from variable
+        with open(db_params.credentials) as f:
+            secret = f.read()
+            mh.get_objectiv_dataframe(
+                db_url=db_params.url,
+                table_name=db_params.table_name,
+                bq_credentials=secret)
+
+        # test nothing specified falls back to DSN and GAC
+        os.environ['DSN'] = db_params.url
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = db_params.credentials
+        mh.get_objectiv_dataframe(table_name=db_params.table_name)
+        if gac_orig:
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = gac_orig
+        else:
+            if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
+                del(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+    else:
+        raise Exception(f"DBParams url not supported: {db_params.url}")
+
+    if dsn_orig:
+        os.environ['DSN'] = dsn_orig
+    else:
+        del(os.environ['DSN'])
+
+
+
+
+
+
+

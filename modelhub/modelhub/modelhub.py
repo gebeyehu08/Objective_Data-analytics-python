@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import re
-from typing import List, Union, Dict, Tuple, Optional, cast
+from typing import List, Union, Dict, Tuple, Optional, cast, Any
 from typing import TYPE_CHECKING
 
 import bach
@@ -86,35 +86,28 @@ class ModelHub:
     @staticmethod
     def _get_db_engine(db_url: Optional[str],
                        bq_credentials_path: Optional[str] = None,
-                       bq_credentials_env: Optional[str] = None) -> Engine:
+                       bq_credentials: Optional[str] = None) -> Engine:
         """
         returns db_connection based on db_url.
-        If db_url is for BigQuery, bq_credentials_path or bq_credentials_env must be provided.
-        When both are given, bq_credentials_path wins.
+        If db_url is for BigQuery, bq_credentials_path or bq_credentials must be provided.
+        When both are given, bq_credentials wins.
         """
         import os
+        kwargs: Dict[str, Any] = {}
+
         if db_url and re.match(r'^bigquery://.+', db_url):
-            if not (bq_credentials_path or bq_credentials_env):
-                raise ValueError('BigQuery credentials path or env is required for engine creation.')
+            if not (bq_credentials_path or bq_credentials):
+                raise ValueError('BigQuery credentials or path is required for engine creation.')
 
-            if not bq_credentials_env:
-                return create_engine(db_url, credentials_path=bq_credentials_path)
-
-            if bq_credentials_env not in os.environ:
-                raise ValueError('BigQuery credentials environment variable name not in env.')
-
-            credentials = os.environ.get(bq_credentials_env)
-            if not credentials:
-                raise ValueError('BigQuery credentials environment variable is empty.')
-
-            from tempfile import NamedTemporaryFile
-            with NamedTemporaryFile(mode='w') as creds:
-                creds.write(credentials)
-                creds.flush()
-                return create_engine(db_url, credentials_path=creds.name)
+            if bq_credentials:
+                import base64
+                credentials_base64 = base64.b64encode(bq_credentials.encode('utf-8'))
+                kwargs['credentials_base64'] = credentials_base64
+            else:
+                kwargs['credentials_path'] = bq_credentials_path
 
         db_url = db_url or os.environ.get('DSN', 'postgresql://objectiv:@localhost:5432/objectiv')
-        return create_engine(db_url)
+        return create_engine(db_url, **kwargs)
 
     def get_objectiv_dataframe(
         self,
@@ -124,7 +117,7 @@ class ModelHub:
         start_date: str = None,
         end_date: str = None,
         bq_credentials_path: Optional[str] = None,
-        bq_credentials_env: Optional[str] = None,
+        bq_credentials: Optional[str] = None,
         with_sessionized_data: bool = True,
         session_gap_seconds: int = SESSION_GAP_DEFAULT_SECONDS,
         identity_resolution: Optional[str] = None,
@@ -147,10 +140,9 @@ class ModelHub:
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
             and including the last date in the sql table. Format as 'YYYY-MM-DD'.
         :param bq_credentials_path: path for BigQuery credentials. If db_url is for BigQuery engine, this
-            parameter or `bq_credentials_env` is required.  When both are given, bq_credentials_path wins.
-        :param bq_credentials_env: Name of the environment variable that contains the json for the credentials
-            file. If db_url is for BigQuery engine, this parameter or `bq_credentials_path` is required.
-            When both are given, bq_credentials_path wins.
+            parameter or `bq_credentials` is required.  When both are given, bq_credentials wins.
+        :param bq_credentials: The json from the credentials file. If db_url is for BigQuery engine, this
+            parameter or `bq_credentials_path` is required. When both are given, bq_credentials wins.
         :param with_sessionized_data: Indicates if DataFrame must include `session_id`
             and `session_hit_number` calculated series.
         :param session_gap_seconds: Amount of seconds to be use for identifying if events were triggered
@@ -168,7 +160,7 @@ class ModelHub:
                 and `session_hit_number` (int64) series.
         """
         engine = self._get_db_engine(
-            db_url=db_url, bq_credentials_path=bq_credentials_path, bq_credentials_env=bq_credentials_env
+            db_url=db_url, bq_credentials_path=bq_credentials_path, bq_credentials=bq_credentials
         )
         from modelhub.pipelines.util import get_objectiv_data
         if table_name is None:
