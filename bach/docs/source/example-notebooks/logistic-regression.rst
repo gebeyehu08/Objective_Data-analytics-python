@@ -51,7 +51,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	>>> # instantiate the model hub, set the default time aggregation to daily
 	>>> # and get the application & path global contexts
 	>>> from modelhub import ModelHub, display_sql_as_markdown
-	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['root_location'])
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 	>>> # get an Objectiv DataFrame within a defined timeframe
 	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
