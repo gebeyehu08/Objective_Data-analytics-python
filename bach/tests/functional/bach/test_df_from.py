@@ -26,7 +26,7 @@ def _create_test_table(engine: Engine, table_name: str):
                 (
                     f'create external table {table_name}'
                     '(a bigint, b string, c double, d date, e timestamp, f boolean) \n'
-                    f"location '{DB_ATHENA_LOCATION}';"
+                    f"location '{DB_ATHENA_LOCATION}/{table_name}/';"
                 )
             )
             return

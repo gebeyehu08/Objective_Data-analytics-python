@@ -32,7 +32,7 @@ OBJ_DB_ATHENA_REGION_NAME="eu-west-1"
 OBJ_DB_ATHENA_SCHEMA_NAME="bach_test"
 OBJ_DB_ATHENA_CATALOG_NAME="automated_tests"
 OBJ_DB_ATHENA_S3_STAGING_DIR="s3://obj-automated-tests/athena_query_results/"
-OBJ_DB_ATHENA_LOCATION="s3://obj-automated-tests/bach_test/staging/"
+OBJ_DB_ATHENA_LOCATION="s3://obj-automated-tests/bach_test/"
 OBJ_DB_ATHENA_WORK_GROUP="automated_tests_work_group"
 
 
