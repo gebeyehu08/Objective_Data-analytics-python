@@ -7,7 +7,7 @@ from uuid import UUID
 import bach
 from bach import DataFrame
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from tests.functional.bach.test_data_and_utils import run_query

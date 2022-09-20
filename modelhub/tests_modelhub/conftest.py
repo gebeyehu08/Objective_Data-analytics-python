@@ -5,7 +5,7 @@ There is some pytest 'magic' here that automatically fills out the db parameters
 test functions that require an engine.
 By default such a test function will get a Postgres db parameters. But if --big-query or --all is
 specified on the commandline, then it will (also) get a BigQuery db parameters. For specific
-tests, it is possible to disable postgres or bigquery testing, see 'marks' section below.
+tests, it is possible to disable postgres, bigquery or athena testing, see 'marks' section below.
 ### Marks and Test Categorization
 A lot of functionality needs to be tested for multiple databases. The 'engine' and 'dialects' fixtures
 mentioned above help with that. Additionally we have some marks (`@pytest.mark.<type>`) to make it explicit
@@ -18,10 +18,15 @@ We broadly want 5 categories of tests:
   *  functional-tests that run against all supported databases (3)
   *  functional-tests that run against all supported databases except Postgres (4)
   *  functional-tests that run against all supported databases except BigQuery (5)
+  *  functional-tests that run against all supported databases except Athena (6)
 1 and 3 are the default for tests. These either get 'db_params' as fixture and run against all
 databases. Category 2 are tests that test generic code that is not geared to a specific database.
-Category 4 and 5 are for functionality that we explicitly not support on some databases.
-Category 4, and 5 are the exception, these need to be marked with the `skip_postgres` or `skip_bigquery` marks.
+Category 4, 5 and 6 are for functionality that we explicitly not support on some databases.
+Category 4, 5 and 6 are the exception, these need to be marked with the `skip_postgres`,
+`skip_bigquery` or `skip_athena` marks.
+
+Temporarily, for Category 6 `skip_athena_todo` mark is also considered for skipping test run for Athena engine.
+This mark helps highlighting that the test MUST be supported by the engine and in a future we should work on it.
 """
 import os
 from urllib.parse import quote_plus
@@ -50,14 +55,17 @@ _DB_ATHENA_TEST_URL = _ENV.get('OBJ_DB_ATHENA_TEST_URL')
 _DB_ATHENA_AWS_ACCESS_KEY_ID = _ENV.get('OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID')
 _DB_ATHENA_AWS_SECRET_ACCESS_KEY = _ENV.get('OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY')
 _DB_ATHENA_REGION_NAME = _ENV.get('OBJ_DB_ATHENA_REGION_NAME', 'eu-west-1')
-_DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'automated_tests.modelhub_test')
-_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/modelhub_test/')
+_DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'modelhub_test')
+_DB_ATHENA_CATALOG_NAME = _ENV.get('OBJ_DB_ATHENA_CATALOG_NAME', 'automated_tests')
+_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/athena_query_results/')
 _DB_ATHENA_WORK_GROUP = _ENV.get('OBJ_DB_ATHENA_WORK_GROUP', 'automated_tests_work_group')
 
 MARK_SKIP_POSTGRES = 'skip_postgres'
 MARK_SKIP_ATHENA = 'skip_athena'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
 
+# temporary mark, remove when all MH functionalities are supported for Athena
+MARK_SKIP_ATHENA_TODO = 'skip_athena_todo'
 
 def pytest_addoption(parser: Parser):
     # Add options for parameterizing multi-database tests for testing either Postgres, Bigquery, or both.
@@ -82,7 +90,7 @@ def pytest_generate_tests(metafunc: Metafunc):
     markers = list(metafunc.definition.iter_markers())
     skip_postgres = any(mark.name == MARK_SKIP_POSTGRES for mark in markers)
     skip_bigquery = any(mark.name == MARK_SKIP_BIGQUERY for mark in markers)
-    skip_athena = any(mark.name == MARK_SKIP_ATHENA for mark in markers)
+    skip_athena = any(mark.name in (MARK_SKIP_ATHENA, MARK_SKIP_ATHENA_TODO) for mark in markers)
     db_params = []
 
     testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("big_query")
@@ -118,7 +126,7 @@ def _get_bigquery_sp_db_params() -> DBParams:
     return DBParams(
         url=_DB_BQ_TEST_URL,
         credentials=_DB_BQ_CREDENTIALS_PATH,
-        table_name='events_flat',
+        table_name='events_flat_anon',
         format=DBParams.Format.SNOWPLOW
     )
 
@@ -133,12 +141,15 @@ def _get_athena_db_params() -> DBParams:
         schema_name = quote_plus(_DB_ATHENA_SCHEMA_NAME)
         s3_staging_dir = quote_plus(_DB_ATHENA_S3_STAGING_DIR)
         athena_work_group = quote_plus(_DB_ATHENA_WORK_GROUP)
+        catalog_name = quote_plus(_DB_ATHENA_CATALOG_NAME)
 
         url = (
             f'awsathena+rest://'
             f'{aws_access_key_id}:{aws_secret_access_key}'
             f'@athena.{region_name}.amazonaws.com:443/'
-            f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}')
+            f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
+            f'&catalog_name={catalog_name}'
+        )
     return DBParams(
         url=url,
         credentials=None,

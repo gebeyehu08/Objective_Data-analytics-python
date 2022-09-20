@@ -67,7 +67,7 @@ the `location_stack` and global contexts.
 
 	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
 	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
-	* :ref:`using global context data <location-stack-and-global-contexts>`
+	* :ref:`Using global context data <location-stack-and-global-contexts>`
 	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 
 Have a look at the data
@@ -597,7 +597,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	>>> # show SQL for analysis; this is just one example, and works for any Objectiv model/analysis
 	>>> display_sql_as_markdown(monthly_users)
 	sql
-	WITH "getitem_where_boolean___5b5e1ee95a6ba99fd63b8e20756ca70d" AS (
+	WITH "manual_materialize___69a0c34935f44c51532b4d6011fb9118" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -607,9 +607,20 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
 	               cast("value"->>'time' AS bigint) AS "time"
 	          FROM "data"
+	       ),
+	       "getitem_where_boolean___938c68dda42732fece35858fed1415a6" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "location_stack" AS "location_stack",
+	               "time" AS "time"
+	          FROM "manual_materialize___69a0c34935f44c51532b4d6011fb9118"
 	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-07-30' AS date))))
 	       ),
-	       "context_data___0d2df0b49ed493f105f3702531d896dd" AS (
+	       "context_data___86ab7bc1893a46a2f4320a4212da6d80" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -617,9 +628,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types"
-	          FROM "getitem_where_boolean___5b5e1ee95a6ba99fd63b8e20756ca70d"
+	          FROM "getitem_where_boolean___938c68dda42732fece35858fed1415a6"
 	       ),
-	       "session_starts___e09911a5633d9555483188496b797485" AS (
+	       "session_starts___25d2dd1edb505920fc7495937f0abbbb" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -630,9 +641,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
-	          FROM "context_data___0d2df0b49ed493f105f3702531d896dd"
+	          FROM "context_data___86ab7bc1893a46a2f4320a4212da6d80"
 	       ),
-	       "session_id_and_count___5e2085e3ce5ad942fa8644344a6898ca" AS (
+	       "session_id_and_count___64dad7aa02b0a7a7c61d2d5e7a0fc837" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -645,9 +656,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	                    ELSE cast(NULL AS bigint)
 	                     END AS "session_start_id",
 	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___e09911a5633d9555483188496b797485"
+	          FROM "session_starts___25d2dd1edb505920fc7495937f0abbbb"
 	       ),
-	       "objectiv_sessionized_data___ae9e92a8b18a72a9333c4321cc0914c2" AS (
+	       "objectiv_sessionized_data___a0305334fc04cd16eb80a8cfc9be8e9f" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -660,9 +671,9 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "is_one_session" AS "is_one_session",
 	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___5e2085e3ce5ad942fa8644344a6898ca"
+	          FROM "session_id_and_count___64dad7aa02b0a7a7c61d2d5e7a0fc837"
 	       ) SELECT to_char("moment", 'YYYY"-"MM') AS "time_aggregation",
 	       count(DISTINCT "user_id") AS "unique_users"
-	  FROM "objectiv_sessionized_data___ae9e92a8b18a72a9333c4321cc0914c2"
+	  FROM "objectiv_sessionized_data___a0305334fc04cd16eb80a8cfc9be8e9f"
 	 GROUP BY to_char("moment", 'YYYY"-"MM')
 	<BLANKLINE>
