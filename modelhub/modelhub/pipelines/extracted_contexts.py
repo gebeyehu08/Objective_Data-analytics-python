@@ -411,7 +411,10 @@ class AthenaQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         return {'contexts': bach.SeriesString.dtype}
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
-        contexts_series = df['contexts'].astype('json')
+        context_series = df['contexts'].astype('objectiv_global_contexts').json['data']
+
+        for gc in self._global_contexts:
+            df[gc] = context_series.obj.get_contexts(gc)
         return df.to_pandas()
 
 

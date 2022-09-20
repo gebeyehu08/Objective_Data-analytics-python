@@ -12,8 +12,7 @@ from bach import DataFrame, Series, SeriesString, SeriesJson
 from bach.expression import Expression, quote_string, quote_identifier, join_expressions
 from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
-from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
-
+from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
 
 TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
 
@@ -94,6 +93,8 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
             return self._postgres_get_contexts_with_type(type)
         if is_bigquery(dialect):
             return self._bigquery_get_contexts_with_type(type)
+        if is_athena(dialect):
+            return self._athena_get_contexts_with_type(type)
         raise DatabaseNotSupportedException(dialect)
 
     def _postgres_get_contexts_with_type(self, type: str):
@@ -119,6 +120,21 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
                 from unnest(json_query_array(parse_json({}), '$')) as ctx with offset as pos
                 where json_value(ctx, '$."_type"') = {}
             ))''',
+            self._series_object,
+            Expression.string_value(type)
+        )
+        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
+
+    def _athena_get_contexts_with_type(self, type: str):
+        expression = Expression.construct(
+            '''
+            transform(
+                filter(
+                    cast({} as array(json)),
+                    element -> strpos(cast(json_extract(element, '$["schema"]') as varchar), {}) > 0
+                ),
+                element -> json_extract(element, '$["data"]')
+            ) ''',
             self._series_object,
             Expression.string_value(type)
         )

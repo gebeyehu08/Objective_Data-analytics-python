@@ -24,7 +24,6 @@ _EXPECTED_CONTEXT_COLUMNS = [
     'event_type',
     'stack_event_types',
 ]
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1261')  # TODO: Athena
 
 
 def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.DataFrame:
