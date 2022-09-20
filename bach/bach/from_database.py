@@ -49,7 +49,6 @@ def get_dtypes_from_table(
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
     elif is_bigquery(engine):
         meta_data_table, table_name = _get_bq_meta_data_table_from_table_name(table_name)
-        filters_expr.append(Expression.construct(f"table_name='{table_name}'"))
     elif is_athena(engine):
         catalog_name = (
             f"{engine.url.query['catalog_name']}." if 'catalog_name' in engine.url.query else ''
