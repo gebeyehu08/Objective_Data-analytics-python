@@ -33,7 +33,7 @@ class ContextFlattening:
         from modelhub.series.series_objectiv import SeriesGlobalContext, SeriesLocationStack
         result = self._contexts_series.to_frame()
         for gc in self._global_contexts:
-            context_name = f'{gc.capitalize()}Context'
+            context_name = "".join([c.capitalize() for c in gc.split('_')]) + 'Context'
             result[gc] = self._extract_context_data(context_name).copy_override_type(SeriesGlobalContext)
 
         if self._with_location_stack:
@@ -81,7 +81,10 @@ class ContextFlattening:
         jsonb_path_query_array({{}},
         \'$[*] ? (@._type == $type)\',
         \'{{"type":{quote_identifier(dialect, context_name)}}}\')'''
-        expression = Expression.construct(expression_str, self._contexts_series)
+        expression = Expression.construct(
+            expression_str,
+            self._contexts_series,
+        )
         return self._contexts_series.copy_override(expression=expression)
 
     def _bigquery_extract_context_data(self, context_name: str) -> bach.SeriesJson:
