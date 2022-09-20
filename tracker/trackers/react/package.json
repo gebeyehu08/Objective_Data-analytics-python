@@ -49,6 +49,7 @@
     "depcheck": "npx depcheck"
   },
   "devDependencies": {
+    "@material-ui/core": "^4.12.4",
     "@objectiv/developer-tools": "^0.0.26-next.0",
     "@objectiv/plugin-identity-context": "^0.0.26-next.0",
     "@objectiv/schema": "^0.0.26-next.0",
