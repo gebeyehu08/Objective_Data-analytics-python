@@ -25,10 +25,21 @@ def test_column_names(engine):
         [2, 'Snits',  1, 1, 1, 1, 1, 1, 1],
         [3, 'Drylts',  1, 1, 1, 1, 1, 1, 1]
     ]
-    assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
+    assert_equals_data(
+        bt,
+        use_to_pandas=True,
+        expected_columns=expected_columns,
+        expected_data=expected_data
+    )
+
     # Make sure that after materializing the columns are unchanged.
-    bt = bt.materialize()
-    assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
+    bt = bt.materialize().sort_index()
+    assert_equals_data(
+        bt,
+        use_to_pandas=True,
+        expected_columns=expected_columns,
+        expected_data=expected_data
+    )
 
 
 @pytest.mark.skip_bigquery_todo('#1209 We do not yet support special characters in column names on BigQuery')
@@ -47,7 +58,12 @@ def test_column_names_merge(engine):
         [2, 2, 'Snits',  1, 1, 1, 1, 1, 1, 1],
         [3, 3, 'Drylts',  1, 1, 1, 1, 1, 1, 1]
     ]
-    assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
+    assert_equals_data(
+        bt,
+        use_to_pandas=True,
+        expected_columns=expected_columns,
+        expected_data=expected_data
+    )
 
 
 def _get_dataframe_with_weird_column_names(engine: Engine):
