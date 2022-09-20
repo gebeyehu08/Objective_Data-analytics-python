@@ -1,6 +1,8 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import base64
+import os
 import re
 from typing import List, Union, Dict, Tuple, Optional, cast, Any
 from typing import TYPE_CHECKING
@@ -92,7 +94,6 @@ class ModelHub:
         If db_url is for BigQuery, bq_credentials_path or bq_credentials must be provided.
         When both are given, bq_credentials wins.
         """
-        import os
         kwargs: Dict[str, Any] = {}
 
         if db_url and re.match(r'^bigquery://.+', db_url):
@@ -100,7 +101,6 @@ class ModelHub:
                 raise ValueError('BigQuery credentials or path is required for engine creation.')
 
             if bq_credentials:
-                import base64
                 credentials_base64 = base64.b64encode(bq_credentials.encode('utf-8'))
                 kwargs['credentials_base64'] = credentials_base64
             else:

@@ -574,12 +574,10 @@ def test_time_agg(db_params):
     )
 
 
-def test_get_objectiv_dataframe_db_connection(db_params: DBParams):
+def test_get_objectiv_dataframe_db_connection(db_params: DBParams, monkeypatch):
     import os
 
-    dsn_orig = os.environ.get('DSN', None)
-    if 'DSN' in os.environ:
-        del (os.environ['DSN'])
+    monkeypatch.delenv('DSN', raising=False)
 
     mh = modelhub.ModelHub()
 
@@ -588,13 +586,11 @@ def test_get_objectiv_dataframe_db_connection(db_params: DBParams):
         mh.get_objectiv_dataframe(db_url=db_params.url, table_name=db_params.table_name)
 
         ## Test fallback to DSN
-        os.environ['DSN'] = db_params.url
+        monkeypatch.setenv('DSN', db_params.url)
         mh.get_objectiv_dataframe(db_url=None, table_name=db_params.table_name)
 
     elif 'bigquery' in db_params.url:
-        gac_orig = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', None)
-        if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
-            del (os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+        monkeypatch.delenv('GOOGLE_APPLICATION_CREDENTIALS', raising=False)
         # Check that we get a nice error to help the user
         with pytest.raises(ValueError, match="credentials or path is required"):
             mh.get_objectiv_dataframe(db_url=db_params.url)
@@ -613,25 +609,9 @@ def test_get_objectiv_dataframe_db_connection(db_params: DBParams):
                 bq_credentials=secret)
 
         # test nothing specified falls back to DSN and GAC
-        os.environ['DSN'] = db_params.url
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = db_params.credentials
+        monkeypatch.setenv('DSN', db_params.url)
+        monkeypatch.setenv('GOOGLE_APPLICATION_CREDENTIALS', db_params.credentials)
+
         mh.get_objectiv_dataframe(table_name=db_params.table_name)
-        if gac_orig:
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = gac_orig
-        else:
-            if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
-                del(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
     else:
         raise Exception(f"DBParams url not supported: {db_params.url}")
-
-    if dsn_orig:
-        os.environ['DSN'] = dsn_orig
-    else:
-        del(os.environ['DSN'])
-
-
-
-
-
-
-
