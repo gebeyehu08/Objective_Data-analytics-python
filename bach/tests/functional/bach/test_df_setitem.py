@@ -209,6 +209,7 @@ def test_set_series_column_name_with_spaces(engine):
     bt['spaces in column'] = bt['founding']
     assert_equals_data(
         bt,
+        use_to_pandas=True,
         expected_columns=[
             '_index_skating_order',  # index
             'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'spaces in column'

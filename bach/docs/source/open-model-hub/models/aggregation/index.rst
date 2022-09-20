@@ -28,6 +28,7 @@ product analytics metrics. Always return aggregated data in some form from the
     retention_matrix
     top_product_features
     top_product_features_before_conversion
+    drop_off_locations
 
 
 
