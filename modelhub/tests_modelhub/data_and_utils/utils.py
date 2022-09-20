@@ -7,7 +7,7 @@ from uuid import UUID
 import bach
 from bach import DataFrame
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from tests.functional.bach.test_data_and_utils import run_query
@@ -79,7 +79,7 @@ def get_parsed_objectiv_data(engine):
     for event_data in TEST_DATA_OBJECTIV:
         event_id, day, moment, cookie_id, value = event_data
         value = json.loads(value)
-        # BQ uses time from taxonomy json for getting moment and day
+        # Athena and BQ uses time from taxonomy json for getting moment and day
         # therefore time value MUST be the same as moment
         if not is_postgres(engine):
             value['time'] = _convert_moment_to_utc_time(moment)

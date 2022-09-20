@@ -276,6 +276,7 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         'collector_tstamp': bach.SeriesTimestamp.dtype,
         'event_id': bach.SeriesString.dtype,
         'network_userid': bach.SeriesString.dtype,
+        'domain_sessionid': bach.SeriesString.dtype,
         'se_action': bach.SeriesString.dtype,
         'se_category': bach.SeriesString.dtype,
         'true_tstamp': bach.SeriesTimestamp.dtype
@@ -289,9 +290,13 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
             columns={
                 'se_action': ObjectivSupportedColumns.EVENT_TYPE.value,
                 'se_category': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
-                'network_userid': ObjectivSupportedColumns.USER_ID.value,
             }
         )
+        # Anonymous users have no network_userid, but their domain_sessionid is useable as user_id as well
+        df_cp[ObjectivSupportedColumns.USER_ID.value] = (
+            df_cp['network_userid'].fillna(df_cp['domain_sessionid'])
+        )
+        df_cp = df_cp.drop(columns=['network_userid', 'domain_sessionid'])
 
         # Mark duplicated event_ids
         # Unfortunately, some events might share an event ID due to
