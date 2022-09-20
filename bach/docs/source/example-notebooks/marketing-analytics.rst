@@ -139,7 +139,7 @@ Users from marketing
 
 	>>> users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
 	>>> users_from_marketing_daily.sort_index(ascending=True).to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #users from marketing', xlabel='Day', ylabel='#Users')
-	<AxesSubplot:title={'center':'Daily #users from marketing'}, xlabel='Day', ylabel='#Users'>
+	<AxesSubplot: title={'center': 'Daily #users from marketing'}, xlabel='Day', ylabel='#Users'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-users-from-marketing.png
   :alt: Daily #users from marketing
@@ -171,7 +171,7 @@ Users per source-medium-campaign over full timeframe
 	>>> upc = upc.to_pandas().groupby(['utm_source', 'utm_campaign'])
 	>>> upc_pivot = upc.sum().reset_index().pivot(index='utm_source', columns='utm_campaign')['unique_users'].reset_index().sort_values(by=['utm_source'], ascending=False)
 	>>> upc_pivot.plot.bar(x='utm_source', stacked=True)
-	<AxesSubplot:xlabel='utm_source'>
+	<AxesSubplot: xlabel='utm_source'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-users-per-source-campaign.png
   :alt: Users per source-medium-campaign over full timeframe
@@ -332,7 +332,7 @@ Daily conversions from marketing
 	:skipif: engine is None
 
 	>>> conversions_from_marketing_daily.sort_index(ascending=True).to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #conversions from marketing', xlabel='Day')
-	<AxesSubplot:title={'center':'Daily #conversions from marketing'}, xlabel='Day'>
+	<AxesSubplot: title={'center': 'Daily #conversions from marketing'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-number-conversions-from-marketing.png
   :alt: Daily #conversions from marketing
@@ -364,7 +364,7 @@ Daily conversion rate from marketing
 	:skipif: engine is None
 
 	>>> conversion_rate_from_marketing.fillna(0.0).sort_index(ascending=True).to_pandas().plot(kind='line', figsize=[15,5], title='Daily conversion rate from marketing', xlabel='Day')
-	<AxesSubplot:title={'center':'Daily conversion rate from marketing'}, xlabel='Day'>
+	<AxesSubplot: title={'center': 'Daily conversion rate from marketing'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversion-rate-from-marketing.png
   :alt: Daily conversion rate from marketing
@@ -388,7 +388,7 @@ Daily conversions overall
 
 	>>> # plot daily conversions overall (including from marketing campaigns)
 	>>> conversions_overall.to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #conversions overall', xlabel='Day')
-	<AxesSubplot:title={'center':'Daily #conversions overall'}, xlabel='Day'>
+	<AxesSubplot: title={'center': 'Daily #conversions overall'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversions-overall.png
   :alt: Daily #conversions overall
@@ -417,7 +417,7 @@ Daily conversion rate overall
 	Name: unique_users, dtype: float64
 
 	>>> conversion_rate_overall.sort_index(ascending=True).fillna(0.0).to_pandas().plot(kind='line', figsize=[15,5], title='Daily conversion rate overall', xlabel='Day')
-	<AxesSubplot:title={'center':'Daily conversion rate overall'}, xlabel='Day'>
+	<AxesSubplot: title={'center': 'Daily conversion rate overall'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversion-rate-overall.png
   :alt: Daily conversion rate overall
@@ -850,24 +850,20 @@ Funnel Discovery: drop-off for users from marketing
 	>>> # select the events of these non converted users
 	>>> df_funnel_non_converted = df_funnel_non_converted[~df_funnel_non_converted['user_id'].isin(funnel_converted_users)]
 	>>> # get the last used feature in the location_stack before dropping off
-	>>> drop_loc = df_funnel_non_converted.sort_values('moment').groupby('user_id')['feature_nice_name'].to_json_array().json[-1].materialize()
-	>>> total_count = drop_loc.count().value
-	>>> # show the last used features by non-converted users, sorted by their usage share compared to all features
-	>>> drop_loc_percent = (drop_loc.value_counts() / total_count) * 100
-	>>> drop_loc_percent = drop_loc_percent.to_frame().rename(columns={'value_counts': 'drop_percentage'})
-	>>> drop_loc_percent.sort_values(by='drop_percentage', ascending=False).head(10)
-	                                                                                               drop_percentage
-	feature_nice_name
-	Root Location: home                                                                                  90.796020
-	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...         3.980100
-	Root Location: blog                                                                                   1.741294
-	Link: logo located at Root Location: blog => Navigation: navbar-top                                   0.995025
-	Link: about-us located at Root Location: home => Navigation: navbar-top                               0.746269
-	Link: logo located at Root Location: home => Navigation: navbar-top                                   0.497512
-	Link: slack located at Root Location: home => Navigation: navbar-top                                  0.248756
-	Link: jobs located at Root Location: home => Navigation: navbar-top                                   0.248756
-	Link: faq located at Root Location: home => Navigation: navbar-top                                    0.248756
-	Link: spin-up-the-demo located at Root Location: home => Content: hero                                0.248756
+	>>> modelhub.aggregate.drop_off_locations(df_funnel_non_converted, groupby='user_id', percentage=True).head(10)
+	                                                                                                         percentage
+	__feature_nice_name
+	Root Location: home	                                                                                 70.398010
+	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...	          7.960199
+	Link: about-us located at Root Location: home => Navigation: navbar-top	                                  4.477612
+	Link: spin-up-the-demo located at Root Location: home => Content: hero	                                  3.980100
+	Link: docs located at Root Location: home => Navigation: navbar-top	                                  2.487562
+	Link: logo located at Root Location: home => Navigation: navbar-top	                                  1.741294
+	Link: blog located at Root Location: home => Navigation: navbar-top	                                  1.492537
+	Link: spin-up-the-demo located at Root Location: home => Content: try-it	                          1.243781
+	Link: docs-taxonomy located at Root Location: home => Content: taxonomy	                                  0.995025
+	Content: post-release-objectiv-now-has-support-for-deepnote located at Root Location: blog	          0.746269
+
 
 .. admonition:: Reference
 	:class: api-reference

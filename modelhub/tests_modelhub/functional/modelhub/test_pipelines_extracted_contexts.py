@@ -31,7 +31,7 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
     if not is_bigquery(engine):
         assert db_format == DBParams.Format.OBJECTIV
         return pd.DataFrame(parsed_data)
-
+    events_with_domain_sessionid = ['12b55ed5-4295-4fc1-bf1f-88d64d1ac304', '12b55ed5-4295-4fc1-bf1f-88d64d1ac305']
     bq_data = []
     for event in parsed_data:
         if db_format == DBParams.Format.SNOWPLOW :
@@ -39,7 +39,14 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
                 {
                     'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
                     'event_id': str(event['event_id']),
-                    'network_userid': str(event['cookie_id']),
+                    'network_userid': (
+                        str(event['cookie_id']) if str(event['event_id']) not in events_with_domain_sessionid
+                        else None
+                    ),
+                    'domain_sessionid': (
+                        str(event['cookie_id']) if str(event['event_id']) in events_with_domain_sessionid
+                        else None
+                    ),
                     'se_action': event['value']['_type'],
                     'se_category': json.dumps(event['value']['_types']),
                     'true_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
@@ -153,8 +160,9 @@ def test_get_initial_data(db_params) -> None:
 
         assert_equals_data(
             result,
-            expected_columns=['collector_tstamp', 'event_id', 'network_userid', 'se_action',
-                              'se_category', 'true_tstamp', 'contexts_io_objectiv_location_stack_1_0_0'],
+            expected_columns=['collector_tstamp', 'event_id', 'network_userid',  'domain_sessionid',
+                              'se_action', 'se_category', 'true_tstamp',
+                              'contexts_io_objectiv_location_stack_1_0_0'],
             expected_data=expected.to_numpy().tolist(),
             use_to_pandas=True,
         )
@@ -214,6 +222,8 @@ def test_apply_filters_duplicated_event_ids(db_params) -> None:
     pdf = pd.DataFrame(
         {
             'event_id': ['1', '2', '3', '1', '4', '1', '4'],
+            'network_userid': ['1'] * 7,
+            'domain_sessionid': ['1'] * 7,
             'collector_tstamp': tstamps,
             'true_tstamp': tstamps,
             'contexts_io_objectiv_location_stack_1_0_0': ['{}'] * 7,

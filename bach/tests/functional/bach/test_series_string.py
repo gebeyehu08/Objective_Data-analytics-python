@@ -119,6 +119,7 @@ def test_get_dummies(engine) -> None:
     assert set(expected_columns) == set(result.data_columns)
     assert_equals_data(
         result[expected_columns],
+        use_to_pandas=True,
         expected_columns=['_index_skating_order'] + expected_columns,
         expected_data=[
             [1, 0, 1, 0],
@@ -186,6 +187,7 @@ def test_string_len(engine) -> None:
         ]
     )
 
+
 def test_to_json_array(engine):
     df = get_df_with_test_data(engine, full_data_set=True)
     s_muni = df['municipality']
@@ -204,6 +206,7 @@ def test_to_json_array(engine):
              'Waadhoeke']
         ]]
     )
+
 
 def test_to_json_array_sorting_null(engine):
     data = [
