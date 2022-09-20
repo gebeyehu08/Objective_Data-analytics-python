@@ -5,7 +5,7 @@ instructions of how to setup Athena: [Bach: Initialize database - Testing](https
 
 In this documentation, we assume the following:
 1. The s3 staging bucket is named `obj-automated-tests`
-2. Location for testing data is `s3://obj-automated-tests/modelhub_test/staging/`
+2. Location for testing data is `s3://obj-automated-tests/modelhub_test/`
 
 When setting up a new Athena/S3 environment make sure to edit those values appropriately.
 
@@ -46,6 +46,6 @@ STORED AS INPUTFORMAT
 OUTPUTFORMAT 
   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
 LOCATION
-  's3://obj-automated-tests/modelhub_test/staging/'
+  's3://obj-automated-tests/modelhub_test/'
 TBLPROPERTIES ('classification'='tsv')
 ```
