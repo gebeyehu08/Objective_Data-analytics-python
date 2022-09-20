@@ -67,8 +67,10 @@ _DB_ATHENA_TEST_URL = _ENV.get('OBJ_DB_ATHENA_TEST_URL')
 _DB_ATHENA_AWS_ACCESS_KEY_ID = _ENV.get('OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID')
 _DB_ATHENA_AWS_SECRET_ACCESS_KEY = _ENV.get('OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY')
 _DB_ATHENA_REGION_NAME = _ENV.get('OBJ_DB_ATHENA_REGION_NAME', 'eu-west-1')
-_DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'automated_tests.bach_test')
-_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/bach_test/staging/')
+_DB_ATHENA_CATALOG_NAME = _ENV.get('OBJ_DB_ATHENA_CATALOG_NAME', 'automated_tests')
+_DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'bach_test')
+_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/athena_query_results/')
+DB_ATHENA_LOCATION = _ENV.get('OBJ_DB_ATHENA_LOCATION', 's3://obj-automated-tests/bach_test/staging/')
 _DB_ATHENA_WORK_GROUP = _ENV.get('OBJ_DB_ATHENA_WORK_GROUP', 'automated_tests_work_group')
 
 
@@ -253,10 +255,13 @@ def _get_athena_engine() -> Engine:
     schema_name = quote_plus(_DB_ATHENA_SCHEMA_NAME)
     s3_staging_dir = quote_plus(_DB_ATHENA_S3_STAGING_DIR)
     athena_work_group = quote_plus(_DB_ATHENA_WORK_GROUP)
+    catalog_name = quote_plus(_DB_ATHENA_CATALOG_NAME)
 
     url = (
         f'awsathena+rest://'
         f'{aws_access_key_id}:{aws_secret_access_key}'
         f'@athena.{region_name}.amazonaws.com:443/'
-        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}')
+        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
+        f'&catalog_name={catalog_name}'
+    )
     return create_engine(url)
