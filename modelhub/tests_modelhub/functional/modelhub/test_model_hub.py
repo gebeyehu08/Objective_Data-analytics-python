@@ -589,7 +589,7 @@ def test_get_objectiv_dataframe_db_connection(db_params: DBParams):
 
         ## Test fallback to DSN
         os.environ['DSN'] = db_params.url
-        mh.get_objectiv_dataframe(db_url=None)
+        mh.get_objectiv_dataframe(db_url=None, table_name=db_params.table_name)
 
     elif 'bigquery' in db_params.url:
         gac_orig = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', None)
