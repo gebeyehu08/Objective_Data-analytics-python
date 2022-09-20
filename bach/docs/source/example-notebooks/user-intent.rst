@@ -8,33 +8,45 @@
 Basic user intent analysis
 ==========================
 
-This example shows how the open model hub can be used for basic user intent analysis. It's also available in 
-a `notebook <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-user-intent.ipynb>`_
-to run on your own data or use our `quickstart <https://objectiv.io/docs/home/try-the-demo/>`_ to try it 
-out with demo data in 5 minutes.
+This example notebook shows how you can easily run basic User Intent analysis with Objectiv. It's also 
+available as a `full Jupyter notebook 
+<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-user-intent.ipynb>`_
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
+or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
+here is the same as in the Demo.
 
-First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
-:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
-
-The data used in this example is based on the data set that comes with our quickstart docker demo.
-
-Besides the open model hub, we have to import the following packages for this example:
-
-.. code-block:: python
-
-    from modelhub import display_sql_as_markdown
-    import bach
-    import pandas as pd
-    from datetime import timedelta
-
+Get started
+-----------
 We first have to instantiate the model hub and an Objectiv DataFrame object.
 
-.. code-block:: python
+.. doctest:: user-intent
+	:skipif: engine is None
 
-  # instantiate the model hub, set the default time aggregation to daily and get the application global context
-  modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application'])
-  # get the Bach DataFrame with Objectiv data
-  df = modelhub.get_objectiv_dataframe(start_date='2022-02-01', end_date='2022-05-01')
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-06-01'
+	>>> end_date = None
+
+.. we override the timeframe for the doctests below
+	
+.. testsetup:: user-intent
+	:skipif: engine is None
+
+	start_date = '2022-06-01'
+	end_date = '2022-06-30'
+	pd.set_option('display.max_colwidth', 93)
+
+.. doctest:: user-intent
+	:skipif: engine is None
+
+	>>> # instantiate the model hub, set the default time aggregation to daily
+	>>> # and get the application & path global contexts
+	>>> from modelhub import ModelHub, display_sql_as_markdown
+	>>> import bach
+	>>> import pandas as pd
+	>>> from datetime import timedelta
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'path'])
+	>>> # get an Objectiv DataFrame within a defined timeframe
+	>>> df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date=start_date, end_date=end_date)
 
 The `location_stack` column, and the columns taken from the global contexts, contain most of the 
 event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
@@ -43,15 +55,24 @@ objects with :doc:`SeriesLocationStack
 accessor for global context columns. See the :doc:`open taxonomy example <./open-taxonomy>` for how to use 
 the `location_stack` and global contexts.
 
-.. code-block:: python
+.. doctest:: user-intent
+	:skipif: engine is None
 
-  # adding specific contexts to the data as columns
-  df['application_id'] = df.application.context.id
-  df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+	>>> df['application_id'] = df.application.context.id
+	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
+	* :ref:`Using global context data <location-stack-and-global-contexts>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
 
 Exploring root location
 -----------------------
-The root_location context in the location_stack uniquely represents the top-level UI location of the user. As a first step of grasping user intent, this is a good starting point to see in what main areas of your product users are spending time.
+The root_location context in the location_stack uniquely represents the top-level UI location of the user. As 
+a first step of grasping user intent, this is a good starting point to see in what main areas of your product 
+users are spending time.
 
 .. code-block:: python
 
