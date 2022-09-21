@@ -9,7 +9,7 @@ Open model hub basics
 =====================
 
 This example notebook shows how you can use the pre-built models from the :doc:`open model hub 
-<../open-model-hub/index>` in conjunction with modeling library :doc:`Bach <../modeling/bach/index>` to 
+<../open-model-hub/index>` in conjunction with modeling library :doc:`Bach <../bach/index>` to 
 quickly build model stacks to answer common analytics questions.
 
 It's also available as a `full Jupyter notebook 
@@ -22,7 +22,7 @@ Using the open model hub
 ------------------------
 The following types of functions/models are provided:
 
-1. :doc:`Helper functions <../open-model-hub/models/helper-functions>index`: Simplify manipulating and 
+1. :doc:`Helper functions <../open-model-hub/models/helper-functions/index>`: Simplify manipulating and 
     analyzing the data.
 2. :doc:`Aggregation models <../open-model-hub/models/aggregation/index>`: Enable running some of the more common 
     data analyses and product analytics metrics.
@@ -36,9 +36,9 @@ Modeling behavior of users and groups is enabled through configurable
 
 **Helper functions** always return a :doc:`Series <../bach/api-reference/Series/index>` with the same shape 
 and index as the :doc:`DataFrame <../bach/api-reference/DataFrame/index>` they are applied to. This ensures 
-they can be added as a column to that :doc:`DataFrame <../bach/api-reference/DataFrame>`. Helper functions 
-that return :doc:`SeriesBoolean <../bach/api-reference/Series/Boolean>` can be used to filter the data. The 
-helper functions can be accessed with the `map` accessor from a model hub instance.
+they can be added as a column to that :doc:`DataFrame <../bach/api-reference/DataFrame/index>`. Helper 
+functions that return :doc:`SeriesBoolean <../bach/api-reference/Series/Boolean/index>` can be used to filter 
+the data. The helper functions can be accessed with the `map` accessor from a model hub instance.
 
 **Aggregation models** perform multiple :doc:`Bach <../bach/index>` instructions that run some of the more 
 common data analyses and product analytics metrics. They always return aggregated data in some form from the 
@@ -138,7 +138,7 @@ means all hits are labeled as new for the entire day in which the user had its f
 We can also label conversion events. To do this, we first have to define what a conversion is, by setting the 
 type of event and the location in the product where the event was triggered 
 (:ref:`see more about the location stack here <location_stack>`, using :doc:`add_conversion_event 
-<../modeling/open-model-hub/api-reference/ModelHub/modelhub.ModelHub.add_conversion_event>`.
+<../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.add_conversion_event>`.
 
 .. doctest:: modelhub
 	:skipif: engine is None
@@ -165,7 +165,7 @@ Combine mapping with filtering and aggregattion
 
 As the map functions above return a SeriesBoolean, they can be combined with filter and aggregation models. 
 We use the same aggregation model we showed earlier (:doc:`unique_users 
-<../modeling/open-model-hub/models/aggregation/modelhub.Aggregate.unique_users`), but now applying the 
+<../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`), but now applying the 
 `df.conversion_events` filter to just look at unique converted users per day.
 
 .. doctest:: modelhub
@@ -316,17 +316,17 @@ Now let's see the results, at which point the underlying query is actually execu
 	23    2
 	Name: session_hit_number, dtype: int64
 
-See the :doc:`Bach API reference <../modeling/bach/api-reference/index>` for all available operations.
+See the :doc:`Bach API reference <../bach/api-reference/index>` for all available operations.
 
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`bach.DataFrame.materialize <../modeling/bach/api-reference/DataFrame/bach.DataFrame.materialize>`
-	* :doc:`modelhub.Map.conversions_in_time <../modeling/open-model-hub/models/helper-functions/modelhub.Map.conversions_in_time>`
-	* :doc:`bach.Series.unique <../modeling/bach/api-reference/Series/bach.Series.unique>`
-	* :doc:`bach.Series.isin <../modeling/bach/api-reference/Series/bach.Series.isin>`
-	* :doc:`bach.DataFrame.groupby <../modeling/bach/api-reference/DataFrame/bach.DataFrame.groupby>`
-	* :doc:`bach.DataFrame.head <../modeling/bach/api-reference/DataFrame/bach.DataFrame.head>`
+	* :doc:`bach.DataFrame.materialize <../bach/api-reference/DataFrame/bach.DataFrame.materialize>`
+	* :doc:`modelhub.Map.conversions_in_time <../open-model-hub/models/helper-functions/modelhub.Map.conversions_in_time>`
+	* :doc:`bach.Series.unique <../bach/api-reference/Series/bach.Series.unique>`
+	* :doc:`bach.Series.isin <../bach/api-reference/Series/bach.Series.isin>`
+	* :doc:`bach.DataFrame.groupby <../bach/api-reference/DataFrame/bach.DataFrame.groupby>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
 
 Export results to a pandas DataFrame
 ------------------------------------
@@ -344,7 +344,7 @@ plotting methods.
 	>>> # presses_per_session_pd is a pandas Series
 	>>> presses_per_session_pd = presses_per_session.to_pandas()
 	>>> presses_per_session_pd.hist()
-	<AxesSubplot: >
+	<AxesSubplot: title={'center': 'Cohort Analysis'}, xlabel='Months After First Event', ylabel='First Event Cohort'>
 
 .. image:: ../img/docs/example-notebooks/model-hub-presses-per-session.png
   :alt: Presses per session
@@ -352,7 +352,7 @@ plotting methods.
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`bach.DataFrame.to_pandas <../modeling/bach/api-reference/DataFrame/bach.DataFrame.to_pandas>`
+	* :doc:`bach.DataFrame.to_pandas <../bach/api-reference/DataFrame/bach.DataFrame.to_pandas>`
 
 Get the SQL for any analysis
 ----------------------------
