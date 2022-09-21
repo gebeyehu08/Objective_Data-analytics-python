@@ -127,7 +127,7 @@ def _get_bigquery_sp_db_params() -> DBParams:
         url=_DB_BQ_TEST_URL,
         credentials=_DB_BQ_CREDENTIALS_PATH,
         table_name='events_flat_anon',
-        format=DBParams.Format.SNOWPLOW
+        format=DBParams.Format.FLATTENED_SNOWPLOW
     )
 
 

@@ -12,7 +12,9 @@ from bach import DataFrame, Series, SeriesString, SeriesJson
 from bach.expression import Expression, quote_string, quote_identifier, join_expressions
 from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
-from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
+from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
+
+from modelhub.series.operations.context_flattening import ContextFlattening
 
 TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
 
@@ -77,68 +79,11 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
 
         :param name: The name of the context-array to retrieve, in snake_case
         """
-        upper_camel_name = "".join([c.capitalize() for c in name.split('_')]) + 'Context'
-
-        return self.get_contexts_with_type(upper_camel_name).astype('objectiv_global_context')
-
-    def get_contexts_with_type(self, type: str):
-        """
-        Returns an array of contexts from an Objectiv stack where `_type` matches `type`.
-
-        :param type: the _type to search for in the contexts of the stack.
-        :returns: a seriesjson, containing a possibly empty array of the specified types
-        """
-        dialect = self._series_object.engine.dialect
-        if is_postgres(dialect):
-            return self._postgres_get_contexts_with_type(type)
-        if is_bigquery(dialect):
-            return self._bigquery_get_contexts_with_type(type)
-        if is_athena(dialect):
-            return self._athena_get_contexts_with_type(type)
-        raise DatabaseNotSupportedException(dialect)
-
-    def _postgres_get_contexts_with_type(self, type: str):
-        dialect = self._series_object.engine.dialect
-        expression_str = f'''
-        jsonb_path_query_array({{}},
-        \'$[*] ? (@._type == $type)\',
-        \'{{"type":{quote_identifier(dialect, type)}}}\')'''
-        expression = Expression.construct(
-            expression_str,
-            self._series_object
+        cf = ContextFlattening(
+            contexts_series=self._series_object, global_contexts=[name], with_location_stack=False,
         )
-        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
-
-    def _bigquery_get_contexts_with_type(self, type: str):
-        # This is quite ugly, but we need to convert to JSON (pre GA), and back to string because
-        # there is no nicer way to otherwise generate the JSON array that we need (as a string for now)
-        # This should be revisited when we implement BQ JSON through that datatype.
-        expression = Expression.construct(
-            '''
-            to_json_string(array(
-                select ctx
-                from unnest(json_query_array(parse_json({}), '$')) as ctx with offset as pos
-                where json_value(ctx, '$."_type"') = {}
-            ))''',
-            self._series_object,
-            Expression.string_value(type)
-        )
-        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
-
-    def _athena_get_contexts_with_type(self, type: str):
-        expression = Expression.construct(
-            '''
-            transform(
-                filter(
-                    cast({} as array(json)),
-                    element -> strpos(cast(json_extract(element, '$["schema"]') as varchar), {}) > 0
-                ),
-                element -> json_extract(element, '$["data"]')
-            ) ''',
-            self._series_object,
-            Expression.string_value(type)
-        )
-        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
+        c_series = cf()[name].copy_override(name=self._series_object.name)
+        return c_series.copy_override_type(SeriesGlobalContext)
 
 
 @register_dtype(value_types=[], override_registered_types=True)

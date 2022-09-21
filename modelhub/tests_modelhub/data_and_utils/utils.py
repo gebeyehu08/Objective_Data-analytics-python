@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, Any, NamedTuple, Optional
@@ -15,8 +16,6 @@ from tests.unit.bach.util import get_pandas_df
 
 from modelhub import ModelHub
 from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL
-from tests_modelhub.data_and_utils.data_objectiv import TEST_DATA_OBJECTIV
-
 
 
 class DBParams(NamedTuple):
@@ -25,17 +24,12 @@ class DBParams(NamedTuple):
         OBJECTIV = 'objectiv'
         # snowplow's native format, using Iglu contexts to store objectiv specific data
         SNOWPLOW = 'snowplow'
+        FLATTENED_SNOWPLOW = 'flattened_snowplow'
 
     url: str
     credentials: Optional[str]
     table_name: str
     format: Format
-
-
-def _convert_moment_to_utc_time(moment: str) -> int:
-    dt = datetime.fromisoformat(moment)
-    dt = dt.replace(tzinfo=timezone.utc)
-    return int(dt.timestamp() * 1e3)
 
 
 def get_df_with_json_data_real(db_params: DBParams) -> DataFrame:
@@ -72,29 +66,6 @@ def get_objectiv_dataframe_test(db_params=None, time_aggregation=None, global_co
         table_name=table_name,
         bq_credentials_path=credentials,
     ), modelhub
-
-
-def get_parsed_objectiv_data(engine):
-    parsed_data = []
-    for event_data in TEST_DATA_OBJECTIV:
-        event_id, day, moment, cookie_id, value = event_data
-        value = json.loads(value)
-        # Athena and BQ uses time from taxonomy json for getting moment and day
-        # therefore time value MUST be the same as moment
-        if not is_postgres(engine):
-            value['time'] = _convert_moment_to_utc_time(moment)
-
-        parsed_data.append(
-            {
-                'event_id': UUID(event_id),
-                'day': datetime.strptime(day, '%Y-%m-%d').date(),
-                'moment': datetime.fromisoformat(moment),
-                'cookie_id': UUID(cookie_id),
-                'value': value
-            }
-        )
-
-    return parsed_data
 
 
 def create_engine_from_db_params(db_params: DBParams) -> Engine:
