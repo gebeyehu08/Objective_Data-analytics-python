@@ -53,6 +53,7 @@ in the global contexts and how to access this data for analyses.
 
 	start_date = '2022-06-01'
 	end_date = '2022-06-30'
+	pd.set_option('display.max_colwidth', 93)
 
 .. doctest:: open-taxonomy
 	:skipif: engine is None
