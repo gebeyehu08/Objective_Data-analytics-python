@@ -208,6 +208,7 @@ def test_big_query_from_other_project(engine):
     ]
     assert_equals_data(
         df,
+        use_to_pandas=True,
         expected_columns=expected_columns,
         expected_data=expected_data
     )

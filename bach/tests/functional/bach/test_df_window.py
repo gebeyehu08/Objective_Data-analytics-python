@@ -658,6 +658,7 @@ def test_window_nav_functions_with_nulls(engine):
     }
     assert_equals_data(
         df.sort_values(by=['A', 'B']),
+        use_to_pandas=True,
         expected_columns=[
             'A', 'B',
             *expected_fln_value['a'].keys(),

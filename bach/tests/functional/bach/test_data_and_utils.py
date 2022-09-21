@@ -7,10 +7,12 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
+import math
 import uuid
 from copy import copy
 from decimal import Decimal
 from typing import List, Union, Type, Any, Dict
+from unittest.mock import ANY
 
 import pandas as pd
 import sqlalchemy
@@ -242,21 +244,47 @@ def assert_equals_data(
             actual = copy(val)
             expected = copy(expected_row[j])
 
-            if isinstance(val, (float, Decimal)) and round_decimals:
+            if isinstance(expected, (float, Decimal)) and round_decimals:
                 actual = round(Decimal(actual), decimal)
                 expected = round(Decimal(expected), decimal)
 
             if isinstance(actual, pd.Timestamp):
-                pdt_expected = pd.Timestamp(expected, tz=None)
                 actual = actual.floor(freq=_date_freq)
-                expected = pdt_expected.floor(freq=_date_freq)
+                if isinstance(expected, (pd.Timestamp, datetime.datetime)):
+                    pdt_expected = pd.Timestamp(expected)
+                    expected = pdt_expected.floor(freq=_date_freq)
 
-            assert_msg = f'row {i} is not equal: {expected_row} != {df_row}'
-            if actual is pd.NaT:
-                assert expected is pd.NaT, assert_msg
-            else:
+            assert_msg = f'row {i} is not equal: {expected_row} != {df_row}; value: {expected} != {actual}'
+            if not _is_na(actual):
                 assert actual == expected, assert_msg
+            elif type(expected) is type(ANY):
+                # Actual is None, NaN, or NaT, and expected is ANY. This is OK
+                # We handle this as a separate case because isna() and isnan() functions don't understand
+                # ANY
+                pass
+            else:
+                # Generically check: if actual is None/NaN/NaT, then expected should be None/NaN/NaT too
+                assert _is_na(expected), assert_msg
+                # If we specifically expect NaN, then we expect the result to be NaN
+                # If we specifically expect NaT, then we expect the result to be NaT
+                # If we expect None, then the result can be any of None, Nan, or NaT
+                if isinstance(expected, float) and math.isnan(expected):
+                    assert isinstance(actual, float), assert_msg
+                    assert math.isnan(actual), assert_msg
+                elif expected is pd.NaT:
+                    assert actual is pd.NaT, assert_msg
     return db_values
+
+
+def _is_na(value: Any) -> bool:
+    """
+    Check if value is NaN, Nat, or None.
+    Similar to pandas.isna(), but won't raise a warning when value is an empty array
+    """
+    is_nan = isinstance(value, float) and math.isnan(value)
+    is_nat = value is pd.NaT
+    is_none = value is None
+    return is_nan or is_nat or is_none
 
 
 def _get_view_sql_data(df: DataFrame):
