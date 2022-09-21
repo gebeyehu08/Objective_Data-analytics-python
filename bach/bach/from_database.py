@@ -54,6 +54,7 @@ def get_dtypes_from_table(
             f"{engine.url.query['catalog_name']}." if 'catalog_name' in engine.url.query else ''
         )
         meta_data_table = f'{catalog_name}INFORMATION_SCHEMA.COLUMNS'
+        # This filter is needed because athena does not limit to data from the current schema
         filters_expr.append(Expression.construct(f"table_schema='{engine.url.database}'"))
     else:
         raise DatabaseNotSupportedException(engine)
