@@ -62,6 +62,8 @@ _SP_GCP_PUBSUB_TOPIC_BAD = os.environ.get('SP_GCP_PUBSUB_TOPIC_BAD', '')
 _SP_AWS_MESSAGE_TOPIC_RAW = os.environ.get('SP_AWS_MESSAGE_TOPIC_RAW', '')
 _SP_AWS_MESSAGE_TOPIC_BAD = os.environ.get('SP_AWS_MESSAGE_TOPIC_BAD', '')
 
+_SP_COLLECTOR_URL = os.environ.get('SP_COLLECTOR_URL', '')
+
 # mapping from objectiv base_schema version to snowplow iglu version
 # NOTE:  the snowplow versions need to be continuous without gaps
 # NOTE2: for every version of the base schema, a new entry should be added to the mapping
@@ -126,6 +128,8 @@ class SnowplowConfig(NamedTuple):
     schema_objectiv_contexts_version: str
     schema_payload_data: str
     schema_schema_violations: str
+
+    collector_url: str
 
 
 class OutputConfig(NamedTuple):
@@ -225,8 +229,9 @@ def map_schema_version_to_snowplow(version: str) -> str:
 def get_config_output_snowplow() -> Optional[SnowplowConfig]:
     gcp_enabled = _SP_GCP_PROJECT != ''
     aws_enabled = _SP_AWS_MESSAGE_TOPIC_RAW != ''
+    collector_enabled = _SP_COLLECTOR_URL != ''
 
-    if not gcp_enabled and not aws_enabled:
+    if not gcp_enabled and not aws_enabled and not collector_enabled:
         return None
 
     if _SP_AWS_MESSAGE_TOPIC_RAW.startswith('https://sqs.'):
@@ -255,7 +260,9 @@ def get_config_output_snowplow() -> Optional[SnowplowConfig]:
         schema_objectiv_contexts_base=_SP_SCHEMA_OBJECTIV_CONTEXTS_BASE,
         schema_objectiv_contexts_version=version,
         schema_payload_data=_SP_SCHEMA_PAYLOAD_DATA,
-        schema_schema_violations=_SP_SCHEMA_SCHEMA_VIOLATIONS
+        schema_schema_violations=_SP_SCHEMA_SCHEMA_VIOLATIONS,
+
+        collector_url=_SP_COLLECTOR_URL
     )
     if config.gcp_enabled:
         print(f'Enabled snowplow: GCP pipeline (raw:{config.gcp_pubsub_topic_raw} '
@@ -264,6 +271,9 @@ def get_config_output_snowplow() -> Optional[SnowplowConfig]:
     if config.aws_enabled:
         print(f'Enabled Snowplow: AWS pipeline (raw({config.aws_message_raw_type}):{config.aws_message_topic_raw} '
               f'/ bad:{config.aws_message_topic_bad})')
+
+    if config.collector_url:
+        print(f'Enabled snowplow: collector @ {config.collector_url}')
 
     return config
 

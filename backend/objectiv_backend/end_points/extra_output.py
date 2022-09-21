@@ -12,10 +12,11 @@ from io import BytesIO
 from typing import List
 
 
-from objectiv_backend.common.config import get_collector_config, SnowplowConfig
+from objectiv_backend.common.config import get_collector_config
 from objectiv_backend.common.types import EventDataList
 from objectiv_backend.schema.validate_events import EventError
-from objectiv_backend.snowplow.snowplow_helper import write_data_to_aws_pipeline, write_data_to_gcp_pubsub
+from objectiv_backend.snowplow.snowplow_helper import write_data_to_aws_pipeline, write_data_to_gcp_pubsub, \
+    write_data_to_sp_collector
 
 if get_collector_config().output.aws:
     import boto3
@@ -82,7 +83,7 @@ def write_data_to_snowplow_if_configured(events: EventDataList,
     """
     Write data to Snowplow pipeline if either GCP or AWS for Snowplow if configures
     :param events: EventDataList
-    :param prefix: should be either OK or NOK
+    :param good: should be either OK or NOK
     :param event_errors: list of errors, if any
     :return:
     """
@@ -95,3 +96,6 @@ def write_data_to_snowplow_if_configured(events: EventDataList,
 
         if config.gcp_enabled:
             write_data_to_gcp_pubsub(events=events, config=config, good=good, event_errors=event_errors)
+
+        if config.collector_url:
+            write_data_to_sp_collector(events=events, config=config)

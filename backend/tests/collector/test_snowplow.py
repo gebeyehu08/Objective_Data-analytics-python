@@ -31,7 +31,9 @@ config = SnowplowConfig(
     aws_enabled=False,
     aws_message_topic_raw='',
     aws_message_topic_bad='',
-    aws_message_raw_type=''
+    aws_message_raw_type='',
+
+    collector_url='test-url'
 )
 
 event_list = json.loads(CLICK_EVENT_JSON)

@@ -19,6 +19,7 @@ from thrift.transport import TTransport
 output_config = get_collector_config().output
 
 if output_config.snowplow:
+    import requests
     snowplow_config = output_config.snowplow
     if snowplow_config.gcp_enabled:
         from google.cloud import pubsub_v1
@@ -454,3 +455,18 @@ def write_data_to_aws_pipeline(events: EventDataList, config: SnowplowConfig,
             # this should never happen
             raise ValueError(f'Unknown Client-Type: {client_type}')
 
+
+def write_data_to_sp_collector(events: EventDataList, config: SnowplowConfig):
+    collector_url = config.collector_url
+
+    for event in events:
+        payload = objectiv_event_to_snowplow_payload(event=event, config=config)
+        body = json.loads(payload.body)
+        headers = {'Content-type': 'application/json'}
+
+        url = f'{collector_url}{payload.path}'
+        r = requests.post(url, headers=headers, json=body)
+
+        if r.status_code != 200:
+            print(f'Failed to post to collector @ {url}')
+            print(r.text)
