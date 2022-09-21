@@ -112,15 +112,20 @@ class ContextFlattening:
         """
         data_json_path = 'json_extract(element, \'$["data"]\')'
         if is_location_stack:
-            data_json_path = f'json_extract({data_json_path}, \'$["location_stack"]\''
+            data_json_path = f'json_extract({data_json_path}, \'$["location_stack"]\')'
 
         expression_str = f'''
-        transform(
+        cast(transform(
             filter(
                 cast({{}} as array(json)),
                 element -> strpos(cast(json_extract(element, '$["schema"]') as varchar), {{}}) > 0
             ),
-            element -> {data_json_path})'''
+            element -> {data_json_path}
+        ) as json)'''
+
+        if not is_location_stack:
+            expression_str = f'cast({expression_str} as json)'
+
         expression = Expression.construct(
             expression_str,
             self._contexts_series,
