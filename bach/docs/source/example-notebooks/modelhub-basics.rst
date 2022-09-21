@@ -340,11 +340,12 @@ plotting methods.
 
 .. doctest:: modelhub
 	:skipif: engine is None
+	:options: +ELLIPSIS
 
 	>>> # presses_per_session_pd is a pandas Series
 	>>> presses_per_session_pd = presses_per_session.to_pandas()
 	>>> presses_per_session_pd.hist()
-	<AxesSubplot: title={'center': 'Cohort Analysis'}, xlabel='Months After First Event', ylabel='First Event Cohort'>
+	<AxesSubplot:...>
 
 .. image:: ../img/docs/example-notebooks/model-hub-presses-per-session.png
   :alt: Presses per session
