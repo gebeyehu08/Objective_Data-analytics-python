@@ -10,8 +10,6 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
 
 
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1263')  # TODO: Athena
-
 # map
 def test_is_first_session(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
@@ -584,7 +582,7 @@ def test_get_objectiv_dataframe_db_connection(db_params: DBParams, monkeypatch):
 
     mh = modelhub.ModelHub()
 
-    if 'postgresql' in db_params.url:
+    if 'postgresql' in db_params.url or 'awsathena' in db_params.url:
         ## Test standard connection
         mh.get_objectiv_dataframe(db_url=db_params.url, table_name=db_params.table_name)
 

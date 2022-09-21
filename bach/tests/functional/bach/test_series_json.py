@@ -246,14 +246,16 @@ def test_json_getitem_slice(engine, dtype):
 
 def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
     # Slices only work on columns with only lists
-    # But behaviour of Postgres and Athena is different from BigQuery. For now we just accept that's the
-    # way it is.
+    # But behaviour of Postgres is different from Athena and BigQuery.
+    # For Athena, slicing is wrapped by try function for avoiding exceptions,
+    # while BigQuery will not raise an exception by default.
+    # For now we just accept that's the way it is.
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[1:-1]
-    if is_postgres(engine) or is_athena(engine):
+    if is_postgres(engine):
         with pytest.raises(Exception):
             bts.to_pandas()
-    elif is_bigquery(engine):
+    elif is_athena(engine) or is_bigquery(engine):
         assert_equals_data(
             bts,
             use_to_pandas=True,
