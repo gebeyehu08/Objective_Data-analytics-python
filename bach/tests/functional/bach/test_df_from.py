@@ -12,14 +12,24 @@ from sqlalchemy.engine import Engine
 from bach import DataFrame
 from sql_models.model import CustomSqlModelBuilder, SqlModel, Materialization
 from sql_models.sql_generator import to_sql
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
+from tests.conftest import DB_ATHENA_LOCATION
 from tests.functional.bach.test_data_and_utils import assert_equals_data
-
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def _create_test_table(engine: Engine, table_name: str):
     # TODO: insert data too, and check in the tests below that we get that data back in the DataFrame
     #  https://github.com/objectiv/objectiv-analytics/issues/1093
+    if is_athena(engine):
+        with engine.connect() as conn:
+            conn.execute(f'drop table if exists {table_name};')
+            conn.execute(
+                (
+                    f'create external table {table_name}'
+                    '(a bigint, b string, c double, d date, e timestamp, f boolean) \n'
+                    f"location '{DB_ATHENA_LOCATION}/{table_name}/';"
+                )
+            )
+            return
     if is_postgres(engine):
         sql = f'drop table if exists {table_name}; ' \
               f'create table {table_name}(a bigint, b text, c double precision, d date, e timestamp, f boolean); '
@@ -33,6 +43,7 @@ def _create_test_table(engine: Engine, table_name: str):
 
 
 @pytest.mark.skip_postgres
+@pytest.mark.skip_athena
 def test_from_table_structural_big_query(engine, unique_table_test_name):
     # Test specifically for structural types on BigQuery. We don't support that on Postgres, so we skip
     # postgres for this test
@@ -82,6 +93,7 @@ def test_from_table_basic(engine, unique_table_test_name):
 
 
 @pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_athena_todo()
 def test_from_model_basic(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
@@ -130,6 +142,7 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
 
 
 @pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_athena_todo()
 def test_from_model_column_ordering(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_model_ordering(), but tests creating the dataframe with
     # from_model instead of from_table
@@ -158,6 +171,7 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
 
 
 @pytest.mark.skip_postgres
+@pytest.mark.skip_athena
 def test_big_query_from_other_project(engine):
     # Test specifically for BigQuery, whether DataFrame.from_table() works on a table in a different project.
 
