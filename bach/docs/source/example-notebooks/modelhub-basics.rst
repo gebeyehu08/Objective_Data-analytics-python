@@ -105,8 +105,8 @@ we show the latest data first.
 	:class: api-reference
 
 	* :doc:`model_hub.aggregate.unique_users() <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
-	* :doc:`.head() <../bach/api-reference/DataFrame/bach.DataFrame.head>`
-	* :doc:`.to_pandas() <../bach/api-reference/DataFrame/bach.DataFrame.to_pandas>`
+	* :doc:`bach.DataFrame.head() <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+	* :doc:`bach.DataFrame.to_pandas() <../bach/api-reference/DataFrame/bach.DataFrame.to_pandas>`
 
 Mapping and filtering
 ---------------------
@@ -137,7 +137,7 @@ means all hits are labeled as new for the entire day in which the user had its f
 
 We can also label conversion events. To do this, we first have to define what a conversion is, by setting the 
 type of event and the location in the product where the event was triggered 
-(:ref:`see more about the location stack here <location_stack>`, using :doc:`add_conversion_event 
+(:ref:`see more about the location stack here <location_stack>`), using :doc:`add_conversion_event 
 <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.add_conversion_event>`.
 
 .. doctest:: modelhub
