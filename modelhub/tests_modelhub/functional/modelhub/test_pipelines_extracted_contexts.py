@@ -8,10 +8,10 @@ from typing import List
 import bach
 import pandas as pd
 import pytest
-from sql_models.util import is_bigquery
+from sql_models.util import is_bigquery, is_postgres
 from bach.testing import assert_equals_data
 
-from modelhub import ExtractedContextsPipeline
+from modelhub.pipelines.extracted_contexts import BaseExtractedContextsPipeline, get_extracted_context_pipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
     DBParams
 
@@ -24,22 +24,34 @@ _EXPECTED_CONTEXT_COLUMNS = [
     'event_type',
     'stack_event_types',
 ]
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1261')  # TODO: Athena
 
 
 def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.DataFrame:
     parsed_data = get_parsed_objectiv_data(engine)
-    if not is_bigquery(engine):
+    if is_postgres(engine):
         assert db_format == DBParams.Format.OBJECTIV
         return pd.DataFrame(parsed_data)
 
-    bq_data = []
+    assert db_format == DBParams.Format.SNOWPLOW
+    events_with_domain_sessionid = ['12b55ed5-4295-4fc1-bf1f-88d64d1ac304', '12b55ed5-4295-4fc1-bf1f-88d64d1ac305']
+    sp_data = []
+
     for event in parsed_data:
-        if db_format == DBParams.Format.SNOWPLOW :
-            bq_data.append(
+        if db_format == DBParams.Format.SNOWPLOW:
+
+            sp_data.append(
                 {
                     'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
                     'event_id': str(event['event_id']),
-                    'network_userid': str(event['cookie_id']),
+                    'network_userid': (
+                        str(event['cookie_id']) if str(event['event_id']) not in events_with_domain_sessionid
+                        else None
+                    ),
+                    'domain_sessionid': (
+                        str(event['cookie_id']) if str(event['event_id']) in events_with_domain_sessionid
+                        else None
+                    ),
                     'se_action': event['value']['_type'],
                     'se_category': json.dumps(event['value']['_types']),
                     'true_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
@@ -51,7 +63,7 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
         else:
             raise TypeError(f"Unsupported db format {db_format}")
 
-    return pd.DataFrame(bq_data)
+    return pd.DataFrame(sp_data)
 
 
 def get_expected_context_pandas_df(
@@ -103,10 +115,10 @@ def get_expected_context_pandas_df(
     return context_pdf[_EXPECTED_CONTEXT_COLUMNS + (global_contexts or [])]
 
 
-def _get_extracted_contexts_pipeline(db_params, global_contexts=[]) -> ExtractedContextsPipeline:
+def _get_extracted_contexts_pipeline(db_params, global_contexts=None) -> BaseExtractedContextsPipeline:
     engine = create_engine_from_db_params(db_params)
-    return ExtractedContextsPipeline(engine=engine, table_name=db_params.table_name,
-                                     global_contexts=global_contexts)
+    return get_extracted_context_pipeline(engine=engine, table_name=db_params.table_name,
+                                     global_contexts=global_contexts or [])
 
 
 def test_get_pipeline_result(db_params) -> None:
@@ -153,8 +165,9 @@ def test_get_initial_data(db_params) -> None:
 
         assert_equals_data(
             result,
-            expected_columns=['collector_tstamp', 'event_id', 'network_userid', 'se_action',
-                              'se_category', 'true_tstamp', 'contexts_io_objectiv_location_stack_1_0_0'],
+            expected_columns=['collector_tstamp', 'event_id', 'network_userid',  'domain_sessionid',
+                              'se_action', 'se_category', 'true_tstamp',
+                              'contexts_io_objectiv_location_stack_1_0_0'],
             expected_data=expected.to_numpy().tolist(),
             use_to_pandas=True,
         )
@@ -162,22 +175,26 @@ def test_get_initial_data(db_params) -> None:
         raise Exception()
 
 
-def test_process_taxonomy_data(db_params) -> None:
+def test_process_data(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
     df = context_pipeline._get_initial_data()
-    df = context_pipeline._process_taxonomy_data(df)
+
+    if is_bigquery(engine):
+        assert 'day' not in df.data
+        assert 'moment' not in df.data
+
+    df = context_pipeline._process_data(df)
+    assert 'day' in df.data
+    assert 'moment' in df.data
+
     df = context_pipeline._convert_dtypes(df)
     result = df.reset_index(drop=True)
 
     expected_series = [
-        'user_id', 'event_type', 'stack_event_types', 'location_stack', 'event_id', 'day', 'moment',
+        'user_id', 'event_type', 'stack_event_types', 'event_id', 'day', 'moment',
     ]
-    if is_bigquery(engine):
-        # day and moment are parsed after processing base data
-        expected_series = expected_series[:-2]
-
 
     result = result.sort_values(by='event_id')[expected_series].to_pandas()
     expected = (
@@ -192,39 +209,8 @@ def test_process_taxonomy_data(db_params) -> None:
     )
 
 
-def test_apply_extra_processing(db_params) -> None:
-    context_pipeline = _get_extracted_contexts_pipeline(db_params)
-    engine = context_pipeline._engine
-
-    df = context_pipeline._get_initial_data()
-    df = context_pipeline._process_taxonomy_data(df)
-    result = context_pipeline._apply_extra_processing(df)
-
-    if not is_bigquery(engine):
-        assert df == result
-        return None
-
-    assert 'day' not in df.data
-    assert 'day' in result.data
-
-    assert 'moment' not in df.data
-    assert 'moment' in result.data
-
-    expected_data = (
-        get_expected_context_pandas_df(engine, db_format=db_params.format)[['day', 'moment']]
-        .values.tolist()
-    )
-
-    assert_equals_data(
-        result.sort_values(by='event_id')[['day', 'moment']],
-        expected_columns=['day', 'moment'],
-        expected_data=expected_data,
-        use_to_pandas=True,
-    )
-
-
 @pytest.mark.skip_postgres
-def test_apply_extra_processing_duplicated_event_ids(db_params) -> None:
+def test_apply_filters_duplicated_event_ids(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
@@ -241,13 +227,16 @@ def test_apply_extra_processing_duplicated_event_ids(db_params) -> None:
     pdf = pd.DataFrame(
         {
             'event_id': ['1', '2', '3', '1', '4', '1', '4'],
+            'network_userid': ['1'] * 7,
+            'domain_sessionid': ['1'] * 7,
             'collector_tstamp': tstamps,
             'true_tstamp': tstamps,
-            'contexts_io_objectiv_taxonomy_1_0_0': ['{}'] * 7,
+            'contexts_io_objectiv_location_stack_1_0_0': ['{}'] * 7,
         }
     )
     df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
-    result = context_pipeline._apply_extra_processing(df)
+    result = context_pipeline._process_data(df)
+    result = context_pipeline._apply_filters(result)
 
     # collector_timestamp will be removed, so will true_tstamp, but the latter will live on as moment
     # so we can use that one to check whether the right event was selected.
@@ -264,7 +253,7 @@ def test_apply_extra_processing_duplicated_event_ids(db_params) -> None:
     )
 
 
-def test_apply_date_filter(db_params) -> None:
+def test_apply_filters(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
@@ -275,27 +264,52 @@ def test_apply_date_filter(db_params) -> None:
     df = bach.DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     df = df.reset_index(drop=True)
 
-    result = context_pipeline._apply_date_filter(df)
+    result = context_pipeline._apply_filters(df)
     assert df == result
 
     start_date = '2021-12-01'
-    result = context_pipeline._apply_date_filter(df, start_date=start_date).sort_values(by='event_id')
+    result = context_pipeline._apply_filters(df, start_date=start_date).sort_values(by='event_id')
     start_mask = pdf['day'] >= datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
     expected = pdf[start_mask].reset_index(drop=True)
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_index_type=False)
 
     end_date = '2021-12-02'
-    result = context_pipeline._apply_date_filter(df, end_date=end_date).sort_values(by='event_id')
+    result = context_pipeline._apply_filters(df, end_date=end_date).sort_values(by='event_id')
     end_mask = pdf['day'] <= datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
     expected = pdf[end_mask].reset_index(drop=True)
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_index_type=False)
 
-    result = context_pipeline._apply_date_filter(
+    result = context_pipeline._apply_filters(
         df, start_date=start_date, end_date=end_date,
     ).sort_values(by='event_id')
     expected = pdf[start_mask & end_mask].reset_index(drop=True)
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_index_type=False)
 
+
+def test_extract_requested_global_contexts(db_params) -> None:
+    global_contexts = ['application']
+    context_pipeline = _get_extracted_contexts_pipeline(db_params, global_contexts=global_contexts)
+    engine = context_pipeline._engine
+
+    df = context_pipeline._get_initial_data()
+    df = context_pipeline._process_data(df)
+    df = context_pipeline._extract_requested_global_contexts(df)
+    df = context_pipeline._convert_dtypes(df)
+    result = df.reset_index(drop=True)
+
+    expected_series = ['event_id', 'location_stack', 'application']
+
+    result = result.sort_values(by='event_id')[expected_series].to_pandas()
+    expected = (
+        get_expected_context_pandas_df(engine, db_format=db_params.format, global_contexts=global_contexts)
+        .sort_values(by='event_id')[expected_series]
+    )
+
+    pd.testing.assert_frame_equal(
+        expected,
+        result,
+        check_index_type=False,
+    )

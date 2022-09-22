@@ -81,6 +81,7 @@ _FAKE_DATA = [
     },
 ]
 
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1267')  # TODO: Athena
 
 @pytest.fixture()
 def pipeline() -> IdentityResolutionPipeline:

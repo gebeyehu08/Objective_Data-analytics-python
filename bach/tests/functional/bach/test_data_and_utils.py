@@ -7,8 +7,7 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
-import uuid
-from typing import List, Type, Any, Dict
+from typing import Type, Dict, List, Any
 
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy, Engine, Dialect
@@ -174,21 +173,6 @@ def run_query(engine: sqlalchemy.engine, sql: str) -> ResultProxy:
 def df_to_list(df):
     data_list = df.reset_index().to_numpy().tolist()
     return(data_list)
-
-
-def _convert_uuid_expected_data(engine: Engine, data: List[List[Any]]) -> List[List[Any]]:
-    """
-    Convert any UUID objects in data to string, if we represent uuids with strings in the engine's dialect.
-    """
-    if is_postgres(engine):
-        return data
-    if is_athena(engine) or is_bigquery(engine):
-        result = [
-            [str(cell) if isinstance(cell, uuid.UUID) else cell for cell in row]
-            for row in data
-        ]
-        return result
-    raise Exception(f'engine not supported {engine}')
 
 
 def assert_postgres_type(

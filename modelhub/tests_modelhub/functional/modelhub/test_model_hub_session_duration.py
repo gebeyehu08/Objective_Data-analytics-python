@@ -9,6 +9,8 @@ from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from bach.testing import assert_equals_data
 import datetime
 
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1262')  # TODO: Athena
+
 
 def test_defaults(db_params):
     # setting nothing, thus using all defaults (which is just moment without formatting)

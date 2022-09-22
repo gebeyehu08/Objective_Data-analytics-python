@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-__version__ = '0.0.22'
+__version__ = '0.0.23'
 
 from modelhub.modelhub import ModelHub
 from modelhub.aggregate import Aggregate
@@ -10,6 +10,9 @@ from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.models.funnel_discovery import FunnelDiscovery
 from modelhub.pipelines import *
 from modelhub.series import *
+
+# convenience import to allow users to use this without importing anything from bach
+from bach import display_sql_as_markdown
 
 
 # Here we do a basic version check, to make sure we are on the most recent versions of objectiv-bach and

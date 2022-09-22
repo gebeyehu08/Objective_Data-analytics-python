@@ -8,6 +8,7 @@ import pytest
 from modelhub.pipelines.identity_resolution import IdentityResolutionPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1267')  # TODO: Athena
 
 def test_convert_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)

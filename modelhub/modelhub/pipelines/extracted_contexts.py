@@ -3,58 +3,40 @@ Copyright 2021 Objectiv B.V.
 """
 import operator
 import re
+from abc import abstractmethod, ABC
 from functools import reduce
 
 import bach
-from typing import Optional, Any, Dict, NamedTuple, List
+from typing import Optional, Dict, List
+
+from sql_models.util import is_postgres, is_bigquery
 
 import modelhub
 from bach.types import StructuredDtype
-from sql_models.constants import DBDialect
-from sql_models.util import is_bigquery, is_postgres
 from sqlalchemy.engine import Engine
 
+from modelhub.series.operations.context_flattening import ContextFlattening
 from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
 from modelhub.pipelines.base_pipeline import BaseDataPipeline
 
 
-class TaxonomyColumnDefinition(NamedTuple):
-    name: str
-    dtype: Any
-
-
-def _get_taxonomy_column_definition(engine: Engine) -> Optional[TaxonomyColumnDefinition]:
+class BaseExtractedContextsPipeline(BaseDataPipeline):
     """
-    Returns the definition of the Objectiv taxonomy column per supported engine
-    """
-    if is_postgres(engine):
-        return TaxonomyColumnDefinition(name='value', dtype=bach.SeriesJson.dtype)
-
-    if is_bigquery(engine):
-        return None
-
-    raise Exception('define taxonomy definition for engine')
-
-
-class ExtractedContextsPipeline(BaseDataPipeline):
-    """
-    Pipeline in charge of extracting Objectiv context columns from event data source.
+    Base pipeline in charge of extracting Objectiv context columns from event data source.
     Based on the provided engine, it will perform the proper transformations for generating a bach DataFrame
     that contains all expected series to be used by Modelhub.
 
     The steps followed in this pipeline are the following:
         1. _get_initial_data: Gets the initial bach DataFrame containing all required context columns
             based on the engine.
-        2. _process_taxonomy_data: Will extract required fields from taxonomy json, it will use
-            _DEFAULT_TAXONOMY_DTYPE_PER_FIELD by default. If engine requires other fields,
-            it should be specified to the pipeline.
-        3. _apply_extra_processing: Applies extra processing if required, this is mainly based on the engine.
-            For example, for BigQuery, the pipeline will generate moment and day series from `time` series
-            extracted from the taxonomy.
+        2. _process_data: Extracts required context series from initial format. Each child must implement this
+            method, as data format might be different per engine.
+        3. _extract_requested_global_contexts: Creates a series per requested global context. Extraction
+           depends if child supports snowplow flat format or GLOBAL_CONTEXT series.
         4. _convert_dtypes: Will convert all required context series to their correct dtype
-        5. _apply_date_filter: Applies start_date and end_date filter, if required.
+        5. _apply_filters: Applies start_date and end_date filter and event deduplication, if required.
 
     Final bach DataFrame will be later validated, it must include:
         - all context series defined in ObjectivSupportedColumns
@@ -62,32 +44,15 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     """
     DATE_FILTER_COLUMN = ObjectivSupportedColumns.DAY.value
 
-    # extra columns that are needed to be fetched, taxonomy column provided for the engine
-    # is ALWAYS selected
-    required_context_columns_per_dialect: Dict[DBDialect, Dict[str, StructuredDtype]] = {
-        DBDialect.POSTGRES: {
-            'event_id': bach.SeriesUuid.dtype,
-            'day': bach.SeriesDate.dtype,
-            'moment': bach.SeriesTimestamp.dtype,
-            'cookie_id': bach.SeriesUuid.dtype,
-        },
-        DBDialect.BIGQUERY: {
-            'collector_tstamp': bach.SeriesTimestamp.dtype,
-            'event_id': bach.SeriesString.dtype,
-            'network_userid': bach.SeriesString.dtype,
-            'se_action': bach.SeriesString.dtype,
-            'se_category': bach.SeriesString.dtype,
-            'true_tstamp': bach.SeriesTimestamp.dtype
-        },
-    }
+    BASE_REQUIRED_DB_DTYPES: Dict[str, StructuredDtype] = {}
+
+    IS_DUPLICATED_EVENT_SERIES_NAME = '__duplicated_event'
 
     def __init__(self, engine: Engine, table_name: str, global_contexts: List[str]):
         super().__init__()
         self._engine = engine
-        self._db_dialect = DBDialect.from_engine(self._engine)
         self._global_contexts = global_contexts
         self._table_name = table_name
-        self._taxonomy_column: Optional[TaxonomyColumnDefinition] = None
 
         # check if table has all required columns for pipeline
         dtypes = bach.from_database.get_dtypes_from_table(
@@ -95,66 +60,29 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             table_name=self._table_name,
         )
 
-        # If the taxonomy column is present, we need to use the "old" format
-        taxonomy_column = _get_taxonomy_column_definition(engine)
-        if taxonomy_column and taxonomy_column.name in dtypes:
-            if not is_postgres(engine):
-                raise Exception('only postgres supports single global context column.')
-
-            self._taxonomy_column = taxonomy_column
-            self._base_dtypes = {
-                self._taxonomy_column.name: self._taxonomy_column.dtype,
-                **self.required_context_columns_per_dialect[self._db_dialect],
-            }
-        else:
-            # No taxonomy column, we need to gather the contexts separately.
-            if not is_bigquery(engine):
-                raise Exception('only bigquery supports snowplow flat format.')
-
-            self._base_dtypes = self._get_bq_sp_base_dtypes(dtypes, global_contexts)
-
+        self._global_contexts_dtypes = self._get_global_contexts_dtypes_from_db_dtypes(db_dtypes=dtypes)
         self._validate_data_dtypes(
             expected_dtypes=self._base_dtypes,
             current_dtypes=dtypes,
         )
 
-    def _get_bq_sp_base_dtypes(
-            self, dtypes: Dict[str, StructuredDtype], global_contexts: List[str]
-    ) -> Dict[str, Any]:
+    @property
+    def _base_dtypes(self) -> Dict[str, StructuredDtype]:
         """
-        Get the base dtypes for BQ in the flat/snowplow data format.
-        Will also set self._global_contexts_column_mapping, to map database columns to global context
-        columns in the dataframe.
+        Mapping between expected columns and series dtypes the pipeline expects in the initial data.
+        Each child is responsible of defining BASE_REQUIRED_DB_TYPES and the global contexts dtypes expected
+        (if required).
         """
-        base_dtypes = self.required_context_columns_per_dialect[self._db_dialect].copy()
+        return {
+            **self.BASE_REQUIRED_DB_DTYPES,
+            **self._global_contexts_dtypes,
+        }
 
-        # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0 -> cookie_id
-        # but also contexts_io_objectiv_location_stack_1_0_0 -> location_stack
-        pattern_global_context = re.compile(r'contexts_io_objectiv_(context_)?(.*?)(_context)?_\d_\d_\d')
-
-        global_contexts_column_mapping = {}
-
-        for col, dtype in dtypes.items():
-            match = pattern_global_context.search(col)
-            if not match:
-                continue
-
-            # get match group 2, as the first one is a "context_" that we don't need.
-            context_name = match.group(2)
-            if context_name == 'location_stack':
-                base_dtypes[col] = [{context_name: bach.SeriesString.dtype}]
-                global_contexts_column_mapping[context_name] = col
-            elif context_name in global_contexts:
-                base_dtypes[col] = [{}]
-                global_contexts_column_mapping[context_name] = col
-
-        missing = [c for c in global_contexts if c not in global_contexts_column_mapping.keys()]
-        if len(missing) > 0:
-            raise ValueError(f'Requested global contexts {missing} not found in data.')
-
-        self._global_contexts_column_mapping = global_contexts_column_mapping
-
-        return base_dtypes
+    @abstractmethod
+    def _get_global_contexts_dtypes_from_db_dtypes(
+        self, db_dtypes: Dict[str, StructuredDtype],
+    ) -> Dict[str, StructuredDtype]:
+        raise NotImplementedError
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
         """
@@ -162,11 +90,11 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         context series
         """
         context_df = self._get_initial_data()
-        context_df = self._process_taxonomy_data(context_df)
-        context_df = self._apply_extra_processing(context_df)
+        context_df = self._process_data(context_df)
+        context_df = self._extract_requested_global_contexts(context_df)
 
         context_df = self._convert_dtypes(df=context_df)
-        context_df = self._apply_date_filter(df=context_df, **kwargs)
+        context_df = self._apply_filters(df=context_df, **kwargs)
 
         context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
         context_df = context_df[context_columns + self._global_contexts]
@@ -193,125 +121,19 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             all_dtypes=self._base_dtypes,
         )
 
-    def _process_taxonomy_data(self, df: bach.DataFrame) -> bach.DataFrame:
+    @abstractmethod
+    def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
         """
-        Extracts all needed values from the taxonomy json/dict and creates a new Series for each.
-        Fields are dependent on the engine's taxonomy definition, therefore the new generated series might be
-        different per engine.
-
-        Returns a bach DataFrame containing each extracted field as series
+        Transforms and prepares initial event data for global context extraction.
         """
-        df_cp = df.copy()
+        raise NotImplementedError
 
-        if self._taxonomy_column:
-            dtypes = {
-                '_type': bach.SeriesString.dtype,
-                '_types': bach.SeriesJson.dtype,
-                'global_contexts': modelhub.series.SeriesGlobalContexts.dtype,
-                'location_stack': modelhub.series.SeriesLocationStack.dtype,
-                'time': bach.SeriesInt64.dtype,
-            }
-            taxonomy_series = df_cp[self._taxonomy_column.name]
-
-            for key, dtype in dtypes.items():
-                # parsing element to string and then to dtype will avoid
-                # conflicts between casting compatibility
-                if isinstance(taxonomy_series, bach.SeriesJson):
-                    taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
-                else:
-                    # taxonomy_series is dtype='dict' for BQ. Therefore, we need to explicitly
-                    # cast the resultant element as string
-                    taxonomy_col = taxonomy_series.elements[key].astype('string')
-
-                taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
-                df_cp[key] = taxonomy_col
-
-            # rename series to objectiv supported before extracting global contexts, as there may be overlap
-            df_cp = df_cp.rename(
-                columns={
-                    'cookie_id': ObjectivSupportedColumns.USER_ID.value,
-                    '_type': ObjectivSupportedColumns.EVENT_TYPE.value,
-                    '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
-                },
-            )
-
-            gc_series = (
-                df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
-            )
-            # Extract the requested global contexts
-            for gc in self._global_contexts:
-                if gc in df_cp.data:
-                    raise ValueError(f'column {gc} already existing in df, can not extract global context')
-                df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
-
-            df_cp = df_cp.drop(columns=[
-                ObjectivSupportedColumns.GLOBAL_CONTEXTS.value,
-                self._taxonomy_column.name
-            ])
-        else:
-            df_cp = df_cp.rename(
-                columns={
-                    'se_action': ObjectivSupportedColumns.EVENT_TYPE.value,
-                    'se_category': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
-                    'network_userid': ObjectivSupportedColumns.USER_ID.value,
-                }
-            )
-
-            for gc, col in self._global_contexts_column_mapping.items():
-                if gc in df_cp.data:
-                    raise ValueError(f'column {gc} already existing in df, can not extract global context')
-                if gc == 'location_stack':
-                    df_cp[gc] = (
-                        df_cp[col].elements[0].elements['location_stack']
-                        .astype('objectiv_location_stack')
-                    )
-                else:
-                    df_cp[gc] = df_cp[col].astype('objectiv_global_context')
-
-            df_cp = df_cp.drop(columns=list(self._global_contexts_column_mapping.values()))
-
-        return df_cp
-
-    def _apply_extra_processing(self, df: bach.DataFrame) -> bach.DataFrame:
+    def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
         """
-        Applies more operations to the dataframe (if needed).
-
-        Returns a bach DataFrame
+        Creates a new series for location_stack and each requested global context. Provided DataFrame
+        is expected to have the required format based on implementation.
         """
-        df_cp = df.copy()
-
-        if is_postgres(self._engine):
-            return df_cp
-
-        # this materialization is to generate a readable query
-        df_cp = df_cp.materialize(node_name='bq_extra_processing')
-
-        # Remove duplicated event_ids
-        # Unfortunately, some events might share an event ID due to
-        # browser pre-cachers or scraping bots sending the same event multiple time. Although,
-        # legitimate clients might try to send the same events multiple times,
-        # in an attempt to make sure that events do not get lost in case of connection problems
-        # and/or app reloads. We can easily recognize these events as they'll have non-unique event-ids.
-        # In all cases we are only interested in the first event. On postgres we achieve this by having a
-        # primary key index on event-id. On BigQuery such indexes are not possible. Instead, we here filter
-        # out duplicate event-ids, keeping the first event
-        # based on the time the collector sends it to snowplow.
-        df_cp = df_cp.drop_duplicates(subset=['event_id'], sort_by=['collector_tstamp'], keep='first')
-
-        # BQ data source has no moment and day columns, therefore we need to generate them
-        if df_cp['true_tstamp'].dtype == 'timestamp':
-            df_cp['moment'] = df_cp['true_tstamp']
-        else:
-            df_cp['moment'] = df_cp['true_tstamp'].copy_override(
-                expression=bach.expression.Expression.construct(
-                    f'TIMESTAMP_MILLIS({{}})', df_cp['true_tstamp']
-                )
-            ).copy_override_type(bach.SeriesTimestamp)
-
-        if 'day' not in df_cp.columns:
-            df_cp['day'] = df_cp['moment'].astype('date')
-
-        return df_cp.drop(columns=['true_tstamp', 'collector_tstamp'])
+        raise NotImplementedError
 
     def validate_pipeline_result(self, result: bach.DataFrame) -> None:
         """
@@ -326,7 +148,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             with_md_dtypes=True
         )
 
-    def _apply_date_filter(
+    def _apply_filters(
         self,
         df: bach.DataFrame,
         start_date: Optional[str] = None,
@@ -334,14 +156,27 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         **kwargs,
     ) -> bach.DataFrame:
         """
-        Filters dataframe by a date range.
+        Apply different filters on the dataframe.
+        Currently only event deduplication and date range are supported.
 
         returns bach DataFrame
         """
         df_cp = df.copy()
 
-        if not start_date and not end_date:
+        if (
+            self.IS_DUPLICATED_EVENT_SERIES_NAME not in df.data_columns
+            and not start_date and not end_date
+        ):
             return df_cp
+
+        if (
+            self.IS_DUPLICATED_EVENT_SERIES_NAME in df.data_columns
+            and df[self.IS_DUPLICATED_EVENT_SERIES_NAME].dtype != bach.SeriesBoolean.dtype
+        ):
+            raise Exception(f'{self.IS_DUPLICATED_EVENT_SERIES_NAME} must boolean dtype.')
+
+        if not df_cp.is_materialized:
+            df_cp = df_cp.materialize()
 
         date_filters = []
         if start_date:
@@ -349,4 +184,237 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if end_date:
             date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
 
-        return df_cp[reduce(operator.and_, date_filters)]
+        all_filters = []
+        if date_filters:
+            all_filters.append(reduce(operator.and_, date_filters))
+
+        if self.IS_DUPLICATED_EVENT_SERIES_NAME in df_cp.data_columns:
+            all_filters.append(~df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME])
+
+        return df_cp[reduce(operator.or_, all_filters)]
+
+
+class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
+    """
+    ExtractedContextsPipeline that process Objectiv native format, where global_contexts and location_stack
+    values are required to be extracted from a "taxonomy" json.
+    """
+    TAXONOMY_JSON_COLUMN_NAME = 'value'
+    TAXONOMY_JSON_FIELD_DTYPES = {
+        '_type': bach.SeriesString.dtype,
+        '_types': bach.SeriesJson.dtype,
+        'global_contexts': modelhub.series.SeriesGlobalContexts.dtype,
+        'location_stack': modelhub.series.SeriesLocationStack.dtype,
+        'time': bach.SeriesInt64.dtype,
+    }
+
+    BASE_REQUIRED_DB_DTYPES = {
+        'event_id': bach.SeriesUuid.dtype,
+        'day': bach.SeriesDate.dtype,
+        'moment': bach.SeriesTimestamp.dtype,
+        'cookie_id': bach.SeriesUuid.dtype,
+        'value': bach.SeriesJson.dtype,
+    }
+
+    def _get_global_contexts_dtypes_from_db_dtypes(
+        self, db_dtypes: Dict[str, StructuredDtype]
+    ) -> Dict[str, StructuredDtype]:
+        return {}
+
+    def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Extracts all needed values from the native taxonomy json/dict and creates a new Series for each.
+
+        Returns a bach DataFrame containing each extracted field as series
+        """
+        df_cp = df.copy()
+        taxonomy_series = df_cp[self.TAXONOMY_JSON_COLUMN_NAME].astype(bach.SeriesJson.dtype)
+        for key, dtype in self.TAXONOMY_JSON_FIELD_DTYPES.items():
+            # parsing element to string and then to dtype will avoid
+            # conflicts between casting compatibility
+            taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
+            taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
+            df_cp[key] = taxonomy_col
+
+        # rename series to objectiv supported before extracting global contexts, as there may be overlap
+        df_cp = df_cp.rename(
+            columns={
+                'cookie_id': ObjectivSupportedColumns.USER_ID.value,
+                '_type': ObjectivSupportedColumns.EVENT_TYPE.value,
+                '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
+            },
+        )
+        return df_cp.drop(columns=[self.TAXONOMY_JSON_COLUMN_NAME])
+
+    def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        """ See implementation in parent class :class:`BaseExtractedContextsPipeline` """
+        if ObjectivSupportedColumns.GLOBAL_CONTEXTS.value not in df.data_columns:
+            raise Exception(
+                f'{self._engine.name} requires flattening for global context extraction, but'
+                f'{ObjectivSupportedColumns.GLOBAL_CONTEXTS.value} is not present in dataframe.'
+            )
+
+        df_cp = df.copy()
+        if self._global_contexts:
+            flattened_contexts_df = ContextFlattening(
+                contexts_series=df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value],
+                global_contexts=self._global_contexts,
+                with_location_stack=False,
+            )()
+            df_cp = df_cp.copy_override(series={**df_cp.data, **flattened_contexts_df.data})
+
+        return df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
+
+
+class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
+    """
+    ExtractedContextsPipeline that processes Snowplow flattened format. Format might not be the same
+    for all engines implemented in Snowplow, therefore this class should be extended and each
+    child must be in charge of handling their own format.
+    """
+    BASE_REQUIRED_DB_DTYPES = {
+        'collector_tstamp': bach.SeriesTimestamp.dtype,
+        'event_id': bach.SeriesString.dtype,
+        'network_userid': bach.SeriesString.dtype,
+        'domain_sessionid': bach.SeriesString.dtype,
+        'se_action': bach.SeriesString.dtype,
+        'se_category': bach.SeriesString.dtype,
+        'true_tstamp': bach.SeriesTimestamp.dtype
+    }
+
+    def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Removes duplicated event_ids and renames initial series name to its respectiv Objectiv series name.
+        """
+        df_cp = df.rename(
+            columns={
+                'se_action': ObjectivSupportedColumns.EVENT_TYPE.value,
+                'se_category': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
+            }
+        )
+        # Anonymous users have no network_userid, but their domain_sessionid is useable as user_id as well
+        df_cp[ObjectivSupportedColumns.USER_ID.value] = (
+            df_cp['network_userid'].fillna(df_cp['domain_sessionid'])
+        )
+        df_cp = df_cp.drop(columns=['network_userid', 'domain_sessionid'])
+
+        # Mark duplicated event_ids
+        # Unfortunately, some events might share an event ID due to
+        # browser pre-cachers or scraping bots sending the same event multiple time. Although,
+        # legitimate clients might try to send the same events multiple times,
+        # in an attempt to make sure that events do not get lost in case of connection problems
+        # and/or app reloads. We can easily recognize these events as they'll have non-unique event-ids.
+        # In all cases we are only interested in the first event. On postgres we achieve this by having a
+        # primary key index on event-id. On BigQuery such indexes are not possible. Instead, we here filter
+        # out duplicate event-ids, keeping the first event
+        # based on the time the collector sends it to snowplow.
+        window = df_cp.sort_values(by=['collector_tstamp']).groupby(by=['event_id']).window()
+        df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME] = (
+            df_cp['event_id'].window_row_number(window=window) > 1
+        )
+        # Snowplow data source has no moment and day columns, therefore we need to generate them
+        if df_cp['true_tstamp'].dtype == 'timestamp':
+            df_cp['moment'] = df_cp['true_tstamp']
+        else:
+            df_cp['moment'] = df_cp['true_tstamp'].copy_override(
+                expression=bach.expression.Expression.construct(
+                    f'TIMESTAMP_MILLIS({{}})', df_cp['true_tstamp']
+                )
+            ).copy_override_type(bach.SeriesTimestamp)
+
+        if 'day' not in df_cp.data_columns:
+            df_cp['day'] = df_cp['moment'].astype('date')
+
+        return df_cp.drop(columns=['true_tstamp', 'collector_tstamp'])
+
+
+class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
+    """
+    BigQuery Pipeline implementation for SnowplowExtractedContextsPipeline. This pipeline
+    assumes there is a column per global context and a single column for location stack.
+    """
+    def _get_global_context_mapping_from_series_names(self, series_names: List[str]):
+        """
+        Returns mapping between db column name and global context name.
+        """
+        # match things like contexts_io_objectiv_context_cookie_id_context_1_0_0 -> cookie_id
+        # but also contexts_io_objectiv_location_stack_1_0_0 -> location_stack
+        global_contexts_column_mapping: Dict[str, str] = {}
+
+        base_patterns = [r'(?P<ls_context>location_stack)']
+        if self._global_contexts:
+            base_patterns.append(rf"(context_(?P<gc_context>{'|'.join(self._global_contexts)})_context)",)
+        pattern_global_context = re.compile(
+            rf"contexts_io_objectiv_({'|'.join(base_patterns)})_\d_\d_\d"
+        )
+
+        for col in series_names:
+            match = pattern_global_context.search(col)
+            if not match:
+                continue
+
+            context_name = match.group('ls_context') or match.group('gc_context')
+
+            global_contexts_column_mapping[col] = context_name
+
+        return global_contexts_column_mapping
+
+    def _get_global_contexts_dtypes_from_db_dtypes(
+        self, db_dtypes: Dict[str, StructuredDtype],
+    ) -> Dict[str, StructuredDtype]:
+        """
+        Returns mapping between global context columns and expected series dtype for each.
+        """
+        gc_mapping = self._get_global_context_mapping_from_series_names(list(db_dtypes.keys()))
+        missing = ({'location_stack'} & set(self._global_contexts)) - set(gc_mapping.values())
+        if missing:
+            raise ValueError(f'Requested global contexts {sorted(missing)} not found in data.')
+
+        return {
+            db_col_name: [{}]
+            if gc_name in self._global_contexts else [{gc_name: bach.SeriesString.dtype}]
+            for db_col_name, gc_name in gc_mapping.items()
+        }
+
+    def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        """ See implementation in parent class :class:`BaseExtractedContextsPipeline` """
+        gc_mapping = self._get_global_context_mapping_from_series_names(
+            series_names=df.data_columns
+        )
+
+        df_cp = df.rename(columns=gc_mapping)
+
+        ls_series_name = str(ObjectivSupportedColumns.LOCATION_STACK.value)
+
+        # for BQ, location stack series has the following format:
+        # [{'location_stack': '[{...}, {...},...]'}]
+        # therefore we need to extract the first element in the array and afterwards the value
+        # of location_stack
+        ls_series_list = df_cp[ls_series_name].copy_override_type(bach.SeriesList, instance_dtype=[{}])
+        ls_series_dict = ls_series_list.elements[0].copy_override_type(
+            series_type=bach.SeriesDict, instance_dtype={'location_stack': bach.SeriesString.dtype}
+        )
+        df_cp[ls_series_name] = ls_series_dict.elements['location_stack']
+
+        return df_cp.astype(
+            {
+                ls_series_name: 'objectiv_location_stack',
+                **{gc: 'objectiv_global_context' for gc in self._global_contexts}
+            }
+        )
+
+
+def get_extracted_context_pipeline(
+    engine: Engine, table_name: str, global_contexts: List[str]
+) -> BaseExtractedContextsPipeline:
+    """
+    Returns an instance of ExtractedContextPipeline based on the provided engine.
+    """
+    if is_postgres(engine):
+        # currently we only support old format for Postgres
+        return NativeObjectivExtractedContextsPipeline(engine, table_name, global_contexts)
+
+    if is_bigquery(engine):
+        return BigQueryExtractedContextsPipeline(engine, table_name, global_contexts)
+
+    raise Exception(f'There is no ExtractedContextsPipeline subclass for {engine.name}.')

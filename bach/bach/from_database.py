@@ -1,16 +1,17 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 from sqlalchemy.engine import Engine
 
+from bach.expression import Expression, join_expressions
 from bach.types import get_dtype_from_db_dtype, StructuredDtype
 from bach.utils import escape_parameter_characters
 from sql_models.constants import DBDialect
 from sql_models.model import SqlModel, CustomSqlModelBuilder
 from sql_models.sql_generator import to_sql
-from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
+from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
 
 
 def get_dtypes_from_model(engine: Engine, node: SqlModel) -> Dict[str, StructuredDtype]:
@@ -43,16 +44,27 @@ def get_dtypes_from_table(
         BigQuery, e.g. 'project_id.dataset.table_name'
     :return: Dictionary with as key the column names of the table, and as values the dtype of the column.
     """
+    filters_expr = []
     if is_postgres(engine):
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
     elif is_bigquery(engine):
         meta_data_table, table_name = _get_bq_meta_data_table_from_table_name(table_name)
+    elif is_athena(engine):
+        catalog_name = (
+            f"{engine.url.query['catalog_name']}." if 'catalog_name' in engine.url.query else ''
+        )
+        meta_data_table = f'{catalog_name}INFORMATION_SCHEMA.COLUMNS'
+        # This filter is needed because athena does not limit to data from the current schema
+        filters_expr.append(Expression.construct(f"table_schema='{engine.url.database}'"))
     else:
         raise DatabaseNotSupportedException(engine)
+
+    filters_expr.append(Expression.construct(f"table_name='{table_name}'"))
+    filters_stmt = join_expressions(filters_expr, join_str=' AND ').to_sql(engine.dialect)
     sql = f"""
         select column_name, data_type
         from {meta_data_table}
-        where table_name = '{table_name}'
+        where {filters_stmt}
         order by ordinal_position;
     """
     return _get_dtypes_from_information_schema_query(engine=engine, query=sql)

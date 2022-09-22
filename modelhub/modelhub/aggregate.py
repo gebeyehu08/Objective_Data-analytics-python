@@ -476,3 +476,50 @@ class Aggregate:
             plt.show()
 
         return retention_matrix
+
+    @staticmethod
+    def drop_off_locations(data: bach.DataFrame,
+                           location_stack: 'SeriesLocationStack' = None,
+                           groupby: Union[List[Union[str, Series]], str, Series] = 'user_id',
+                           percentage=False) -> bach.DataFrame:
+        """
+        Find the locations/features where users drop off, and their usage/share.
+
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param location_stack: the slice of the location stack to consider.
+
+            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
+            - if `None`, the whole location stack is taken.
+        :param groupby: sets the column(s) to group by.
+        :param percentage: if True calculate the percentage.
+
+        :returns: :py:class:`bach.DataFrame` with the location where users drop off, and the count/percentage.
+        """
+
+        data = data.copy()
+
+        if location_stack is not None:
+            data['__feature_nice_name'] = location_stack.ls.nice_name
+        else:
+            data['__feature_nice_name'] = data.location_stack.ls.nice_name
+
+        # need to drop missing values because we don't
+        # want to get as a last step None value
+        data = data.dropna(subset='__feature_nice_name')
+
+        by = [data['moment']]
+        series = data.groupby(groupby)['__feature_nice_name'].sort_by_series(by=by,
+                                                                             ascending=True)
+        series_json_array = cast(bach.SeriesString, series).to_json_array()
+
+        drop_loc = series_json_array.json[-1].materialize()
+
+        if percentage:
+            total_count = drop_loc.count().value
+            drop_loc = (drop_loc.value_counts() / total_count) * 100
+            drop_loc = drop_loc.to_frame().rename(
+                columns={'value_counts': 'percentage'})
+            drop_loc = drop_loc.sort_values(by='percentage', ascending=False)
+            return drop_loc
+
+        return drop_loc.value_counts().to_frame()
