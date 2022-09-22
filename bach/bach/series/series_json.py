@@ -870,7 +870,7 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
         )
         key_to_extract = [
             Expression.construct(
-                '({}, x[{}])',
+                '({}, __x[{}])',
                 Expression.string_value(key),
                 Expression.string_value(key),
             )
@@ -887,7 +887,7 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
 
         # extracts only the keys to match
         transform_array = Expression.construct(
-            'transform({}, x-> cast(map_from_entries(array[{}]) as json))',
+            'transform({}, __x -> cast(map_from_entries(array[{}]) as json))',
             array_map_expr,
             join_expressions(key_to_extract),
         )

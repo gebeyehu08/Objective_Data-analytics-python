@@ -8,7 +8,7 @@ import bach
 import pandas as pd
 import pytest
 from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 from modelhub import SessionizedDataPipeline
 from tests_modelhub.data_and_utils.data_parsers import get_extracted_contexts_data_from_parsed_objectiv_data
@@ -54,7 +54,6 @@ _FAKE_SESSIONIZED_DATA = [
         'is_start_of_session': None,
     },
 ]
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1266')  # TODO: Athena
 
 
 def _get_sessionized_data_pipeline() -> SessionizedDataPipeline:

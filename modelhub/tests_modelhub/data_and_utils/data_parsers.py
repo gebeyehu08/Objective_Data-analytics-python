@@ -35,7 +35,7 @@ def get_extracted_contexts_data_from_parsed_objectiv_data(data_format: DBParams.
             continue
 
         parsed_sp_event_data = _parse_event_data_to_snowplow_format(event_data, data_format)
-        # for snowplow, some fields might differ like: user_id, moment and day
+        # for snowplow, some fields differ: user_id, moment and day
         ec_event_data['user_id'] = UUID(
             parsed_sp_event_data['network_userid'] or parsed_sp_event_data['domain_sessionid']
         )
@@ -89,15 +89,15 @@ def _parse_event_data_to_snowplow_format(event_data: Dict[str, Any], data_format
         'true_tstamp': datetime.utcfromtimestamp(parsed_time_val / 1e3),
     }
     if data_format == DBParams.Format.SNOWPLOW:
-        parsed_event_data.update(_parse_native_taxonomy_to_native_snoplow(event_data['value']))
+        parsed_event_data.update(_parse_native_taxonomy_to_native_snowplow(event_data['value']))
 
     if data_format == DBParams.Format.FLATTENED_SNOWPLOW:
-        parsed_event_data.update(_parse_native_taxonomy_to_flattened_snoplow(event_data['value']))
+        parsed_event_data.update(_parse_native_taxonomy_to_flattened_snowplow(event_data['value']))
 
     return parsed_event_data
 
 
-def _parse_native_taxonomy_to_flattened_snoplow(taxonomy_json: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_native_taxonomy_to_flattened_snowplow(taxonomy_json: Dict[str, Any]) -> Dict[str, Any]:
     gc_converted = defaultdict(list)
     for gc in taxonomy_json['global_contexts']:
         gc_name, gc_data = _get_global_context_data(gc, DBParams.Format.FLATTENED_SNOWPLOW)
@@ -111,7 +111,7 @@ def _parse_native_taxonomy_to_flattened_snoplow(taxonomy_json: Dict[str, Any]) -
     }
 
 
-def _parse_native_taxonomy_to_native_snoplow(taxonomy_json: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_native_taxonomy_to_native_snowplow(taxonomy_json: Dict[str, Any]) -> Dict[str, Any]:
     contexts = []
     for gc in taxonomy_json['global_contexts']:
         gc_name, gc_data = _get_global_context_data(gc, DBParams.Format.SNOWPLOW)

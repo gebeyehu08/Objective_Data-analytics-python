@@ -19,7 +19,6 @@ def test_get_objectiv_data_only_context_data(db_params) -> None:
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1266')  # TODO: Athena
 def test_get_objectiv_data_w_sessionized_data(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
@@ -38,7 +37,6 @@ def test_get_objectiv_data_w_sessionized_data(db_params) -> None:
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1267')  # TODO: Athena
 def test_get_objectiv_data_w_identity_data(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
@@ -77,7 +75,6 @@ def test_get_objectiv_data_w_identity_data(db_params) -> None:
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1267')  # TODO: Athena
 def test_get_objectiv_data_w_identity_data_w_anonymized_users(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
@@ -116,7 +113,6 @@ def test_get_objectiv_data_w_identity_data_w_anonymized_users(db_params) -> None
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1267')  # TODO: Athena
 def test_get_objectiv_data_w_identity_n_session_data(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 

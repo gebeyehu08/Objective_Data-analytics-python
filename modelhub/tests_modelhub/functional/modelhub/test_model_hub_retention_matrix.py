@@ -7,7 +7,7 @@ Copyright 2022 Objectiv B.V.
 from modelhub import __version__
 import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 
 @pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1262')  # TODO: Athena
