@@ -15,6 +15,7 @@ import modelhub
 from bach.types import StructuredDtype
 from sqlalchemy.engine import Engine
 
+from modelhub.series.operations.context_flattening import ContextFlattening
 from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
@@ -252,16 +253,15 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
                 f'{self._engine.name} requires flattening for global context extraction, but'
                 f'{ObjectivSupportedColumns.GLOBAL_CONTEXTS.value} is not present in dataframe.'
             )
-        df_cp = df.copy()
 
-        gc_series = (
-            df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
-        )
-        # Extract the requested global contexts
-        for gc in self._global_contexts:
-            if gc in df_cp.data:
-                raise ValueError(f'column {gc} already existing in df, can not extract global context')
-            df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
+        df_cp = df.copy()
+        if self._global_contexts:
+            flattened_contexts_df = ContextFlattening(
+                contexts_series=df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value],
+                global_contexts=self._global_contexts,
+                with_location_stack=False,
+            )()
+            df_cp = df_cp.copy_override(series={**df_cp.data, **flattened_contexts_df.data})
 
         return df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
 
