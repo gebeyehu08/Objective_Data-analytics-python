@@ -12,7 +12,7 @@ from bach import DataFrame, Series, SeriesString, SeriesJson
 from bach.expression import Expression, quote_string, quote_identifier, join_expressions
 from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
-from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
+from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
 
 from modelhub.series.operations.context_flattening import ContextFlattening
 
@@ -178,11 +178,41 @@ class SeriesLocationStack(SeriesJson):
             """
             keys = ['_type', 'id']
             engine = self._series_object.engine
+            if is_athena(engine):
+                return self._athena_filter_keys_of_dicts(keys)
             if is_postgres(engine):
                 return self._postgres_filter_keys_of_dicts(keys)
             if is_bigquery(engine):
                 return self._bigquery_filter_keys_of_dicts(keys)
             raise DatabaseNotSupportedException(engine)
+
+        def _athena_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
+            """
+              Return a new Series, that consists of the same top level array, but with all
+              the sub-dictionaries having only their original fields if that field
+              is listed in the keys parameter.
+              If the field didn't previously exist then it will have the value NULL.
+
+              Athena only.
+              """
+            key_to_extract = [
+                Expression.construct(
+                    '({}, __x[{}])',
+                    Expression.string_value(key),
+                    Expression.string_value(key),
+                )
+                for key in keys
+            ]
+            array_map_expr = Expression.construct(
+                'try(cast({} as array(map(varchar, json))))',
+                self._series_object
+            )
+            expression = Expression.construct(
+                'cast(transform({}, __x -> cast(map_from_entries(array[{}]) as json)) as json)',
+                array_map_expr,
+                join_expressions(key_to_extract),
+            )
+            return self._series_object.copy_override(expression=expression)
 
         def _postgres_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
             """
