@@ -46,11 +46,18 @@ const RootLocationContext = CommonContextAttributes.keys({
   _type: Joi.string().valid('RootLocationContext').required(),
 });
 
-
-
+const NonRootLocationContexts = [
+  ContentContext,
+  ExpandableContext,
+  InputContext,
+  LinkContext,
+  MediaPlayerContext,
+  NavigationContext,
+  OverlayContext,
+  PressableContext,
+]
 
 // Events
-
 
 const CommonEventAttributes = Joi.object({
   id: Joi.string().guid({ version: 'uuidv4' }).required(),
@@ -62,16 +69,7 @@ const CommonInteractiveEventAttributes = CommonEventAttributes.keys({
     // RootLocationContext must be the first item and it's required
     .ordered(RootLocationContext.required())
     // All other items can be LocationContexts
-    .items(
-      ContentContext,
-      ExpandableContext,
-      InputContext,
-      LinkContext,
-      MediaPlayerContext,
-      NavigationContext,
-      OverlayContext,
-      PressableContext,
-    )
+    .items(...NonRootLocationContexts)
     // Items in the LocationStack must have unique _type+id combinations
     .unique((a, b) => a._type === b._type && a.id === b.id)
     // Interactive events must have a Location Stack
@@ -83,19 +81,13 @@ const CommonNonInteractiveEventAttributes = CommonEventAttributes.keys({
     // RootLocationContext must be the first
     .ordered(RootLocationContext)
     // All other items can be LocationContexts
-    .items(
-      ContentContext,
-      ExpandableContext,
-      InputContext,
-      LinkContext,
-      MediaPlayerContext,
-      NavigationContext,
-      OverlayContext,
-      PressableContext,
-    )
+    .items(...NonRootLocationContexts)
     // Items in the LocationStack must have unique _type+id combinations
     .unique((a, b) => a._type === b._type && a.id === b.id)
 })
+
+
+
 
 const PressEvent = CommonInteractiveEventAttributes.keys({
   _type: Joi.string().valid('PressEvent').required()
@@ -115,8 +107,6 @@ const Event = Joi.alternatives(
   InputChangeEvent,
   SuccessEvent
 )
-
-
 
 
 
@@ -142,6 +132,10 @@ console.log('Event validation:', Event.validate({
     }
   ]
 }).error ?? 'valid')
+
+
+
+
 
 console.log('Context validation:', RootLocationContext.validate({
   _type: "RootLocationContext",

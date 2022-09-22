@@ -5,21 +5,37 @@
 import { z } from "zod";
 import crypto from "crypto";
 
-// All Contexts
-const CommonContextAttributes = z.object({
-  id: z.string()
-})
+// Some global enums
+const LocationContextTypes = z.enum([
+  'ContentContext',
+  'ExpandableContext',
+  'InputContext',
+  'LinkContext',
+  'MediaPlayerContext',
+  'NavigationContext',
+  'OverlayContext',
+  'PressableContext',
+  'RootLocationContext'
+])
+
+const GlobalContextTypes = z.enum([
+  'ApplicationContext',
+  'CookieIdContext',
+  'HttpContext',
+  'IdentityContext',
+  'InputValueContext',
+  'LocaleContext',
+  'MarketingContext',
+  'PathContext',
+  'SessionContext',
+])
+
 
 // Custom refinements
 const validateContextUniqueness = (contexts, ctx) => {
   const seenContexts = [];
   const duplicatedContexts = contexts.filter((context) => {
-    if (
-      seenContexts.find(
-        (seenContext) =>
-          seenContext._type === context._type && seenContext.id === context.id
-      )
-    ) {
+    if (seenContexts.find((seenContext) => seenContext._type === context._type && seenContext.id === context.id)) {
       return true;
     }
 
@@ -35,19 +51,42 @@ const validateContextUniqueness = (contexts, ctx) => {
   });
 }
 
-// Location Contexts
-const LocationContextTypes = z.enum([
-  'ContentContext',
-  'ExpandableContext',
-  'InputContext',
-  'LinkContext',
-  'MediaPlayerContext',
-  'NavigationContext',
-  'OverlayContext',
-  'PressableContext',
-  'RootLocationContext'
-])
+const validateInputValueContexts = (event, ctx) => {
+  const global_contexts = event.global_contexts ?? [];
+  const location_stack = event.location_stack ?? [];
+  const inputValueContexts = global_contexts.filter(
+    globalContext => globalContext._type === GlobalContextTypes.enum.InputValueContext
+  );
+  const inputContext = location_stack.find(
+    locationContext => locationContext._type === LocationContextTypes.enum.InputContext
+  );
+  if(inputValueContexts.find(({id}) => id !== inputContext.id)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `All InputValueContext instances should have id: ${inputContext.id}`,
+    })
+  }
+}
 
+const validateApplicationContextPresence = (global_contexts, ctx) => {
+  const applicationContext = global_contexts.find(
+    (globalContext) => globalContext._type === GlobalContextTypes.enum.ApplicationContext
+  );
+
+  if(!applicationContext) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `All Events require ApplicationContext in their Global Contexts`,
+    })
+  }
+}
+
+// Contexts
+const CommonContextAttributes = z.object({
+  id: z.string()
+})
+
+// Location Contexts
 const ContentContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.ContentContext),
 });
@@ -85,6 +124,62 @@ const RootLocationContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.RootLocationContext),
 }).strict();
 
+// Global Contexts
+const ApplicationContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.ApplicationContext),
+});
+
+const CookieIdContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.CookieIdContext),
+  cookie_id: z.string()
+});
+
+const HttpContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.HttpContext),
+  referer: z.string(),
+  user_agent: z.string(),
+  remote_address: z.string().optional()
+});
+
+const IdentityContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.IdentityContext),
+  value: z.string()
+});
+
+const InputValueContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.InputValueContext),
+  value: z.string()
+});
+
+const LocaleContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.LocaleContext),
+  language_code: z.string().optional(), // TODO add refinement to validate ISO 639-1
+  country_code: z.string().optional(), // TODO add refinement to validate ISO 3166-1 alpha-2
+});
+
+const MarketingContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.MarketingContext),
+  source: z.string(),
+  medium: z.string(),
+  campaign: z.string(),
+  term: z.string().optional,
+  content: z.string().optional,
+  source_platform: z.string().optional,
+  creative_format: z.string().optional,
+  marketing_tactic: z.string().optional,
+});
+
+const PathContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.PathContext),
+});
+
+const SessionContext = CommonContextAttributes.extend({
+  _type: z.literal(GlobalContextTypes.enum.SessionContext),
+  hit_number: z.number()
+});
+
+
+// Location Stack and Global Contexts arrays
 const LocationStack = z
   .tuple([RootLocationContext])
   .rest(
@@ -102,56 +197,6 @@ const LocationStack = z
   .superRefine(validateContextUniqueness)
 ;
 
-// Global Contexts
-const GlobalContextTypes = z.enum([
-  'ApplicationContext',
-  'CookieIdContext',
-  'HttpContext',
-  'IdentityContext',
-  'InputValueContext',
-  'LocaleContext',
-  'MarketingContext',
-  'PathContext',
-  'SessionContext',
-])
-
-const ApplicationContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.ApplicationContext),
-});
-
-const CookieIdContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.CookieIdContext),
-});
-
-const HttpContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.HttpContext),
-});
-
-const IdentityContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.IdentityContext),
-});
-
-const InputValueContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.InputValueContext),
-  value: z.string()
-});
-
-const LocaleContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.LocaleContext),
-});
-
-const MarketingContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.MarketingContext),
-});
-
-const PathContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.PathContext),
-});
-
-const SessionContext = CommonContextAttributes.extend({
-  _type: z.literal(GlobalContextTypes.enum.SessionContext),
-});
-
 const GlobalContexts = z.array(
   z.discriminatedUnion('_type', [
     ApplicationContext,
@@ -165,41 +210,26 @@ const GlobalContexts = z.array(
     SessionContext,
   ]))
   .superRefine(validateContextUniqueness)
+  .superRefine(validateApplicationContextPresence)
 ;
 
-const InputChangeEvent = z.object({
+// Events
+
+const CommonEventAttributes = z.object({
   id: z.string().uuid(),
-  _type: z.literal('InputChangeEvent'),
-  location_stack: LocationStack.refine(
-    locationStack => locationStack.find(
-      (locationContext) => locationContext._type === 'InputContext'
-    ),
-    { message: 'InputChangeEvent requires InputContext in its LocationStack' }
-  ),
-  global_contexts: GlobalContexts.optional()
-}).superRefine((event, ctx) => {
-  const global_contexts = event.global_contexts ?? [];
-  const location_stack = event.location_stack ?? [];
-  const inputValueContexts = global_contexts.filter( globalContext => globalContext._type === 'InputValueContext');
-  const inputContext = location_stack.find(locationContext => locationContext._type === 'InputContext');
-  if(inputValueContexts.find(({id}) => id !== inputContext.id)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `All InputValueContext instances should have id: ${inputContext.id}`,
-    })
-  }
+  global_contexts: GlobalContexts
 })
 
-// Type inference
-
-type InputChangeEvent = z.infer<typeof InputChangeEvent>;
-
-const event: InputChangeEvent = {
-  _type: "InputChangeEvent",
-  id: crypto.randomUUID()
-}
-
-InputChangeEvent.parse(event);
+const InputChangeEvent = CommonEventAttributes.extend({
+  _type: z.literal('InputChangeEvent'), // TODO create enum of event names
+  location_stack: LocationStack
+    .refine(
+      locationStack => locationStack.find(
+        (locationContext) => locationContext._type === LocationContextTypes.enum.InputContext
+      ),
+      { message: 'InputChangeEvent requires InputContext in its LocationStack' }
+    ),
+}).superRefine(validateInputValueContexts)
 
 // Some testing
 
@@ -247,10 +277,16 @@ console.log('InputChangeEvent validation:', InputChangeEvent.parse({
       _type: "InputContext",
       id: 'input'
     }
+  ],
+  global_contexts: [
+    {
+      _type: 'ApplicationContext',
+      id: 'test'
+    }
   ]
 }))
 
-console.log('InputChangeEvent validation (should fail):', InputChangeEvent.parse({
+console.log('InputChangeEvent validation:', InputChangeEvent.parse({
   _type: 'InputChangeEvent',
   id: crypto.randomUUID(),
   location_stack: [
@@ -265,8 +301,12 @@ console.log('InputChangeEvent validation (should fail):', InputChangeEvent.parse
   ],
   global_contexts: [
     {
+      _type: 'ApplicationContext',
+      id: 'test'
+    },
+    {
       _type: 'InputValueContext',
-      id: 'wrong',
+      id: 'input',
       value: '123'
     }
   ]
