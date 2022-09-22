@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 
 import bach
-from bach.series import Series, SeriesString
+from bach.series import Series, SeriesString, SeriesInt64
 from bach.expression import Expression, join_expressions
 from sql_models.constants import NotSet, not_set
 from typing import List, Union, TYPE_CHECKING, cast
@@ -148,7 +148,7 @@ class FunnelDiscovery:
         data: bach.DataFrame,
         steps: int,
         by: GroupByType = not_set,
-        location_stack: Union[str, 'SeriesString', 'SeriesLocationStack'] = None,
+        location_stack: Union[str, 'SeriesString', 'SeriesLocationStack', 'SeriesInt64'] = None,
         add_conversion_step_column: bool = False,
         only_converted_paths: bool = False,
         start_from_end: bool = False,
@@ -268,7 +268,7 @@ class FunnelDiscovery:
         data: bach.DataFrame,
         steps: int,
         by: List[str],
-        location_stack: Union['SeriesString', 'SeriesLocationStack'],
+        location_stack: Union['SeriesString', 'SeriesLocationStack', 'SeriesInt64'],
         start_from_end: bool,
         add_first_conversion_column: bool,
     ) -> bach.DataFrame:
