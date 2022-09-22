@@ -8,7 +8,7 @@ from uuid import UUID
 import bach
 import pandas as pd
 import pytest
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 from modelhub.pipelines.identity_resolution import IdentityResolutionPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
