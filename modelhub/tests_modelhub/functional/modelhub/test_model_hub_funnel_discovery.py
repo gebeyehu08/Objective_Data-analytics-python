@@ -21,7 +21,6 @@ def _add_root_offset_sorting(df: bach.DataFrame, asc: bool = True) -> bach.DataF
 def test_get_navigation_paths(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
     funnel = modelhub.get_funnel_discovery()
-
     df = df.sort_values(by='moment')
 
     # this is the order of all nice names when aggregated
@@ -122,6 +121,30 @@ def test_get_navigation_paths(db_params):
                 'Link: Docs located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
                 None, None
             ],
+        ],
+        use_to_pandas=True,
+    )
+
+    # test different location stack column by name and different type
+    bts = funnel.get_navigation_paths(by='user_id', data=df, steps=2, location_stack='session_hit_number')
+    bts = _add_root_offset_sorting(bts)
+    assert_equals_data(
+        bts,
+        expected_columns=[
+            'session_hit_number_step_1', 'session_hit_number_step_2'
+        ],
+        expected_data=[
+            [1, 2],
+            [2, 1],
+            [1, 1],
+            [1, 2],
+            [2, 3],
+            [3, 1],
+            [1, 2],
+            [2, 1],
+            [1, 2],
+            [2, 1],
+            [1, 1]
         ],
         use_to_pandas=True,
     )

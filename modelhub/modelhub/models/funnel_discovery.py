@@ -217,9 +217,7 @@ class FunnelDiscovery:
 
         check_objectiv_dataframe(df=data, columns_to_check=['moment'])
 
-        column = location_stack
-        if column is None:
-            column = data['location_stack']
+        column = location_stack or data['location_stack']
         if type(column) == str:
             column = data[column]
 
