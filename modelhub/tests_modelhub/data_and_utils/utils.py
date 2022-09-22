@@ -5,13 +5,11 @@ from typing import Dict, Any, NamedTuple, Optional
 from uuid import UUID
 
 import bach
-from bach import DataFrame
+import pandas as pd
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from tests.functional.bach.test_data_and_utils import run_query
-from tests.unit.bach.util import get_pandas_df
 
 from modelhub import ModelHub
 from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL
@@ -38,11 +36,14 @@ def _convert_moment_to_utc_time(moment: str) -> int:
     return int(dt.timestamp() * 1e3)
 
 
-def get_df_with_json_data_real(db_params: DBParams) -> DataFrame:
+def get_df_with_json_data_real(db_params: DBParams) -> bach.DataFrame:
     engine = create_engine_from_db_params(db_params)
-    df = DataFrame.from_pandas(
+    pdf = pd.DataFrame.from_records(TEST_DATA_JSON_REAL, columns=JSON_COLUMNS_REAL)
+    pdf.set_index(pdf.columns[0], drop=False, inplace=True)
+
+    df = bach.DataFrame.from_pandas(
         engine=engine,
-        df=get_pandas_df(dataset=TEST_DATA_JSON_REAL, columns=JSON_COLUMNS_REAL),
+        df=pdf,
         convert_objects=True,
     )
     df['global_contexts'] = df.global_contexts.astype('json')
@@ -118,6 +119,13 @@ def setup_db(engine: Engine, table_name: str):
     _insert_records_in_db(engine, table_name=table_name, columns=columns)
 
 
+def _run_query(engine: Engine, sql: str):
+    sql = sql.replace('%', '%%')
+    with engine.connect() as conn:
+        res = conn.execute(sql)
+        return res
+
+
 def _prep_db_table(engine, table_name: str, columns: Dict[str, Any]):
     if is_postgres(engine):
         column_stmt = ','.join(f'{col_name} {db_type}' for col_name, db_type in columns.items())
@@ -129,7 +137,7 @@ def _prep_db_table(engine, table_name: str, columns: Dict[str, Any]):
         """
     else:
         raise Exception()
-    run_query(engine, sql)
+    _run_query(engine, sql)
 
 
 def _insert_records_in_db(engine, table_name: str, columns: Dict[str, Any]):
@@ -146,4 +154,4 @@ def _insert_records_in_db(engine, table_name: str, columns: Dict[str, Any]):
 
     values_stmt = ','.join(records)
     sql = f'insert into {table_name} ({column_stmt}) values {values_stmt}'
-    run_query(engine, sql)
+    return _run_query(engine, sql)
