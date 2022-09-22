@@ -54,7 +54,6 @@ _FAKE_SESSIONIZED_DATA = [
         'is_start_of_session': None,
     },
 ]
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1266')  # TODO: Athena
 
 
 def _get_sessionized_data_pipeline() -> SessionizedDataPipeline:
