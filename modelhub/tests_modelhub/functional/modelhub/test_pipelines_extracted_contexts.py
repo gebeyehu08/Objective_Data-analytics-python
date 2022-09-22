@@ -8,7 +8,7 @@ from typing import List
 import bach
 import pandas as pd
 import pytest
-from sql_models.util import is_bigquery
+from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 from modelhub.pipelines.extracted_contexts import BaseExtractedContextsPipeline, get_extracted_context_pipeline
@@ -24,18 +24,23 @@ _EXPECTED_CONTEXT_COLUMNS = [
     'event_type',
     'stack_event_types',
 ]
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1261')  # TODO: Athena
 
 
 def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.DataFrame:
     parsed_data = get_parsed_objectiv_data(engine)
-    if not is_bigquery(engine):
+    if is_postgres(engine):
         assert db_format == DBParams.Format.OBJECTIV
         return pd.DataFrame(parsed_data)
+
+    assert db_format == DBParams.Format.SNOWPLOW
     events_with_domain_sessionid = ['12b55ed5-4295-4fc1-bf1f-88d64d1ac304', '12b55ed5-4295-4fc1-bf1f-88d64d1ac305']
-    bq_data = []
+    sp_data = []
+
     for event in parsed_data:
-        if db_format == DBParams.Format.SNOWPLOW :
-            bq_data.append(
+        if db_format == DBParams.Format.SNOWPLOW:
+
+            sp_data.append(
                 {
                     'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
                     'event_id': str(event['event_id']),
@@ -58,7 +63,7 @@ def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.Da
         else:
             raise TypeError(f"Unsupported db format {db_format}")
 
-    return pd.DataFrame(bq_data)
+    return pd.DataFrame(sp_data)
 
 
 def get_expected_context_pandas_df(

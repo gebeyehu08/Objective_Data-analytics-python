@@ -9,6 +9,9 @@ from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test, DBP
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
 
+
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1263')  # TODO: Athena
+
 # map
 def test_is_first_session(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')

@@ -6,10 +6,11 @@ import pytest
 
 from bach import DataFrame
 
-from modelhub.pipelines.extracted_contexts import BaseExtractedContextsPipeline, get_extracted_context_pipeline
+from modelhub.pipelines.extracted_contexts import get_extracted_context_pipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
     DBParams
 
+pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1261')  # TODO: Athena
 
 @pytest.fixture(autouse=True)
 def patch_extracted_contexts_validations(monkeypatch, db_params):
