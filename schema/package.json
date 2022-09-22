@@ -1,0 +1,21 @@
+{
+  "name": "@objectiv/validation",
+  "version": "0.0.1",
+  "description": "Objectiv Validation for the Open Analytics Taxonomy",
+  "main": "index.js",
+  "repository": "https://github.com/objectiv/objectiv-analytics/schema",
+  "type": "module",
+  "author": {
+    "name": "Surai Di Rosa",
+    "email": "surai.dirosa@gmail.com",
+    "url": "https://github.com/sdirosa"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "joi": "^17.6.0",
+    "zod": "^3.19.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.18"
+  }
+}
