@@ -33,6 +33,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 
 	start_date = '2022-06-01'
 	end_date = '2022-06-30'
+	pd.set_option('display.max_colwidth', 93)
 
 .. doctest:: explore-data
 	:skipif: engine is None

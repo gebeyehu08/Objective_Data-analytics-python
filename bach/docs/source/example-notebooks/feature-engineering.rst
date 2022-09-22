@@ -8,28 +8,67 @@
 Feature engineering with Bach
 =============================
 
-This example shows how Bach can be used for feature engineering. We'll go through describing the data, finding
-outliers, transforming data and grouping and aggregating data so that a useful feature set is created that
-can be used for machine learning. We have a separate example available that goes into the details of how a
-data set prepared in Bach can be used for machine learning with sklearn 
-:doc:`here <machine-learning>`.
+This example notebook shows how :doc:`modeling library Bach <../bach/index>` can be used for feature 
+engineering.
 
-This example is also available in a `notebook
-<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/feature-engineering.ipynb>`_
-to run on your own data or use our `quickstart <https://objectiv.io/docs/home/try-the-demo/>`_ to try it 
-out with demo data in 5 minutes.
+It's also available as a `full Jupyter notebook 
+<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-demo-notebook.ipynb>`_
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
+or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
+here is the same as in the Demo.
 
-First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
-:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
+We'll go through describing the data, finding outliers, transforming data, and grouping & aggregating data so 
+that a useful feature set is created that can be used for machine learning. To see details of how such a 
+dataset can be used for machine learning with sklearn, :doc:`see our ML notebook <./machine-learning>`.
 
-This object points to all data in the data set. Too large to run in pandas and therefore sklearn. For the
-data set that we need, we aggregate to user level, at which point it is small enough to fit in memory.
+Get started
+-----------
+We first have to instantiate the model hub and an Objectiv DataFrame object.
 
-We start with showing the first couple of rows from the data set and describing the entire data set.
+.. doctest:: feature-engineering
+	:skipif: engine is None
 
-.. code-block:: python
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-03-01'
+	>>> end_date = None
 
-    df.head()
+.. we override the timeframe for the doctests below
+	
+.. doctest:: feature-engineering
+	:hide:
+
+	>>> start_date = '2022-03-01'
+	>>> end_date = '2022-03-31'
+	>>> pd.set_option('display.max_colwidth', 93)
+
+.. doctest:: feature-engineering
+	:skipif: engine is None
+
+	>>> from modelhub import ModelHub, display_sql_as_markdown
+	>>> # instantiate the model hub and set the default time aggregation to daily
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	>>> # get a Bach DataFrame with Objectiv data within a defined timeframe
+	>>> df = modelhub.get_objectiv_dataframe(start_date=start_date, end_date=end_date)
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
+	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
+
+This object points to all data in the dataset, which is too large to run in pandas and therefore sklearn. For 
+the dataset that we need, we will aggregate to user level, at which point it is small enough to fit in memory.
+
+We'll start with showing the first couple of rows and describing the entire dataset.
+
+Describe the data
+-----------------
+
+.. doctest:: feature-engineering
+	:skipif: engine is None
+
+	>>> df.head()
+	TODO
 
 Columns of interest are 'user_id', this is what we will aggregate to. 'moment' contains timestamp info for the
 events. Global contexts (not present in this example) and the 'location_stack' contain most of the event 
@@ -37,13 +76,14 @@ specific data. The global contexts that you want to use in the analysis need to 
 the model hub. See the :ref:`open taxonomy example <location-stack-and-global-contexts>` for 
 how to use the location stack and global contexts.
 
-.. code-block:: python
+.. doctest:: feature-engineering
+	:skipif: engine is None
 
-    df.describe(include='all').head()
+	>>> df.describe(include='all').head()
+	TODO
 
-
-Creating a feature set
-----------------------
+Create a feature set
+--------------------
 We'd like to create a feature set that describes the behaviour of users in a way. We start with extracting
 the root location from the location stack. This indicates what parts of our website users have visited. Using
 `to_numpy()` shows the results as a numpy array.
