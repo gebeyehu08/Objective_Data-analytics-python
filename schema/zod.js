@@ -84,41 +84,41 @@ const validateApplicationContextPresence = (global_contexts, ctx) => {
 // Contexts
 const CommonContextAttributes = z.object({
   id: z.string()
-})
+});
 
 // Location Contexts
 const ContentContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.ContentContext),
-});
+}).strict();
 
 const ExpandableContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.ExpandableContext),
-});
+}).strict();
 
 const InputContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.InputContext),
-});
+}).strict();
 
 const LinkContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.LinkContext),
   href: z.string(),
-});
+}).strict();
 
 const MediaPlayerContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.MediaPlayerContext),
-});
+}).strict();
 
 const NavigationContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.NavigationContext),
-});
+}).strict();
 
 const OverlayContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.OverlayContext),
-});
+}).strict();
 
 const PressableContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.PressableContext),
-});
+}).strict();
 
 const RootLocationContext = CommonContextAttributes.extend({
   _type: z.literal(LocationContextTypes.enum.RootLocationContext),
@@ -127,35 +127,35 @@ const RootLocationContext = CommonContextAttributes.extend({
 // Global Contexts
 const ApplicationContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.ApplicationContext),
-});
+}).strict();
 
 const CookieIdContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.CookieIdContext),
   cookie_id: z.string()
-});
+}).strict();
 
 const HttpContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.HttpContext),
   referer: z.string(),
   user_agent: z.string(),
   remote_address: z.string().optional()
-});
+}).strict();
 
 const IdentityContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.IdentityContext),
   value: z.string()
-});
+}).strict();
 
 const InputValueContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.InputValueContext),
   value: z.string()
-});
+}).strict();
 
 const LocaleContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.LocaleContext),
   language_code: z.string().optional(), // TODO add refinement to validate ISO 639-1
   country_code: z.string().optional(), // TODO add refinement to validate ISO 3166-1 alpha-2
-});
+}).strict();
 
 const MarketingContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.MarketingContext),
@@ -167,16 +167,16 @@ const MarketingContext = CommonContextAttributes.extend({
   source_platform: z.string().optional,
   creative_format: z.string().optional,
   marketing_tactic: z.string().optional,
-});
+}).strict();
 
 const PathContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.PathContext),
-});
+}).strict();
 
 const SessionContext = CommonContextAttributes.extend({
   _type: z.literal(GlobalContextTypes.enum.SessionContext),
   hit_number: z.number()
-});
+}).strict();
 
 
 // Location Stack and Global Contexts arrays
@@ -218,7 +218,7 @@ const GlobalContexts = z.array(
 const CommonEventAttributes = z.object({
   id: z.string().uuid(),
   global_contexts: GlobalContexts
-})
+});
 
 const InputChangeEvent = CommonEventAttributes.extend({
   _type: z.literal('InputChangeEvent'), // TODO create enum of event names
@@ -229,7 +229,8 @@ const InputChangeEvent = CommonEventAttributes.extend({
       ),
       { message: 'InputChangeEvent requires InputContext in its LocationStack' }
     ),
-}).superRefine(validateInputValueContexts)
+})
+  .superRefine(validateInputValueContexts)
 
 // Some testing
 
