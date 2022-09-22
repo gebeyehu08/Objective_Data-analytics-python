@@ -3,7 +3,7 @@
  */
 
 const crypto = require('crypto');
-const { InputChangeEvent, LinkContext, LocationStack, RootLocationContext } = require("./dist/zod.js");
+const { InputChangeEvent, LinkContext, LocationStack, RootLocationContext } = require("./dist/validator.js");
 
 console.log(
   "RootLocationContext validation:",
