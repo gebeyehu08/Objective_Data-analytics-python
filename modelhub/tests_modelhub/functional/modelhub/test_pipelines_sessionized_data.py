@@ -11,7 +11,8 @@ from sql_models.util import is_bigquery
 from bach.testing import assert_equals_data
 
 from modelhub import SessionizedDataPipeline
-from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
+from tests_modelhub.data_and_utils.data_parsers import get_extracted_contexts_data_from_parsed_objectiv_data
+from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 _SESSION_GAP_SECONDS = 180
 
@@ -63,8 +64,9 @@ def _get_sessionized_data_pipeline() -> SessionizedDataPipeline:
 def test_get_pipeline_result(db_params) -> None:
     pipeline = _get_sessionized_data_pipeline()
     engine = create_engine_from_db_params(db_params)
-    pdf = pd.DataFrame(get_parsed_objectiv_data(engine))[['event_id', 'cookie_id', 'moment']]
-    pdf = pdf.rename(columns={'cookie_id': 'user_id'})
+    pdf = pd.DataFrame(
+        get_extracted_contexts_data_from_parsed_objectiv_data(db_params.format)
+    )[['event_id', 'user_id', 'moment']]
 
     user_id = UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1')
     pdf = pdf[pdf['user_id'] == user_id]
