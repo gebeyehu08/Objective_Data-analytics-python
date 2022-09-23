@@ -29,9 +29,6 @@ const GlobalContextTypes = z.enum([
   "SessionContext",
 ]);
 
-// TODO finish this up
-const EventTypes = z.enum(["InputChangeEvent", "PressableEvent"]);
-
 // Custom refinements
 const validateContextUniqueness = (contexts, ctx) => {
   const seenContexts = [];
@@ -232,7 +229,7 @@ const CommonEventAttributes = z.object({
 });
 
 export const InputChangeEvent = CommonEventAttributes.extend({
-  _type: z.literal(EventTypes.enum.InputChangeEvent),
+  _type: z.literal("InputChangeEvent"), // TODO use enums
   location_stack: LocationStack.refine(
     (locationStack) =>
       locationStack.find(
@@ -246,7 +243,7 @@ export const InputChangeEvent = CommonEventAttributes.extend({
   .superRefine(validateInputValueContexts);
 
 export const PressEvent = CommonEventAttributes.extend({
-  _type: z.literal(EventTypes.enum.PressEvent),
+  _type: z.literal("PressEvent"), // TODO use enums
   location_stack: LocationStack.refine(
     (locationStack) =>
       locationStack.find(

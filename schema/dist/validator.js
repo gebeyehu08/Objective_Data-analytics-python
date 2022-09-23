@@ -5246,10 +5246,6 @@ var GlobalContextTypes = mod.enum([
     "PathContext",
     "SessionContext"
 ]);
-var EventTypes = mod.enum([
-    "InputChangeEvent",
-    "PressableEvent"
-]);
 var validateContextUniqueness = function(contexts, ctx) {
     var seenContexts = [];
     var duplicatedContexts = contexts.filter(function(context) {
@@ -5403,7 +5399,7 @@ var CommonEventAttributes = mod.object({
     global_contexts: GlobalContexts
 });
 var InputChangeEvent = CommonEventAttributes.extend({
-    _type: mod.literal(EventTypes.enum.InputChangeEvent),
+    _type: mod.literal("InputChangeEvent"),
     location_stack: LocationStack.refine(function(locationStack) {
         return locationStack.find(function(locationContext) {
             return locationContext._type === LocationContextTypes.enum.InputContext;
@@ -5413,7 +5409,7 @@ var InputChangeEvent = CommonEventAttributes.extend({
     })
 }).strict().superRefine(validateInputValueContexts);
 var PressEvent = CommonEventAttributes.extend({
-    _type: mod.literal(EventTypes.enum.PressEvent),
+    _type: mod.literal("PressEvent"),
     location_stack: LocationStack.refine(function(locationStack) {
         return locationStack.find(function(locationContext) {
             return locationContext._type === LocationContextTypes.enum.PressableContext || locationContext._type === LocationContextTypes.enum.LinkContext;

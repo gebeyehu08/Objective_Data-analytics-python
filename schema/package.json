@@ -6,8 +6,10 @@
   "repository": "https://github.com/objectiv/objectiv-analytics/schema",
   "scripts": {
     "build": "tsup validator.js",
+    "serve": "node validator-service.js",
+    "validate": "node validator-cli.js",
     "prettier": "prettier --write validator*.js",
-    "validate": "es5-validator dist/validator.js"
+    "es5-validate": "es5-validator dist/validator.js"
   },
   "author": {
     "name": "Surai Di Rosa",
@@ -16,6 +18,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "express": "^4.18.1",
     "zod": "^3.19.1"
   },
   "devDependencies": {
