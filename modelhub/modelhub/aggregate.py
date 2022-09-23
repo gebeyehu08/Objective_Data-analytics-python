@@ -427,9 +427,12 @@ class Aggregate:
         if _end_date is not None:
             data = data[data['moment'] < _end_date]
 
-        # in BigQuery columns cannot start with numbers
-        data['cohort_distance_prefix'] = '_'
+        # prepare cohort_distance value as a valid column name based on engine
+        # e.g in BigQuery columns cannot start with numbers, and Athena does not allow dots in column names.
+        data['cohort_distance'] = data['cohort_distance'].round()
         data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
+        data['cohort_distance'] = data['cohort_distance'].str.replace('.0', '')
+        data['cohort_distance_prefix'] = '_'
         data['cohort_distance'] = data['cohort_distance_prefix'] + data['cohort_distance']
 
         retention_matrix = data.groupby(['first_cohort',
@@ -437,7 +440,7 @@ class Aggregate:
             level='cohort_distance')
 
         # renaming columns, removing string attached after unstacking
-        column_name_map = {col: col.replace('__user_id_nunique', '').replace('.0', '')
+        column_name_map = {col: col.replace('__user_id_nunique', '')
                            for col in retention_matrix.data_columns}
         retention_matrix = retention_matrix.rename(columns=column_name_map)
 
