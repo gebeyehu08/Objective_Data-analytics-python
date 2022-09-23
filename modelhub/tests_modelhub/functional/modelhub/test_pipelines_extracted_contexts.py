@@ -220,7 +220,7 @@ def test_apply_filters_duplicated_event_ids_n_dates(db_params) -> None:
     )
     df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
     result = context_pipeline._process_data(df)
-    result = context_pipeline._apply_filters(result, start_date='2022-01-02', end_date='2022-01-04')
+    result = context_pipeline._apply_filters(result, start_date='2022-01-02', end_date='2022-01-05')
     assert_equals_data(
         result.sort_values(by='event_id')[['event_id', 'moment']],
         expected_columns=['event_id', 'moment'],
