@@ -195,6 +195,43 @@ def test_apply_filters_duplicated_event_ids(db_params) -> None:
     )
 
 
+@pytest.mark.skip_postgres
+def test_apply_filters_duplicated_event_ids_n_dates(db_params) -> None:
+    context_pipeline = _get_extracted_contexts_pipeline(db_params)
+    engine = context_pipeline._engine
+
+    tstamps = [
+        datetime.datetime(2022, 1, 1, 12, 0, 0),
+        datetime.datetime(2022, 1, 1, 12, 0, 1),
+        datetime.datetime(2022, 1, 2),
+        datetime.datetime(2022, 1, 5),
+        datetime.datetime(2022, 1, 3),
+        datetime.datetime(2022, 1, 4)
+    ]
+    pdf = pd.DataFrame(
+        {
+            'event_id': ['1', '1', '4', '1', '4', '3'],
+            'network_userid': ['1'] * 6,
+            'domain_sessionid': ['1'] * 6,
+            'collector_tstamp': tstamps,
+            'true_tstamp': tstamps,
+            'contexts_io_objectiv_location_stack_1_0_0': ['{}'] * 6,
+        }
+    )
+    df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+    result = context_pipeline._process_data(df)
+    result = context_pipeline._apply_filters(result, start_date='2022-01-02', end_date='2022-01-05')
+    assert_equals_data(
+        result.sort_values(by='event_id')[['event_id', 'moment']],
+        expected_columns=['event_id', 'moment'],
+        expected_data=[
+            ['3', datetime.datetime(2022, 1, 4)],
+            ['4', datetime.datetime(2022, 1, 2)],
+        ],
+        use_to_pandas=True,
+    )
+
+
 def test_apply_filters(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
