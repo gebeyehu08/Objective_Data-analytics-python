@@ -50,6 +50,8 @@ from dotenv import dotenv_values
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
+from sql_models.util import is_athena
+
 # Load settings from .test_env file, but allow overrides from Environment variables
 _DOT_ENV_FILE = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/.secrets/.test_env'
 _ENV = {
@@ -170,11 +172,18 @@ def pytest_sessionfinish() -> None:
     # This way we clean the testing database
     for engine, tables_to_drop in _RECORDED_TEST_TABLES_PER_ENGINE.items():
         with engine.connect() as conn:
-            drop_tables_sql = '\n'.join(
-                f'DROP TABLE IF EXISTS {table_name};'
-                for table_name in tables_to_drop
+            if is_athena(engine):
+                # athena engine does not support executing multiple statements
+                for table_name in tables_to_drop:
+                    conn.execute(f'DROP TABLE IF EXISTS {table_name};')
+                continue
+
+            conn.execute(
+                '\n'.join(
+                    f'DROP TABLE IF EXISTS {table_name};'
+                    for table_name in tables_to_drop
+                )
             )
-            conn.execute(drop_tables_sql)
 
 
 def pytest_generate_tests(metafunc: Metafunc):
