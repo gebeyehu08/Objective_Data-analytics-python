@@ -2,8 +2,14 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-const crypto = require('crypto');
-const { InputChangeEvent, LinkContext, LocationStack, RootLocationContext } = require("./dist/validator.js");
+const crypto = require("crypto");
+const {
+  InputChangeEvent,
+  LinkContext,
+  LocationStack,
+  RootLocationContext,
+  validate,
+} = require("./dist/validator.js");
 
 console.log(
   "RootLocationContext validation:",
@@ -71,7 +77,7 @@ console.log(
 
 console.log(
   "InputChangeEvent validation:",
-  InputChangeEvent.parse({
+  validate({
     _type: "InputChangeEvent",
     id: crypto.randomUUID(),
     location_stack: [
@@ -93,6 +99,30 @@ console.log(
         _type: "InputValueContext",
         id: "input",
         value: "123",
+      },
+    ],
+  })
+);
+
+console.log(
+  "PressEvent validation:",
+  validate({
+    _type: "PressEvent",
+    id: crypto.randomUUID(),
+    location_stack: [
+      {
+        _type: "RootLocationContext",
+        id: "test",
+      },
+      {
+        _type: "PressableContext",
+        id: "button",
+      },
+    ],
+    global_contexts: [
+      {
+        _type: "ApplicationContext",
+        id: "test",
       },
     ],
   })

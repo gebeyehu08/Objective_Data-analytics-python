@@ -5,8 +5,8 @@
   "main": "index.js",
   "repository": "https://github.com/objectiv/objectiv-analytics/schema",
   "scripts": {
-    "build": "tsup validator.ts",
-    "prettier": "prettier --write validator.ts",
+    "build": "tsup validator.js",
+    "prettier": "prettier --write validator*.js",
     "validate": "es5-validator dist/validator.js"
   },
   "author": {
@@ -20,10 +20,10 @@
   },
   "devDependencies": {
     "@swc/core": "^1.3.2",
-    "@types/node": "^18.7.18",
     "es5-validator": "^1.3.1",
     "prettier": "^2.7.1",
     "tsup": "^6.2.3",
-    "typescript": "^4.8.3"
+    "typescript": "^4.8.3",
+    "yargs": "^17.5.1"
   }
 }

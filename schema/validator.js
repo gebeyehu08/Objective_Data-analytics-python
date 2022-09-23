@@ -3,7 +3,6 @@
  */
 
 import { z } from "zod";
-import { RefinementCtx } from "zod/lib/types";
 
 // Some global enums
 const LocationContextTypes = z.enum([
@@ -30,10 +29,12 @@ const GlobalContextTypes = z.enum([
   "SessionContext",
 ]);
 
+// TODO finish this up
+const EventTypes = z.enum(["InputChangeEvent", "PressableEvent"]);
+
 // Custom refinements
-type Context = { _type: string; id: string };
-const validateContextUniqueness = (contexts: Context[], ctx: RefinementCtx) => {
-  const seenContexts: Context[] = [];
+const validateContextUniqueness = (contexts, ctx) => {
+  const seenContexts = [];
   const duplicatedContexts = contexts.filter((context) => {
     if (
       seenContexts.find(
@@ -56,26 +57,20 @@ const validateContextUniqueness = (contexts: Context[], ctx: RefinementCtx) => {
   });
 };
 
-type Event = {
-  _type: string;
-  id: string;
-  global_contexts: Context[];
-  location_stack: Context[];
-};
-const validateInputValueContexts = (event: Event, ctx: RefinementCtx) => {
+const validateInputValueContexts = (event, ctx) => {
   const global_contexts = event.global_contexts ?? [];
   const location_stack = event.location_stack ?? [];
   const inputValueContexts = global_contexts.filter(
-    (globalContext: Context) =>
+    (globalContext) =>
       globalContext._type === GlobalContextTypes.enum.InputValueContext
   );
-  const inputContext: Context | undefined = location_stack.find(
-    (locationContext: Context) =>
+  const inputContext = location_stack.find(
+    (locationContext) =>
       locationContext._type === LocationContextTypes.enum.InputContext
   );
   if (
     inputContext &&
-    inputValueContexts.find(({ id }: Context) => id !== inputContext.id)
+    inputValueContexts.find(({ id }) => id !== inputContext.id)
   ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -84,10 +79,7 @@ const validateInputValueContexts = (event: Event, ctx: RefinementCtx) => {
   }
 };
 
-const validateApplicationContextPresence = (
-  global_contexts: Context[],
-  ctx: RefinementCtx
-) => {
+const validateApplicationContextPresence = (global_contexts, ctx) => {
   const applicationContext = global_contexts.find(
     (globalContext) =>
       globalContext._type === GlobalContextTypes.enum.ApplicationContext
@@ -240,7 +232,7 @@ const CommonEventAttributes = z.object({
 });
 
 export const InputChangeEvent = CommonEventAttributes.extend({
-  _type: z.literal("InputChangeEvent"), // TODO create enum of event names
+  _type: z.literal(EventTypes.enum.InputChangeEvent),
   location_stack: LocationStack.refine(
     (locationStack) =>
       locationStack.find(
@@ -249,4 +241,29 @@ export const InputChangeEvent = CommonEventAttributes.extend({
       ),
     { message: "InputChangeEvent requires InputContext in its LocationStack" }
   ),
-}).superRefine(validateInputValueContexts);
+})
+  .strict()
+  .superRefine(validateInputValueContexts);
+
+export const PressEvent = CommonEventAttributes.extend({
+  _type: z.literal(EventTypes.enum.PressEvent),
+  location_stack: LocationStack.refine(
+    (locationStack) =>
+      locationStack.find(
+        (locationContext) =>
+          locationContext._type ===
+            LocationContextTypes.enum.PressableContext ||
+          locationContext._type === LocationContextTypes.enum.LinkContext
+      ),
+    {
+      message:
+        "PressEvent requires PressableContext or LinkContext in its LocationStack",
+    }
+  ),
+}).strict();
+
+// TODO we can use a discriminated union for much nicer error messages after this gets merged:
+//  - https://github.com/colinhacks/zod/issues/1171
+// z.discriminatedUnion('_type', [InputChangeEvent, PressEvent])
+
+export const validate = z.union([InputChangeEvent, PressEvent]).safeParse;

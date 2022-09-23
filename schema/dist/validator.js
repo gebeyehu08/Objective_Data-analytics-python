@@ -428,7 +428,7 @@ var __toCommonJS = function(mod2) {
         value: true
     }), mod2);
 };
-// validator.ts
+// validator.js
 var validator_exports = {};
 __export(validator_exports, {
     ApplicationContext: function() {
@@ -485,6 +485,9 @@ __export(validator_exports, {
     PathContext: function() {
         return PathContext;
     },
+    PressEvent: function() {
+        return PressEvent;
+    },
     PressableContext: function() {
         return PressableContext;
     },
@@ -493,6 +496,9 @@ __export(validator_exports, {
     },
     SessionContext: function() {
         return SessionContext;
+    },
+    validate: function() {
+        return validate;
     }
 });
 module.exports = __toCommonJS(validator_exports);
@@ -5217,7 +5223,7 @@ var mod = /* @__PURE__ */ Object.freeze({
     quotelessJson: quotelessJson,
     ZodError: ZodError
 });
-// validator.ts
+// validator.js
 var LocationContextTypes = mod.enum([
     "ContentContext",
     "ExpandableContext",
@@ -5239,6 +5245,10 @@ var GlobalContextTypes = mod.enum([
     "MarketingContext",
     "PathContext",
     "SessionContext"
+]);
+var EventTypes = mod.enum([
+    "InputChangeEvent",
+    "PressableEvent"
 ]);
 var validateContextUniqueness = function(contexts, ctx) {
     var seenContexts = [];
@@ -5393,7 +5403,7 @@ var CommonEventAttributes = mod.object({
     global_contexts: GlobalContexts
 });
 var InputChangeEvent = CommonEventAttributes.extend({
-    _type: mod.literal("InputChangeEvent"),
+    _type: mod.literal(EventTypes.enum.InputChangeEvent),
     location_stack: LocationStack.refine(function(locationStack) {
         return locationStack.find(function(locationContext) {
             return locationContext._type === LocationContextTypes.enum.InputContext;
@@ -5401,7 +5411,21 @@ var InputChangeEvent = CommonEventAttributes.extend({
     }, {
         message: "InputChangeEvent requires InputContext in its LocationStack"
     })
-}).superRefine(validateInputValueContexts);
+}).strict().superRefine(validateInputValueContexts);
+var PressEvent = CommonEventAttributes.extend({
+    _type: mod.literal(EventTypes.enum.PressEvent),
+    location_stack: LocationStack.refine(function(locationStack) {
+        return locationStack.find(function(locationContext) {
+            return locationContext._type === LocationContextTypes.enum.PressableContext || locationContext._type === LocationContextTypes.enum.LinkContext;
+        });
+    }, {
+        message: "PressEvent requires PressableContext or LinkContext in its LocationStack"
+    })
+}).strict();
+var validate = mod.union([
+    InputChangeEvent,
+    PressEvent
+]).safeParse;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
     ApplicationContext: ApplicationContext,
@@ -5422,7 +5446,9 @@ var InputChangeEvent = CommonEventAttributes.extend({
     NavigationContext: NavigationContext,
     OverlayContext: OverlayContext,
     PathContext: PathContext,
+    PressEvent: PressEvent,
     PressableContext: PressableContext,
     RootLocationContext: RootLocationContext,
-    SessionContext: SessionContext
+    SessionContext: SessionContext,
+    validate: validate
 });
