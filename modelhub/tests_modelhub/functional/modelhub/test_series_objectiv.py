@@ -6,8 +6,6 @@ from modelhub import __version__  # Any import from modelhub initializes all the
 from tests_modelhub.data_and_utils.utils import get_df_with_json_data_real, DBParams
 from bach.testing import assert_equals_data
 
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1268')  # TODO: Athena
-
 
 def test_get_real_data(db_params: DBParams):
     bt = get_df_with_json_data_real(db_params)
@@ -26,6 +24,7 @@ def test_get_real_data(db_params: DBParams):
     )
 
 
+@pytest.mark.skip_athena
 def test_objectiv_stack_type(db_params):
     bt = get_df_with_json_data_real(db_params)
 
@@ -45,6 +44,7 @@ def test_objectiv_stack_type(db_params):
     )
 
 
+@pytest.mark.skip_athena
 def test_objectiv_stack_type2(db_params):
     bt = get_df_with_json_data_real(db_params)
 
@@ -64,6 +64,7 @@ def test_objectiv_stack_type2(db_params):
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1268')
 def test_objectiv_stack_type3(db_params):
     bt = get_df_with_json_data_real(db_params)
 
@@ -84,6 +85,7 @@ def test_objectiv_stack_type3(db_params):
     )
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1268')
 def test_objectiv_stack_type4(db_params):
     bt = get_df_with_json_data_real(db_params)
 
