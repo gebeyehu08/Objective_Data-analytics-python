@@ -112,11 +112,11 @@ which captures the main areas users have visited. Using `to_numpy()` shows the r
 .. doctest:: feature-engineering
 	:skipif: engine is None
 
-	>>> df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
 	>>> # root series is later unstacked and its values might contain dashes
 	>>> # which are not allowed in BigQuery column names, lets replace them
-	>>> df['root'] = df['root'].str.replace('-', '_')
-	>>> df.root.unique().to_numpy()
+	>>> df['root_location'] = df['root_location'].str.replace('-', '_')
+	>>> df.root_location.unique().to_numpy()
 	array(['join_slack', 'jobs', 'home', 'tracking', 'blog', 'about',
 	       'taxonomy', 'modeling', 'privacy'], dtype=object)
 
@@ -129,7 +129,7 @@ Check any missing values
 .. doctest:: feature-engineering
 	:skipif: engine is None
 
-	>>> df.root.isnull().value_counts().head()
+	>>> df.root_location.isnull().value_counts().head()
 	root
 	False    3619
 	Name: value_counts, dtype: int64
@@ -150,7 +150,7 @@ We are interested in all `PressEvent` event types:
 .. doctest:: feature-engineering
 	:skipif: engine is None
 
-	>>> df[(df.event_type=='PressEvent')].root.unique().to_numpy()
+	>>> df[(df.event_type=='PressEvent')].root_location.unique().to_numpy()
 	array(['about', 'blog', 'home', 'jobs', 'modeling', 'privacy', 'taxonomy',
 	       'tracking'], dtype=object)
 
@@ -177,7 +177,7 @@ clicked in those sections.
 .. doctest:: feature-engineering
 	:skipif: engine is None
 
-	>>> features = df[(df.event_type=='PressEvent')].groupby(['user_id','root']).session_hit_number.count()
+	>>> features = df[(df.event_type=='PressEvent')].groupby(['user_id','root_location']).session_hit_number.count()
 
 .. doctest:: feature-engineering
 	:skipif: engine is None
