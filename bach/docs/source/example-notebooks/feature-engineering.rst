@@ -130,7 +130,7 @@ Check any missing values
 	:skipif: engine is None
 
 	>>> df.root_location.isnull().value_counts().head()
-	root
+	root_location
 	False    3619
 	Name: value_counts, dtype: int64
 
@@ -158,13 +158,13 @@ We are interested in all `PressEvent` event types:
 	:skipif: engine is None
 
 	>>> df[(df.event_type=='PressEvent')].describe(include='string').head()
-	         event_type      root
+	         event_type root_location
 	__stat
-	count          1041      1041
-	min      PressEvent     about
-	max      PressEvent  tracking
-	nunique           1         8
-	mode     PressEvent      home
+	count          1041          1041
+	min      PressEvent         about
+	max      PressEvent      tracking
+	nunique           1             8
+	mode     PressEvent          home
 
 Create the variables
 ~~~~~~~~~~~~~~~~~~~~
@@ -297,7 +297,7 @@ using `fillna` to fill missing values.
 	* :doc:`bach.DataFrame.describe <../bach/api-reference/DataFrame/bach.DataFrame.describe>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
 	* :doc:`bach.Series.count <../bach/api-reference/Series/bach.Series.count>`
-	* :doc:`bach.DataFrame.count <../bach/api-reference/DataFrame/count>`
+	* :doc:`bach.DataFrame.count <../bach/api-reference/DataFrame/bach.DataFrame.count>`
 	* :doc:`bach.DataFrame.materialize <../bach/api-reference/DataFrame/bach.DataFrame.materialize>`
 	* :doc:`bach.DataFrame.unstack <../bach/api-reference/DataFrame/bach.DataFrame.unstack>`
 	* :doc:`modelhub.Aggregate.session_duration <../open-model-hub/models/aggregation/modelhub.Aggregate.session_duration>`
@@ -395,7 +395,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
 	          FROM "context_data___d6845511b784682d2030cb9537520ebf"
@@ -430,7 +430,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
 	          FROM "session_id_and_count___766015b8f4afe35c2a46f582f7f7f7e7"
 	       ),
-	       "getitem_where_boolean___e6065d1a5f747ede50f0386b2d4aa6c9" AS (
+	       "getitem_where_boolean___d4fe3c3c09fb76e919f12b1baa6efe63" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -440,31 +440,31 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "stack_event_types" AS "stack_event_types",
 	               "session_id" AS "session_id",
 	               "session_hit_number" AS "session_hit_number",
-	               REPLACE(jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id', '-', '_') AS "root"
+	               REPLACE(jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id', '-', '_') AS "root_location"
 	          FROM "objectiv_sessionized_data___bd69174ccede8591d3839d22ec8f0a00"
 	         WHERE ("event_type" = 'PressEvent')
 	       ),
-	       "reset_index___73206ed4f3699ad9f5561314aaa127b5" AS (
+	       "reset_index___bba721c8361156e1a86903dce88acb46" AS (
 	        SELECT "user_id" AS "user_id",
-	               "root" AS "root",
+	               "root_location" AS "root_location",
 	               count("session_hit_number") AS "session_hit_number"
-	          FROM "getitem_where_boolean___e6065d1a5f747ede50f0386b2d4aa6c9"
+	          FROM "getitem_where_boolean___d4fe3c3c09fb76e919f12b1baa6efe63"
 	         GROUP BY "user_id",
-	                  "root"
+	                  "root_location"
 	       ),
-	       "unstack___473dffd0cfa2f14db3316a66348b3e46" AS (
+	       "unstack___757b4718b8eba9f9f2578abb80f4f580" AS (
 	        SELECT "user_id" AS "user_id",
 	               max("session_hit_number") AS "session_hit_number",
-	               max("root") AS "root",
-	               max(CASE WHEN ("root" = 'about') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "about__session_hit_number",
-	               max(CASE WHEN ("root" = 'blog') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "blog__session_hit_number",
-	               max(CASE WHEN ("root" = 'home') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "home__session_hit_number",
-	               max(CASE WHEN ("root" = 'jobs') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "jobs__session_hit_number",
-	               max(CASE WHEN ("root" = 'modeling') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "modeling__session_hit_number",
-	               max(CASE WHEN ("root" = 'privacy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "privacy__session_hit_number",
-	               max(CASE WHEN ("root" = 'taxonomy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "taxonomy__session_hit_number",
-	               max(CASE WHEN ("root" = 'tracking') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "tracking__session_hit_number"
-	          FROM "reset_index___73206ed4f3699ad9f5561314aaa127b5"
+	               max("root_location") AS "root_location",
+	               max(CASE WHEN ("root_location" = 'about') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "about__session_hit_number",
+	               max(CASE WHEN ("root_location" = 'blog') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "blog__session_hit_number",
+	               max(CASE WHEN ("root_location" = 'home') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "home__session_hit_number",
+	               max(CASE WHEN ("root_location" = 'jobs') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "jobs__session_hit_number",
+	               max(CASE WHEN ("root_location" = 'modeling') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "modeling__session_hit_number",
+	               max(CASE WHEN ("root_location" = 'privacy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "privacy__session_hit_number",
+	               max(CASE WHEN ("root_location" = 'taxonomy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "taxonomy__session_hit_number",
+	               max(CASE WHEN ("root_location" = 'tracking') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "tracking__session_hit_number"
+	          FROM "reset_index___bba721c8361156e1a86903dce88acb46"
 	         GROUP BY "user_id"
 	       ),
 	       "getitem_having_boolean___bb91956150f694a8673ab91ca8069ce4" AS (
@@ -484,7 +484,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	          FROM "getitem_having_boolean___bb91956150f694a8673ab91ca8069ce4"
 	         GROUP BY "user_id"
 	       ),
-	       "merge_sql___94b9506c47428da8e5ba69b2deefb1d2" AS (
+	       "merge_sql___c1220e7d8a9011bc8d33050e3521812c" AS (
 	        SELECT COALESCE("l"."user_id", "r"."user_id") AS "user_id",
 	               (COALESCE("l"."about__session_hit_number", cast(0 AS bigint))) AS "about",
 	               (COALESCE("l"."blog__session_hit_number", cast(0 AS bigint))) AS "blog",
@@ -495,7 +495,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               (COALESCE("l"."taxonomy__session_hit_number", cast(0 AS bigint))) AS "taxonomy",
 	               (COALESCE("l"."tracking__session_hit_number", cast(0 AS bigint))) AS "tracking",
 	               "r"."session_duration" AS "session_duration"
-	          FROM "unstack___473dffd0cfa2f14db3316a66348b3e46" AS l
+	          FROM "unstack___757b4718b8eba9f9f2578abb80f4f580" AS l
 	          LEFT
 	            JOIN "merge_right___1c30913fb6ff459358acacf19290c224" AS r
 	            ON ("l"."user_id" = "r"."user_id")
@@ -509,7 +509,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	       "taxonomy" AS "taxonomy",
 	       "tracking" AS "tracking",
 	       (COALESCE("session_duration", cast('P0DT0H0M0S' AS interval))) AS "session_duration"
-	  FROM "merge_sql___94b9506c47428da8e5ba69b2deefb1d2"
+	  FROM "merge_sql___c1220e7d8a9011bc8d33050e3521812c"
 	<BLANKLINE>
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
