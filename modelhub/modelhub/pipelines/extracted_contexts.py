@@ -9,12 +9,13 @@ from functools import reduce
 import bach
 from typing import Optional, Dict, List
 
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 
 import modelhub
 from bach.types import StructuredDtype
 from sqlalchemy.engine import Engine
 
+from modelhub.series.operations.context_flattening import ContextFlattening
 from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
@@ -177,20 +178,15 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         if not df_cp.is_materialized:
             df_cp = df_cp.materialize()
 
-        date_filters = []
-        if start_date:
-            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
-        if end_date:
-            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
-
         all_filters = []
-        if date_filters:
-            all_filters.append(reduce(operator.and_, date_filters))
-
+        if start_date:
+            all_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
+        if end_date:
+            all_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
         if self.IS_DUPLICATED_EVENT_SERIES_NAME in df_cp.data_columns:
             all_filters.append(~df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME])
 
-        return df_cp[reduce(operator.or_, all_filters)]
+        return df_cp[reduce(operator.and_, all_filters)]
 
 
 class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
@@ -252,16 +248,15 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
                 f'{self._engine.name} requires flattening for global context extraction, but'
                 f'{ObjectivSupportedColumns.GLOBAL_CONTEXTS.value} is not present in dataframe.'
             )
-        df_cp = df.copy()
 
-        gc_series = (
-            df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
-        )
-        # Extract the requested global contexts
-        for gc in self._global_contexts:
-            if gc in df_cp.data:
-                raise ValueError(f'column {gc} already existing in df, can not extract global context')
-            df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
+        df_cp = df.copy()
+        if self._global_contexts:
+            flattened_contexts_df = ContextFlattening(
+                contexts_series=df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value],
+                global_contexts=self._global_contexts,
+                with_location_stack=False,
+            )()
+            df_cp = df_cp.copy_override(series={**df_cp.data, **flattened_contexts_df.data})
 
         return df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
 
@@ -404,6 +399,23 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         )
 
 
+class AthenaQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
+    def _get_global_contexts_dtypes_from_db_dtypes(
+        self, db_dtypes: Dict[str, StructuredDtype]
+    ) -> Dict[str, StructuredDtype]:
+        return {'contexts': bach.SeriesString.dtype}
+
+    def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        context_series = df['contexts'].copy_override_type(bach.SeriesJson).json['data']
+        flattened_contexts_df = ContextFlattening(
+            contexts_series=context_series,
+            global_contexts=self._global_contexts,
+            with_location_stack=True,
+        )()
+        df_cp = df.copy_override(series={**df.data, **flattened_contexts_df.data})
+        return df_cp.drop(columns=['contexts'])
+
+
 def get_extracted_context_pipeline(
     engine: Engine, table_name: str, global_contexts: List[str]
 ) -> BaseExtractedContextsPipeline:
@@ -416,5 +428,8 @@ def get_extracted_context_pipeline(
 
     if is_bigquery(engine):
         return BigQueryExtractedContextsPipeline(engine, table_name, global_contexts)
+
+    if is_athena(engine):
+        return AthenaQueryExtractedContextsPipeline(engine, table_name, global_contexts)
 
     raise Exception(f'There is no ExtractedContextsPipeline subclass for {engine.name}.')

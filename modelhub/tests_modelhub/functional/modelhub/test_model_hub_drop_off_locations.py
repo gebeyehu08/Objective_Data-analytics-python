@@ -2,13 +2,14 @@
 Copyright 2022 Objectiv B.V.
 """
 
+import pytest
 
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_drop_off_locations(db_params):
 
     df, modelhub = get_objectiv_dataframe_test(db_params)

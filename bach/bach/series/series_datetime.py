@@ -774,7 +774,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             return ToPandasInfo(dtype='object', function=self._parse_interval_bigquery)
 
         if is_athena(self.engine):
-            return ToPandasInfo(dtype='object', function=lambda value: pandas.Timedelta(seconds=value))
+            return ToPandasInfo(
+                dtype='object', function=lambda value: pandas.Timedelta(seconds=value).round(freq='us')
+            )
 
         return None
 

@@ -6,8 +6,9 @@ import modelhub
 from modelhub import __version__
 import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test, DBParams
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 from uuid import UUID
+
 
 # map
 def test_is_first_session(db_params):
@@ -581,7 +582,7 @@ def test_get_objectiv_dataframe_db_connection(db_params: DBParams, monkeypatch):
 
     mh = modelhub.ModelHub()
 
-    if 'postgresql' in db_params.url:
+    if 'postgresql' in db_params.url or 'awsathena' in db_params.url:
         ## Test standard connection
         mh.get_objectiv_dataframe(db_url=db_params.url, table_name=db_params.table_name)
 
