@@ -11,10 +11,9 @@ Open taxonomy how-to
 This notebook demonstrates what you can do with the :doc:`Bach modeling library <../bach/index>` and a 
 dataset that is validated against the `open analytics taxonomy <https://objectiv.io/docs/taxonomy/>`_. 
 
-It's also available in a 
-`notebook <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/open-taxonomy-how-to.ipynb>`_
-to run on your own data, or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it 
-out.
+It's also available in a `notebook 
+<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/open-taxonomy-how-to.ipynb>`_ to run on 
+your own data. The dataset used here is the same as in `Objectiv Go <https://objectiv.io/docs/home/go/>`__.
 
 The Objectiv :doc:`Bach API <../bach/api-reference/index>` is strongly pandas-like, to provide a familiar 
 interface to handle large amounts of data in a python environment, while supporting multiple data stores. See 
@@ -611,11 +610,31 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	 ORDER BY "moment" DESC NULLS LAST
 	<BLANKLINE>
 
-
-Where to go next
-----------------
-To dive further into working with the open taxonomy, 
+That's it! To dive further into working with the open taxonomy, 
 :doc:`see the Bach API reference <../bach/api-reference/index>`.
 
-You can also have a look at 
-:doc:`the example notebook demonstrating the open model hub basics <./modelhub-basics>`.
+`Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
+
+Next Steps
+----------
+
+Try the notebooks in Objectiv Go
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* :doc:`Open model hub basics <./feature-importance>` - use the pre-built models from the 
+	:doc:`open model hub <../open-model-hub/index>` in conjunction with modeling library 
+	:doc:`Bach <../bach/index>` to quickly build model stacks to answer common analytics questions.

@@ -14,9 +14,8 @@ Machine Learning directly on the raw data in your SQL database. We also have an 
 
 This notebook is also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/machine-learning.ipynb>`_
-to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
+The dataset used here is the same as in `Objectiv Go </docs/home/go/>`__.
 
 Get started
 -----------
@@ -326,17 +325,16 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	 ORDER BY cast(sum(cast(1 AS bigint)) AS bigint) DESC NULLS LAST
 	<BLANKLINE>
 
-
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 
 Next Steps
 ----------
 
-Play with this notebook in the demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Try the notebooks in Objectiv Go
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a fully functional `Objectiv demo pipeline <https://objectiv.io/docs/home/try-the-demo>`_ in under 5 
-minutes, and play with any of the example notebooks yourself.
+Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
 
 Use this notebook with your own data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

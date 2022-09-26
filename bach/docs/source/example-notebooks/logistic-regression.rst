@@ -22,9 +22,8 @@ on a full dataset collected with Objectiv. Examples of predictions you can creat
 
 It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-logistic-regression.ipynb>`_
-to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`). 
+The dataset used here is the same as in `Objectiv Go </docs/home/go/>`__.
 
 Get started
 -----------
@@ -445,7 +444,32 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	  FROM "get_sample___01a2af82e1e42baef3a9d9517947e18e"
 	<BLANKLINE>
 
-This demonstrates the core functionality of the :doc:`Logistic Regression model in the open model hub 
-<../open-model-hub/models/machine-learning/LogisticRegression/modelhub.LogisticRegression>`. Stay tuned for 
-more metrics to assess model fit, as well as simplifying splitting the data into training and testing 
-datasets.
+That's it! Stay tuned for more metrics to assess model fit, as well as simplifying splitting the data into 
+training and testing datasets.
+
+`Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
+
+Next Steps
+----------
+
+Try the notebooks in Objectiv Go
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* :doc:`Feature importance notebook <./feature-importance>` - model the importance of features on achieving a 
+	conversion goal.
+* :doc:`User Intent notebook <./user-intent>` - run basic User Intent analysis with Objectiv.
+

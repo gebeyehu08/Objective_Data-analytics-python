@@ -12,8 +12,8 @@ This example notebook shows how to use the 'Funnel Discovery' model on your data
 It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/funnel-discovery.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+or you can instead `run Objectiv Go </docs/home/go/>`__ to try it out. The dataset used here is the same as in 
+Go.
 
 In classical funnel analysis you predefine the steps, and then you analyze the differences for user 
 attributes or behavior in each step.
@@ -463,11 +463,183 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
 
-Where to go next
-----------------
+.. the testsetup below is a workaround to show the actual SQL output
+
+.. doctest:: funnel-discovery
+	:hide:
+	
+	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+
+.. doctest:: funnel-discovery
+	:skipif: engine is None
+
+	>>> # show SQL for analysis; this is just one example, and works for any Objectiv model/analysis
+	>>> display_sql_as_markdown(top_conversion_locations)
+	sql
+	WITH "manual_materialize___98e5bd0cc63a3e9a9e1a6f1bdd82bc66" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "cookie_id" AS "user_id",
+	               "value"->>'_type' AS "event_type",
+	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
+	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
+	               cast("value"->>'time' AS bigint) AS "time",
+	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",
+	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing"
+	          FROM "data"
+	       ),
+	       "getitem_where_boolean___d0a208add8c64ef83a59cef7edf355e4" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "location_stack" AS "location_stack",
+	               "time" AS "time",
+	               "application" AS "application",
+	               "marketing" AS "marketing"
+	          FROM "manual_materialize___98e5bd0cc63a3e9a9e1a6f1bdd82bc66"
+	         WHERE ((("day" >= cast('2022-02-01' AS date))) AND (("day" <= cast('2022-06-30' AS date))))
+	       ),
+	       "context_data___eaf1462be86e6368151e0cf9af3e04ed" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing"
+	          FROM "getitem_where_boolean___d0a208add8c64ef83a59cef7edf355e4"
+	       ),
+	       "session_starts___27f8c4162872ab094450b32a4ed48317" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	                    ELSE cast(TRUE AS boolean)
+	                     END AS "is_start_of_session"
+	          FROM "context_data___eaf1462be86e6368151e0cf9af3e04ed"
+	       ),
+	       "session_id_and_count___d78d64ff0d102b2362de6240a7287c98" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               "is_start_of_session" AS "is_start_of_session",
+	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+	                    ELSE cast(NULL AS bigint)
+	                     END AS "session_start_id",
+	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
+	          FROM "session_starts___27f8c4162872ab094450b32a4ed48317"
+	       ),
+	       "objectiv_sessionized_data___2b0854f76f7d3c374b0b7861e1e81c02" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               "is_start_of_session" AS "is_start_of_session",
+	               "session_start_id" AS "session_start_id",
+	               "is_one_session" AS "is_one_session",
+	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
+	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
+	          FROM "session_id_and_count___d78d64ff0d102b2362de6240a7287c98"
+	       ),
+	       "getitem_where_boolean___05da29b84521bd6d7acbd271d371b26d" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "session_id" AS "session_id",
+	               "session_hit_number" AS "session_hit_number",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               "application"->0->>'id' AS "application_id",
+	               (
+	                SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ')
+	                  FROM jsonb_array_elements("location_stack") WITH
+	            ORDINALITY
+	                 WHERE
+	            ORDINALITY = jsonb_array_length("location_stack")
+	               ) || (CASE WHEN jsonb_array_length("location_stack") > 1 THEN ' located at ' || (SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ') FROM jsonb_array_elements("location_stack") WITH ORDINALITY WHERE ORDINALITY < jsonb_array_length("location_stack") ) ELSE '' END) AS "feature_nice_name"
+	          FROM "objectiv_sessionized_data___2b0854f76f7d3c374b0b7861e1e81c02"
+	         WHERE ("event_type" = 'PressEvent')
+	       ),
+	       "getitem_where_boolean___3b536504b37038abde053debeea64172" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "session_id" AS "session_id",
+	               "session_hit_number" AS "session_hit_number",
+	               "application" AS "application",
+	               "marketing" AS "marketing",
+	               "application_id" AS "application_id",
+	               "feature_nice_name" AS "feature_nice_name",
+	               CASE WHEN ("application_id" = 'objectiv-docs') THEN cast(TRUE AS boolean)
+	                    ELSE cast(FALSE AS boolean)
+	                     END AS "is_conversion_event"
+	          FROM "getitem_where_boolean___05da29b84521bd6d7acbd271d371b26d"
+	         WHERE CASE WHEN ("application_id" = 'objectiv-docs') THEN cast(TRUE AS boolean)
+	                    ELSE cast(FALSE AS boolean)
+	                     END
+	       ) SELECT "feature_nice_name" AS "feature_nice_name",
+	       ((cast(count(DISTINCT "user_id") AS double precision) / cast(602 AS bigint)) * cast(100 AS bigint)) AS "converted_users_percentage"
+	  FROM "getitem_where_boolean___3b536504b37038abde053debeea64172"
+	 GROUP BY "feature_nice_name"
+	<BLANKLINE>
+
+That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
+
+Next Steps
+----------
+
+Play with this notebook in Objectiv Go
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in  under 5 minutes, 
+and play with this example notebook yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Now that you've discovered the customer journeys that lead to conversion or drop-off, you can further analyze 
 each of them to understand which ones could be optimized, or should get more/less focus. Another next step 
 could be to have a more in-depth look at the marketing campaign data differences per source. 
 
-See the :doc:`open taxonomy example <./open-taxonomy>` for more on how to use open taxonomy based data, or 
-have a look at the other example notebooks for other use cases.
+* :doc:`Product Analytics notebook <./product-analytics>` - easily run basic product analytics on your data.
+* :doc:`Marketing Analytics notebook <./marketing-analytics>` - analyze the above metrics and more for users 
+	coming from marketing efforts.
