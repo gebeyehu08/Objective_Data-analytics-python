@@ -429,11 +429,13 @@ class Aggregate:
 
         # prepare cohort_distance value as a valid column name based on engine
         # e.g in BigQuery columns cannot start with numbers, and Athena does not allow dots in column names.
-        data['cohort_distance'] = data['cohort_distance'].round()
-        data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
-        data['cohort_distance'] = data['cohort_distance'].str.replace('.0', '')
+        cd_series = data['cohort_distance'].copy_override_type(bach.SeriesFloat64).round()
+        formatted_cd_series = (
+            cd_series.astype(dtype=bach.SeriesString.dtype).copy_override_type(bach.SeriesString)
+        )
+        formatted_cd_series = formatted_cd_series.str.replace('.0', '')
         data['cohort_distance_prefix'] = '_'
-        data['cohort_distance'] = data['cohort_distance_prefix'] + data['cohort_distance']
+        data['cohort_distance'] = data['cohort_distance_prefix'] + formatted_cd_series
 
         retention_matrix = data.groupby(['first_cohort',
                                          'cohort_distance']).agg({'user_id': 'nunique'}).unstack(
@@ -510,19 +512,15 @@ class Aggregate:
         # want to get as a last step None value
         data = data.dropna(subset='__feature_nice_name')
 
-        by = [data['moment']]
-        series = data.groupby(groupby)['__feature_nice_name'].sort_by_series(by=by,
-                                                                             ascending=True)
-        series_json_array = cast(bach.SeriesString, series).to_json_array()
+        window = data.sort_values(by='moment', ascending=True).groupby(groupby).window(
+            end_boundary=bach.partitioning.WindowFrameBoundary.FOLLOWING,
+        )
+        drop_loc = window['__feature_nice_name'].window_last_value()
+        drop_loc = drop_loc.materialize(distinct=True)
 
-        drop_loc = series_json_array.json[-1].materialize()
-
+        result = drop_loc.value_counts(normalize=percentage).to_frame()
         if percentage:
-            total_count = drop_loc.count().value
-            drop_loc = (drop_loc.value_counts() / total_count) * 100
-            drop_loc = drop_loc.to_frame().rename(
-                columns={'value_counts': 'percentage'})
-            drop_loc = drop_loc.sort_values(by='percentage', ascending=False)
-            return drop_loc
-
-        return drop_loc.value_counts().to_frame()
+            result = result.rename(columns={'value_counts': 'percentage'})
+            result['percentage'] *= 100
+            result = result.sort_values(by='percentage', ascending=False)
+        return result
