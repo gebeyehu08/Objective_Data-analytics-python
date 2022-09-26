@@ -10,7 +10,6 @@ from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from bach.testing import assert_equals_data
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1262')  # TODO: Athena
 def test_retention_matrix(db_params):
 
     df, modelhub = get_objectiv_dataframe_test(db_params)
