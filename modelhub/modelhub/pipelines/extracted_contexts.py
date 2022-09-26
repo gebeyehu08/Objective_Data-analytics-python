@@ -178,20 +178,15 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         if not df_cp.is_materialized:
             df_cp = df_cp.materialize()
 
-        date_filters = []
-        if start_date:
-            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
-        if end_date:
-            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
-
         all_filters = []
-        if date_filters:
-            all_filters.append(reduce(operator.and_, date_filters))
-
+        if start_date:
+            all_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
+        if end_date:
+            all_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
         if self.IS_DUPLICATED_EVENT_SERIES_NAME in df_cp.data_columns:
             all_filters.append(~df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME])
 
-        return df_cp[reduce(operator.or_, all_filters)]
+        return df_cp[reduce(operator.and_, all_filters)]
 
 
 class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):

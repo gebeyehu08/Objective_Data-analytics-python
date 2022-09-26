@@ -17,7 +17,7 @@ from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.models.funnel_discovery import FunnelDiscovery
 from modelhub.series.series_objectiv import MetaBase
 from sql_models.constants import NotSet
-from sql_models.util import is_bigquery
+from sql_models.util import is_bigquery, is_athena
 
 if TYPE_CHECKING:
     from modelhub.series import SeriesLocationStack
@@ -164,7 +164,7 @@ class ModelHub:
         )
         from modelhub.pipelines.util import get_objectiv_data
         if table_name is None:
-            if is_bigquery(engine):
+            if is_athena(engine) or is_bigquery(engine):
                 table_name = 'events'
             else:
                 table_name = 'data'
