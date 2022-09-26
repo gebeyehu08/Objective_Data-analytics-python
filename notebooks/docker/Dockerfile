@@ -30,7 +30,9 @@ RUN . /services/venv/bin/activate && \
 COPY docker/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
-COPY *.ipynb $APP
+COPY basic-product-analytics.ipynb $APP
+COPY marketing-analytics.ipynb $APP
+COPY funnel-discovery.ipynb $APP
 
 USER notebook
 ENV OBJECTIV_VERSION_CHECK_DISABLE=true
