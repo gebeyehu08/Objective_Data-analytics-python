@@ -499,7 +499,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
 	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
 	               cast("value"->>'time' AS bigint) AS "time",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",       
+	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",
 	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing"
 	          FROM "data"
 	       ),
@@ -539,7 +539,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "stack_event_types" AS "stack_event_types",
 	               "application" AS "application",
 	               "marketing" AS "marketing",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
 	          FROM "context_data___a62e3289513a784aef75ce1ac4dbc956"
@@ -610,6 +610,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	  FROM "getitem_where_boolean___030da093a492e9f38d62489200716824"
 	 ORDER BY "moment" DESC NULLS LAST
 	<BLANKLINE>
+
 
 Where to go next
 ----------------
