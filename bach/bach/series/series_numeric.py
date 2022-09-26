@@ -12,7 +12,7 @@ from bach import DataFrameOrSeries
 from bach.series import Series
 from bach.expression import Expression, AggregateFunctionExpression
 from bach.series.series import WrappedPartition
-from bach.types import StructuredDtype
+from bach.types import StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
@@ -455,3 +455,16 @@ class SeriesFloat64(SeriesAbstractNumeric):
             order_by=[],
             instance_dtype=cls.dtype
         )
+
+    def __eq__(self, other):
+        from bach.series import SeriesBoolean
+        # both bigquery and athena support is_nan
+        if (
+            (is_bigquery(self.engine) or is_athena(self.engine))
+            and isinstance(other, float) and math.isnan(other)
+        ):
+            return self.copy_override(
+                expression=Expression.construct('is_nan({})', self)
+            ).copy_override_type(SeriesBoolean)
+
+        return super().__eq__(other)
