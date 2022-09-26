@@ -105,5 +105,5 @@ jobs:
           pytest --athena tests_modelhub/unit
       - name: Functional tests Athena
         run: |
-          cd bach
+          cd modelhub
           pytest -n 4 --dist loadgroup --athena tests_modelhub/functional/
