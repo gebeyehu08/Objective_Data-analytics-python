@@ -68,22 +68,26 @@ def test_random(engine):
         distinct_values.add(value)
 
 
-def test__eq__nan(engine):
+def test_compare_nan(engine):
     pdf = pd.DataFrame(data={'a': [1, 2, 3, 4, 5]})
     df = DataFrame.from_pandas(df=pdf, engine=engine, convert_objects=True)
 
     nan_value = float('nan')
     df.loc[(df['a'] == 2) | (df['a'] == 4),  'a'] = nan_value
-    df['is_nan'] = df['a'] == nan_value
+    df['eq_nan'] = df['a'] == nan_value
+    df['lt_nan'] = df['a'] < nan_value
+    df['gt_nan'] = df['a'] > nan_value
+    df['le_nan'] = df['a'] <= nan_value
+    df['ge_nan'] = df['a'] >= nan_value
 
     assert_equals_data(
         df,
-        expected_columns=['_index_0', 'a', 'is_nan'],
+        expected_columns=['_index_0', 'a', 'eq_nan', 'lt_nan', 'gt_nan', 'le_nan', 'ge_nan'],
         expected_data=[
-            [0,         1., False],
-            [1,  nan_value,  True],
-            [2,         3., False],
-            [3,  nan_value,  True],
-            [4,         5., False],
+            [0,         1., False] + [ANY] * 4,  # comparing (except equals) with nan might
+            [1,  nan_value,  True] + [ANY] * 4,  # differ between all engines
+            [2,         3., False] + [ANY] * 4,  # we just check if any error is not raise
+            [3,  nan_value,  True] + [ANY] * 4,
+            [4,         5., False] + [ANY] * 4,
         ],
     )
