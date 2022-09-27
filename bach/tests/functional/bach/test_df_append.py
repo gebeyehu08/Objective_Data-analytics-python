@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from bach import DataFrame
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_append_w_aligned_columns(engine) -> None:
     caller_pdf = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'A': [6, 7, 8, 9], 'B': ['f', 'g', 'h', 'i']})
@@ -17,6 +19,8 @@ def test_append_w_aligned_columns(engine) -> None:
     np.testing.assert_equal(expected.to_numpy(), result.to_numpy())
 
 
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_append_w_non_aligned_columns(engine) -> None:
     # Column names 'A#' and 'a#' should be considered as two different columns, i.e. they don't align
     # By adding the '#' to the column names we also test the correct handling of special characters

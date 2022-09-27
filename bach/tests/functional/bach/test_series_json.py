@@ -360,6 +360,8 @@ def test_json_flatten_array(engine, dtype):
     )
 
 
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_json_flatten_array_column_name_special_chars(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
     df = df.sort_index()[:2]  # two rows should be enough, and keeps the expected data shorter
