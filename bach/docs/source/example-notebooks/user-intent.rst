@@ -335,7 +335,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "stack_event_types" AS "stack_event_types",
 	               "application" AS "application",
 	               "path" AS "path",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
 	          FROM "context_data___13ef50fca5b744da64018a0f57865536"
@@ -351,7 +351,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "application" AS "application",
 	               "path" AS "path",
 	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)      
+	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
 	                    ELSE cast(NULL AS bigint)
 	                     END AS "session_start_id",
 	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
