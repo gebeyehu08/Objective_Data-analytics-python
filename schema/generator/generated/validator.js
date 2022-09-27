@@ -60,7 +60,7 @@ export const CookieIdContext = z.object({
 export const HttpContext = z.object({
   referrer: z.string(),
   user_agent: z.string(),
-  remote_address: z.string(),
+  remote_address: z.string().optional(),
   id: z.string(),
   _type: z.literal(ContextTypes.enum.HttpContext),
 });
@@ -72,8 +72,8 @@ export const InputValueContext = z.object({
 });
 
 export const LocaleContext = z.object({
-  language_code: z.string(),
-  country_code: z.string(),
+  language_code: z.string().optional(),
+  country_code: z.string().optional(),
   id: z.string(),
   _type: z.literal(ContextTypes.enum.LocaleContext),
 });
@@ -93,11 +93,11 @@ export const MarketingContext = z.object({
   source: z.string(),
   medium: z.string(),
   campaign: z.string(),
-  term: z.string(),
-  content: z.string(),
-  source_platform: z.string(),
-  creative_format: z.string(),
-  marketing_tactic: z.string(),
+  term: z.string().optional(),
+  content: z.string().optional(),
+  source_platform: z.string().optional(),
+  creative_format: z.string().optional(),
+  marketing_tactic: z.string().optional(),
   id: z.string(),
   _type: z.literal(ContextTypes.enum.MarketingContext),
 });

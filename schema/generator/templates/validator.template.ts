@@ -31,7 +31,7 @@ Generator.generateFromModel(
         validator.writeProperty({
           name: String(property),
           typeName: SchemaToZodPropertyTypeMap[properties[property].type],
-          isOptional: properties[property].isOptional,
+          isOptional: properties[property].optional,
           value: (properties[property].value ?? '').replace('${contextName}', `ContextTypes.enum.${contextName}`),
         });
       });
