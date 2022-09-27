@@ -44,6 +44,7 @@ def test_location_stack_get_from_context_with_type_series(db_params):
         ]
     )
 
+
 def test_location_stack_navigation_features(db_params):
     bt = get_df_with_json_data_real(db_params)
 

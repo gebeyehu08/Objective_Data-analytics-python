@@ -74,37 +74,8 @@ class SeriesLocationStack(SeriesJson):
             :param dtype: the dtype of the series to return.
             :returns: a series of type `dtype`
             """
-            dialect = self._series_object.engine.dialect
-            if is_postgres(dialect):
-                return self._postgres_get_from_context_with_type_series(type, key, dtype)
-            if is_bigquery(dialect):
-                return self._bigquery_get_from_context_with_type_series(type, key, dtype)
-            raise DatabaseNotSupportedException(dialect)
-
-        def _postgres_get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
-            dialect = self._series_object.engine.dialect
-            expression_str = f'''
-            jsonb_path_query_first({{}},
-            \'$[*] ? (@._type == $type)\',
-            \'{{"type":{quote_identifier(dialect, type)}}}\') ->> {{}}'''
-            expression = Expression.construct(
-                expression_str,
-                self._series_object,
-                Expression.string_value(key)
-            )
-            return self._series_object.copy_override_dtype(dtype).copy_override(expression=expression)
-
-        def _bigquery_get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
-            select_ctx_expression = Expression.construct(
-                '''(
-                  select first_value(ctx) over (order by pos)
-                  from unnest(json_query_array({}, '$')) as ctx with offset as pos
-                  where json_value(ctx, '$."_type"') = {} limit 1
-                )''',
-                self._series_object,
-                Expression.string_value(type)
-            )
-            ctx_series = self._series_object.copy_override(expression=select_ctx_expression)
+            type_slice = slice({'_type': type}, None)
+            ctx_series = self._series_object.json[type_slice].json[0]
             as_str = dtype == 'string'
             value_series = ctx_series.json.get_value(key=key, as_str=as_str)
             return value_series.copy_override_dtype(dtype)
