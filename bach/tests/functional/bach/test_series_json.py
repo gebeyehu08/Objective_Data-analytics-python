@@ -360,7 +360,7 @@ def test_json_flatten_array(engine, dtype):
     )
 
 
-def test_json_flatten_array_column_names(engine, dtype):
+def test_json_flatten_array_column_name_special_chars(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
     df = df.sort_index()[:2]  # two rows should be enough, and keeps the expected data shorter
 
@@ -387,6 +387,7 @@ def test_json_flatten_array_column_names(engine, dtype):
         ],
         use_to_pandas=True,
     )
+
 
 def test_complex_types_astype_json(engine, dtype):
 
