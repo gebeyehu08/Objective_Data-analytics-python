@@ -48,13 +48,13 @@ export const EventTypes = z.enum([
 
 export const ApplicationContext = z.object({
   id: z.string(),
-  _type: z.literal('ApplicationContext'),
+  _type: z.literal(ContextTypes.enum.ApplicationContext),
 });
 
 export const CookieIdContext = z.object({
   cookie_id: z.string(),
   id: z.string(),
-  _type: z.literal('CookieIdContext'),
+  _type: z.literal(ContextTypes.enum.CookieIdContext),
 });
 
 export const HttpContext = z.object({
@@ -62,31 +62,31 @@ export const HttpContext = z.object({
   user_agent: z.string(),
   remote_address: z.string(),
   id: z.string(),
-  _type: z.literal('HttpContext'),
+  _type: z.literal(ContextTypes.enum.HttpContext),
 });
 
 export const InputValueContext = z.object({
   value: z.string(),
   id: z.string(),
-  _type: z.literal('InputValueContext'),
+  _type: z.literal(ContextTypes.enum.InputValueContext),
 });
 
 export const LocaleContext = z.object({
   language_code: z.string(),
   country_code: z.string(),
   id: z.string(),
-  _type: z.literal('LocaleContext'),
+  _type: z.literal(ContextTypes.enum.LocaleContext),
 });
 
 export const PathContext = z.object({
   id: z.string(),
-  _type: z.literal('PathContext'),
+  _type: z.literal(ContextTypes.enum.PathContext),
 });
 
 export const SessionContext = z.object({
   hit_number: z.bigint(),
   id: z.string(),
-  _type: z.literal('SessionContext'),
+  _type: z.literal(ContextTypes.enum.SessionContext),
 });
 
 export const MarketingContext = z.object({
@@ -99,58 +99,58 @@ export const MarketingContext = z.object({
   creative_format: z.string(),
   marketing_tactic: z.string(),
   id: z.string(),
-  _type: z.literal('MarketingContext'),
+  _type: z.literal(ContextTypes.enum.MarketingContext),
 });
 
 export const IdentityContext = z.object({
   value: z.string(),
   id: z.string(),
-  _type: z.literal('IdentityContext'),
+  _type: z.literal(ContextTypes.enum.IdentityContext),
 });
 
 export const InputContext = z.object({
   id: z.string(),
-  _type: z.literal('InputContext'),
+  _type: z.literal(ContextTypes.enum.InputContext),
 });
 
 export const PressableContext = z.object({
   id: z.string(),
-  _type: z.literal('PressableContext'),
+  _type: z.literal(ContextTypes.enum.PressableContext),
 });
 
 export const LinkContext = z.object({
   href: z.string(),
   id: z.string(),
-  _type: z.literal('LinkContext'),
+  _type: z.literal(ContextTypes.enum.LinkContext),
 });
 
 export const RootLocationContext = z.object({
   id: z.string(),
-  _type: z.literal('RootLocationContext'),
+  _type: z.literal(ContextTypes.enum.RootLocationContext),
 });
 
 export const ExpandableContext = z.object({
   id: z.string(),
-  _type: z.literal('ExpandableContext'),
+  _type: z.literal(ContextTypes.enum.ExpandableContext),
 });
 
 export const MediaPlayerContext = z.object({
   id: z.string(),
-  _type: z.literal('MediaPlayerContext'),
+  _type: z.literal(ContextTypes.enum.MediaPlayerContext),
 });
 
 export const NavigationContext = z.object({
   id: z.string(),
-  _type: z.literal('NavigationContext'),
+  _type: z.literal(ContextTypes.enum.NavigationContext),
 });
 
 export const OverlayContext = z.object({
   id: z.string(),
-  _type: z.literal('OverlayContext'),
+  _type: z.literal(ContextTypes.enum.OverlayContext),
 });
 
 export const ContentContext = z.object({
   id: z.string(),
-  _type: z.literal('ContentContext'),
+  _type: z.literal(ContextTypes.enum.ContentContext),
 });
 

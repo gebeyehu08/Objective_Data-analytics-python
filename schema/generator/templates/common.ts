@@ -32,3 +32,45 @@ export const writeEnumerations = (writer: SchemaWriter | ValidatorWriter) => {
 
   writer.writeLine();
 };
+
+export const getContexts = (includeAbstracts = false) => {
+  const allContexts = getObjectKeys(Objectiv.contexts);
+
+  if (includeAbstracts) {
+    return allContexts;
+  }
+
+  return allContexts.filter((entityName) => !entityName.startsWith('Abstract'));
+};
+
+export const getEntityProperties = (entity) => entity['properties'] ?? {};
+export const getEntityParents = (entity) => entity['parents'] ?? [];
+export const getEntityRequiresContext = (entity) => entity['requiresContext'] ?? [];
+
+// recursive helper to fetch parent attributes
+export const getParentAttributes = (entities, parents, attributes = { properties: {} }) =>
+  parents.reduce((parentAttributes, parent) => {
+    const parentProperties = getEntityProperties(entities[parent]);
+    const parentParents = getEntityParents(entities[parent]);
+
+    const parentPropertyKeys = getObjectKeys(parentProperties);
+    parentPropertyKeys.forEach((parentPropertyKey) => {
+      const parentProperty = parentProperties[parentPropertyKey];
+      if (parentAttributes.properties[parentPropertyKey] === undefined) {
+        parentAttributes.properties[parentPropertyKey] = parentProperty;
+      }
+    });
+
+    if (!parentParents.length) {
+      return parentAttributes;
+    }
+
+    return getParentAttributes(entities, parentParents, parentAttributes);
+  }, attributes);
+
+export const getEntityAttributes = (entities, entityName) => {
+  const parents = getEntityParents(entities[entityName]);
+  const properties = getEntityProperties(entities[entityName]);
+
+  return getParentAttributes(entities, parents, { properties });
+};
