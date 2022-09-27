@@ -13,6 +13,6 @@ Generator.generateFromModel(
   (writer: TextWriter, model: typeof Objectiv) => {
     const validator = new ValidatorWriter(writer);
 
-    writeEnumerations(validator, model);
+    writeEnumerations(validator);
   }
 );

@@ -15,11 +15,11 @@ export const writeCopyright = (writer: SchemaWriter | ValidatorWriter) => {
   writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
 };
 
-export const writeEnumerations = (writer: SchemaWriter | ValidatorWriter, model: typeof Objectiv) => {
+export const writeEnumerations = (writer: SchemaWriter | ValidatorWriter) => {
   writer.writeEnumeration({
     export: true,
     name: 'ContextTypes',
-    members: sortEnumMembers(getObjectKeys(model.contexts).map((_type) => ({ name: _type }))),
+    members: sortEnumMembers(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
   });
 
   writer.writeLine();
@@ -27,7 +27,7 @@ export const writeEnumerations = (writer: SchemaWriter | ValidatorWriter, model:
   writer.writeEnumeration({
     export: true,
     name: 'EventTypes',
-    members: sortEnumMembers(getObjectKeys(model.events).map((_type) => ({ name: _type }))),
+    members: sortEnumMembers(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
   });
 
   writer.writeLine();

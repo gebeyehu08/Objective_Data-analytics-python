@@ -11,5 +11,5 @@ import { writeEnumerations } from './common';
 Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: TextWriter, model: typeof Objectiv) => {
   const ts = new SchemaWriter(writer);
 
-  writeEnumerations(ts, model);
+  writeEnumerations(ts);
 });
