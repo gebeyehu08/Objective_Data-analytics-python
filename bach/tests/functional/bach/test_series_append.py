@@ -32,7 +32,6 @@ def test_series_append_column_name_special_chars(engine) -> None:
     df = df.rename(columns={'city': 'A!@_'})
 
     result = df['A!@_'].append(df.skating_order)
-    print(result.view_sql())
     assert isinstance(result, Series)
 
     assert_equals_data(
