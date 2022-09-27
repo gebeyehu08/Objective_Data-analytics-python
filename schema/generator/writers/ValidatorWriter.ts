@@ -14,7 +14,7 @@ export type Enumeration = {
   members: EnumMemberDefinition[]
 }
 
-export class ZodWriter extends CodeWriter {
+export class ValidatorWriter extends CodeWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.writeLine(`/*\n* Copyright ${new Date().getFullYear()} Objectiv B.V.\n*/\n`);

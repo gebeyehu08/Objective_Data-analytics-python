@@ -8,8 +8,9 @@
     "build": "tsup validator.js",
     "serve": "node validator-service.js",
     "validate": "node validator-cli.js",
-    "prettier": "prettier --write validator*.js",
-    "es5-validate": "es5-validator dist/validator.js"
+    "prettier": "prettier --write validator*.js generator",
+    "es5-validate": "es5-validator dist/validator.js",
+    "generator:watch": "(cd generator && yellicode --watch)"
   },
   "author": {
     "name": "Surai Di Rosa",
