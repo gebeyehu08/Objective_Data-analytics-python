@@ -15,6 +15,13 @@ export type Enumeration = {
   members: EnumMemberDefinition[];
 };
 
+export interface PropertyDefinition {
+  name: string;
+  typeName: string;
+  isOptional?: boolean;
+  value?: string;
+}
+
 export class ValidatorWriter extends CodeWriter {
   constructor(writer: TextWriter) {
     super(writer);
@@ -32,5 +39,21 @@ export class ValidatorWriter extends CodeWriter {
     });
     this.decreaseIndent();
     this.writeLine(`]);`);
+  }
+
+  public writeProperty(property: PropertyDefinition): void {
+    // FIXME Indent doesn't work here for some reason
+    this.increaseIndent();
+    this.writeIndent();
+
+    // TODO mapping between schema and zod for typeName (eg: integer > number)
+    this.write(`${property.name}: z.${property.typeName}(${property.value ?? ''})`);
+
+    if (property.isOptional) {
+      this.write('.optional()');
+    }
+
+    this.writeEndOfLine(',');
+    this.decreaseIndent();
   }
 }

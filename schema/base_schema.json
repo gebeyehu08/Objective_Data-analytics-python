@@ -134,7 +134,8 @@
         },
         "_type": {
           "description": "A string literal used during serialization. Should always match the Context interface name.",
-          "type": "string"
+          "type": "literal",
+          "value": "'${entityName}'"
         }
       }
     },

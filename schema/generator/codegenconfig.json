@@ -6,6 +6,12 @@
       "templateFile": "templates/common.ts"
     },
     {
+      "templateFile": "writers/SchemaWriter.ts"
+    },
+    {
+      "templateFile": "writers/ValidatorWriter.ts"
+    },
+    {
       "modelFile": "../base_schema.json",
       "templateFile": "templates/schema.template.ts"
     },
