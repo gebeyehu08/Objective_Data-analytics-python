@@ -437,8 +437,14 @@ __export(validator_exports, {
     ContentContext: function() {
         return ContentContext;
     },
+    ContextTypes: function() {
+        return ContextTypes;
+    },
     CookieIdContext: function() {
         return CookieIdContext;
+    },
+    EventTypes: function() {
+        return EventTypes;
     },
     ExpandableContext: function() {
         return ExpandableContext;
@@ -5224,27 +5230,45 @@ var mod = /* @__PURE__ */ Object.freeze({
     ZodError: ZodError
 });
 // validator.js
-var LocationContextTypes = mod.enum([
+var ContextTypes = mod.enum([
+    "AbstractContext",
+    "AbstractGlobalContext",
+    "AbstractLocationContext",
+    "ApplicationContext",
     "ContentContext",
+    "CookieIdContext",
     "ExpandableContext",
+    "HttpContext",
+    "IdentityContext",
     "InputContext",
+    "InputValueContext",
     "LinkContext",
+    "LocaleContext",
+    "MarketingContext",
     "MediaPlayerContext",
     "NavigationContext",
     "OverlayContext",
-    "PressableContext",
-    "RootLocationContext"
-]);
-var GlobalContextTypes = mod.enum([
-    "ApplicationContext",
-    "CookieIdContext",
-    "HttpContext",
-    "IdentityContext",
-    "InputValueContext",
-    "LocaleContext",
-    "MarketingContext",
     "PathContext",
+    "PressableContext",
+    "RootLocationContext",
     "SessionContext"
+]);
+var EventTypes = mod.enum([
+    "AbstractEvent",
+    "ApplicationLoadedEvent",
+    "FailureEvent",
+    "HiddenEvent",
+    "InputChangeEvent",
+    "InteractiveEvent",
+    "MediaEvent",
+    "MediaLoadEvent",
+    "MediaPauseEvent",
+    "MediaStartEvent",
+    "MediaStopEvent",
+    "NonInteractiveEvent",
+    "PressEvent",
+    "SuccessEvent",
+    "VisibleEvent"
 ]);
 var validateContextUniqueness = function(contexts, ctx) {
     var seenContexts = [];
@@ -5270,10 +5294,10 @@ var validateInputValueContexts = function(event, ctx) {
     var _location_stack;
     var location_stack = (_location_stack = event.location_stack) !== null && _location_stack !== void 0 ? _location_stack : [];
     var inputValueContexts = global_contexts.filter(function(globalContext) {
-        return globalContext._type === GlobalContextTypes.enum.InputValueContext;
+        return globalContext._type === ContextTypes.enum.InputValueContext;
     });
     var inputContext = location_stack.find(function(locationContext) {
-        return locationContext._type === LocationContextTypes.enum.InputContext;
+        return locationContext._type === ContextTypes.enum.InputContext;
     });
     if (inputContext && inputValueContexts.find(function(param) {
         var id = param.id;
@@ -5285,76 +5309,81 @@ var validateInputValueContexts = function(event, ctx) {
         });
     }
 };
-var validateApplicationContextPresence = function(global_contexts, ctx) {
-    var applicationContext = global_contexts.find(function(globalContext) {
-        return globalContext._type === GlobalContextTypes.enum.ApplicationContext;
-    });
-    if (!applicationContext) {
-        ctx.addIssue({
-            code: mod.ZodIssueCode.custom,
-            message: "All Events require ApplicationContext in their Global Contexts"
+var validateContextPresence = function(type, errorMessage) {
+    return function(event, ctx) {
+        var contextFoundInLocationStack = event.location_stack.find(function(globalContext) {
+            return globalContext._type === type;
         });
-    }
+        var contextFoundInGlobalContexts = event.global_contexts.find(function(locationContext) {
+            return locationContext._type === type;
+        });
+        if (!contextFoundInLocationStack && !contextFoundInGlobalContexts) {
+            ctx.addIssue({
+                code: mod.ZodIssueCode.custom,
+                message: errorMessage
+            });
+        }
+    };
 };
 var CommonContextAttributes = mod.object({
     id: mod.string()
 });
 var ContentContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.ContentContext)
+    _type: mod.literal(ContextTypes.enum.ContentContext)
 }).strict();
 var ExpandableContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.ExpandableContext)
+    _type: mod.literal(ContextTypes.enum.ExpandableContext)
 }).strict();
 var InputContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.InputContext)
+    _type: mod.literal(ContextTypes.enum.InputContext)
 }).strict();
 var LinkContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.LinkContext),
+    _type: mod.literal(ContextTypes.enum.LinkContext),
     href: mod.string()
 }).strict();
 var MediaPlayerContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.MediaPlayerContext)
+    _type: mod.literal(ContextTypes.enum.MediaPlayerContext)
 }).strict();
 var NavigationContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.NavigationContext)
+    _type: mod.literal(ContextTypes.enum.NavigationContext)
 }).strict();
 var OverlayContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.OverlayContext)
+    _type: mod.literal(ContextTypes.enum.OverlayContext)
 }).strict();
 var PressableContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.PressableContext)
+    _type: mod.literal(ContextTypes.enum.PressableContext)
 }).strict();
 var RootLocationContext = CommonContextAttributes.extend({
-    _type: mod.literal(LocationContextTypes.enum.RootLocationContext)
+    _type: mod.literal(ContextTypes.enum.RootLocationContext)
 }).strict();
 var ApplicationContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.ApplicationContext)
+    _type: mod.literal(ContextTypes.enum.ApplicationContext)
 }).strict();
 var CookieIdContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.CookieIdContext),
+    _type: mod.literal(ContextTypes.enum.CookieIdContext),
     cookie_id: mod.string()
 }).strict();
 var HttpContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.HttpContext),
+    _type: mod.literal(ContextTypes.enum.HttpContext),
     referer: mod.string(),
     user_agent: mod.string(),
     remote_address: mod.string().optional()
 }).strict();
 var IdentityContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.IdentityContext),
+    _type: mod.literal(ContextTypes.enum.IdentityContext),
     value: mod.string()
 }).strict();
 var InputValueContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.InputValueContext),
+    _type: mod.literal(ContextTypes.enum.InputValueContext),
     value: mod.string()
 }).strict();
 var LocaleContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.LocaleContext),
+    _type: mod.literal(ContextTypes.enum.LocaleContext),
     language_code: mod.string().optional(),
     country_code: mod.string().optional()
 }).strict();
 var MarketingContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.MarketingContext),
+    _type: mod.literal(ContextTypes.enum.MarketingContext),
     source: mod.string(),
     medium: mod.string(),
     campaign: mod.string(),
@@ -5365,10 +5394,10 @@ var MarketingContext = CommonContextAttributes.extend({
     marketing_tactic: mod.string().optional()
 }).strict();
 var PathContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.PathContext)
+    _type: mod.literal(ContextTypes.enum.PathContext)
 }).strict();
 var SessionContext = CommonContextAttributes.extend({
-    _type: mod.literal(GlobalContextTypes.enum.SessionContext),
+    _type: mod.literal(ContextTypes.enum.SessionContext),
     hit_number: mod.number()
 }).strict();
 var LocationStack = mod.tuple([
@@ -5393,16 +5422,16 @@ var GlobalContexts = mod.array(mod.discriminatedUnion("_type", [
     MarketingContext,
     PathContext,
     SessionContext
-])).superRefine(validateContextUniqueness).superRefine(validateApplicationContextPresence);
+])).superRefine(validateContextUniqueness);
 var CommonEventAttributes = mod.object({
     id: mod.string().uuid(),
     global_contexts: GlobalContexts
-});
+}).superRefine(validateContextPresence(ContextTypes.enum.ApplicationContext, "All Events require ApplicationContext in their Global Contexts"));
 var InputChangeEvent = CommonEventAttributes.extend({
     _type: mod.literal("InputChangeEvent"),
     location_stack: LocationStack.refine(function(locationStack) {
         return locationStack.find(function(locationContext) {
-            return locationContext._type === LocationContextTypes.enum.InputContext;
+            return locationContext._type === ContextTypes.enum.InputContext;
         });
     }, {
         message: "InputChangeEvent requires InputContext in its LocationStack"
@@ -5412,7 +5441,7 @@ var PressEvent = CommonEventAttributes.extend({
     _type: mod.literal("PressEvent"),
     location_stack: LocationStack.refine(function(locationStack) {
         return locationStack.find(function(locationContext) {
-            return locationContext._type === LocationContextTypes.enum.PressableContext || locationContext._type === LocationContextTypes.enum.LinkContext;
+            return locationContext._type === ContextTypes.enum.PressableContext || locationContext._type === ContextTypes.enum.LinkContext;
         });
     }, {
         message: "PressEvent requires PressableContext or LinkContext in its LocationStack"
@@ -5426,7 +5455,9 @@ var validate = mod.union([
 0 && (module.exports = {
     ApplicationContext: ApplicationContext,
     ContentContext: ContentContext,
+    ContextTypes: ContextTypes,
     CookieIdContext: CookieIdContext,
+    EventTypes: EventTypes,
     ExpandableContext: ExpandableContext,
     GlobalContexts: GlobalContexts,
     HttpContext: HttpContext,

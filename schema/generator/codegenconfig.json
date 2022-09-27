@@ -1,0 +1,14 @@
+{
+    "compileTypeScript": true,
+    "typeScriptConfigFile": "./tsconfig.json",
+    "templates": [
+        {
+            "modelFile": "../base_schema.json",
+            "templateFile": "templates/schema.template.ts"
+        },
+        {
+            "modelFile": "../base_schema.json",
+            "templateFile": "templates/validator.template.ts"
+        }
+    ]
+}
