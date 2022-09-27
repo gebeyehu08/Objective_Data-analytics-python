@@ -6,6 +6,5 @@
     "removeComments": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
   }
 }
