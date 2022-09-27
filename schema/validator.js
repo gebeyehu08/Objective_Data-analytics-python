@@ -5,45 +5,45 @@
 import { z } from "zod";
 
 export const ContextTypes = z.enum([
-	"AbstractContext",
-	"AbstractGlobalContext",
-	"AbstractLocationContext",
-	"ApplicationContext",
-	"ContentContext",
-	"CookieIdContext",
-	"ExpandableContext",
-	"HttpContext",
-	"IdentityContext",
-	"InputContext",
-	"InputValueContext",
-	"LinkContext",
-	"LocaleContext",
-	"MarketingContext",
-	"MediaPlayerContext",
-	"NavigationContext",
-	"OverlayContext",
-	"PathContext",
-	"PressableContext",
-	"RootLocationContext",
-	"SessionContext",
+  "AbstractContext",
+  "AbstractGlobalContext",
+  "AbstractLocationContext",
+  "ApplicationContext",
+  "ContentContext",
+  "CookieIdContext",
+  "ExpandableContext",
+  "HttpContext",
+  "IdentityContext",
+  "InputContext",
+  "InputValueContext",
+  "LinkContext",
+  "LocaleContext",
+  "MarketingContext",
+  "MediaPlayerContext",
+  "NavigationContext",
+  "OverlayContext",
+  "PathContext",
+  "PressableContext",
+  "RootLocationContext",
+  "SessionContext",
 ]);
 
 export const EventTypes = z.enum([
-	"AbstractEvent",
-	"ApplicationLoadedEvent",
-	"FailureEvent",
-	"HiddenEvent",
-	"InputChangeEvent",
-	"InteractiveEvent",
-	"MediaEvent",
-	"MediaLoadEvent",
-	"MediaPauseEvent",
-	"MediaStartEvent",
-	"MediaStopEvent",
-	"NonInteractiveEvent",
-	"PressEvent",
-	"SuccessEvent",
-	"VisibleEvent",
+  "AbstractEvent",
+  "ApplicationLoadedEvent",
+  "FailureEvent",
+  "HiddenEvent",
+  "InputChangeEvent",
+  "InteractiveEvent",
+  "MediaEvent",
+  "MediaLoadEvent",
+  "MediaPauseEvent",
+  "MediaStartEvent",
+  "MediaStopEvent",
+  "NonInteractiveEvent",
+  "PressEvent",
+  "SuccessEvent",
+  "VisibleEvent",
 ]);
 
 // Custom refinements
@@ -95,8 +95,12 @@ const validateInputValueContexts = (event, ctx) => {
 };
 
 const validateContextPresence = (type, errorMessage) => (event, ctx) => {
-  const contextFoundInLocationStack = event.location_stack.find((globalContext) => globalContext._type === type);
-  const contextFoundInGlobalContexts = event.global_contexts.find((locationContext) => locationContext._type === type);
+  const contextFoundInLocationStack = event.location_stack.find(
+    (globalContext) => globalContext._type === type
+  );
+  const contextFoundInGlobalContexts = event.global_contexts.find(
+    (locationContext) => locationContext._type === type
+  );
 
   if (!contextFoundInLocationStack && !contextFoundInGlobalContexts) {
     ctx.addIssue({
@@ -238,13 +242,17 @@ export const GlobalContexts = z
 
 // Events
 
-const CommonEventAttributes = z.object({
-  id: z.string().uuid(),
-  global_contexts: GlobalContexts,
-}).superRefine(validateContextPresence(
-    ContextTypes.enum.ApplicationContext,
-    `All Events require ApplicationContext in their Global Contexts`
-  ));
+const CommonEventAttributes = z
+  .object({
+    id: z.string().uuid(),
+    global_contexts: GlobalContexts,
+  })
+  .superRefine(
+    validateContextPresence(
+      ContextTypes.enum.ApplicationContext,
+      `All Events require ApplicationContext in their Global Contexts`
+    )
+  );
 
 export const InputChangeEvent = CommonEventAttributes.extend({
   _type: z.literal("InputChangeEvent"), // TODO use enums
@@ -266,8 +274,7 @@ export const PressEvent = CommonEventAttributes.extend({
     (locationStack) =>
       locationStack.find(
         (locationContext) =>
-          locationContext._type ===
-            ContextTypes.enum.PressableContext ||
+          locationContext._type === ContextTypes.enum.PressableContext ||
           locationContext._type === ContextTypes.enum.LinkContext
       ),
     {
