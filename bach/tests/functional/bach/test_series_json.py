@@ -359,6 +359,35 @@ def test_json_flatten_array(engine, dtype):
         use_to_pandas=True,
     )
 
+
+def test_json_flatten_array_column_names(engine, dtype):
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    df = df.sort_index()[:2]  # two rows should be enough, and keeps the expected data shorter
+
+    df = df.reset_index(drop=False)
+    df = df.rename(columns={'_index_row': '_Index_Row#!', 'list_column': 'List!_COLUMN'})
+    df = df.set_index('_Index_Row#!')
+
+    list_column = df['List!_COLUMN']
+
+    result_item, result_offset = list_column.json.flatten_array()
+    result_item = result_item.sort_by_series(
+        by=[result_item.index['_Index_Row#!'], result_offset]
+    )
+    assert_equals_data(
+        result_item,
+        expected_columns=['_Index_Row#!', 'List!_COLUMN'],
+        expected_data=[
+            [0, {'a': 'b'}],
+            [0, {'c': 'd'}],
+            [1, 'a'],
+            [1, 'b'],
+            [1, 'c'],
+            [1, 'd'],
+        ],
+        use_to_pandas=True,
+    )
+
 def test_complex_types_astype_json(engine, dtype):
 
     if is_athena(engine) or is_postgres(engine):

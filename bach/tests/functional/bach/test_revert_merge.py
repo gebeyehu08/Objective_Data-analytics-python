@@ -71,10 +71,10 @@ def test_revert_merge_basic_on_indexes(engine):
 def test_revert_merge_suffixes(engine):
     bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
     mt = get_df_with_food_data(engine)[['skating_order', 'food']]
-    merged = bt.merge(mt, left_on='_index_skating_order', right_on='skating_order', suffixes=('_AA', '_BB'))
+    merged = bt.merge(mt, left_on='_index_skating_order', right_on='skating_order', suffixes=('_AA', '_aa'))
     result_bt, result_mt = revert_merge(merged)
-    for expected, result in zip([bt, mt], [result_bt, result_mt]):
-        _compare_source_with_replicate(expected, result)
+    _compare_source_with_replicate(bt, result_bt)
+    _compare_source_with_replicate(mt, result_mt)
 
 
 def test_revert_merge_mixed_columns(engine):

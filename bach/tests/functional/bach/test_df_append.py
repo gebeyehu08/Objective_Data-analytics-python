@@ -6,26 +6,28 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def test_append_w_aligned_columns(engine) -> None:
-    caller_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
-    other_pdf = pd.DataFrame({'a': [6, 7, 8, 9], 'b': ['f', 'g', 'h', 'i']})
+    caller_pdf = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': ['a', 'b', 'c', 'd', 'e']})
+    other_pdf = pd.DataFrame({'A': [6, 7, 8, 9], 'B': ['f', 'g', 'h', 'i']})
 
     caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
     other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
 
-    result = caller_df.append(other_df).sort_values('a').reset_index(drop=False)
-    expected = caller_pdf.append(other_pdf).sort_values('a').reset_index(drop=False)
+    result = caller_df.append(other_df).sort_values('A').reset_index(drop=False)
+    expected = caller_pdf.append(other_pdf).sort_values('A').reset_index(drop=False)
     np.testing.assert_equal(expected.to_numpy(), result.to_numpy())
 
 
 def test_append_w_non_aligned_columns(engine) -> None:
-    caller_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
-    other_pdf = pd.DataFrame({'d': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
+    # Column names 'A#' and 'a#' should be considered as two different columns, i.e. they don't align
+    # By adding the '#' to the column names we also test the correct handling of special characters
+    caller_pdf = pd.DataFrame({'A#': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
+    other_pdf = pd.DataFrame({'a#': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
 
     caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
     other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
-    result = caller_df.append(other_df).sort_values('a').reset_index(drop=False)
+    result = caller_df.append(other_df).sort_values(['A#', 'a#']).reset_index(drop=False)
 
-    expected = caller_pdf.append(other_pdf).sort_values('a').reset_index(drop=False)
+    expected = caller_pdf.append(other_pdf).sort_values(['A#', 'a#']).reset_index(drop=False)
     expected = expected.rename(columns={'index': '_index_0'})
 
     result_pdf = result.to_pandas()
@@ -33,7 +35,8 @@ def test_append_w_non_aligned_columns(engine) -> None:
 
     assert_equals_data(
         result,
-        expected_columns=['_index_0', 'a', 'b', 'd', 'c'],
+        use_to_pandas=True,
+        expected_columns=['_index_0', 'A#', 'b', 'a#', 'c'],
         expected_data=[
             [0, 1, 'a', None, None],
             [1, 2, 'b', None, None],
