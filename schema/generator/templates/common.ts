@@ -13,6 +13,10 @@ export const getObjectKeys = Object.keys as <T extends object>(
 export const sortEnumMembers = <T extends { name: string }>(members: T[]) =>
   members.sort((a, b) => a.name.localeCompare(b.name));
 
+export const writeCopyright = (writer: SchemaWriter | ValidatorWriter,) => {
+  writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
+}
+
 export const writeEnumerations = (
   writer: SchemaWriter | ValidatorWriter,
   model: typeof Objectiv

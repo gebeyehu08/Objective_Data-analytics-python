@@ -45,3 +45,4 @@ export const EventTypes = z.enum([
   "SuccessEvent",
   "VisibleEvent",
 ]);
+

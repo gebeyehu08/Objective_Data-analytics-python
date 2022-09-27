@@ -3,6 +3,9 @@
   "typeScriptConfigFile": "./tsconfig.json",
   "templates": [
     {
+      "templateFile": "templates/common.ts"
+    },
+    {
       "modelFile": "../base_schema.json",
       "templateFile": "templates/schema.template.ts"
     },

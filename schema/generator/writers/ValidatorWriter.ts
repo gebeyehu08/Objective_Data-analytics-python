@@ -3,6 +3,7 @@
  */
 
 import { CodeWriter, TextWriter } from "@yellicode/core";
+import { writeCopyright } from "../templates/common";
 
 export type EnumMemberDefinition = {
   name: string;
@@ -17,9 +18,8 @@ export type Enumeration = {
 export class ValidatorWriter extends CodeWriter {
   constructor(writer: TextWriter) {
     super(writer);
-    this.writeLine(
-      `/*\n* Copyright ${new Date().getFullYear()} Objectiv B.V.\n*/\n`
-    );
+    this.indentString = '  ';
+    writeCopyright(this);
     this.writeLine('import { z } from "zod";\n');
   }
 
