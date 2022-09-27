@@ -24,6 +24,25 @@ def test_get_real_data(db_params: DBParams):
     )
 
 
+def test_location_stack_get_from_context_with_type_series(db_params):
+    bt = get_df_with_json_data_real(db_params)
+
+    bt['a'] = bt.location_stack.astype('objectiv_location_stack')
+    bts = bt.a.ls.get_from_context_with_type_series("WebDocumentContext", "id")
+    assert_equals_data(
+        bts,
+        expected_columns=['_index_event_id', 'a'],
+        expected_data=[
+            [1, '#document'],
+            [2, '#document'],
+            [3, '#document'],
+            [4, '#document'],
+            [5, '#document'],
+            [6, '#document']
+        ]
+    )
+
+
 def test_location_stack_navigation_features(db_params):
     bt = get_df_with_json_data_real(db_params)
 
