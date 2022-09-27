@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { CodeWriter, TextWriter } from "@yellicode/core";
-import { writeCopyright } from "../templates/common";
+import { CodeWriter, TextWriter } from '@yellicode/core';
+import { writeCopyright } from '../templates/common';
 
 export type EnumMemberDefinition = {
   name: string;
@@ -24,7 +24,7 @@ export class ValidatorWriter extends CodeWriter {
   }
 
   public writeEnumeration(enumeration: Enumeration): void {
-    enumeration.export && this.write("export ");
+    enumeration.export && this.write('export ');
     this.writeLine(`const ${enumeration.name} = z.enum([`);
     this.increaseIndent();
     enumeration.members.forEach((members) => {

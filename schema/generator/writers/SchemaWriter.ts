@@ -2,9 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TextWriter } from "@yellicode/core";
-import { TypeScriptWriter } from "@yellicode/typescript";
-import { writeCopyright } from "../templates/common";
+import { TextWriter } from '@yellicode/core';
+import { TypeScriptWriter } from '@yellicode/typescript';
+import { writeCopyright } from '../templates/common';
 
 export class SchemaWriter extends TypeScriptWriter {
   constructor(writer: TextWriter) {
@@ -14,4 +14,4 @@ export class SchemaWriter extends TypeScriptWriter {
   }
 }
 
-export * from "@yellicode/typescript";
+export * from '@yellicode/typescript';

@@ -2,60 +2,55 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const ContextTypes = z.enum([
-  "AbstractContext",
-  "AbstractGlobalContext",
-  "AbstractLocationContext",
-  "ApplicationContext",
-  "ContentContext",
-  "CookieIdContext",
-  "ExpandableContext",
-  "HttpContext",
-  "IdentityContext",
-  "InputContext",
-  "InputValueContext",
-  "LinkContext",
-  "LocaleContext",
-  "MarketingContext",
-  "MediaPlayerContext",
-  "NavigationContext",
-  "OverlayContext",
-  "PathContext",
-  "PressableContext",
-  "RootLocationContext",
-  "SessionContext",
+  'AbstractContext',
+  'AbstractGlobalContext',
+  'AbstractLocationContext',
+  'ApplicationContext',
+  'ContentContext',
+  'CookieIdContext',
+  'ExpandableContext',
+  'HttpContext',
+  'IdentityContext',
+  'InputContext',
+  'InputValueContext',
+  'LinkContext',
+  'LocaleContext',
+  'MarketingContext',
+  'MediaPlayerContext',
+  'NavigationContext',
+  'OverlayContext',
+  'PathContext',
+  'PressableContext',
+  'RootLocationContext',
+  'SessionContext',
 ]);
 
 export const EventTypes = z.enum([
-  "AbstractEvent",
-  "ApplicationLoadedEvent",
-  "FailureEvent",
-  "HiddenEvent",
-  "InputChangeEvent",
-  "InteractiveEvent",
-  "MediaEvent",
-  "MediaLoadEvent",
-  "MediaPauseEvent",
-  "MediaStartEvent",
-  "MediaStopEvent",
-  "NonInteractiveEvent",
-  "PressEvent",
-  "SuccessEvent",
-  "VisibleEvent",
+  'AbstractEvent',
+  'ApplicationLoadedEvent',
+  'FailureEvent',
+  'HiddenEvent',
+  'InputChangeEvent',
+  'InteractiveEvent',
+  'MediaEvent',
+  'MediaLoadEvent',
+  'MediaPauseEvent',
+  'MediaStartEvent',
+  'MediaStopEvent',
+  'NonInteractiveEvent',
+  'PressEvent',
+  'SuccessEvent',
+  'VisibleEvent',
 ]);
 
 // Custom refinements
 const validateContextUniqueness = (contexts, ctx) => {
   const seenContexts = [];
   const duplicatedContexts = contexts.filter((context) => {
-    if (
-      seenContexts.find(
-        (seenContext) =>
-          seenContext._type === context._type && seenContext.id === context.id
-      )
-    ) {
+    if (seenContexts.find((seenContext) => seenContext._type === context._type && seenContext.id === context.id)) {
       return true;
     }
 
@@ -76,17 +71,12 @@ const validateInputValueContexts = (event, ctx) => {
   const global_contexts = event.global_contexts ?? [];
   const location_stack = event.location_stack ?? [];
   const inputValueContexts = global_contexts.filter(
-    (globalContext) =>
-      globalContext._type === ContextTypes.enum.InputValueContext
+    (globalContext) => globalContext._type === ContextTypes.enum.InputValueContext
   );
   const inputContext = location_stack.find(
-    (locationContext) =>
-      locationContext._type === ContextTypes.enum.InputContext
+    (locationContext) => locationContext._type === ContextTypes.enum.InputContext
   );
-  if (
-    inputContext &&
-    inputValueContexts.find(({ id }) => id !== inputContext.id)
-  ) {
+  if (inputContext && inputValueContexts.find(({ id }) => id !== inputContext.id)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: `All InputValueContext instances should have id: ${inputContext.id}`,
@@ -95,12 +85,8 @@ const validateInputValueContexts = (event, ctx) => {
 };
 
 const validateContextPresence = (type, errorMessage) => (event, ctx) => {
-  const contextFoundInLocationStack = event.location_stack.find(
-    (globalContext) => globalContext._type === type
-  );
-  const contextFoundInGlobalContexts = event.global_contexts.find(
-    (locationContext) => locationContext._type === type
-  );
+  const contextFoundInLocationStack = event.location_stack.find((globalContext) => globalContext._type === type);
+  const contextFoundInGlobalContexts = event.global_contexts.find((locationContext) => locationContext._type === type);
 
   if (!contextFoundInLocationStack && !contextFoundInGlobalContexts) {
     ctx.addIssue({
@@ -211,7 +197,7 @@ export const SessionContext = CommonContextAttributes.extend({
 export const LocationStack = z
   .tuple([RootLocationContext])
   .rest(
-    z.discriminatedUnion("_type", [
+    z.discriminatedUnion('_type', [
       ContentContext,
       ExpandableContext,
       InputContext,
@@ -226,7 +212,7 @@ export const LocationStack = z
 
 export const GlobalContexts = z
   .array(
-    z.discriminatedUnion("_type", [
+    z.discriminatedUnion('_type', [
       ApplicationContext,
       CookieIdContext,
       HttpContext,
@@ -255,21 +241,18 @@ const CommonEventAttributes = z
   );
 
 export const InputChangeEvent = CommonEventAttributes.extend({
-  _type: z.literal("InputChangeEvent"), // TODO use enums
+  _type: z.literal('InputChangeEvent'), // TODO use enums
   location_stack: LocationStack.refine(
     (locationStack) =>
-      locationStack.find(
-        (locationContext) =>
-          locationContext._type === ContextTypes.enum.InputContext
-      ),
-    { message: "InputChangeEvent requires InputContext in its LocationStack" }
+      locationStack.find((locationContext) => locationContext._type === ContextTypes.enum.InputContext),
+    { message: 'InputChangeEvent requires InputContext in its LocationStack' }
   ),
 })
   .strict()
   .superRefine(validateInputValueContexts);
 
 export const PressEvent = CommonEventAttributes.extend({
-  _type: z.literal("PressEvent"), // TODO use enums
+  _type: z.literal('PressEvent'), // TODO use enums
   location_stack: LocationStack.refine(
     (locationStack) =>
       locationStack.find(
@@ -278,8 +261,7 @@ export const PressEvent = CommonEventAttributes.extend({
           locationContext._type === ContextTypes.enum.LinkContext
       ),
     {
-      message:
-        "PressEvent requires PressableContext or LinkContext in its LocationStack",
+      message: 'PressEvent requires PressableContext or LinkContext in its LocationStack',
     }
   ),
 }).strict();
