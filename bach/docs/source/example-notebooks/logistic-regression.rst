@@ -287,7 +287,7 @@ The sampled dataset we used above can easily be unsampled.
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/go#creating-bi-dashboards>`_.
 
 .. code-block:: jupyter-notebook
 

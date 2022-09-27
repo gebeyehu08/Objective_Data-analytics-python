@@ -356,7 +356,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/go#creating-bi-dashboards>`_.
 
 That's it! The model to run this directly using the open model hub is currently still in development; 
 `see the draft PR <https://github.com/objectiv/objectiv-analytics/pull/662/>`_. 
