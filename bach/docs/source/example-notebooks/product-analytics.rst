@@ -491,6 +491,22 @@ To calculate the daily conversion rate, we use the earlier created `daily_users`
 	2022-07-21    0.023256
 	Name: unique_users, dtype: float64
 
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # combined DataFrame with #conversions + conversion rate, daily
+	>>> conversions_plus_rate = conversions.to_frame().merge(conversion_rate.to_frame(), on='time_aggregation', how='left').sort_index(ascending=False)
+	>>> conversions_plus_rate = conversions_plus_rate.rename(columns={'unique_users_x': 'converted_users', 'unique_users_y': 'conversion_rate'})
+	>>> conversions_plus_rate.head()
+	                 converted_users conversion_rate
+	time_aggregation
+	2022-08-09                     2        0.080000
+	2022-08-08                     2        0.041667
+	2022-08-07                     1        0.052632
+	2022-08-06                     2        0.125000
+	2022-08-05                     1        0.030303
+
 Features  before conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can calculate what users did _before_ converting.
