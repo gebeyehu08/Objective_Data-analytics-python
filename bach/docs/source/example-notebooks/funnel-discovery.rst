@@ -13,7 +13,7 @@ It's also available as a `full Jupyter notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/funnel-discovery.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
 or you can instead `run Objectiv Up </docs/home/up/>`__ to try it out. The dataset used here is the same as in 
-Go.
+Up.
 
 In classical funnel analysis you predefine the steps, and then you analyze the differences for user 
 attributes or behavior in each step.
