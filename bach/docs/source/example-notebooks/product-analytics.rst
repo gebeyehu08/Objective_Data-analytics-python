@@ -12,7 +12,7 @@ This example notebook shows how you can easily analyze the basics of product ana
 as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-product-analytics.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run Objectiv Go </docs/home/go/>`__ to try it out. The dataset used here is the same as in 
+or you can instead `run Objectiv Up </docs/home/up/>`__ to try it out. The dataset used here is the same as in 
 Go.
 
 Get started
@@ -491,6 +491,22 @@ To calculate the daily conversion rate, we use the earlier created `daily_users`
 	2022-07-21    0.023256
 	Name: unique_users, dtype: float64
 
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # combined DataFrame with #conversions + conversion rate, daily
+	>>> conversions_plus_rate = conversions.to_frame().merge(conversion_rate.to_frame(), on='time_aggregation', how='left').sort_index(ascending=False)
+	>>> conversions_plus_rate = conversions_plus_rate.rename(columns={'unique_users_x': 'converted_users', 'unique_users_y': 'conversion_rate'})
+	>>> conversions_plus_rate.head()
+	                  converted_users  conversion_rate
+	time_aggregation
+	2022-07-28                      1         0.058824
+	2022-07-27                      1         0.012821
+	2022-07-26                      3         0.029412
+	2022-07-25                      1         0.009804
+	2022-07-24                      1         0.013333
+
 Features  before conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can calculate what users did _before_ converting.
@@ -564,7 +580,7 @@ Get the SQL for any analysis
 ----------------------------
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. the testsetup below is a workaround to show the actual SQL output
 
@@ -671,10 +687,10 @@ That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any 
 Next Steps
 ----------
 
-Play with this notebook in Objectiv Go
+Play with this notebook in Objectiv Up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in  under 5 minutes, 
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in  under 5 minutes, 
 and play with this example notebook yourself.
 
 Use this notebook with your own data

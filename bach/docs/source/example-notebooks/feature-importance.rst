@@ -13,7 +13,7 @@ achieving a conversion goal. Such features can be any interactions with your pro
 run this directly using the open model hub is currently still in development; `see the draft PR 
 <https://github.com/objectiv/objectiv-analytics/pull/662/>`_. 
 
-The dataset used here is the same as in `Objectiv Go </docs/home/go/>`__. To run this on your own data, see 
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__. To run this on your own data, see 
 how to :doc:`get started in your notebook <../get-started-in-your-notebook>`.
 
 Get started
@@ -356,7 +356,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 That's it! The model to run this directly using the open model hub is currently still in development; 
 `see the draft PR <https://github.com/objectiv/objectiv-analytics/pull/662/>`_. 
@@ -366,10 +366,10 @@ That's it! The model to run this directly using the open model hub is currently 
 Next Steps
 ----------
 
-Try the notebooks in Objectiv Go
+Try the notebooks in Objectiv Up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in under 5 minutes, 
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
 and play with the included example notebooks yourself.
 
 Check out related example notebooks

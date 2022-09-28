@@ -13,7 +13,7 @@ dataset that is validated against the `open analytics taxonomy <https://objectiv
 
 It's also available in a `notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/open-taxonomy-how-to.ipynb>`_ to run on 
-your own data. The dataset used here is the same as in `Objectiv Go <https://objectiv.io/docs/home/go/>`__.
+your own data. The dataset used here is the same as in `Objectiv Up <https://objectiv.io/docs/home/up/>`__.
 
 The Objectiv :doc:`Bach API <../bach/api-reference/index>` is strongly pandas-like, to provide a familiar 
 interface to handle large amounts of data in a python environment, while supporting multiple data stores. See 
@@ -475,7 +475,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. doctest:: open-taxonomy
 	:hide:
@@ -618,10 +618,10 @@ That's it! To dive further into working with the open taxonomy,
 Next Steps
 ----------
 
-Try the notebooks in Objectiv Go
+Try the notebooks in Objectiv Up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in under 5 minutes, 
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
 and play with the included example notebooks yourself.
 
 Use this notebook with your own data

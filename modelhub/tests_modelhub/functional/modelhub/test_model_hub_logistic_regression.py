@@ -9,7 +9,6 @@ import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests_modelhub.functional.modelhub.logistic_regression_test_utils import LRTestHelper
 
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1265')  # TODO: Athena
 
 def test_fitted_model(db_params):
     bt, modelhub = get_objectiv_dataframe_test(db_params)

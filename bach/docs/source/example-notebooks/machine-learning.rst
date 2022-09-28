@@ -15,7 +15,7 @@ Machine Learning directly on the raw data in your SQL database. We also have an 
 This notebook is also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/machine-learning.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
-The dataset used here is the same as in `Objectiv Go </docs/home/go/>`__.
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__.
 
 Get started
 -----------
@@ -214,7 +214,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. doctest:: machine-learning
 	:hide:
@@ -330,10 +330,10 @@ That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any 
 Next Steps
 ----------
 
-Try the notebooks in Objectiv Go
+Try the notebooks in Objectiv Up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in under 5 minutes, 
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
 and play with the included example notebooks yourself.
 
 Use this notebook with your own data
