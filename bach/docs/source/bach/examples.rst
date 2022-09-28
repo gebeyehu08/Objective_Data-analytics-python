@@ -15,7 +15,7 @@ In the examples we'll assume that the database has a table called 'example', wit
 columns. The SQL to create that table can be found below in :ref:`appendix_example_data`.
 
 To get a taste of what you can do with Objectiv Bach, There is a `demo
-</docs/home/go>`_ available that enables you to run the full Objectiv pipeline
+</docs/home/up>`_ available that enables you to run the full Objectiv pipeline
 on your local machine. It includes our website as a demo app, a Jupyter Notebook environment with working
 models and a Metabase environment to output data to.
 

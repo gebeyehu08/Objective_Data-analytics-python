@@ -12,7 +12,7 @@ This example notebook shows how you can easily analyze traffic coming from Marke
 via UTM tags. It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/marketing-analytics.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run Objectiv Go </docs/home/go/>`__ to try it out. The dataset used here is the same as in 
+or you can instead `run Objectiv Up </docs/home/go/>`__ to try it out. The dataset used here is the same as in 
 Go.
 
 Get started
@@ -951,7 +951,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/go#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. the testsetup below is a workaround to show the actual SQL output
 
@@ -1188,10 +1188,10 @@ That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any 
 Next Steps
 ----------
 
-Play with this notebook in Objectiv Go
+Play with this notebook in Objectiv Up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a full-fledged product analytics pipeline with `Objectiv Go </docs/home/go>`__ in  under 5 minutes, 
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in  under 5 minutes, 
 and play with this example notebook yourself.
 
 Use this notebook with your own data
