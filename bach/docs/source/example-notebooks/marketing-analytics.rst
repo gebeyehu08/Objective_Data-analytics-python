@@ -369,6 +369,21 @@ Daily conversion rate from marketing
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversion-rate-from-marketing.png
   :alt: Daily conversion rate from marketing
 
+.. doctest:: marketing-analytics
+	:skipif: engine is None
+
+	>>> # combined DataFrame with #conversions + conversion rate, daily
+	>>> conversions_from_marketing_plus_rate = conversions_from_marketing_daily.to_frame().merge(conversion_rate_from_marketing.to_frame(), on='time_aggregation', how='left').sort_index(ascending=False)
+	>>> conversions_from_marketing_plus_rate = conversions_from_marketing_plus_rate.rename(columns={'unique_users_x': 'converted_users', 'unique_users_y': 'conversion_rate'})
+	>>> conversions_from_marketing_plus_rate.head()
+	                  converted_users  conversion_rate
+	time_aggregation
+	2022-08-04                      1         8.333333
+	2022-07-26                      4         6.349206
+	2022-07-25                      1         1.587302
+	2022-07-23                      5         9.259259
+	2022-07-22                      1         2.127660
+
 Daily conversions overall
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -539,13 +554,13 @@ Avg. duration for converted users per _source_
 	twitter    0 days 00:00:23.775200
 	reddit     0 days 00:02:02.262000
 
-Avg. duration per converted user
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Avg. duration per ad source for converted users
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> # duration before conversion - per source & user
+	>>> # duration before conversion - per source
 	>>> # label sessions with a conversion
 	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='github_press', partition='user_id') >= 1
 	>>> # label hits where at that point in time, there are 0 conversions in the session
@@ -554,7 +569,24 @@ Avg. duration per converted user
 	>>> df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
 	>>> # filter on above created labels to find the users who converted for the very first time
 	>>> converted_users = df_marketing_selection[(df_marketing_selection.converted_users & df_marketing_selection.zero_conversions_at_moment)]
-	>>> modelhub.aggregate.session_duration(converted_users, groupby=['day', 'utm_source', 'user_id']).to_frame().sort_values('day', ascending=False).head(20)
+	>>> duration_per_source_converted = modelhub.aggregate.session_duration(converted_users, groupby=['day', 'utm_source']).to_frame().sort_values('day', ascending=False)
+	>>> duration_per_source_converted.head(20)
+	                            session_duration
+	day        utm_source
+	2022-07-26 reddit     0 days 00:02:02.262000
+	           twitter    0 days 00:00:20.948500
+	2022-07-23 twitter    0 days 00:00:00.352000
+	2022-07-22 twitter    0 days 00:01:02.267000
+
+Avg. duration per converted user
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. doctest:: marketing-analytics
+	:skipif: engine is None
+
+	>>> # duration before conversion - per source & user
+	>>> duration_per_converted_user = modelhub.aggregate.session_duration(converted_users, groupby=['day', 'utm_source', 'user_id']).to_frame().sort_values('day', ascending=False)
+	>>> duration_per_converted_user.head(20)
 	                                                                 session_duration
 	day        utm_source user_id
 	2022-07-26 reddit     ed42dc5f-6040-4ddc-b7e5-48162adb7bbc 0 days 00:02:02.262000
