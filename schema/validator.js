@@ -195,9 +195,9 @@ export const SessionContext = CommonContextAttributes.extend({
 
 // Location Stack and Global Contexts arrays
 export const LocationStack = z
-  .tuple([RootLocationContext])
-  .rest(
+  .array(
     z.discriminatedUnion('_type', [
+      RootLocationContext,
       ContentContext,
       ExpandableContext,
       InputContext,

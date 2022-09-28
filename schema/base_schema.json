@@ -8,7 +8,8 @@
     "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
     "type": "array",
     "items": {
-      "type":"AbstractLocationContext"
+      "type":"AbstractLocationContext",
+      "discriminator": "_type"
     },
     "rules": [
       {
@@ -32,7 +33,8 @@
     "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.",
     "type": "array",
     "items": {
-      "type":"AbstractGlobalContext"
+      "type":"AbstractGlobalContext",
+      "discriminator":"_type"
     },
     "rules": [
       {
@@ -49,7 +51,6 @@
   "events": {
     "AbstractEvent": {
       "description": "This is the abstract parent of all Events.",
-      "parents": [],
       "properties":{
         "location_stack": {
           "type": "LocationStack",
@@ -75,7 +76,7 @@
     },
     "InteractiveEvent": {
       "description": "The parent of Events that are the direct result of a user interaction, e.g. a button click.",
-      "parents": ["AbstractEvent"],
+      "parent": "AbstractEvent",
       "properties": {
         "location_stack": {
           "type": "LocationStack",
@@ -85,20 +86,15 @@
     },
     "NonInteractiveEvent": {
       "description": "The parent of Events that are not directly triggered by a user action.",
-      "parents": ["AbstractEvent"],
-      "requiresContext": []
+      "parent": "AbstractEvent"
     },
     "ApplicationLoadedEvent": {
       "description": "A NonInteractive event that is emitted after an application (eg. SPA) has finished loading.",
-      "parents": ["NonInteractiveEvent"],
-      "requiresContext": []
+      "parent": "NonInteractiveEvent"
     },
     "FailureEvent": {
       "description": "A NonInteractiveEvent that is sent when a user action results in a error, \nlike an invalid email when sending a form.",
-      "parents": [
-        "NonInteractiveEvent"
-      ],
-      "requiresContext": [],
+      "parent": "NonInteractiveEvent",
       "properties": {
         "message": {
           "description": "Failure message.",
@@ -108,28 +104,27 @@
     },
     "InputChangeEvent": {
       "description": "Event triggered when user input is modified.",
-      "parents": ["InteractiveEvent"],
+      "parent": "InteractiveEvent",
       "requiresContext": ["InputContext"]
     },
     "PressEvent": {
       "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).",
-      "parents": ["InteractiveEvent"],
+      "parent": "InteractiveEvent",
       "requiresContext": ["PressableContext"]
     },
     "HiddenEvent": {
       "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.",
-      "parents": ["NonInteractiveEvent"],
+      "parent": "NonInteractiveEvent",
       "requiresContext": ["AbstractLocationContext"]
     },
     "VisibleEvent": {
       "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.",
-      "parents": ["NonInteractiveEvent"],
+      "parent": "NonInteractiveEvent",
       "requiresContext": ["AbstractLocationContext"]
     },
     "SuccessEvent": {
       "description": "A NonInteractiveEvent that is sent when a user action is successfully completed, \nlike sending an email form.",
-      "parents": ["NonInteractiveEvent"],
-      "requiresContext": [],
+      "parent": "NonInteractiveEvent",
       "properties": {
         "message": {
           "description": "Success message.",
@@ -139,28 +134,24 @@
     },
     "MediaEvent": {
       "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.",
-      "parents": ["NonInteractiveEvent"],
+      "parent": "NonInteractiveEvent",
       "requiresContext": ["MediaPlayerContext"]
     },
     "MediaLoadEvent": {
       "description": "A MediaEvent that's emitted after a media item completes loading.",
-      "parents": ["MediaEvent"],
-      "requiresContext": []
+      "parent": "MediaEvent"
     },
     "MediaPauseEvent": {
       "description": "A MediaEvent that's emitted after a media item pauses playback.",
-      "parents": ["MediaEvent"],
-      "requiresContext": []
+      "parent": "MediaEvent"
     },
     "MediaStartEvent": {
       "description": "A MediaEvent that's emitted after a media item starts playback.",
-      "parents": ["MediaEvent"],
-      "requiresContext": []
+      "parent": "MediaEvent"
     },
     "MediaStopEvent": {
       "description": "A MediaEvent that's emitted after a media item stops playback.",
-      "parents": ["MediaEvent"],
-      "requiresContext": []
+      "parent": "MediaEvent"
     }
   },
   "contexts": {
@@ -179,15 +170,15 @@
     },
     "AbstractGlobalContext": {
       "description": "This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.",
-      "parents": ["AbstractContext"]
+      "parent": "AbstractContext"
     },
     "ApplicationContext": {
       "description": "A GlobalContext describing in which app the event happens, like a website or iOS app.",
-      "parents": ["AbstractGlobalContext"]
+      "parent": "AbstractGlobalContext"
     },
     "CookieIdContext": {
       "description": "Global context with information needed to reconstruct a user session.",
-      "parents": ["AbstractGlobalContext"],
+      "parent": "AbstractGlobalContext",
       "properties": {
         "cookie_id": {
           "description": "Unique identifier from the session cookie.",
@@ -197,7 +188,7 @@
     },
     "HttpContext": {
       "description": "A GlobalContext describing meta information about the agent that sent the event.",
-      "parents": ["AbstractGlobalContext"],
+      "parent": "AbstractGlobalContext",
       "properties": {
         "referrer": {
           "description": "Full URL to HTTP referrer of the current page.",
@@ -216,7 +207,7 @@
     },
     "InputValueContext": {
       "description": "A GlobalContext containing the value of a single input element. Multiple can be present.",
-      "parents": ["AbstractGlobalContext"],
+      "parent": "AbstractGlobalContext",
       "properties": {
         "value": {
           "description": "The value of the input element.",
@@ -226,7 +217,7 @@
     },
     "LocaleContext": {
       "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).",
-      "parents": ["AbstractGlobalContext"],
+      "parent": "AbstractGlobalContext",
       "properties": {
         "language_code": {
           "description": "Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.",
@@ -242,13 +233,11 @@
     },
     "PathContext": {
       "description": "A GlobalContext describing the path where the user is when an event is sent.",
-      "parents": ["AbstractGlobalContext"]
+      "parent": "AbstractGlobalContext"
     },
     "SessionContext": {
       "description": "A GlobalContext describing meta information about the current session.",
-      "parents": [
-        "AbstractGlobalContext"
-      ],
+      "parent": "AbstractGlobalContext",
       "properties": {
         "hit_number": {
           "description": "Hit counter relative to the current session, this event originated in.",
@@ -258,7 +247,7 @@
     },
     "MarketingContext": {
       "description": "a context that captures marketing channel info, so users can do attribution, campaign \neffectiveness and other models.",
-      "parents": ["AbstractGlobalContext"],
+      "parent": "AbstractGlobalContext",
       "properties": {
         "source": {
           "description": "Identifies the advertiser, site, publication, etc.",
@@ -301,7 +290,7 @@
     },
     "IdentityContext": {
       "description": "A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.",
-      "parents": ["AbstractGlobalContext"],
+      "parent": "AbstractGlobalContext",
       "properties": {
         "value": {
           "description": "The unique identifier for this user/group/entity within the scope defined by `id`.",
@@ -311,20 +300,20 @@
     },
     "AbstractLocationContext": {
       "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.",
-      "parents": ["AbstractContext"],
+      "parent": "AbstractContext",
       "requiresContext": ["RootLocationContext", "PathContext"]
     },
     "InputContext": {
       "description": "A Location Context that describes an element that accepts user input, i.e. a form field.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     },
     "PressableContext": {
       "description": "An Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     },
     "LinkContext": {
       "description": "A PressableContext that contains an href.",
-      "parents": ["PressableContext"],
+      "parent": "PressableContext",
       "properties": {
         "href": {
           "description": "URL (href) the link points to.",
@@ -334,27 +323,27 @@
     },
     "RootLocationContext": {
       "description": "A Location Context that uniquely represents the top-level UI location of the user.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     },
     "ExpandableContext": {
       "description": "A Location Context that describes a section of the UI that can expand & collapse.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     },
     "MediaPlayerContext": {
       "description": "A Location Context that describes a section of the UI containing a media player.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     },
     "NavigationContext": {
       "description": "A Location Context that describes a section of the UI containing navigational elements, for example a menu.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     },
     "OverlayContext": {
       "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     },
     "ContentContext": {
       "description": "A Location Context that describes a logical section of the UI that contains other Location Contexts. \nEnabling Data Science to analyze this section specifically.",
-      "parents": ["AbstractLocationContext"]
+      "parent": "AbstractLocationContext"
     }
   }
 }

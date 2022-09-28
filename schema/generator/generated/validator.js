@@ -46,13 +46,6 @@ export const EventTypes = z.enum([
   "VisibleEvent",
 ]);
 
-export const LocationStack = z.object({
-  undefined: z.undefined(),
-  undefined: z.undefined(),
-  undefined: z.undefined(),
-  undefined: z.undefined(),
-});
-
 export const ApplicationContext = z.object({
   id: z.string(),
   _type: z.literal(ContextTypes.enum.ApplicationContext),
@@ -160,4 +153,34 @@ export const ContentContext = z.object({
   id: z.string(),
   _type: z.literal(ContextTypes.enum.ContentContext),
 });
+
+export const LocationStack = z
+  .array(
+    z.discriminatedUnion('_type', [
+      ContentContext,
+      ExpandableContext,
+      InputContext,
+      LinkContext,
+      MediaPlayerContext,
+      NavigationContext,
+      OverlayContext,
+      PressableContext,
+      RootLocationContext,
+    ])
+  );
+
+export const GlobalContexts = z
+  .array(
+    z.discriminatedUnion('_type', [
+      ApplicationContext,
+      CookieIdContext,
+      HttpContext,
+      IdentityContext,
+      InputValueContext,
+      LocaleContext,
+      MarketingContext,
+      PathContext,
+      SessionContext,
+    ])
+  );
 

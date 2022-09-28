@@ -40,8 +40,27 @@ export const getContexts = (includeAbstracts = false) => {
 };
 
 export const getEntityProperties = (entity) => entity['properties'] ?? {};
-export const getEntityParents = (entity) => entity['parents'] ?? [];
-export const getEntityRequiresContext = (entity) => entity['requiresContext'] ?? [];
+
+export const getEntity = (entityType) => Objectiv.contexts[entityType] ?? Objectiv.events[entityType];
+
+export const getEntityParents = (entity, parents = []) => {
+  const parentEntityType = entity['parent'];
+
+  if(!parentEntityType) {
+    return parents.sort();
+  }
+
+  parents.push(parentEntityType);
+
+  return getEntityParents(getEntity(parentEntityType), parents);
+};
+
+export const getContextChildren = (parentContext) => getContexts().filter(contextType => {
+  const context = Objectiv.contexts[contextType];
+  const contextParents = getEntityParents(context);
+  return contextParents.includes(parentContext);
+}).sort();
+
 
 // recursive helper to fetch parent attributes
 export const getParentProperties = (entities, parents, properties = {}) =>

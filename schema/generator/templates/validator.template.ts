@@ -2,20 +2,21 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { z } from 'zod';
-import Objectiv from '../../base_schema.json';
-import { Generator } from '@yellicode/templating';
 import { TextWriter } from '@yellicode/core';
+import { Generator } from '@yellicode/templating';
+import Objectiv from '../../base_schema.json';
 import { ZodWriter } from '../writers/ZodWriter';
-import { getContexts, getProperties, getObjectKeys, writeEnumerations } from './common';
+import { getContextChildren, getContexts, getObjectKeys, getProperties, writeEnumerations } from './common';
 
 Generator.generateFromModel(
   { outputFile: '../generated/validator.js' },
   (writer: TextWriter, model: typeof Objectiv) => {
     const zodWriter = new ZodWriter(writer);
 
+    // ContextTypes and EventTypes enums
     writeEnumerations(zodWriter);
 
+    // Context definitions
     getContexts().forEach((contextName) => {
       const properties = getProperties(model.contexts, contextName);
 
@@ -29,5 +30,19 @@ Generator.generateFromModel(
         })),
       });
     });
+
+    // LocationStack array definition
+    zodWriter.writeArray({
+      name: 'LocationStack',
+      items: getContextChildren(model.LocationStack.items.type),
+      discriminator: model.LocationStack.items.discriminator
+    })
+
+    // GlobalContexts array definition
+    zodWriter.writeArray({
+      name: 'GlobalContexts',
+      items: getContextChildren(model.GlobalContexts.items.type),
+      discriminator: model.GlobalContexts.items.discriminator
+    })
   }
 );

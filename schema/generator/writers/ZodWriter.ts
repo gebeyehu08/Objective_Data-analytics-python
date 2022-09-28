@@ -3,7 +3,6 @@
  */
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
-import { getObjectKeys } from '../templates/common';
 
 export type EnumMemberDefinition = {
   name: string;
@@ -25,6 +24,12 @@ export interface PropertyDefinition {
 export interface ObjectDefinition {
   name: string;
   properties: PropertyDefinition[];
+}
+
+export type ArrayDefinition = {
+  name: string,
+  items: string[],
+  discriminator?: string
 }
 
 const SchemaToZodPropertyTypeMap = {
@@ -75,4 +80,24 @@ export class ZodWriter extends CodeWriter {
 
     this.writeLine(`});\n`);
   }
+  
+  public writeArray = (array: ArrayDefinition) => {
+    this.writeLine(`export const ${array.name} = z`);
+    this.increaseIndent();
+    this.writeLine(`.array(`);
+    this.increaseIndent();
+    this.writeLine(`z.${array.discriminator ? `discriminatedUnion('${array.discriminator}', ` : 'union(' }[`);
+    this.increaseIndent();
+
+    array.items.forEach(childContext => {
+      this.writeLine(`${childContext},`);
+    })
+
+    this.decreaseIndent();
+    this.writeLine(`])`);
+    this.decreaseIndent();
+    this.writeLine(`);`);
+    this.decreaseIndent();
+    this.writeLine();
+  };
 }

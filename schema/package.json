@@ -10,7 +10,6 @@
     "prettier": "prettier --write validator*.js generator/templates generator/writers",
     "generator:watch": "(cd generator && yellicode --watch)"
   },
-  "type": "module",
   "author": {
     "name": "Surai Di Rosa",
     "email": "surai.dirosa@gmail.com",
