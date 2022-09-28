@@ -13,6 +13,14 @@
     },
     {
       "modelFile": "../base_schema.json",
+      "templateFile": "templates/docs.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
+      "templateFile": "templates/factories.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
       "templateFile": "templates/schema.template.ts"
     },
     {
