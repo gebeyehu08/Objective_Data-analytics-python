@@ -499,13 +499,13 @@ To calculate the daily conversion rate, we use the earlier created `daily_users`
 	>>> conversions_plus_rate = conversions.to_frame().merge(conversion_rate.to_frame(), on='time_aggregation', how='left').sort_index(ascending=False)
 	>>> conversions_plus_rate = conversions_plus_rate.rename(columns={'unique_users_x': 'converted_users', 'unique_users_y': 'conversion_rate'})
 	>>> conversions_plus_rate.head()
-	                 converted_users conversion_rate
+	                  converted_users  conversion_rate
 	time_aggregation
-	2022-08-09                     2        0.080000
-	2022-08-08                     2        0.041667
-	2022-08-07                     1        0.052632
-	2022-08-06                     2        0.125000
-	2022-08-05                     1        0.030303
+	2022-07-28                      1         0.058824
+	2022-07-27                      1         0.012821
+	2022-07-26                      3         0.029412
+	2022-07-25                      1         0.009804
+	2022-07-24                      1         0.013333
 
 Features  before conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
