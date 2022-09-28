@@ -4,8 +4,8 @@
 
 import { TextWriter } from '@yellicode/core';
 import Objectiv from '../../base_schema.json';
-import { SchemaWriter } from '../writers/SchemaWriter';
-import { ValidatorWriter } from '../writers/ValidatorWriter';
+import { TypescriptWriter } from '../writers/SchemaWriter';
+import { ZodWriter } from '../writers/ValidatorWriter';
 
 export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<keyof T>;
 
@@ -16,7 +16,7 @@ export const writeCopyright = (writer: TextWriter) => {
   writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
 };
 
-export const writeEnumerations = (writer: SchemaWriter | ValidatorWriter) => {
+export const writeEnumerations = (writer: TypescriptWriter | ZodWriter) => {
   writer.writeEnumeration({
     export: true,
     name: 'ContextTypes',

@@ -4,7 +4,7 @@
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
 
-export class DocsWriter extends CodeWriter {
+export class MarkdownWriter extends CodeWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';

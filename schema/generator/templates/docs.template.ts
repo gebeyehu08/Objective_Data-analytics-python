@@ -5,9 +5,9 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
-import { DocsWriter } from '../writers/DocsWriter';
+import { MarkdownWriter } from '../writers/MarkdownWriter';
 
 Generator.generateFromModel({ outputFile: '../generated/docs.md' }, (writer: TextWriter, model: typeof Objectiv) => {
-  const docsWriter = new DocsWriter(writer);
+  const docsWriter = new MarkdownWriter(writer);
   // TODO
 });

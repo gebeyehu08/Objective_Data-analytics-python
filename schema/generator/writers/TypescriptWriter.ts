@@ -6,7 +6,7 @@ import { TextWriter } from '@yellicode/core';
 import { TypeScriptWriter } from '@yellicode/typescript';
 import { writeCopyright } from '../templates/common';
 
-export class FactoriesWriter extends TypeScriptWriter {
+export class TypescriptWriter extends TypeScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';

@@ -22,7 +22,7 @@ export interface PropertyDefinition {
   value?: string;
 }
 
-export class ValidatorWriter extends CodeWriter {
+export class ZodWriter extends CodeWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';

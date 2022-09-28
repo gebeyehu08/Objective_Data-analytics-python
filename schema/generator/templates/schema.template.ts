@@ -2,14 +2,14 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TextWriter } from '@yellicode/core';
-import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
-import { SchemaWriter } from '../writers/SchemaWriter';
+import { Generator } from '@yellicode/templating';
+import { TextWriter } from '@yellicode/core';
+import { TypescriptWriter } from '../writers/TypescriptWriter';
 import { writeEnumerations } from './common';
 
 Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: TextWriter, model: typeof Objectiv) => {
-  const schemaWriter = new SchemaWriter(writer);
+  const schemaWriter = new TypescriptWriter(writer);
 
   writeEnumerations(schemaWriter);
 });

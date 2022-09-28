@@ -2,10 +2,10 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TextWriter } from '@yellicode/core';
-import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
-import { ValidatorWriter } from '../writers/ValidatorWriter';
+import { Generator } from '@yellicode/templating';
+import { TextWriter } from '@yellicode/core';
+import { ZodWriter } from '../writers/ZodWriter';
 import { getContexts, getEntityAttributes, getObjectKeys, writeEnumerations } from './common';
 
 const SchemaToZodPropertyTypeMap = {
@@ -18,7 +18,7 @@ const SchemaToZodPropertyTypeMap = {
 Generator.generateFromModel(
   { outputFile: '../generated/validator.js' },
   (writer: TextWriter, model: typeof Objectiv) => {
-    const validatorWriter = new ValidatorWriter(writer);
+    const validatorWriter = new ZodWriter(writer);
 
     writeEnumerations(validatorWriter);
 
