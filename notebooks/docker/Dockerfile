@@ -34,5 +34,5 @@ COPY basic-product-analytics.ipynb $APP
 COPY marketing-analytics.ipynb $APP
 
 USER notebook
-ENV OBJECTIV_VERSION_CHECK_DISABLE=true
+ENV OBJECTIV_VERSION_CHECK_DISABLE=false
 ENTRYPOINT /entrypoint.sh
