@@ -303,7 +303,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
 	          FROM "session_id_and_count___a4a712e42ece50e5846f84e4aa99f981"
 	       ),
-	       "getitem_where_boolean___b21b5c45d052ff9d2c59e2660f8bcc9f" AS (
+	       "getitem_where_boolean___7266549eddda372e4585e53004302dfd" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -313,13 +313,13 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "stack_event_types" AS "stack_event_types",
 	               "session_id" AS "session_id",
 	               "session_hit_number" AS "session_hit_number",
-	               REPLACE(jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id', '-', '_') AS "root"
+	               REPLACE(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id', '-', '_') AS "root"
 	          FROM "objectiv_sessionized_data___35e440d72c941de548e6a8af397e8c76"
 	         WHERE ("event_type" = 'PressEvent')
 	       ) SELECT "user_id" AS "user_id",
 	       "root" AS "root",
 	       cast(sum(cast(1 AS bigint)) AS bigint) AS "value_counts"
-	  FROM "getitem_where_boolean___b21b5c45d052ff9d2c59e2660f8bcc9f"
+	  FROM "getitem_where_boolean___7266549eddda372e4585e53004302dfd"
 	 GROUP BY "user_id",
 	          "root"
 	 ORDER BY cast(sum(cast(1 AS bigint)) AS bigint) DESC NULLS LAST

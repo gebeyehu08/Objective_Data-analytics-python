@@ -393,7 +393,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	        SELECT *
 	          FROM (VALUES (cast(0 AS bigint), 'modeling'), (cast(1 AS bigint), 'taxonomy'), (cast(2 AS bigint), 'tracking'), (cast(3 AS bigint), 'home'), (cast(4 AS bigint), 'docs')) AS t("_index_0", "roots")
 	       ),
-	       "getitem_where_boolean___9470019c9e6f91a2d37f6bac0e01cc64" AS (
+	       "getitem_where_boolean___00cde70680cb674872b8cee4ef7d41e4" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -406,34 +406,34 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "application" AS "application",
 	               "path" AS "path",
 	               "application"->0->>'id' AS "application_id",
-	               jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id' AS "root_location"
+	               coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id' AS "root_location"
 	          FROM "objectiv_sessionized_data___d0994dc2186ae53706a802b150cc8072"
-	         WHERE ((jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id' in (SELECT "roots" AS "roots" FROM "loaded_data___6c36bcef7d60e965af3a13a3db67f6eb")) AND (("application"->0->>'id' = 'objectiv-docs')))
+	         WHERE ((coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id' in (SELECT "roots" AS "roots" FROM "loaded_data___6c36bcef7d60e965af3a13a3db67f6eb")) AND (("application"->0->>'id' = 'objectiv-docs')))
 	       ),
-	       "getitem_having_boolean___ad8b9eb86439d22b96d56328aeba111f" AS (
+	       "getitem_having_boolean___99a294366058db159a8e28b4ff649f31" AS (
 	        SELECT "user_id" AS "user_id",
 	               "session_id" AS "__session_id",
 	               min("moment") AS "moment_min",
 	               max("moment") AS "moment_max",
 	               ((max("moment")) - (min("moment"))) AS "session_duration"
-	          FROM "getitem_where_boolean___9470019c9e6f91a2d37f6bac0e01cc64"
+	          FROM "getitem_where_boolean___00cde70680cb674872b8cee4ef7d41e4"
 	         GROUP BY "user_id",
 	                  "session_id"
 	        HAVING (extract(epoch FROM ((max("moment")) - (min("moment")))) > cast(0 AS bigint))
 	       ),
-	       "merge_right___52b59f870f97d354b8ab744be3c80c5a" AS (
+	       "merge_right___8724897a0a977a93d907ace7b11ecb71" AS (
 	        SELECT "user_id" AS "user_id",
 	               sum("session_duration") AS "explore_inform_duration"
-	          FROM "getitem_having_boolean___ad8b9eb86439d22b96d56328aeba111f"
+	          FROM "getitem_having_boolean___99a294366058db159a8e28b4ff649f31"
 	         GROUP BY "user_id"
 	       ),
-	       "merge_sql___32a357c8d28e7fb38db96b6fbeb0c2eb" AS (
+	       "merge_sql___650ea1f999f0b9ce04ee2b8cc57c21de" AS (
 	        SELECT COALESCE("l"."user_id", "r"."user_id") AS "user_id",
 	               "l"."session_duration" AS "session_duration",
 	               "r"."explore_inform_duration" AS "explore_inform_duration"
 	          FROM "merge_left___bd4e54d179d02e6a47ad999ac1eeda06" AS l
 	          LEFT
-	            JOIN "merge_right___52b59f870f97d354b8ab744be3c80c5a" AS r
+	            JOIN "merge_right___8724897a0a977a93d907ace7b11ecb71" AS r
 	            ON ("l"."user_id" = "r"."user_id")
 	       ) SELECT "user_id" AS "user_id",
 	       "session_duration" AS "session_duration",
@@ -441,7 +441,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	       CASE WHEN ("explore_inform_duration" > cast('P0DT0H11M30S' AS interval)) THEN '3 - implement'
 	            ELSE CASE WHEN ((("explore_inform_duration" >= cast('P0DT0H1M30S' AS interval))) AND (("explore_inform_duration" <= cast('P0DT0H11M30S' AS interval)))) THEN '2 - explore' ELSE '1 - inform' END
 	             END AS "bucket"
-	  FROM "merge_sql___32a357c8d28e7fb38db96b6fbeb0c2eb"
+	  FROM "merge_sql___650ea1f999f0b9ce04ee2b8cc57c21de"
 	<BLANKLINE>
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
