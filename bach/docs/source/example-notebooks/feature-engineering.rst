@@ -14,7 +14,7 @@ engineering.
 It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/feature-engineering.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
-The dataset used here is the same as in `Objectiv Up </docs/home/go/>`__.
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__.
 
 We'll go through describing the data, finding outliers, transforming data, and grouping & aggregating data so 
 that a useful feature set is created that can be used for machine learning. To see details of how such a 

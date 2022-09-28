@@ -12,7 +12,7 @@ This example notebook shows how you can easily analyze traffic coming from Marke
 via UTM tags. It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/marketing-analytics.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run Objectiv Up </docs/home/go/>`__ to try it out. The dataset used here is the same as in 
+or you can instead `run Objectiv Up </docs/home/up/>`__ to try it out. The dataset used here is the same as in 
 Go.
 
 Get started

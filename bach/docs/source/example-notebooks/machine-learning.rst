@@ -15,7 +15,7 @@ Machine Learning directly on the raw data in your SQL database. We also have an 
 This notebook is also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/machine-learning.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
-The dataset used here is the same as in `Objectiv Up </docs/home/go/>`__.
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__.
 
 Get started
 -----------

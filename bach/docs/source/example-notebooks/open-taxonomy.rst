@@ -13,7 +13,7 @@ dataset that is validated against the `open analytics taxonomy <https://objectiv
 
 It's also available in a `notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/open-taxonomy-how-to.ipynb>`_ to run on 
-your own data. The dataset used here is the same as in `Objectiv Up <https://objectiv.io/docs/home/go/>`__.
+your own data. The dataset used here is the same as in `Objectiv Up <https://objectiv.io/docs/home/up/>`__.
 
 The Objectiv :doc:`Bach API <../bach/api-reference/index>` is strongly pandas-like, to provide a familiar 
 interface to handle large amounts of data in a python environment, while supporting multiple data stores. See 

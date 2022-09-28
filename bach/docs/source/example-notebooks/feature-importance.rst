@@ -13,7 +13,7 @@ achieving a conversion goal. Such features can be any interactions with your pro
 run this directly using the open model hub is currently still in development; `see the draft PR 
 <https://github.com/objectiv/objectiv-analytics/pull/662/>`_. 
 
-The dataset used here is the same as in `Objectiv Up </docs/home/go/>`__. To run this on your own data, see 
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__. To run this on your own data, see 
 how to :doc:`get started in your notebook <../get-started-in-your-notebook>`.
 
 Get started

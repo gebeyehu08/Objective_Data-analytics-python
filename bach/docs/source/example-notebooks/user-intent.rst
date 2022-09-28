@@ -12,7 +12,7 @@ This example notebook shows how you can easily run basic User Intent analysis wi
 available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-user-intent.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
-The dataset used here is the same as in `Objectiv Up </docs/home/go/>`__.
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__.
 
 Get started
 -----------
