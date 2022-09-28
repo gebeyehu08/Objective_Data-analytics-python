@@ -6,6 +6,6 @@ import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
 
-Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: TextWriter, model: typeof Objectiv) => {
+Generator.generateFromModel({ outputFile: '../generated/iglu.json' }, (writer: TextWriter, model: typeof Objectiv) => {
   // TODO
 });
