@@ -277,8 +277,8 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
 
     def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
         """
-        Extracts context data from global_contexts json. Native format is currently only supported for Postgres,
-        therefore an exception will be raised for other dialects.
+        Extracts context data from global_contexts json. Native format is currently only
+        supported for Postgres, therefore an exception will be raised for other dialects.
         """
         dialect = df.engine.dialect
         if not is_postgres(dialect):
