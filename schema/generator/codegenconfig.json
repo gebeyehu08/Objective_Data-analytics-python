@@ -6,6 +6,9 @@
       "templateFile": "templates/common.ts"
     },
     {
+      "templateFile": "writers/DocsWriter.ts"
+    },
+    {
       "templateFile": "writers/SchemaWriter.ts"
     },
     {

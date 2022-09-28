@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TextWriter } from "@yellicode/core";
+import { TextWriter } from '@yellicode/core';
 import Objectiv from '../../base_schema.json';
 import { SchemaWriter } from '../writers/SchemaWriter';
 import { ValidatorWriter } from '../writers/ValidatorWriter';

@@ -9,7 +9,7 @@ import { SchemaWriter } from '../writers/SchemaWriter';
 import { writeEnumerations } from './common';
 
 Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: TextWriter, model: typeof Objectiv) => {
-  const ts = new SchemaWriter(writer);
+  const schemaWriter = new SchemaWriter(writer);
 
-  writeEnumerations(ts);
+  writeEnumerations(schemaWriter);
 });

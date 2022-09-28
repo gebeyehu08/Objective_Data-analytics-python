@@ -17,18 +17,18 @@ const SchemaToZodPropertyTypeMap = {
 Generator.generateFromModel(
   { outputFile: '../generated/validator.js' },
   (writer: TextWriter, model: typeof Objectiv) => {
-    const validator = new ValidatorWriter(writer);
+    const validatorWriter = new ValidatorWriter(writer);
 
-    writeEnumerations(validator);
+    writeEnumerations(validatorWriter);
 
-    // TODO see if we can generalize this function, passing type map and replacements map to it (both optional)
+    // TODO see if we can generalize this function
     getContexts().forEach((contextName) => {
       const { properties } = getEntityAttributes(model.contexts, contextName);
 
-      validator.writeLine(`export const ${contextName} = z.object({`);
+      validatorWriter.writeLine(`export const ${contextName} = z.object({`);
 
       getObjectKeys(properties).forEach((property) => {
-        validator.writeProperty({
+        validatorWriter.writeProperty({
           name: String(property),
           typeName: SchemaToZodPropertyTypeMap[properties[property].type],
           isOptional: properties[property].optional,
@@ -36,7 +36,7 @@ Generator.generateFromModel(
         });
       });
 
-      validator.writeLine(`});\n`);
+      validatorWriter.writeLine(`});\n`);
     });
   }
 );
