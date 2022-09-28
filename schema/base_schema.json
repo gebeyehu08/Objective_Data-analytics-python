@@ -19,7 +19,7 @@
       },
       {
         "type": "requires_context",
-        "context": "PathContext",
+        "context": "PathContext"
       },
       {
         "type": "unique_context",
@@ -150,7 +150,7 @@
           "type": "requires_context",
           "context": "MediaPlayerContext"
         }
-      ],
+      ]
     },
     "MediaLoadEvent": {
       "description": "A MediaEvent that's emitted after a media item completes loading.",
