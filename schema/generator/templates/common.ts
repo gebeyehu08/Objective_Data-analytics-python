@@ -2,19 +2,14 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TextWriter } from '@yellicode/core';
 import Objectiv from '../../base_schema.json';
-import { TypescriptWriter } from '../writers/SchemaWriter';
-import { ZodWriter } from '../writers/ValidatorWriter';
+import { TypescriptWriter } from '../writers/TypescriptWriter';
+import { ZodWriter } from '../writers/ZodWriter';
 
 export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<keyof T>;
 
 export const sortEnumMembers = <T extends { name: string }>(members: T[]) =>
   members.sort((a, b) => a.name.localeCompare(b.name));
-
-export const writeCopyright = (writer: TextWriter) => {
-  writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
-};
 
 export const writeEnumerations = (writer: TypescriptWriter | ZodWriter) => {
   writer.writeEnumeration({

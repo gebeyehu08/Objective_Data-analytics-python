@@ -3,7 +3,6 @@
  */
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
-import { writeCopyright } from '../templates/common';
 
 export type EnumMemberDefinition = {
   name: string;
@@ -26,7 +25,7 @@ export class ZodWriter extends CodeWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
-    writeCopyright(this);
+    writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
     this.writeLine('import { z } from "zod";\n');
   }
 

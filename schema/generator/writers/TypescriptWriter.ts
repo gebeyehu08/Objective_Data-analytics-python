@@ -4,13 +4,12 @@
 
 import { TextWriter } from '@yellicode/core';
 import { TypeScriptWriter } from '@yellicode/typescript';
-import { writeCopyright } from '../templates/common';
 
 export class TypescriptWriter extends TypeScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
-    writeCopyright(this);
+    writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
   }
 }
 
