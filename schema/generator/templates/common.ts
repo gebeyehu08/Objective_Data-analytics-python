@@ -3,31 +3,11 @@
  */
 
 import Objectiv from '../../base_schema.json';
-import { TypescriptWriter } from '../writers/TypescriptWriter';
-import { ZodWriter } from '../writers/ZodWriter';
 
 export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<keyof T>;
 
 export const sortEnumMembers = <T extends { name: string }>(members: T[]) =>
   members.sort((a, b) => a.name.localeCompare(b.name));
-
-export const writeEnumerations = (writer: TypescriptWriter | ZodWriter) => {
-  writer.writeEnumeration({
-    export: true,
-    name: 'ContextTypes',
-    members: sortEnumMembers(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
-  });
-
-  writer.writeLine();
-
-  writer.writeEnumeration({
-    export: true,
-    name: 'EventTypes',
-    members: sortEnumMembers(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
-  });
-
-  writer.writeLine();
-};
 
 export const getContexts = (includeAbstracts = false) => {
   const allContexts = getObjectKeys(Objectiv.contexts);

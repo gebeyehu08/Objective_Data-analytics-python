@@ -6,15 +6,28 @@ import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
 import { ZodWriter } from '../writers/ZodWriter';
-import { getContextChildren, getContexts, getObjectKeys, getProperties, writeEnumerations } from './common';
+import { getContextChildren, getContexts, getObjectKeys, getProperties, sortEnumMembers } from './common';
 
 Generator.generateFromModel(
   { outputFile: '../generated/validator.js' },
   (writer: TextWriter, model: typeof Objectiv) => {
     const zodWriter = new ZodWriter(writer);
 
-    // ContextTypes and EventTypes enums
-    writeEnumerations(zodWriter);
+    // ContextTypes enum
+    zodWriter.writeEnumeration({
+      export: true,
+      name: 'ContextTypes',
+      members: sortEnumMembers(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
+    });
+    writer.writeLine();
+
+    // EventTypes enum
+    zodWriter.writeEnumeration({
+      export: true,
+      name: 'EventTypes',
+      members: sortEnumMembers(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
+    });
+    writer.writeLine();
 
     // Context definitions
     getContexts().forEach((contextName) => {
