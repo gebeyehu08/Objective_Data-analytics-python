@@ -622,6 +622,7 @@ class DataFrame:
     ) -> 'DataFrame':
         """
         INTERNAL: Instantiate a new DataFrame based on the result of the query defined in `model`.
+
         :param engine: an sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
         :param index: list of series names that make up the index. At least one series needs to be
@@ -732,6 +733,7 @@ class DataFrame:
     @classmethod
     def get_instance(
         cls,
+        *,
         engine,
         base_node: BachSqlModel,
         index_dtypes: Mapping[str, StructuredDtype],
@@ -811,9 +813,12 @@ class DataFrame:
 
         Create a copy of self, with the given arguments overridden
 
-        There are three special parameters: index_dtypes, series_dtypes and single_value. These are used to
-        create new index and data series iff index and/or series are not given. `single_value` determines
-        whether the Expressions for those newly created series should be SingleValueExpressions or not.
+        There are three special parameters:
+            index_dtypes, series_dtypes and single_value.
+        These are used to create new index and data series iff index and/or series are not given.
+        `single_value` determines whether the Expressions for those newly created series should be
+        `SingleValueExpressions` or not.
+
         All other arguments are passed through to `__init__`, filled with current instance values if None is
         given in the parameters.
         """

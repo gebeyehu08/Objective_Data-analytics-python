@@ -209,7 +209,10 @@ class Series(ABC):
                 )
 
         if order_by:
-            validate_node_column_references_in_sorting_expressions(node=base_node, order_by=order_by)
+            validate_node_column_references_in_sorting_expressions(
+                node=base_node,
+                order_by=order_by
+            )
 
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
