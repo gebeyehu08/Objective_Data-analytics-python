@@ -28,6 +28,8 @@ class LRTestHelper:
         self.X = X
         self.y = y
 
+        self.precision = 3
+
         data = X.copy()
         data[y.name] = y
         pdf = data.to_pandas()
@@ -46,6 +48,11 @@ class LRTestHelper:
     def test_fitted_model(self):
         for key, value in self.sklearn_lr.__dict__.items():
             modelhub_value = getattr(self.modelhub_lr, key)
+
+            if key in ['coef_', 'intercept_']:
+                value = value.round(self.precision)
+                modelhub_value = modelhub_value.round(self.precision)
+
             print(f'testing {key}')
             print(f'modelhub value: {modelhub_value}\nsklearn value : {value}\n')
             result = modelhub_value == value
@@ -90,6 +97,9 @@ class LRTestHelper:
         else:
             modelhub_data = modelhub_data.sort_index().to_numpy()
             equals = np.isclose(sklearn_data, modelhub_data).all()
+        if method_name == 'predict_proba':
+            modelhub_data = modelhub_data.round(self.precision)
+            sklearn_data = sklearn_data.round(self.precision)
 
         assert equals, f"modelhub_data: {modelhub_data} != sklearn_data: {sklearn_data}"
 
