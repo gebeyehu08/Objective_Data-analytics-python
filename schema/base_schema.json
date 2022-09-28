@@ -18,13 +18,16 @@
         "position": 0
       },
       {
+        "type": "requires_context",
+        "context": "PathContext",
+      },
+      {
         "type": "unique_context",
         "context": "RootLocationContext",
         "by": ["_type"]
       },
       {
         "type": "unique_context",
-        "context": "*",
         "by": ["_type", "id"]
       }
     ]
@@ -43,7 +46,6 @@
       },
       {
         "type": "unique_context",
-        "context": "*",
         "by": ["_type", "id"]
       }
     ]
@@ -105,22 +107,30 @@
     "InputChangeEvent": {
       "description": "Event triggered when user input is modified.",
       "parent": "InteractiveEvent",
-      "requiresContext": ["InputContext"]
+      "rules": [
+        {
+          "type": "requires_context",
+          "context": "InputContext"
+        }
+      ]
     },
     "PressEvent": {
       "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).",
       "parent": "InteractiveEvent",
-      "requiresContext": ["PressableContext"]
+      "rules": [
+        {
+          "type": "requires_context",
+          "context": "PressableContext"
+        }
+      ]
     },
     "HiddenEvent": {
       "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.",
-      "parent": "NonInteractiveEvent",
-      "requiresContext": ["AbstractLocationContext"]
+      "parent": "NonInteractiveEvent"
     },
     "VisibleEvent": {
       "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.",
-      "parent": "NonInteractiveEvent",
-      "requiresContext": ["AbstractLocationContext"]
+      "parent": "NonInteractiveEvent"
     },
     "SuccessEvent": {
       "description": "A NonInteractiveEvent that is sent when a user action is successfully completed, \nlike sending an email form.",
@@ -135,7 +145,12 @@
     "MediaEvent": {
       "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.",
       "parent": "NonInteractiveEvent",
-      "requiresContext": ["MediaPlayerContext"]
+      "rules": [
+        {
+          "type": "requires_context",
+          "context": "MediaPlayerContext"
+        }
+      ],
     },
     "MediaLoadEvent": {
       "description": "A MediaEvent that's emitted after a media item completes loading.",
@@ -300,8 +315,7 @@
     },
     "AbstractLocationContext": {
       "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.",
-      "parent": "AbstractContext",
-      "requiresContext": ["RootLocationContext", "PathContext"]
+      "parent": "AbstractContext"
     },
     "InputContext": {
       "description": "A Location Context that describes an element that accepts user input, i.e. a form field.",
