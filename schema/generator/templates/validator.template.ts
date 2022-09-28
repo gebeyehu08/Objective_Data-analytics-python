@@ -12,6 +12,7 @@ const SchemaToZodPropertyTypeMap = {
   integer: 'bigint',
   literal: 'literal',
   string: 'string',
+  discriminator: 'literal',
 };
 
 Generator.generateFromModel(
@@ -32,7 +33,7 @@ Generator.generateFromModel(
           name: String(property),
           typeName: SchemaToZodPropertyTypeMap[properties[property].type],
           isOptional: properties[property].optional,
-          value: (properties[property].value ?? '').replace('${contextName}', `ContextTypes.enum.${contextName}`),
+          value: properties[property].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
         });
       });
 

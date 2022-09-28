@@ -134,8 +134,7 @@
         },
         "_type": {
           "description": "A string literal used during serialization. Should always match the Context interface name.",
-          "type": "literal",
-          "value": "${contextName}"
+          "type": "discriminator"
         }
       }
     },
