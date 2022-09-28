@@ -290,6 +290,7 @@ def test_from_pandas_types_cte(engine, unique_table_test_name):
 
     assert_equals_data(
         df,
+        use_to_pandas=True,
         expected_columns=['_index_int_column',
                           'float_column',
                           'bool_column',

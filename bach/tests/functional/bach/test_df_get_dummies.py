@@ -22,7 +22,7 @@ def test_basic_get_dummies(engine) -> None:
     assert set(expected_columns) == set(result.data_columns)
     result = result[expected_columns]
     assert_equals_data(
-        result[expected_columns],
+        result,
         use_to_pandas=True,
         expected_columns=['_index_0'] + expected_columns,
         expected_data=[

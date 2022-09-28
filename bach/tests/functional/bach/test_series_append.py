@@ -24,6 +24,7 @@ def test_series_append_same_dtype(engine) -> None:
         ],
     )
 
+
 @pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 @pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_series_append_column_name_special_chars(engine) -> None:
