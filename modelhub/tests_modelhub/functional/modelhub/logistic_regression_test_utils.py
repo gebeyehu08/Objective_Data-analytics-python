@@ -28,7 +28,7 @@ class LRTestHelper:
         self.X = X
         self.y = y
 
-        self.precision = 3
+        self.precision = 18
 
         data = X.copy()
         data[y.name] = y
@@ -97,6 +97,7 @@ class LRTestHelper:
         else:
             modelhub_data = modelhub_data.sort_index().to_numpy()
             equals = np.isclose(sklearn_data, modelhub_data).all()
+
         if method_name == 'predict_proba':
             modelhub_data = modelhub_data.round(self.precision)
             sklearn_data = sklearn_data.round(self.precision)
