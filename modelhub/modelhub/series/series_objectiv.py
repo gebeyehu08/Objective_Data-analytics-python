@@ -66,7 +66,6 @@ class SeriesLocationStack(SeriesJson):
 
         def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
             """
-            .. _get_from_context_with_type_series:
             Returns the value of `key` from the first context in an Objectiv stack
             where `_type` matches `type`.
             :param type: the _type to search for in the contexts of the stack.

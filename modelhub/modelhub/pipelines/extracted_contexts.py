@@ -189,6 +189,10 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         return df_cp[reduce(operator.and_, all_filters)]
 
     def _apply_context_flattening(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Helper function for creating a new series per context (if engine supports a different format).
+        Function must only be called if `_extract_context_data` method is implemented.
+        """
         df_cp = df.copy()
         for gc in self._global_contexts:
             context_name = "".join([c.capitalize() for c in gc.split('_')]) + 'Context'
@@ -197,6 +201,10 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         return df_cp
 
     def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Helper function that returns a new series that contains data for the required context_name.
+        Child must implement class as data formats can differ between engines.
+        """
         raise NotImplementedError
 
 
@@ -268,6 +276,10 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
         return df_cp.drop(columns=['global_contexts'])
 
     def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Extracts context data from global_contexts json. Native format is currently only supported for Postgres,
+        therefore an exception will be raised for other dialects.
+        """
         dialect = df.engine.dialect
         if not is_postgres(dialect):
             raise Exception('Extraction of context data for native format is supported only for Postgres.')
