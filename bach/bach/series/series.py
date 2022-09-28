@@ -26,7 +26,7 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
@@ -1075,7 +1075,7 @@ class Series(ABC):
 
     def isnull(self) -> 'SeriesBoolean':
         """
-        Evaluate for every row in this series whether the value is missing or NULL.
+        Evaluate for every row in this series whether the value is missing (NaN, None and SQL NULL).
 
         .. note::
             Only NULL values in the Series in the underlying sql table will return True. numpy.nan is not
@@ -1085,12 +1085,18 @@ class Series(ABC):
         --------
         notnull
         """
-        expression_str = f'{{}} is null'
-        expression = NonAtomicExpression.construct(
-            expression_str,
-            self
-        )
+        from bach.series.series_numeric import SeriesAbstractNumeric
         from bach import SeriesBoolean
+        expression = NonAtomicExpression.construct('{} is null', self)
+
+        if isinstance(self, SeriesAbstractNumeric):
+            # PG
+            nan_condition_expr = (self == float('nan')).expression
+            if is_athena(self.engine) or is_bigquery(self.engine):
+                nan_condition_expr = NonAtomicExpression.construct('is_nan({})', self)
+
+            expression = Expression.construct('(({}) or ({}))', expression, nan_condition_expr)
+
         return self.copy_override_type(SeriesBoolean).copy_override(expression=expression)
 
     def notnull(self) -> 'SeriesBoolean':

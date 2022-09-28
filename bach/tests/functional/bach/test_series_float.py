@@ -5,9 +5,7 @@
 import math
 from unittest.mock import ANY
 
-import pandas as pd
-
-from bach import SeriesFloat64, DataFrame
+from bach import SeriesFloat64
 from bach.testing import assert_equals_data
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from tests.functional.bach.test_series_numeric import helper_test_simple_arithmetic
@@ -66,28 +64,3 @@ def test_random(engine):
         # 3 rows of data with 64 bit random numbers is so small we just discard that.
         assert value not in distinct_values
         distinct_values.add(value)
-
-
-def test_compare_nan(engine):
-    pdf = pd.DataFrame(data={'a': [1, 2, 3, 4, 5]})
-    df = DataFrame.from_pandas(df=pdf, engine=engine, convert_objects=True)
-
-    nan_value = float('nan')
-    df.loc[(df['a'] == 2) | (df['a'] == 4),  'a'] = nan_value
-    df['eq_nan'] = df['a'] == nan_value
-    df['lt_nan'] = df['a'] < nan_value
-    df['gt_nan'] = df['a'] > nan_value
-    df['le_nan'] = df['a'] <= nan_value
-    df['ge_nan'] = df['a'] >= nan_value
-
-    assert_equals_data(
-        df,
-        expected_columns=['_index_0', 'a', 'eq_nan', 'lt_nan', 'gt_nan', 'le_nan', 'ge_nan'],
-        expected_data=[
-            [0,         1., False] + [ANY] * 4,  # comparing (except equals) with nan might
-            [1,  nan_value,  True] + [ANY] * 4,  # differ between all engines
-            [2,         3., False] + [ANY] * 4,  # we just check if any error is not raise
-            [3,  nan_value,  True] + [ANY] * 4,
-            [4,         5., False] + [ANY] * 4,
-        ],
-    )

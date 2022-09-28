@@ -3061,13 +3061,7 @@ class DataFrame:
 
         logical_operator = 'or' if how == 'any' else 'and'
 
-        conditions = []
-        for ds in dropna_series:
-            main_condition = self.all_series[ds].isnull()
-            if self.all_series[ds].dtype in ['float64', 'int64']:
-                main_condition = main_condition | (self.all_series[ds] == float('nan'))
-
-            conditions.append(main_condition)
+        conditions = [self.all_series[ds].isnull() for ds in dropna_series]
 
         if not thresh:
             expression_fmt = f' {logical_operator} '.join([f'{{}}'] * len(dropna_series))
