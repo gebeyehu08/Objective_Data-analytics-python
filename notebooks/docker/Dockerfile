@@ -32,7 +32,6 @@ RUN chmod +x /entrypoint.sh
 
 COPY basic-product-analytics.ipynb $APP
 COPY marketing-analytics.ipynb $APP
-COPY funnel-discovery.ipynb $APP
 
 USER notebook
 ENV OBJECTIV_VERSION_CHECK_DISABLE=true
