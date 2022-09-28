@@ -1,13 +1,13 @@
-.. _modelhub_reference_series_global_contexts:
+.. _modelhub_reference_series_global_context:
 
 .. currentmodule:: modelhub
 
 ====================
-SeriesGlobalContexts
+SeriesGlobalContext
 ====================
 
 .. autosummary::
     :template: autosummary/class_short.rst
     :toctree: 
 
-    SeriesGlobalContexts
+    SeriesGlobalContext
