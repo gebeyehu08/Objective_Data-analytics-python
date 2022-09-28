@@ -3,6 +3,7 @@
  */
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
+import { getObjectKeys } from '../templates/common';
 
 export type EnumMemberDefinition = {
   name: string;
@@ -20,6 +21,18 @@ export interface PropertyDefinition {
   isOptional?: boolean;
   value?: string;
 }
+
+export interface ObjectDefinition {
+  name: string;
+  properties: PropertyDefinition[];
+}
+
+const SchemaToZodPropertyTypeMap = {
+  integer: 'bigint',
+  literal: 'literal',
+  string: 'string',
+  discriminator: 'literal',
+};
 
 export class ZodWriter extends CodeWriter {
   constructor(writer: TextWriter) {
@@ -41,12 +54,11 @@ export class ZodWriter extends CodeWriter {
   }
 
   public writeProperty(property: PropertyDefinition): void {
-    // FIXME Indent doesn't work here for some reason
     this.increaseIndent();
     this.writeIndent();
 
     // TODO mapping between schema and zod for typeName (eg: integer > number)
-    this.write(`${property.name}: z.${property.typeName}(${property.value ?? ''})`);
+    this.write(`${property.name}: z.${SchemaToZodPropertyTypeMap[property.typeName]}(${property.value ?? ''})`);
 
     if (property.isOptional) {
       this.write('.optional()');
@@ -54,5 +66,13 @@ export class ZodWriter extends CodeWriter {
 
     this.writeEndOfLine(',');
     this.decreaseIndent();
+  }
+
+  public writeObject(object: ObjectDefinition): void {
+    this.writeLine(`export const ${object.name} = z.object({`);
+
+    object.properties.forEach((property) => this.writeProperty(property));
+
+    this.writeLine(`});\n`);
   }
 }

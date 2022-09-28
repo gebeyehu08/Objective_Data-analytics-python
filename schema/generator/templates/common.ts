@@ -44,29 +44,29 @@ export const getEntityParents = (entity) => entity['parents'] ?? [];
 export const getEntityRequiresContext = (entity) => entity['requiresContext'] ?? [];
 
 // recursive helper to fetch parent attributes
-export const getParentAttributes = (entities, parents, attributes = { properties: {} }) =>
-  parents.reduce((parentAttributes, parent) => {
+export const getParentProperties = (entities, parents, properties = {}) =>
+  parents.reduce((properties, parent) => {
     const parentProperties = getEntityProperties(entities[parent]);
     const parentParents = getEntityParents(entities[parent]);
 
     const parentPropertyKeys = getObjectKeys(parentProperties);
     parentPropertyKeys.forEach((parentPropertyKey) => {
       const parentProperty = parentProperties[parentPropertyKey];
-      if (parentAttributes.properties[parentPropertyKey] === undefined) {
-        parentAttributes.properties[parentPropertyKey] = parentProperty;
+      if (properties[parentPropertyKey] === undefined) {
+        properties[parentPropertyKey] = parentProperty;
       }
     });
 
     if (!parentParents.length) {
-      return parentAttributes;
+      return properties;
     }
 
-    return getParentAttributes(entities, parentParents, parentAttributes);
-  }, attributes);
+    return getParentProperties(entities, parentParents, properties);
+  }, properties);
 
-export const getEntityAttributes = (entities, entityName) => {
+export const getProperties = (entities, entityName) => {
   const parents = getEntityParents(entities[entityName]);
   const properties = getEntityProperties(entities[entityName]);
 
-  return getParentAttributes(entities, parents, { properties });
+  return getParentProperties(entities, parents, properties);
 };

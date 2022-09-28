@@ -28,23 +28,23 @@ export const ContextTypes = z.enum([
   'SessionContext',
 ]);
 
-export const EventTypes = z.enum([
-  'AbstractEvent',
-  'ApplicationLoadedEvent',
-  'FailureEvent',
-  'HiddenEvent',
-  'InputChangeEvent',
-  'InteractiveEvent',
-  'MediaEvent',
-  'MediaLoadEvent',
-  'MediaPauseEvent',
-  'MediaStartEvent',
-  'MediaStopEvent',
-  'NonInteractiveEvent',
-  'PressEvent',
-  'SuccessEvent',
-  'VisibleEvent',
-]);
+// export const EventTypes = z.enum([
+//   'AbstractEvent',
+//   'ApplicationLoadedEvent',
+//   'FailureEvent',
+//   'HiddenEvent',
+//   'InputChangeEvent',
+//   'InteractiveEvent',
+//   'MediaEvent',
+//   'MediaLoadEvent',
+//   'MediaPauseEvent',
+//   'MediaStartEvent',
+//   'MediaStopEvent',
+//   'NonInteractiveEvent',
+//   'PressEvent',
+//   'SuccessEvent',
+//   'VisibleEvent',
+// ]);
 
 // Custom refinements
 const validateContextUniqueness = (contexts, ctx) => {
@@ -84,17 +84,17 @@ const validateInputValueContexts = (event, ctx) => {
   }
 };
 
-const validateContextPresence = (type, errorMessage) => (event, ctx) => {
-  const contextFoundInLocationStack = event.location_stack.find((globalContext) => globalContext._type === type);
-  const contextFoundInGlobalContexts = event.global_contexts.find((locationContext) => locationContext._type === type);
-
-  if (!contextFoundInLocationStack && !contextFoundInGlobalContexts) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: errorMessage,
-    });
-  }
-};
+// const validateContextPresence = (type, errorMessage) => (event, ctx) => {
+//   const contextFoundInLocationStack = event.location_stack.find((globalContext) => globalContext._type === type);
+//   const contextFoundInGlobalContexts = event.global_contexts.find((locationContext) => locationContext._type === type);
+//
+//   if (!contextFoundInLocationStack && !contextFoundInGlobalContexts) {
+//     ctx.addIssue({
+//       code: z.ZodIssueCode.custom,
+//       message: errorMessage,
+//     });
+//   }
+// };
 
 // Contexts
 const CommonContextAttributes = z.object({
@@ -228,17 +228,16 @@ export const GlobalContexts = z
 
 // Events
 
-const CommonEventAttributes = z
-  .object({
-    id: z.string().uuid(),
-    global_contexts: GlobalContexts,
-  })
-  .superRefine(
-    validateContextPresence(
-      ContextTypes.enum.ApplicationContext,
-      `All Events require ApplicationContext in their Global Contexts`
-    )
-  );
+const CommonEventAttributes = z.object({
+  id: z.string().uuid(),
+  global_contexts: GlobalContexts,
+});
+// .superRefine(
+//   validateContextPresence(
+//     ContextTypes.enum.ApplicationContext,
+//     `All Events require ApplicationContext in their Global Contexts`
+//   )
+// );
 
 export const InputChangeEvent = CommonEventAttributes.extend({
   _type: z.literal('InputChangeEvent'), // TODO use enums

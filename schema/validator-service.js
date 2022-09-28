@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-const express = require('express');
-const { validate } = require('./dist/validator.js');
+import express from 'express';
+import { validate } from './validator.js';
 
 var app = express();
 app.use(express.json());

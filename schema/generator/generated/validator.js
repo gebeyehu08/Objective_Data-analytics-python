@@ -46,6 +46,13 @@ export const EventTypes = z.enum([
   "VisibleEvent",
 ]);
 
+export const LocationStack = z.object({
+  undefined: z.undefined(),
+  undefined: z.undefined(),
+  undefined: z.undefined(),
+  undefined: z.undefined(),
+});
+
 export const ApplicationContext = z.object({
   id: z.string(),
   _type: z.literal(ContextTypes.enum.ApplicationContext),

@@ -4,25 +4,59 @@
     "base_schema": "0.0.5"
   },
   "description": "This is the Objectiv base schema for the Open Analytics Taxonomy.",
+  "LocationStack": {
+    "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
+    "type": "array",
+    "items": {
+      "type":"AbstractLocationContext"
+    },
+    "rules": [
+      {
+        "type": "requires_context",
+        "context": "RootLocationContext",
+        "position": 0
+      },
+      {
+        "type": "unique_context",
+        "context": "RootLocationContext",
+        "by": ["_type"]
+      },
+      {
+        "type": "unique_context",
+        "context": "*",
+        "by": ["_type", "id"]
+      }
+    ]
+  },
+  "GlobalContexts": {
+    "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.",
+    "type": "array",
+    "items": {
+      "type":"AbstractGlobalContext"
+    },
+    "rules": [
+      {
+        "type": "requires_context",
+        "context": "ApplicationContext"
+      },
+      {
+        "type": "unique_context",
+        "context": "*",
+        "by": ["_type", "id"]
+      }
+    ]
+  },
   "events": {
     "AbstractEvent": {
       "description": "This is the abstract parent of all Events.",
       "parents": [],
-      "requiresContext": ["ApplicationContext"],
       "properties":{
         "location_stack": {
-          "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
-          "type": "array",
-          "items": {
-            "type":"AbstractLocationContext"
-          }
+          "type": "LocationStack",
+          "optional": true
         },
         "global_contexts": {
-          "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.",
-          "type": "array",
-          "items": {
-            "type":"AbstractGlobalContext"
-          }
+          "type": "GlobalContexts"
         },
         "_type": {
           "description": "String containing the name of the event type. (eg. ClickEvent).",
@@ -42,7 +76,12 @@
     "InteractiveEvent": {
       "description": "The parent of Events that are the direct result of a user interaction, e.g. a button click.",
       "parents": ["AbstractEvent"],
-      "requiresContext": ["AbstractLocationContext"]
+      "properties": {
+        "location_stack": {
+          "type": "LocationStack",
+          "optional": false
+        }
+      }
     },
     "NonInteractiveEvent": {
       "description": "The parent of Events that are not directly triggered by a user action.",

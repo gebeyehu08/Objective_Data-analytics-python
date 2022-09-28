@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-const crypto = require('crypto');
-const { InputChangeEvent, LinkContext, LocationStack, RootLocationContext, validate } = require('./dist/validator.js');
+import crypto from 'crypto';
+import { InputChangeEvent, LinkContext, LocationStack, RootLocationContext, validate } from './validator.js';
 
 console.log(
   'RootLocationContext validation:',
