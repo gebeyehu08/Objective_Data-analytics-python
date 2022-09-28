@@ -84,7 +84,6 @@ def test_location_stack_feature_stack(db_params):
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1268')  # TODO: Athena
 def test_location_stack_nice_name(db_params):
     bt = get_df_with_json_data_real(db_params)
 

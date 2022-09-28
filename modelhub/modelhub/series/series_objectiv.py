@@ -14,6 +14,7 @@ from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
 from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
 
+
 TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
 
 
@@ -192,9 +193,46 @@ class SeriesLocationStack(SeriesJson):
                 expression = self._postgres_nice_name()
             elif is_bigquery(engine):
                 expression = self._bigquery_nice_name()
+            elif is_athena(engine):
+                expression = self._athena_nice_name()
             else:
                 raise DatabaseNotSupportedException(engine)
             return self._series_object.copy_override_type(SeriesString).copy_override(expression=expression)
+
+        def _athena_nice_name(self) -> Expression:
+            location_formatting_str = '''
+                transform(
+                    cast({} as array(json)),
+                    x-> replace(
+                        regexp_replace(
+                            cast(json_extract(x, '$["_type"]') as varchar),
+                            '([a-z])([A-Z])', x -> x[1] || ' ' || x[2]
+                        ),
+                        ' Context', ''
+                    )
+                    || ': ' || cast(json_extract(x, '$["id"]') as varchar)
+                )
+            '''
+
+            _last_element_in_stack = self._series_object.json[-1:]
+            _prev_elements_in_stack = self._series_object.json[:-1]
+
+            formatted_last_location = Expression.construct(
+                'element_at({}, 1)', Expression.construct(location_formatting_str, _last_element_in_stack)
+            )
+            formatted_prev_locations = Expression.construct(
+                "array_join({}, ' => ')",
+                Expression.construct(location_formatting_str, _prev_elements_in_stack),
+            )
+
+            return Expression.construct(
+                "{} || CASE WHEN cardinality(cast({} as array(json))) > 1 THEN {} || {} ELSE {} END",
+                formatted_last_location,
+                self._series_object,
+                Expression.string_value(' located at '),
+                formatted_prev_locations,
+                Expression.string_value('')
+            )
 
         def _bigquery_nice_name(self) -> Expression:
             # last_element_nice_expr turns something with _type='SectionContext' and id='section_id'
