@@ -156,7 +156,12 @@ def from_pandas_ephemeral(
     sql_model = model_builder()
 
     index = list(index_dtypes.keys())
-    return DataFrame.from_model(engine=engine, model=sql_model, index=index, all_dtypes=all_dtypes)
+    return DataFrame.from_model(
+        engine=engine,
+        model=sql_model,
+        index=index,
+        all_dtypes=all_dtypes
+    )
 
 
 def _assert_column_names_valid(dialect: Dialect, df: pandas.DataFrame):
@@ -204,7 +209,7 @@ def _from_pd_shared(
     :return: Tuple:
         * Modified copy of Pandas DataFrame.
         * index_dtypes dict. Mapping of index names to the dtype.
-        * all_dtypes dict. Mapping of all columns names to dtypes, includes data and index columns.
+        * all_dtypes dict. Mapping of all series names to dtypes, includes data and index columns.
     """
     index = []
 
@@ -223,33 +228,34 @@ def _from_pd_shared(
 
     supported_pandas_dtypes = ['int64', 'float64', 'string', 'datetime64[ns]', 'bool', 'int32']
     all_dtypes_or_alias: Dict[str, DtypeOrAlias] = {}
-    for column in df_copy.columns:
-        dtype = df_copy[column].dtype.name
+    for series_name in df_copy.columns:
+        series_name = str(series_name)
+        dtype = df_copy[series_name].dtype.name
 
         if dtype in supported_pandas_dtypes:
-            all_dtypes_or_alias[str(column)] = dtype
+            all_dtypes_or_alias[series_name] = dtype
             continue
 
-        if df_copy[column].dropna().empty:
-            raise ValueError(f'{column} column has no non-nullable values, cannot infer type.')
+        if df_copy[series_name].dropna().empty:
+            raise ValueError(f'{series_name} column has no non-nullable values, cannot infer type.')
 
         if convert_objects:
-            df_copy[column] = df_copy[column].convert_dtypes(
+            df_copy[series_name] = df_copy[series_name].convert_dtypes(
                 convert_integer=False, convert_boolean=False, convert_floating=False,
             )
-            dtype = df_copy[column].dtype.name
+            dtype = df_copy[series_name].dtype.name
 
         if dtype not in supported_pandas_dtypes and not(cte and convert_objects):
-            raise TypeError(f'unsupported dtype for {column}: {dtype}')
+            raise TypeError(f'unsupported dtype for {series_name}: {dtype}')
 
         if cte and convert_objects:
-            non_nullables = df_copy[column].dropna()
+            non_nullables = df_copy[series_name].dropna()
             types = non_nullables.apply(type).unique()
             if len(types) != 1:
-                raise TypeError(f'multiple types found in column {column}: {types}')
+                raise TypeError(f'multiple types found in column {series_name}: {types}')
             dtype = value_to_dtype(non_nullables.iloc[0])
 
-        all_dtypes_or_alias[str(column)] = dtype
+        all_dtypes_or_alias[series_name] = dtype
 
     _assert_column_names_valid(dialect=dialect, df=df_copy)
 

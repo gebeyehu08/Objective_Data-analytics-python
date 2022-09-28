@@ -124,9 +124,12 @@ class ConcatOperation(Generic[TDataFrameOrSeries]):
 
         series_expressions = [self._join_series_expressions(df) for df in objects]
 
+        new_columns_rs = list(new_indexes.values()) + list(new_data_series.values())
+        column_expressions = {rs.name: rs.expression for rs in new_columns_rs}
+
         return ConcatSqlModel.get_instance(
             dialect=self.dialect,
-            columns=tuple(new_index_names + new_data_series_names),
+            column_expressions=column_expressions,
             all_series_expressions=series_expressions,
             all_nodes=[df.base_node for df in objects],
             variables=variables,
@@ -344,7 +347,7 @@ class ConcatSqlModel(BachSqlModel):
         cls,
         *,
         dialect: Dialect,
-        columns: Tuple[str, ...],
+        column_expressions: Dict[str, Expression],
         all_series_expressions: List[Expression],
         all_nodes: List[BachSqlModel],
         variables: Dict['DtypeNamePair', Hashable],
@@ -367,5 +370,5 @@ class ConcatSqlModel(BachSqlModel):
             references=references,
             materialization=Materialization.CTE,
             materialization_name=None,
-            column_expressions={c: Expression.column_reference(c) for c in columns},
+            column_expressions=column_expressions,
         )

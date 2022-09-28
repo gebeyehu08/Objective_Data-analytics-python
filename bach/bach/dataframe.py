@@ -33,12 +33,9 @@ if TYPE_CHECKING:
     from bach.savepoints import Savepoints
     from bach.series import Series, SeriesBoolean
 
-# TODO exclude from docs
 DataFrameOrSeries = Union['DataFrame', 'Series']
 # ColumnNames: a single column name, or a list of column names
-# TODO exclude from docs
 ColumnNames = Union[str, List[str]]
-# TODO exclude from docs
 ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 # ColumnFunction: Identifier for a function that can be applied to a column, possibly in the context of a
 #     window or aggregation.
@@ -227,7 +224,10 @@ class DataFrame:
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
 
-        validate_node_column_references_in_sorting_expressions(node=base_node, order_by=self.order_by)
+        validate_node_column_references_in_sorting_expressions(
+            node=base_node,
+            order_by=self.order_by
+        )
 
     @property
     def engine(self):
@@ -547,11 +547,11 @@ class DataFrame:
         :param engine: a sqlalchemy engine for the database.
         :param table_name: the table name that contains the data to instantiate as DataFrame.
             Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'.
-        :param index: list of column names that make up the index. At least one column needs to be
+        :param index: list of series names that make up the index. At least one series needs to be
             selected for the index.
-        :param all_dtypes: Optional. Mapping from column name to dtype.
-            Must contain all index and data columns.
-            Must be in same order as the columns appear in the the sql-model.
+        :param all_dtypes: Optional. Mapping from series name to dtype.
+            Must contain all index and data series.
+            Must be in same order as the columns appear in the sql-model.
         :returns: A DataFrame based on a sql table.
 
         .. note::
@@ -590,11 +590,11 @@ class DataFrame:
 
         :param engine: a sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
-        :param index: list of column names that make up the index. At least one column needs to be
+        :param index: list of series names that make up the index. At least one series needs to be
             selected for the index.
-        :param all_dtypes: Optional. Mapping from column name to dtype.
-            Must contain all index and data columns.
-            Must be in same order as the columns appear in the the sql-model.
+        :param all_dtypes: Optional. Mapping series name to dtype.
+            Must contain all index and data series.
+            Must be in same order as the columns appear in the sql-model.
         :returns: A DataFrame based on an SqlModel
 
         .. note::
@@ -624,11 +624,11 @@ class DataFrame:
         INTERNAL: Instantiate a new DataFrame based on the result of the query defined in `model`.
         :param engine: an sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
-        :param index: list of column names that make up the index. At least one column needs to be
+        :param index: list of series names that make up the index. At least one series needs to be
             selected for the index.
-        :param all_dtypes: Dictionary mapping column name to dtype.
-            Must contain all index and data columns.
-            Must be in same order as the columns appear in the the sql-model.
+        :param all_dtypes: Dictionary mapping series name to dtype.
+            Must contain all index and data series.
+            Must be in same order as the columns appear in the sql-model.
         :returns: A DataFrame based on an SqlModel
 
         """
@@ -739,14 +739,18 @@ class DataFrame:
         group_by: Optional['GroupBy'],
         order_by: List[SortColumn],
         savepoints: 'Savepoints',
-        variables: Dict['DtypeNamePair', Hashable]
+        variables: Dict['DtypeNamePair', Hashable],
+        single_value: bool = False
     ) -> 'DataFrame':
         """
         INTERNAL: Get an instance with the right series instantiated based on the dtypes array.
 
         This assumes that base_node has a column for all names in index_dtypes and dtypes.
-        If single_value is True, SingleValueExpression is used as the class for the series expressions
+        If single_value is True, SingleValueExpression is used as the class for the series expressions.
         """
+
+        expression_class = SingleValueExpression if single_value else Expression
+
         base_params = {
             'engine': engine,
             'base_node': base_node,
@@ -757,7 +761,7 @@ class DataFrame:
             name: get_series_type_from_dtype(dtype).get_class_instance(
                 index={},  # Empty index for index series
                 name=name,
-                expression=Expression.column_reference(name),
+                expression=expression_class.column_reference(name),
                 instance_dtype=dtype,
                 **base_params
             )
@@ -768,7 +772,7 @@ class DataFrame:
             name: get_series_type_from_dtype(dtype).get_class_instance(
                 index=index,
                 name=name,
-                expression=Expression.column_reference(name),
+                expression=expression_class.column_reference(name),
                 instance_dtype=dtype,
                 **base_params
             )
@@ -788,6 +792,7 @@ class DataFrame:
 
     def copy_override(
         self,
+        *,
         engine: Optional[Engine] = None,
         base_node: Optional[BachSqlModel] = None,
         index: Optional[Mapping[str, 'Series']] = None,
@@ -3441,6 +3446,9 @@ class DataFrame:
 
         .. note::
             DataFrame should contain at least one index level.
+
+        .. note::
+            This function queries the database.
         """
         if not self.index:
             raise IndexError('DataFrame/Series should have at least one index level.')

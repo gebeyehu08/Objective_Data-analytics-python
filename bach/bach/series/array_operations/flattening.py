@@ -71,9 +71,9 @@ class ArrayFlattening(ABC):
         Mapping of all dtypes of all referenced columns in generated model
         """
         return {
+            **{idx.name: idx.dtype for idx in self._series_object.index.values()},
             self.item_series_name: self._series_object.dtype,
-            self.item_offset_series_name: 'int64',
-            **{idx.name: idx.dtype for idx in self._series_object.index.values()}
+            self.item_offset_series_name: 'int64'
         }
 
     def _get_unnest_model(self) -> BachSqlModel:
