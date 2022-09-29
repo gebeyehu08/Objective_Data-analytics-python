@@ -741,18 +741,13 @@ class DataFrame:
         group_by: Optional['GroupBy'],
         order_by: List[SortColumn],
         savepoints: 'Savepoints',
-        variables: Dict['DtypeNamePair', Hashable],
-        single_value: bool = False
+        variables: Dict['DtypeNamePair', Hashable]
     ) -> 'DataFrame':
         """
         INTERNAL: Get an instance with the right series instantiated based on the dtypes array.
 
         This assumes that base_node has a column for all names in index_dtypes and dtypes.
-        If single_value is True, SingleValueExpression is used as the class for the series expressions.
         """
-
-        expression_class = SingleValueExpression if single_value else Expression
-
         base_params = {
             'engine': engine,
             'base_node': base_node,
@@ -763,7 +758,7 @@ class DataFrame:
             name: get_series_type_from_dtype(dtype).get_class_instance(
                 index={},  # Empty index for index series
                 name=name,
-                expression=expression_class.column_reference(name),
+                expression=Expression.column_reference(name),
                 instance_dtype=dtype,
                 **base_params
             )
@@ -774,7 +769,7 @@ class DataFrame:
             name: get_series_type_from_dtype(dtype).get_class_instance(
                 index=index,
                 name=name,
-                expression=expression_class.column_reference(name),
+                expression=Expression.column_reference(name),
                 instance_dtype=dtype,
                 **base_params
             )

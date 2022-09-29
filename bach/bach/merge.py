@@ -487,12 +487,15 @@ def _determine_series_per_source(
                     expression=expr,
                 )
 
-    ordered_left_series = _order_series(left_node, left_series)
-    ordered_right_series = _order_series(right_node, right_series)
+    ordered_left_series = _order_series_based_on_node(left_node, left_series)
+    ordered_right_series = _order_series_based_on_node(right_node, right_series)
     return ordered_left_series, ordered_right_series
 
 
-def _order_series(original_node: BachSqlModel, unordered_series: Mapping[str, Series]) -> Dict[str, Series]:
+def _order_series_based_on_node(
+        original_node: BachSqlModel,
+        unordered_series: Mapping[str, Series]
+) -> Dict[str, Series]:
     """
     Sort the given mapping of Series name to Series in the same way as the columns are sorted in the
     original_node. Series that are not in original_node are sorted at the end.
