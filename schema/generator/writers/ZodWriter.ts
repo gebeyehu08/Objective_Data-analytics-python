@@ -226,7 +226,7 @@ export class ZodWriter extends CodeWriter {
       const lineLength = line ? line.length : 0;
       if (this.documentationLineLength > 0 && lineLength > this.documentationLineLength) {
         CodeWriterUtility.wordWrap(line, this.documentationLineLength).forEach((s) => this.writeLine(` * ${s}`));
-      } else this.writeLine(` * ${line}`);
+      } else this.writeLine(` * ${line.trim()}`);
     });
 
     this.writeLine(' */');

@@ -83,7 +83,7 @@ export const EventTypes = z.enum([
  */
 export const ApplicationContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -102,7 +102,7 @@ export const CookieIdContext = z.object({
    */
   cookie_id: z.string(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -129,7 +129,7 @@ export const HttpContext = z.object({
    */
   remote_address: z.string().optional(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -148,7 +148,7 @@ export const InputValueContext = z.object({
    */
   value: z.string(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -171,7 +171,7 @@ export const LocaleContext = z.object({
    */
   country_code: z.string().optional(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -186,7 +186,7 @@ export const LocaleContext = z.object({
  */
 export const PathContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -205,7 +205,7 @@ export const SessionContext = z.object({
    */
   hit_number: z.bigint(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -216,7 +216,7 @@ export const SessionContext = z.object({
 });
 
 /**
- * a context that captures marketing channel info, so users can do attribution, campaign 
+ * a context that captures marketing channel info, so users can do attribution, campaign
  * effectiveness and other models.
  */
 export const MarketingContext = z.object({
@@ -253,7 +253,7 @@ export const MarketingContext = z.object({
    */
   marketing_tactic: z.string().optional(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -274,7 +274,7 @@ export const IdentityContext = z.object({
    */
   value: z.string(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -289,7 +289,7 @@ export const IdentityContext = z.object({
  */
 export const InputContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -300,12 +300,12 @@ export const InputContext = z.object({
 });
 
 /**
- * An Location Context that describes an interactive element (like a link, button, icon), 
+ * An Location Context that describes an interactive element (like a link, button, icon),
  * that the user can press and will trigger an Interactive Event.
  */
 export const PressableContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -324,7 +324,7 @@ export const LinkContext = z.object({
    */
   href: z.string(),
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -339,7 +339,7 @@ export const LinkContext = z.object({
  */
 export const RootLocationContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -354,7 +354,7 @@ export const RootLocationContext = z.object({
  */
 export const ExpandableContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -369,7 +369,7 @@ export const ExpandableContext = z.object({
  */
 export const MediaPlayerContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -384,7 +384,7 @@ export const MediaPlayerContext = z.object({
  */
 export const NavigationContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -399,7 +399,7 @@ export const NavigationContext = z.object({
  */
 export const OverlayContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -410,12 +410,12 @@ export const OverlayContext = z.object({
 });
 
 /**
- * A Location Context that describes a logical section of the UI that contains other Location Contexts. 
+ * A Location Context that describes a logical section of the UI that contains other Location Contexts.
  * Enabling Data Science to analyze this section specifically.
  */
 export const ContentContext = z.object({
   /**
-   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
@@ -426,8 +426,8 @@ export const ContentContext = z.object({
 });
 
 /**
- * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
- * deterministically describes where an event took place from global to specific. 
+ * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+ * deterministically describes where an event took place from global to specific.
  * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
  */
 export const LocationStack = z
@@ -457,7 +457,7 @@ export const LocationStack = z
   );
 
 /**
- * Global contexts add global / general information about the event. They carry information that is not 
+ * Global contexts add global / general information about the event. They carry information that is not
  * related to where the Event originated (location), such as device, platform or business data.
  */
 export const GlobalContexts = z
