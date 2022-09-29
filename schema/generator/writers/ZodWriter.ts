@@ -89,7 +89,7 @@ export class ZodWriter extends CodeWriter {
 
     this.increaseIndent();
     enumeration.members.forEach((members) => {
-      this.writeLine(`"${members.name}",`);
+      this.writeLine(`'${members.name}',`);
     });
     this.decreaseIndent();
 
