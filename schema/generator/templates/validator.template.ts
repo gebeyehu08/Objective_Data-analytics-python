@@ -41,6 +41,7 @@ Generator.generateFromModel(
         description: context.description,
         properties: getObjectKeys(properties).map((property) => ({
           name: String(property),
+          description: properties[property].description,
           typeName: properties[property].type,
           isOptional: properties[property].optional,
           value: properties[property].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,

@@ -20,6 +20,7 @@ export interface PropertyDefinition {
   typeName: string;
   isOptional?: boolean;
   value?: string;
+  description?: string;
 }
 
 export interface ObjectDefinition {
@@ -73,6 +74,11 @@ export class ZodWriter extends CodeWriter {
     this.increaseIndent();
     this.writeIndent();
 
+    if (property.description) {
+      // TODO
+      //this.writeJsDocLines(property.description.split('\n'));
+    }
+
     this.write(`${property.name}: z.${SchemaToZodPropertyTypeMap[property.typeName]}(${property.value ?? ''})`);
 
     if (property.isOptional) {
@@ -125,10 +131,10 @@ export class ZodWriter extends CodeWriter {
     lines.forEach((line) => {
       const lineLength = line ? line.length : 0;
       if (this.documentationLineLength > 0 && lineLength > this.documentationLineLength) {
-        CodeWriterUtility.wordWrap(line, this.documentationLineLength).forEach((s) => this.writeLine(`* ${s}`));
-      } else this.writeLine(`* ${line}`);
+        CodeWriterUtility.wordWrap(line, this.documentationLineLength).forEach((s) => this.writeLine(` * ${s}`));
+      } else this.writeLine(` * ${line}`);
     });
 
-    this.writeLine('*/');
+    this.writeLine(' */');
   }
 }
