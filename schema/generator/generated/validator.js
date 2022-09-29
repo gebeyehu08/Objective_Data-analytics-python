@@ -444,8 +444,17 @@ export const LocationStack = z
       RootLocationContext,
     ])
   )
-  .superRefine(requiresContext({ context: ContextTypes.enum.RootLocationContext, position: 0 }))
-  .superRefine(uniqueContext({ by: ['_type', 'id'] }));
+  .superRefine(
+    requiresContext({
+      context: ContextTypes.enum.RootLocationContext,
+      position: 0,
+    })
+  )
+  .superRefine(
+    uniqueContext({
+      by: ['_type', 'id'],
+    })
+  );
 
 /**
  * Global contexts add global / general information about the event. They carry information that is not 

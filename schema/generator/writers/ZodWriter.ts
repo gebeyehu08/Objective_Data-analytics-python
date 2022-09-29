@@ -35,19 +35,23 @@ export type PropertyDefinition = {
   isOptional?: boolean;
   value?: string;
   description?: string;
-}
+};
 
 export type ParameterDefinition = {
   name: string;
-  typeName: string;
-  value: string;
-}
+  value: string | number | boolean;
+};
+
+type SuperRefineDefinition = {
+  name: string;
+  parameters?: ParameterDefinition[];
+};
 
 export type ObjectDefinition = {
   name: string;
   properties: PropertyDefinition[];
   description?: string;
-}
+};
 
 export type ArrayDefinition = {
   name: string;
@@ -143,28 +147,32 @@ export class ZodWriter extends CodeWriter {
     this.writeLine(`])`);
     this.decreaseIndent();
     this.writeLine(`)${array.rules?.length ? '' : ';'}`);
+    this.decreaseIndent();
 
     (array.rules ?? []).forEach((rule, index) => {
-      let parameters = '';
       switch (rule.type) {
         case ValidationRuleTypes.RequiresLocationContext:
         case ValidationRuleTypes.RequiresGlobalContext:
-          parameters = `context: ContextTypes.enum.${rule.context}`
-          if(rule.position !== undefined) {
-            parameters = `${parameters}, position: ${rule.position}`
-          }
-          this.writeSuperRefine(`requiresContext({ ${parameters} })`);
+          this.writeSuperRefine({
+            name: 'requiresContext',
+            parameters: [
+              { name: 'context', value: `ContextTypes.enum.${rule.context}` },
+              { name: 'position', value: rule.position },
+            ],
+          });
           break;
         case ValidationRuleTypes.UniqueLocationContext:
         case ValidationRuleTypes.UniqueGlobalContext:
-          if(!rule.by) {
-            throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`)
+          if (!rule.by) {
+            throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`);
           }
-          if(rule.context) {
-            parameters = `context: ContextTypes.enum.${rule.context}`
-          }
-          parameters = `${parameters}${parameters && ', '}by: ['${rule.by.join("', '")}']`
-          this.writeSuperRefine(`uniqueContext({ ${parameters} })`);
+          this.writeSuperRefine({
+            name: 'uniqueContext',
+            parameters: [
+              { name: 'context', value: rule.context ? `ContextTypes.enum.${rule.context}` : undefined },
+              { name: 'by', value: `['${rule.by.join("', '")}']` },
+            ],
+          });
           break;
         default:
           throw new Error(`Validation rule ${rule.type} cannot be applied to ${array.name}.`);
@@ -184,19 +192,31 @@ export class ZodWriter extends CodeWriter {
     this.writeIndent();
 
     let formattedValue = parameter.value;
-    if(Array.isArray(parameter.value)) {
+    if (Array.isArray(parameter.value)) {
       formattedValue = `['${parameter.value.join("', '")}']`;
     }
 
-    this.write(`${parameter.name}: ${formattedValue})`);
+    this.write(`${parameter.name}: ${formattedValue}`);
 
     this.writeEndOfLine(',');
     this.decreaseIndent();
   }
 
-  public writeSuperRefine = (refineName) => {
+  public writeSuperRefine = (refineDefinition: SuperRefineDefinition) => {
+    this.increaseIndent();
+    this.writeLine(`.superRefine(`);
+
+    this.increaseIndent();
+    this.writeLine(`${refineDefinition.name}({`);
+    refineDefinition.parameters
+      .filter((parameter) => parameter.value !== undefined)
+      .forEach((parameter) => this.writeParameter(parameter));
+    this.writeLine(`})`);
+    this.decreaseIndent();
+
     this.writeIndent();
-    this.write(`.superRefine(${refineName})`);
+    this.write(`)`);
+    this.decreaseIndent();
   };
 
   public writeJsDocLines(lines: string[]) {
