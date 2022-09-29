@@ -328,6 +328,11 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         )
         df_cp = df_cp.drop(columns=['network_userid', 'domain_sessionid'])
 
+        # avoid having empty string in series that will be parsed as UUID
+        uuid_series = [ObjectivSupportedColumns.EVENT_ID, ObjectivSupportedColumns.USER_ID]
+        for series in uuid_series:
+            df_cp.loc[df_cp[series.value] == '', series.value] = None
+
         # Mark duplicated event_ids
         # Unfortunately, some events might share an event ID due to
         # browser pre-cachers or scraping bots sending the same event multiple time. Although,
