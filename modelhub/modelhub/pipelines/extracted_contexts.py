@@ -9,13 +9,13 @@ from functools import reduce
 import bach
 from typing import Optional, Dict, List
 
-from sql_models.util import is_postgres, is_bigquery, is_athena
+from bach.expression import Expression
+from sql_models.util import is_postgres, is_bigquery, is_athena, quote_identifier
 
 import modelhub
 from bach.types import StructuredDtype
 from sqlalchemy.engine import Engine
 
-from modelhub.series.operations.context_flattening import ContextFlattening
 from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
@@ -188,6 +188,25 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
 
         return df_cp[reduce(operator.and_, all_filters)]
 
+    def _apply_context_flattening(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Helper function for creating a new series per context (if engine supports a different format).
+        Function must only be called if `_extract_context_data` method is implemented.
+        """
+        df_cp = df.copy()
+        for gc in self._global_contexts:
+            context_name = "".join([c.capitalize() for c in gc.split('_')]) + 'Context'
+            df_cp[gc] = self._extract_context_data(df_cp, context_name).astype('objectiv_global_context')
+
+        return df_cp
+
+    def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Helper function that returns a new series that contains data for the required context_name.
+        Child must implement class as data formats can differ between engines.
+        """
+        raise NotImplementedError
+
 
 class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
     """
@@ -198,7 +217,7 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
     TAXONOMY_JSON_FIELD_DTYPES = {
         '_type': bach.SeriesString.dtype,
         '_types': bach.SeriesJson.dtype,
-        'global_contexts': modelhub.series.SeriesGlobalContexts.dtype,
+        'global_contexts': modelhub.series.SeriesJson.dtype,
         'location_stack': modelhub.series.SeriesLocationStack.dtype,
         'time': bach.SeriesInt64.dtype,
     }
@@ -243,22 +262,38 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
         """ See implementation in parent class :class:`BaseExtractedContextsPipeline` """
-        if ObjectivSupportedColumns.GLOBAL_CONTEXTS.value not in df.data_columns:
+        contexts_series = 'global_contexts'
+        if contexts_series not in df.data_columns:
             raise Exception(
                 f'{self._engine.name} requires flattening for global context extraction, but'
-                f'{ObjectivSupportedColumns.GLOBAL_CONTEXTS.value} is not present in dataframe.'
+                f'{contexts_series} is not present in dataframe.'
             )
 
         df_cp = df.copy()
         if self._global_contexts:
-            flattened_contexts_df = ContextFlattening(
-                contexts_series=df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value],
-                global_contexts=self._global_contexts,
-                with_location_stack=False,
-            )()
-            df_cp = df_cp.copy_override(series={**df_cp.data, **flattened_contexts_df.data})
+            df_cp = self._apply_context_flattening(df_cp)
 
-        return df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
+        return df_cp.drop(columns=['global_contexts'])
+
+    def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Extracts context data from global_contexts json. Native format is currently only
+        supported for Postgres, therefore an exception will be raised for other dialects.
+        """
+        dialect = df.engine.dialect
+        if not is_postgres(dialect):
+            raise Exception('Extraction of context data for native format is supported only for Postgres.')
+
+        contexts_series = df['global_contexts']
+        expression_str = f'''
+        jsonb_path_query_array({{}},
+        \'$[*] ? (@._type == $type)\',
+        \'{{"type":{quote_identifier(dialect, context_name)}}}\')'''
+        expression = Expression.construct(
+            expression_str,
+            contexts_series,
+        )
+        return contexts_series.copy_override(expression=expression).copy_override_type(bach.SeriesJson)
 
 
 class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
@@ -406,14 +441,35 @@ class AthenaQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         return {'contexts': bach.SeriesString.dtype}
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
-        context_series = df['contexts'].copy_override_type(bach.SeriesJson).json['data']
-        flattened_contexts_df = ContextFlattening(
-            contexts_series=context_series,
-            global_contexts=self._global_contexts,
-            with_location_stack=True,
-        )()
-        df_cp = df.copy_override(series={**df.data, **flattened_contexts_df.data})
+        df_cp = self._apply_context_flattening(df)
+        location_stack = self._extract_context_data(df, context_name='location_stack')
+        df_cp['location_stack'] = location_stack.json[0].json['location_stack']
         return df_cp.drop(columns=['contexts'])
+
+    def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Extracts all elements where each element's `schema` value contains the context name as a substr.
+        """
+        data_json_path = 'json_extract(element, \'$["data"]\')'
+        contexts_series = (
+            df['contexts'].copy_override_type(bach.SeriesJson).json['data']
+        )
+
+        expression_str = f'''
+        cast(transform(
+            filter(
+                cast({{}} as array(json)),
+                element -> strpos(cast(json_extract(element, '$["schema"]') as varchar), {{}}) > 0
+            ),
+            element -> {data_json_path}
+        ) as json)'''
+
+        expression = Expression.construct(
+            expression_str,
+            contexts_series,
+            Expression.string_value(context_name)
+        )
+        return contexts_series.copy_override(expression=expression).copy_override_type(bach.SeriesJson)
 
 
 def get_extracted_context_pipeline(
