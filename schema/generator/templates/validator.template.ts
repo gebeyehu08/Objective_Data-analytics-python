@@ -46,6 +46,7 @@ Generator.generateFromModel(
           isOptional: properties[property].optional,
           value: properties[property].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
         })),
+        // TODO rules
       });
     });
 
@@ -55,6 +56,7 @@ Generator.generateFromModel(
       items: getContextChildren(model.LocationStack.items.type),
       discriminator: model.LocationStack.items.discriminator,
       description: model.LocationStack.description,
+      rules: model.LocationStack.rules,
     });
 
     // GlobalContexts array definition
@@ -63,6 +65,7 @@ Generator.generateFromModel(
       items: getContextChildren(model.GlobalContexts.items.type),
       discriminator: model.GlobalContexts.items.discriminator,
       description: model.GlobalContexts.description,
+      // TODO rules
     });
   }
 );

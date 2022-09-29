@@ -2,7 +2,33 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { z } from "zod";
+import { z } from 'zod';
+
+/**
+ * A refinement that checks whether the given context type is present in the subject contexts
+ */
+const requiresContext =
+  ({ context, position }) =>
+  (contexts, ctx) => {
+    const locationContextIndex = contexts.findIndex((context) => context._type === context);
+
+    if (!locationContextIndex) {
+      let message = `Location Context ${context} is required for ${ctx.name}`;
+      if (position !== undefined) {
+        message = `${message} at position ${position}`;
+      }
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${message}.` });
+    }
+  };
+
+/**
+ * A refinement that checks whether the given context type is present only once in the subject contexts
+ */
+const uniqueContext =
+  ({ context }) =>
+  (contexts, ctx) => {
+    // TODO
+  };
 
 /**
  * Context's _type discriminator attribute values
@@ -56,7 +82,14 @@ export const EventTypes = z.enum([
  * A GlobalContext describing in which app the event happens, like a website or iOS app.
  */
 export const ApplicationContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.ApplicationContext),
 });
 
@@ -64,8 +97,18 @@ export const ApplicationContext = z.object({
  * Global context with information needed to reconstruct a user session.
  */
 export const CookieIdContext = z.object({
+  /**
+   * Unique identifier from the session cookie.
+   */
   cookie_id: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.CookieIdContext),
 });
 
@@ -73,10 +116,26 @@ export const CookieIdContext = z.object({
  * A GlobalContext describing meta information about the agent that sent the event.
  */
 export const HttpContext = z.object({
+  /**
+   * Full URL to HTTP referrer of the current page.
+   */
   referrer: z.string(),
+  /**
+   * User-agent of the agent that sent the event.
+   */
   user_agent: z.string(),
+  /**
+   * (public) IP address of the agent that sent the event.
+   */
   remote_address: z.string().optional(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.HttpContext),
 });
 
@@ -84,8 +143,18 @@ export const HttpContext = z.object({
  * A GlobalContext containing the value of a single input element. Multiple can be present.
  */
 export const InputValueContext = z.object({
+  /**
+   * The value of the input element.
+   */
   value: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.InputValueContext),
 });
 
@@ -93,9 +162,22 @@ export const InputValueContext = z.object({
  * A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).
  */
 export const LocaleContext = z.object({
+  /**
+   * Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.
+   */
   language_code: z.string().optional(),
+  /**
+   * Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.
+   */
   country_code: z.string().optional(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.LocaleContext),
 });
 
@@ -103,7 +185,14 @@ export const LocaleContext = z.object({
  * A GlobalContext describing the path where the user is when an event is sent.
  */
 export const PathContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.PathContext),
 });
 
@@ -111,8 +200,18 @@ export const PathContext = z.object({
  * A GlobalContext describing meta information about the current session.
  */
 export const SessionContext = z.object({
+  /**
+   * Hit counter relative to the current session, this event originated in.
+   */
   hit_number: z.bigint(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.SessionContext),
 });
 
@@ -121,15 +220,46 @@ export const SessionContext = z.object({
  * effectiveness and other models.
  */
 export const MarketingContext = z.object({
+  /**
+   * Identifies the advertiser, site, publication, etc.
+   */
   source: z.string(),
+  /**
+   * Advertising or marketing medium: cpc, banner, email newsletter, etc.
+   */
   medium: z.string(),
+  /**
+   * Individual campaign name, slogan, promo code, etc.
+   */
   campaign: z.string(),
+  /**
+   * [Optional] Search keywords.
+   */
   term: z.string().optional(),
+  /**
+   * [Optional] Used to differentiate similar content, or links within the same ad.
+   */
   content: z.string().optional(),
+  /**
+   * [Optional] To differentiate similar content, or links within the same ad.
+   */
   source_platform: z.string().optional(),
+  /**
+   * [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
+   */
   creative_format: z.string().optional(),
+  /**
+   * [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
+   */
   marketing_tactic: z.string().optional(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.MarketingContext),
 });
 
@@ -139,8 +269,18 @@ export const MarketingContext = z.object({
  * The `value` field should contain the unique identifier within that scope.
  */
 export const IdentityContext = z.object({
+  /**
+   * The unique identifier for this user/group/entity within the scope defined by `id`.
+   */
   value: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.IdentityContext),
 });
 
@@ -148,7 +288,14 @@ export const IdentityContext = z.object({
  * A Location Context that describes an element that accepts user input, i.e. a form field.
  */
 export const InputContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.InputContext),
 });
 
@@ -157,7 +304,14 @@ export const InputContext = z.object({
  * that the user can press and will trigger an Interactive Event.
  */
 export const PressableContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.PressableContext),
 });
 
@@ -165,8 +319,18 @@ export const PressableContext = z.object({
  * A PressableContext that contains an href.
  */
 export const LinkContext = z.object({
+  /**
+   * URL (href) the link points to.
+   */
   href: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.LinkContext),
 });
 
@@ -174,7 +338,14 @@ export const LinkContext = z.object({
  * A Location Context that uniquely represents the top-level UI location of the user.
  */
 export const RootLocationContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.RootLocationContext),
 });
 
@@ -182,7 +353,14 @@ export const RootLocationContext = z.object({
  * A Location Context that describes a section of the UI that can expand & collapse.
  */
 export const ExpandableContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.ExpandableContext),
 });
 
@@ -190,7 +368,14 @@ export const ExpandableContext = z.object({
  * A Location Context that describes a section of the UI containing a media player.
  */
 export const MediaPlayerContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.MediaPlayerContext),
 });
 
@@ -198,7 +383,14 @@ export const MediaPlayerContext = z.object({
  * A Location Context that describes a section of the UI containing navigational elements, for example a menu.
  */
 export const NavigationContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.NavigationContext),
 });
 
@@ -206,7 +398,14 @@ export const NavigationContext = z.object({
  * A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.
  */
 export const OverlayContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.OverlayContext),
 });
 
@@ -215,7 +414,14 @@ export const OverlayContext = z.object({
  * Enabling Data Science to analyze this section specifically.
  */
 export const ContentContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`) 
+   * for Context instance uniqueness.
+   */
   id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
   _type: z.literal(ContextTypes.enum.ContentContext),
 });
 
@@ -237,7 +443,9 @@ export const LocationStack = z
       PressableContext,
       RootLocationContext,
     ])
-  );
+  )
+  .superRefine(requiresContext({ context: ContextTypes.enum.RootLocationContext, position: 0 }))
+  .superRefine(uniqueContext({ by: ['_type', 'id'] }));
 
 /**
  * Global contexts add global / general information about the event. They carry information that is not 

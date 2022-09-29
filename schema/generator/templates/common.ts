@@ -6,6 +6,7 @@ import Objectiv from '../../base_schema.json';
 
 export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<keyof T>;
 
+// TODO make this is sortBy(subject, propertyName)
 export const sortEnumMembers = <T extends { name: string }>(members: T[]) =>
   members.sort((a, b) => a.name.localeCompare(b.name));
 

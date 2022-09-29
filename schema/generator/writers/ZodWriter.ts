@@ -4,6 +4,20 @@
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
 
+export enum ValidationRuleTypes {
+  RequiresLocationContext = 'requires_location_context',
+  RequiresGlobalContext = 'requires_global_context',
+  UniqueLocationContext = 'unique_location_context',
+  UniqueGlobalContext = 'unique_global_context',
+}
+
+export type ValidationRule = {
+  type: string;
+  context?: string;
+  position?: number;
+  by?: string[];
+};
+
 export type EnumMemberDefinition = {
   name: string;
 };
@@ -15,7 +29,7 @@ export type Enumeration = {
   description?: string;
 };
 
-export interface PropertyDefinition {
+export type PropertyDefinition = {
   name: string;
   typeName: string;
   isOptional?: boolean;
@@ -23,7 +37,13 @@ export interface PropertyDefinition {
   description?: string;
 }
 
-export interface ObjectDefinition {
+export type ParameterDefinition = {
+  name: string;
+  typeName: string;
+  value: string;
+}
+
+export type ObjectDefinition = {
   name: string;
   properties: PropertyDefinition[];
   description?: string;
@@ -34,6 +54,7 @@ export type ArrayDefinition = {
   items: string[];
   discriminator?: string;
   description?: string;
+  rules?: ValidationRule[];
 };
 
 const SchemaToZodPropertyTypeMap = {
@@ -50,7 +71,8 @@ export class ZodWriter extends CodeWriter {
     super(writer);
     this.indentString = '  ';
     writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
-    this.writeLine('import { z } from "zod";\n');
+    this.writeFile('./validator.template.static.ts');
+    this.writeLine();
   }
 
   public writeEnumeration(enumeration: Enumeration): void {
@@ -72,12 +94,12 @@ export class ZodWriter extends CodeWriter {
 
   public writeProperty(property: PropertyDefinition): void {
     this.increaseIndent();
-    this.writeIndent();
 
     if (property.description) {
-      // TODO
-      //this.writeJsDocLines(property.description.split('\n'));
+      this.writeJsDocLines(property.description.split('\n'));
     }
+
+    this.writeIndent();
 
     this.write(`${property.name}: z.${SchemaToZodPropertyTypeMap[property.typeName]}(${property.value ?? ''})`);
 
@@ -120,9 +142,61 @@ export class ZodWriter extends CodeWriter {
     this.decreaseIndent();
     this.writeLine(`])`);
     this.decreaseIndent();
-    this.writeLine(`);`);
+    this.writeLine(`)${array.rules?.length ? '' : ';'}`);
+
+    (array.rules ?? []).forEach((rule, index) => {
+      let parameters = '';
+      switch (rule.type) {
+        case ValidationRuleTypes.RequiresLocationContext:
+        case ValidationRuleTypes.RequiresGlobalContext:
+          parameters = `context: ContextTypes.enum.${rule.context}`
+          if(rule.position !== undefined) {
+            parameters = `${parameters}, position: ${rule.position}`
+          }
+          this.writeSuperRefine(`requiresContext({ ${parameters} })`);
+          break;
+        case ValidationRuleTypes.UniqueLocationContext:
+        case ValidationRuleTypes.UniqueGlobalContext:
+          if(!rule.by) {
+            throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`)
+          }
+          if(rule.context) {
+            parameters = `context: ContextTypes.enum.${rule.context}`
+          }
+          parameters = `${parameters}${parameters && ', '}by: ['${rule.by.join("', '")}']`
+          this.writeSuperRefine(`uniqueContext({ ${parameters} })`);
+          break;
+        default:
+          throw new Error(`Validation rule ${rule.type} cannot be applied to ${array.name}.`);
+      }
+      if (index === array.rules.length - 1) {
+        this.write(';');
+      }
+      this.writeLine();
+    });
+
     this.decreaseIndent();
     this.writeLine();
+  };
+
+  public writeParameter(parameter: ParameterDefinition): void {
+    this.increaseIndent();
+    this.writeIndent();
+
+    let formattedValue = parameter.value;
+    if(Array.isArray(parameter.value)) {
+      formattedValue = `['${parameter.value.join("', '")}']`;
+    }
+
+    this.write(`${parameter.name}: ${formattedValue})`);
+
+    this.writeEndOfLine(',');
+    this.decreaseIndent();
+  }
+
+  public writeSuperRefine = (refineName) => {
+    this.writeIndent();
+    this.write(`.superRefine(${refineName})`);
   };
 
   public writeJsDocLines(lines: string[]) {

@@ -13,21 +13,12 @@
     },
     "rules": [
       {
-        "type": "requires_context",
+        "type": "requires_location_context",
         "context": "RootLocationContext",
         "position": 0
       },
       {
-        "type": "requires_context",
-        "context": "PathContext"
-      },
-      {
-        "type": "unique_context",
-        "context": "RootLocationContext",
-        "by": ["_type"]
-      },
-      {
-        "type": "unique_context",
+        "type": "unique_location_context",
         "by": ["_type", "id"]
       }
     ]
@@ -41,11 +32,11 @@
     },
     "rules": [
       {
-        "type": "requires_context",
+        "type": "requires_global_context",
         "context": "ApplicationContext"
       },
       {
-        "type": "unique_context",
+        "type": "unique_global_context",
         "by": ["_type", "id"]
       }
     ]
@@ -84,7 +75,13 @@
           "type": "LocationStack",
           "optional": false
         }
-      }
+      },
+      "rules": [
+        {
+          "type": "requires_global_context",
+          "context": "PathContext"
+        }
+      ]
     },
     "NonInteractiveEvent": {
       "description": "The parent of Events that are not directly triggered by a user action.",
@@ -109,7 +106,7 @@
       "parent": "InteractiveEvent",
       "rules": [
         {
-          "type": "requires_context",
+          "type": "requires_location_context",
           "context": "InputContext"
         }
       ]
@@ -119,7 +116,7 @@
       "parent": "InteractiveEvent",
       "rules": [
         {
-          "type": "requires_context",
+          "type": "requires_location_context",
           "context": "PressableContext"
         }
       ]
