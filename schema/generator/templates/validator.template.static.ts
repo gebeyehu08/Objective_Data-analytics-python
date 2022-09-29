@@ -6,14 +6,14 @@ import { z } from 'zod';
 const requiresContext =
   ({ context, position }) =>
   (contexts, ctx) => {
-    const contextIndex = contexts.findIndex((context) => context._type === context);
+    const contextIndex = contexts.findIndex(({ _type }) => _type === context);
 
-    if (!contextIndex) {
-      let message = `Context ${context} is required for ${ctx.name}`;
-      if (position !== undefined) {
-        message = `${message} at position ${position}`;
-      }
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${message}.` });
+    if (contextIndex < 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required.` });
+    }
+
+    if (contextIndex >= 0 && position !== undefined && position !== contextIndex) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required at position ${position}.` });
     }
   };
 

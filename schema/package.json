@@ -8,8 +8,10 @@
     "serve": "node validator-service.js",
     "validate": "node validator-cli.js",
     "prettier": "prettier --write validator*.js generator",
-    "generator:watch": "(cd generator && yellicode --watch)"
+    "generate": "(cd generator && yarn generate)",
+    "generate:watch": "(cd generator && yarn generate:watch)"
   },
+  "type": "module",
   "author": {
     "name": "Surai Di Rosa",
     "email": "surai.dirosa@gmail.com",
@@ -22,10 +24,6 @@
   },
   "devDependencies": {
     "@swc/core": "^1.3.2",
-    "@yellicode/core": "^1.5.0",
-    "@yellicode/elements": "^1.9.2",
-    "@yellicode/templating": "^1.8.0",
-    "@yellicode/typescript": "^1.14.0",
     "prettier": "^2.7.1",
     "typescript": "^4.8.3",
     "yargs": "^17.5.1"
