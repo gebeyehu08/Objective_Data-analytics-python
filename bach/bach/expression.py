@@ -198,11 +198,15 @@ class Expression:
         return cls(data=data)
 
     @classmethod
-    def construct_expr_as_name(cls, expr: 'Expression', name: str) -> 'Expression':
+    def construct_expr_as_sql_name(cls, dialect: Dialect, expr: 'Expression', name: str) -> 'Expression':
         """
-        Construct an expression that represents the sql: {expr} as "name"
+        Construct an expression that represents the sql: {expr} as "name".
+        The name parameter will be run through `get_sql_name()`, which might transformed it into another
+        name. This is to make sure the generated expression contains a column name that is legal for the
+        specified Dialect.
         """
-        ident_expr = Expression.identifier(name)
+        from bach.utils import get_sql_column_name
+        ident_expr = Expression.identifier(get_sql_column_name(dialect=dialect, name=name))
         # TODO: enable this optimisation again
         # if expr.to_sql() == ident_expr.to_sql():
         #     # this is to prevent generating sql of the form `x as x`, we'll just return `x` in that case
@@ -337,13 +341,14 @@ class Expression:
             replaced_tokens.append(ColumnReferenceToken(new_column_name))
         return self.__class__(replaced_tokens)
 
-    def remove_table_column_references(self) -> Tuple[str, str, 'Expression']:
+    def remove_table_column_references(self) -> Tuple[Optional[str], Optional[str], 'Expression']:
         """
         removes all table references from this expression.
-        Returns first table_name and column_name found and a new expression without table column references
+        Returns first table_name and column_name found and a new expression without table column references.
+        If no TableColumnReferenceToken are found, then the table_name and column_name will be None.
         """
-        table_name = ''
-        column_name = ''
+        table_name = None
+        column_name = None
         if not self.has_table_column_references:
             return table_name, column_name, self
 

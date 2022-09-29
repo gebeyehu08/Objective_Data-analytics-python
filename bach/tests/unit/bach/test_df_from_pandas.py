@@ -41,7 +41,7 @@ def test__assert_column_names_valid_db_specific(dialect):
         ColNameValid('test',                  True,  True,  True),
         ColNameValid('test' * 15 + 'test',    False, True,  True),   # 64 characters
         ColNameValid('abcdefghij' * 30 + 'a', False, False, False),  # 301 characters
-        ColNameValid('#@*&O*JALDSJK',         True,  False, False),
+        ColNameValid('#@*&O*JALDSJK',         True,  True, True),    # Can be encoded as valid column name
     ]
     for test in tests:
         data = [[1, 2, 3], [3, 4, 5]]
@@ -51,5 +51,6 @@ def test__assert_column_names_valid_db_specific(dialect):
         if expected:
             _assert_column_names_valid(dialect=dialect, df=pdf)
         else:
-            with pytest.raises(ValueError, match='Invalid column names: .* for SQL dialect'):
+            msg = f'Column name ".*" is not valid for SQL dialect {dialect.name}, and cannot be escaped.'
+            with pytest.raises(ValueError, match=msg):
                 _assert_column_names_valid(dialect=dialect, df=pdf)

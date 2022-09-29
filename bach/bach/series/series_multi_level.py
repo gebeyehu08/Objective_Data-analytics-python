@@ -478,7 +478,8 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
             self.upper,
             self.bounds,
         )
-        return Expression.construct_expr_as_name(expr, self.name)
+        dialect = self.engine.dialect
+        return Expression.construct_expr_as_sql_name(dialect=dialect, expr=expr, name=self.name)
 
     @staticmethod
     def _parse_numeric_interval_value_postgres(value) -> Optional[pandas.Interval]:

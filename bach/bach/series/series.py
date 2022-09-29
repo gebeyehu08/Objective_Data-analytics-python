@@ -22,7 +22,7 @@ from bach.sql_model import BachSqlModel
 from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrAlias,\
     AllSupportedLiteralTypes, value_to_series_type
 from bach.utils import (
-    is_valid_column_name, validate_node_column_references_in_sorting_expressions, SortColumn
+    validate_node_column_references_in_sorting_expressions, SortColumn, get_sql_column_name
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
@@ -196,8 +196,9 @@ class Series(ABC):
             raise ValueError(f'Series and aggregation index do not match: {group_by.index} != {index}')
         if not group_by and expression.has_aggregate_function:
             raise ValueError('Expression has an aggregation function set, but there is no group_by')
-        if not is_valid_column_name(dialect=engine.dialect, name=name):
-            raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
+        # Make sure that name can be converted to a valid sql-column name. get_sql_column_name() will
+        # raise an exception if the name cannot be converted to a valid sql column name
+        get_sql_column_name(dialect=engine.dialect, name=name)
 
         for value in index.values():
             if value.base_node != base_node:
@@ -210,6 +211,7 @@ class Series(ABC):
 
         if order_by:
             validate_node_column_references_in_sorting_expressions(
+                dialect=engine.dialect,
                 node=base_node,
                 order_by=order_by
             )
@@ -626,7 +628,8 @@ class Series(ABC):
     def get_column_expression(self, table_alias: Optional[str] = None) -> Expression:
         """ INTERNAL: Get the column expression for this Series """
         expression = self.expression.resolve_column_references(self.engine.dialect, table_alias)
-        return Expression.construct_expr_as_name(expression, self.name)
+        dialect = self.engine.dialect
+        return Expression.construct_expr_as_sql_name(dialect=dialect, expr=expression, name=self.name)
 
     def _get_supported(
         self,

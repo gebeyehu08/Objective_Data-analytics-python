@@ -16,6 +16,7 @@ from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.conftest import DB_ATHENA_LOCATION
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
+
 def _create_test_table(engine: Engine, table_name: str):
     # TODO: insert data too, and check in the tests below that we get that data back in the DataFrame
     #  https://github.com/objectiv/objectiv-analytics/issues/1093
@@ -226,3 +227,7 @@ def test_big_query_from_other_project(engine):
         expected_columns=expected_columns,
         expected_data=expected_data
     )
+
+
+# TODO: test for table with column names with capitals in it.
+#  https://github.com/objectiv/objectiv-analytics/issues/1318
