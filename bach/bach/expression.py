@@ -201,7 +201,7 @@ class Expression:
     def construct_expr_as_sql_name(cls, dialect: Dialect, expr: 'Expression', name: str) -> 'Expression':
         """
         Construct an expression that represents the sql: {expr} as "name".
-        The name parameter will be run through `get_sql_name()`, which might transformed it into another
+        The name parameter will be run through `get_sql_name()`, which might transform it into another
         name. This is to make sure the generated expression contains a column name that is legal for the
         specified Dialect.
         """
