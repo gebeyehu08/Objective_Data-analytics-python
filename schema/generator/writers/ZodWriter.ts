@@ -144,43 +144,10 @@ export class ZodWriter extends CodeWriter {
     this.decreaseIndent();
     this.writeLine(`])`);
     this.decreaseIndent();
-    this.writeLine(`)${array.rules?.length ? '' : ';'}`);
-    this.decreaseIndent();
+    this.writeIndent();
+    this.write(`)`);
 
-    (array.rules ?? []).forEach((rule, index) => {
-      switch (rule.type) {
-        case ValidationRuleTypes.RequiresContext:
-          if (!rule.context) {
-            throw new Error(`Validation rule ${rule.type} requires the \`context\` attribute to be set.`);
-          }
-          this.writeSuperRefine({
-            name: 'requiresContext',
-            parameters: [
-              { name: 'context', value: `ContextTypes.enum.${rule.context}` },
-              { name: 'position', value: rule.position },
-            ],
-          });
-          break;
-        case ValidationRuleTypes.UniqueContext:
-          if (!rule.by) {
-            throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`);
-          }
-          this.writeSuperRefine({
-            name: 'uniqueContext',
-            parameters: [
-              { name: 'context', value: rule.context ? `ContextTypes.enum.${rule.context}` : undefined },
-              { name: 'by', value: `['${rule.by.join("', '")}']` },
-            ],
-          });
-          break;
-        default:
-          throw new Error(`Validation rule ${rule.type} cannot be applied to ${array.name}.`);
-      }
-      if (index === array.rules.length - 1) {
-        this.write(';');
-      }
-      this.writeLine();
-    });
+    this.writeRules(array);
 
     this.decreaseIndent();
     this.writeLine();
@@ -229,5 +196,49 @@ export class ZodWriter extends CodeWriter {
     });
 
     this.writeLine(' */');
+  }
+
+  private writeRules(subject) {
+    if (!subject.rules?.length) {
+      this.writeLine(';');
+    } else {
+      this.writeEndOfLine();
+    }
+    this.decreaseIndent();
+
+    (subject.rules ?? []).forEach((rule, index) => {
+      switch (rule.type) {
+        case ValidationRuleTypes.RequiresContext:
+          if (!rule.context) {
+            throw new Error(`Validation rule ${rule.type} requires the \`context\` attribute to be set.`);
+          }
+          this.writeSuperRefine({
+            name: 'requiresContext',
+            parameters: [
+              { name: 'context', value: `ContextTypes.enum.${rule.context}` },
+              { name: 'position', value: rule.position },
+            ],
+          });
+          break;
+        case ValidationRuleTypes.UniqueContext:
+          if (!rule.by) {
+            throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`);
+          }
+          this.writeSuperRefine({
+            name: 'uniqueContext',
+            parameters: [
+              { name: 'context', value: rule.context ? `ContextTypes.enum.${rule.context}` : undefined },
+              { name: 'by', value: `['${rule.by.join("', '")}']` },
+            ],
+          });
+          break;
+        default:
+          throw new Error(`Validation rule ${rule.type} cannot be applied to ${subject.name}.`);
+      }
+      if (index === subject.rules.length - 1) {
+        this.write(';');
+      }
+      this.writeLine();
+    });
   }
 }

@@ -479,7 +479,7 @@ export const LocationStack = z
   )
   .superRefine(
     uniqueContext({
-      by: ['_type'],
+      by: ['_type', 'id'],
     })
   );
 
@@ -511,3 +511,4 @@ export const GlobalContexts = z
       by: ['_type', 'id'],
     })
   );
+
