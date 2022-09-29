@@ -13,12 +13,12 @@
     },
     "rules": [
       {
-        "type": "requires_location_context",
+        "type": "requires_context",
         "context": "RootLocationContext",
         "position": 0
       },
       {
-        "type": "unique_location_context",
+        "type": "unique_context",
         "by": ["_type", "id"]
       }
     ]
@@ -32,11 +32,11 @@
     },
     "rules": [
       {
-        "type": "requires_global_context",
+        "type": "requires_context",
         "context": "ApplicationContext"
       },
       {
-        "type": "unique_global_context",
+        "type": "unique_context",
         "by": ["_type", "id"]
       }
     ]
@@ -78,7 +78,7 @@
       },
       "rules": [
         {
-          "type": "requires_global_context",
+          "type": "requires_context",
           "context": "PathContext"
         }
       ]
@@ -106,7 +106,7 @@
       "parent": "InteractiveEvent",
       "rules": [
         {
-          "type": "requires_location_context",
+          "type": "requires_context",
           "context": "InputContext"
         }
       ]
@@ -116,7 +116,7 @@
       "parent": "InteractiveEvent",
       "rules": [
         {
-          "type": "requires_location_context",
+          "type": "requires_context",
           "context": "PressableContext"
         }
       ]

@@ -473,5 +473,14 @@ export const GlobalContexts = z
       PathContext,
       SessionContext,
     ])
+  )
+  .superRefine(
+    requiresContext({
+      context: ContextTypes.enum.ApplicationContext,
+    })
+  )
+  .superRefine(
+    uniqueContext({
+      by: ['_type', 'id'],
+    })
   );
-

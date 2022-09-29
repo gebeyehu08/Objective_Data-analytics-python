@@ -65,7 +65,7 @@ Generator.generateFromModel(
       items: getContextChildren(model.GlobalContexts.items.type),
       discriminator: model.GlobalContexts.items.discriminator,
       description: model.GlobalContexts.description,
-      // TODO rules
+      rules: model.GlobalContexts.rules,
     });
   }
 );

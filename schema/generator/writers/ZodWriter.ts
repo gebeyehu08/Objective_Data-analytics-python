@@ -5,10 +5,8 @@
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
 
 export enum ValidationRuleTypes {
-  RequiresLocationContext = 'requires_location_context',
-  RequiresGlobalContext = 'requires_global_context',
-  UniqueLocationContext = 'unique_location_context',
-  UniqueGlobalContext = 'unique_global_context',
+  RequiresContext = 'requires_context',
+  UniqueContext = 'unique_context',
 }
 
 export type ValidationRule = {
@@ -151,8 +149,10 @@ export class ZodWriter extends CodeWriter {
 
     (array.rules ?? []).forEach((rule, index) => {
       switch (rule.type) {
-        case ValidationRuleTypes.RequiresLocationContext:
-        case ValidationRuleTypes.RequiresGlobalContext:
+        case ValidationRuleTypes.RequiresContext:
+          if (!rule.context) {
+            throw new Error(`Validation rule ${rule.type} requires the \`context\` attribute to be set.`);
+          }
           this.writeSuperRefine({
             name: 'requiresContext',
             parameters: [
@@ -161,8 +161,7 @@ export class ZodWriter extends CodeWriter {
             ],
           });
           break;
-        case ValidationRuleTypes.UniqueLocationContext:
-        case ValidationRuleTypes.UniqueGlobalContext:
+        case ValidationRuleTypes.UniqueContext:
           if (!rule.by) {
             throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`);
           }
