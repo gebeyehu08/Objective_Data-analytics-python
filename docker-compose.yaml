@@ -96,6 +96,7 @@ services:
     environment:
       <<: *db_env_variables
       OBJECTIV_VERSION_CHECK_DISABLE: ${OBJECTIV_VERSION_CHECK_DISABLE-false}
+      OBJECTIV_SKIP_IMPORT: ${OBJECTIV_SKIP_IMPORT-""}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
       interval: 30s
