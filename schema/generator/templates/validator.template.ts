@@ -18,6 +18,7 @@ Generator.generateFromModel(
       export: true,
       name: 'ContextTypes',
       members: sortEnumMembers(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
+      description: `Context's _type discriminator attribute values`
     });
     writer.writeLine();
 
@@ -26,15 +27,18 @@ Generator.generateFromModel(
       export: true,
       name: 'EventTypes',
       members: sortEnumMembers(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
+      description: `Event's _type discriminator attribute values`
     });
     writer.writeLine();
 
     // Context definitions
     getContexts().forEach((contextName) => {
+      const context = model.contexts[contextName];
       const properties = getProperties(model.contexts, contextName);
 
       zodWriter.writeObject({
         name: contextName,
+        description: context.description,
         properties: getObjectKeys(properties).map((property) => ({
           name: String(property),
           typeName: properties[property].type,
@@ -48,14 +52,16 @@ Generator.generateFromModel(
     zodWriter.writeArray({
       name: 'LocationStack',
       items: getContextChildren(model.LocationStack.items.type),
-      discriminator: model.LocationStack.items.discriminator
-    })
+      discriminator: model.LocationStack.items.discriminator,
+      description: model.LocationStack.description
+    });
 
     // GlobalContexts array definition
     zodWriter.writeArray({
       name: 'GlobalContexts',
       items: getContextChildren(model.GlobalContexts.items.type),
-      discriminator: model.GlobalContexts.items.discriminator
-    })
+      discriminator: model.GlobalContexts.items.discriminator,
+      description: model.GlobalContexts.description
+    });
   }
 );

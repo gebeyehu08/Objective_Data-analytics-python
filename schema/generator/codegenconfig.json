@@ -6,13 +6,13 @@
       "templateFile": "templates/common.ts"
     },
     {
-      "templateFile": "writers/DocsWriter.ts"
+      "templateFile": "writers/MarkdownWriter.ts"
     },
     {
-      "templateFile": "writers/SchemaWriter.ts"
+      "templateFile": "writers/TypescriptWriter.ts"
     },
     {
-      "templateFile": "writers/ValidatorWriter.ts"
+      "templateFile": "writers/ZodWriter.ts"
     },
     {
       "modelFile": "../base_schema.json",

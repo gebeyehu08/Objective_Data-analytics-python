@@ -26,7 +26,7 @@ export const getEntity = (entityType) => Objectiv.contexts[entityType] ?? Object
 export const getEntityParents = (entity, parents = []) => {
   const parentEntityType = entity['parent'];
 
-  if(!parentEntityType) {
+  if (!parentEntityType) {
     return parents.sort();
   }
 
@@ -35,12 +35,14 @@ export const getEntityParents = (entity, parents = []) => {
   return getEntityParents(getEntity(parentEntityType), parents);
 };
 
-export const getContextChildren = (parentContext) => getContexts().filter(contextType => {
-  const context = Objectiv.contexts[contextType];
-  const contextParents = getEntityParents(context);
-  return contextParents.includes(parentContext);
-}).sort();
-
+export const getContextChildren = (parentContext) =>
+  getContexts()
+    .filter((contextType) => {
+      const context = Objectiv.contexts[contextType];
+      const contextParents = getEntityParents(context);
+      return contextParents.includes(parentContext);
+    })
+    .sort();
 
 // recursive helper to fetch parent attributes
 export const getParentProperties = (entities, parents, properties = {}) =>
