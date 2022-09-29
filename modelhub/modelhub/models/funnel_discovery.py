@@ -128,9 +128,11 @@ class FunnelDiscovery:
 
         step_size = 1  # we want steps' pairs
         all_dfs = []
+
+        step_column_name = steps_counter_df.columns[0].replace('_step_1','')
         for i_step in range(1, max(step_numbers) - step_size + 1):
-            step1 = f'location_stack_step_{i_step}'
-            step2 = f'location_stack_step_{i_step + step_size}'
+            step1 = f'{step_column_name}_step_{i_step}'
+            step2 = f'{step_column_name}_step_{i_step + step_size}'
 
             column_names = {step1: 'source', step2: 'target'}
             _df = steps_counter_df[[step1, step2, 'value_counts']].rename(columns=column_names)
@@ -152,7 +154,8 @@ class FunnelDiscovery:
         add_conversion_step_column: bool = False,
         only_converted_paths: bool = False,
         start_from_end: bool = False,
-        n_examples: int = None
+        n_examples: int = None,
+        sort_by: str = None,
     ) -> bach.DataFrame:
         """
         Get the navigation paths for each event's location stack. Each navigation path
@@ -179,7 +182,7 @@ class FunnelDiscovery:
         :param steps: Number of steps/locations to consider in navigation path.
         :param by: sets the column(s) to group by. If by is None or not set,
             then steps are based on the order of events based on the entire dataset.
-        :param column: the column of which to create the paths. Can be a string of the name of the
+        :param location_stack: the column of which to create the paths. Can be a string of the name of the
             column in data, or a Series with the same base node as `data`. If None the default location
             stack is taken.
         :param add_conversion_step_column: if True gets the first conversion step number
@@ -201,6 +204,7 @@ class FunnelDiscovery:
 
         :param n_examples: limit the amount of navigation paths.
                            If `None`, all the navigation paths are taken.
+        :param sort_by: column to sort by for determining the order of the sequences of 'location_stack'
 
         :returns: Bach DataFrame containing a new Series for each step containing the nice name
             of the location.
@@ -215,7 +219,9 @@ class FunnelDiscovery:
         ):
             raise ValueError('The is_conversion_event column is missing in the dataframe.')
 
-        check_objectiv_dataframe(df=data, columns_to_check=['moment'])
+        if sort_by is None:
+            check_objectiv_dataframe(df=data, columns_to_check=['moment'])
+            sort_by = 'moment'
 
         column = location_stack or data['location_stack']
         if type(column) == str:
@@ -239,6 +245,7 @@ class FunnelDiscovery:
             location_stack=column,
             start_from_end=start_from_end,
             add_first_conversion_column=add_conversion_step_column or only_converted_paths,
+            sort_by=sort_by
         )
 
         # limit rows
@@ -271,6 +278,7 @@ class FunnelDiscovery:
         location_stack: Union['SeriesString', 'SeriesLocationStack', 'SeriesInt64'],
         start_from_end: bool,
         add_first_conversion_column: bool,
+        sort_by: str
     ) -> bach.DataFrame:
         """
         Generates all steps series and `_first_conversion_step_number` (if required).
@@ -278,7 +286,7 @@ class FunnelDiscovery:
         Returns a bach DataFrame including a series for each requested step.
         """
         # adds __feature_nice_name and __root_step_offset to DataFrame
-        data = self._prepare_data_for_step_extraction(data, by, location_stack)
+        data = self._prepare_data_for_step_extraction(data, by, location_stack, sort_by)
 
         series_to_keep = by + [self.FEATURE_NICE_NAME_SERIES, self.STEP_OFFSET_SERIES]
         if add_first_conversion_column:
@@ -321,6 +329,7 @@ class FunnelDiscovery:
         data: bach.DataFrame,
         by: List[str],
         location_stack: 'SeriesLocationStack',
+        sort_by: str
     ) -> bach.DataFrame:
         """
         Extracts feature nice name from location stack and calculates the offset of it based
@@ -338,7 +347,7 @@ class FunnelDiscovery:
 
         # always sort by moment, since we need to respect the order of the nice names in the data
         # for getting the correct navigation paths based on event time
-        data = data.sort_values(by + ['moment', self.FEATURE_NICE_NAME_SERIES])
+        data = data.sort_values(by + [sort_by, self.FEATURE_NICE_NAME_SERIES])
         offset_window = data.groupby(by=by).window()
         data[self.STEP_OFFSET_SERIES] = data[location_stack.name].window_row_number(window=offset_window) - 1
         return data.materialize(node_name='pre_step_extraction')
