@@ -27,12 +27,21 @@ const requiresContext =
 const uniqueContext =
   ({ contextType, by }) =>
   (allContexts, ctx) => {
-    const contexts = contextType ? allContexts.filter(context => context._type === contextType) : allContexts;
+    const contexts = contextType ? allContexts.filter((context) => context._type === contextType) : allContexts;
     const seenContexts = [];
 
-    // TODO implement `by`
     const duplicatedContexts = contexts.filter((context) => {
-      if (seenContexts.find((seenContext) => seenContext._type === context._type && seenContext.id === context.id)) {
+      if (
+        seenContexts.find((seenContext) => {
+          let matchCount = 0;
+          by.forEach((propertyToMatch) => {
+            if (seenContext[propertyToMatch] === context[propertyToMatch]) {
+              matchCount++;
+            }
+          });
+          return matchCount === by.length;
+        })
+      ) {
         return true;
       }
 
@@ -470,7 +479,7 @@ export const LocationStack = z
   )
   .superRefine(
     uniqueContext({
-      by: ['_type', 'id'],
+      by: ['_type'],
     })
   );
 
@@ -502,4 +511,3 @@ export const GlobalContexts = z
       by: ['_type', 'id'],
     })
   );
-

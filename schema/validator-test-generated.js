@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { LinkContext, LocationStack, RootLocationContext } from './generator/generated/validator.js';
+import { LinkContext, LocationStack, RootLocationContext } from './validator.js';
 
 console.log(
   'RootLocationContext validation:',
@@ -32,10 +32,6 @@ console.log(
       _type: 'LinkContext',
       id: 'test',
       href: '/test',
-    },
-    {
-      _type: 'ContentContext',
-      id: 'test2',
     },
     {
       _type: 'ContentContext',
