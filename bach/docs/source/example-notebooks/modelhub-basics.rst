@@ -14,9 +14,8 @@ quickly build model stacks to answer common analytics questions.
 
 It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-demo-notebook.ipynb>`_
-to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
+The dataset used here is the same as in `Objectiv Up </docs/home/up>`__.
 
 Using the open model hub
 ------------------------
@@ -360,7 +359,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. doctest:: modelhub
 	:hide:
@@ -418,7 +417,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
 	               "application" AS "application",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
 	          FROM "context_data___567e5226be2a44a0a15de0d391e0030f"
@@ -494,7 +493,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "l"."session_hit_number" AS "session_hit_number",
 	               "l"."application" AS "application",
 	               "l"."is_new_user" AS "is_new_user",
-	               (((jsonb_array_length(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"id": "Quickstart Guide", "_type": "LinkContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY)), '[]'::JSONB)) > cast(0 AS bigint))) AND (("l"."event_type" = 'PressEvent'))) AS "conversion_events",
+	               (((jsonb_array_length(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"id": "Quickstart Guide", "_type": "LinkContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY)), '[]'::JSONB)) > cast(0 AS bigint))) AND (("l"."event_type" = 'PressEvent'))) AS "conversion_events",        
 	               "r"."is_new_user" AS "is_new_user_month"
 	          FROM "merge_sql___78dff41f72cc410f62fb050940d92227" AS l
 	          LEFT
@@ -601,11 +600,11 @@ That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any 
 Next Steps
 ----------
 
-Play with this notebook in the demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Try the notebooks in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a fully functional `Objectiv demo pipeline <https://objectiv.io/docs/home/try-the-demo>`_ in under 5 
-minutes, and play with any of the example notebooks yourself.
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
 
 Use this notebook with your own data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

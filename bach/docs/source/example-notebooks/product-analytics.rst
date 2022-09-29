@@ -12,8 +12,8 @@ This example notebook shows how you can easily analyze the basics of product ana
 as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-product-analytics.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+or you can instead `run Objectiv Up </docs/home/up/>`__ to try it out. The dataset used here is the same as in 
+Up.
 
 Get started
 -----------
@@ -491,6 +491,22 @@ To calculate the daily conversion rate, we use the earlier created `daily_users`
 	2022-07-21    0.023256
 	Name: unique_users, dtype: float64
 
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # combined DataFrame with #conversions + conversion rate, daily
+	>>> conversions_plus_rate = conversions.to_frame().merge(conversion_rate.to_frame(), on='time_aggregation', how='left').sort_index(ascending=False)
+	>>> conversions_plus_rate = conversions_plus_rate.rename(columns={'unique_users_x': 'converted_users', 'unique_users_y': 'conversion_rate'})
+	>>> conversions_plus_rate.head()
+	                  converted_users  conversion_rate
+	time_aggregation
+	2022-07-28                      1         0.058824
+	2022-07-27                      1         0.012821
+	2022-07-26                      3         0.029412
+	2022-07-25                      1         0.009804
+	2022-07-24                      1         0.013333
+
 Features  before conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can calculate what users did _before_ converting.
@@ -560,44 +576,26 @@ Finally, let's see how much time converted users spent before they converted.
 	* :doc:`modelhub.Map.conversions_in_time <../open-model-hub/models/helper-functions/modelhub.Map.conversions_in_time>`
 	* :doc:`modelhub.Aggregate.session_duration <../open-model-hub/models/aggregation/modelhub.Aggregate.session_duration>`
 
-Funnel Discovery
-----------------
-To analyze the paths that users take that impact your product goals, have a look at the 
-:doc:`Funnel Discovery notebook <./funnel-discovery>`.
-
-Marketing analysis
-------------------
-To analyze the above metrics and more for users coming from marketing efforts, have a look at the 
-:doc:`Marketing Analytics notebook <./marketing-analytics>`.
-
 Get the SQL for any analysis
 ----------------------------
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. the testsetup below is a workaround to show the actual SQL output
 
-.. testsetup:: product-analytics-sql
-	:skipif: engine is None
+.. doctest:: product-analytics
+	:hide:
+	
+	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
 
-	from modelhub import ModelHub
-	from datetime import datetime
-	# instantiate the model hub and set the default time aggregation to daily
-	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
-	# get a Bach DataFrame with Objectiv data within a defined timeframe
-	df = modelhub.get_objectiv_dataframe(start_date='2022-03-01', end_date='2022-07-30')
-	monthly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
-	def display_sql_as_markdown(arg):
-		print('sql\n' + arg.view_sql() + '\n') # print out SQL instead of an object
-
-.. doctest:: product-analytics-sql
+.. doctest:: product-analytics
 	:skipif: engine is None
 
 	>>> # show SQL for analysis; this is just one example, and works for any Objectiv model/analysis
 	>>> display_sql_as_markdown(monthly_users)
 	sql
-	WITH "manual_materialize___69a0c34935f44c51532b4d6011fb9118" AS (
+	WITH "manual_materialize___e627e9bdda472e6a76c583c57c6d37ed" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -605,10 +603,11 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "value"->>'_type' AS "event_type",
 	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
 	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time"
+	               cast("value"->>'time' AS bigint) AS "time",
+	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application"
 	          FROM "data"
 	       ),
-	       "getitem_where_boolean___938c68dda42732fece35858fed1415a6" AS (
+	       "getitem_where_boolean___64691f3d96b0031460768c7d88c29861" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -616,21 +615,12 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
 	               "location_stack" AS "location_stack",
-	               "time" AS "time"
-	          FROM "manual_materialize___69a0c34935f44c51532b4d6011fb9118"
+	               "time" AS "time",
+	               "application" AS "application"
+	          FROM "manual_materialize___e627e9bdda472e6a76c583c57c6d37ed"
 	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-07-30' AS date))))
 	       ),
-	       "context_data___86ab7bc1893a46a2f4320a4212da6d80" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types"
-	          FROM "getitem_where_boolean___938c68dda42732fece35858fed1415a6"
-	       ),
-	       "session_starts___25d2dd1edb505920fc7495937f0abbbb" AS (
+	       "context_data___5420e4ab121cc6ebf6ded99c4338ea34" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -638,12 +628,24 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application"
+	          FROM "getitem_where_boolean___64691f3d96b0031460768c7d88c29861"
+	       ),
+	       "session_starts___14d0995bc0268269f794bdfa05982ec4" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
 	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
-	          FROM "context_data___86ab7bc1893a46a2f4320a4212da6d80"
+	          FROM "context_data___5420e4ab121cc6ebf6ded99c4338ea34"
 	       ),
-	       "session_id_and_count___64dad7aa02b0a7a7c61d2d5e7a0fc837" AS (
+	       "session_id_and_count___911c8ceaa9af5ddae1f70759155ef6e3" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -651,14 +653,15 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
 	               "is_start_of_session" AS "is_start_of_session",
 	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
 	                    ELSE cast(NULL AS bigint)
 	                     END AS "session_start_id",
 	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___25d2dd1edb505920fc7495937f0abbbb"
+	          FROM "session_starts___14d0995bc0268269f794bdfa05982ec4"
 	       ),
-	       "objectiv_sessionized_data___a0305334fc04cd16eb80a8cfc9be8e9f" AS (
+	       "objectiv_sessionized_data___054d4037d24a400c0d317cca2546947e" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -666,14 +669,42 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "location_stack" AS "location_stack",
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
 	               "is_start_of_session" AS "is_start_of_session",
 	               "session_start_id" AS "session_start_id",
 	               "is_one_session" AS "is_one_session",
 	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___64dad7aa02b0a7a7c61d2d5e7a0fc837"
+	          FROM "session_id_and_count___911c8ceaa9af5ddae1f70759155ef6e3"
 	       ) SELECT to_char("moment", 'YYYY"-"MM') AS "time_aggregation",
 	       count(DISTINCT "user_id") AS "unique_users"
-	  FROM "objectiv_sessionized_data___a0305334fc04cd16eb80a8cfc9be8e9f"
+	  FROM "objectiv_sessionized_data___054d4037d24a400c0d317cca2546947e"
 	 GROUP BY to_char("moment", 'YYYY"-"MM')
 	<BLANKLINE>
+
+That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
+
+Next Steps
+----------
+
+Play with this notebook in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in  under 5 minutes, 
+and play with this example notebook yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* :doc:`Marketing Analytics notebook <./marketing-analytics>` - analyze the above metrics and more for users 
+	coming from marketing efforts.
+* :doc:`Funnel Discovery notebook <./funnel-discovery>` - analyze the paths that users take that impact your 
+	product goals.
