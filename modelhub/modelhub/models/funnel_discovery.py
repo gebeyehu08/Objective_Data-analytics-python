@@ -129,7 +129,7 @@ class FunnelDiscovery:
         step_size = 1  # we want steps' pairs
         all_dfs = []
 
-        step_column_name = steps_counter_df.columns[0].replace('_step_1','')
+        step_column_name = steps_counter_df.data_columns[0].replace('_step_1','')
         for i_step in range(1, max(step_numbers) - step_size + 1):
             step1 = f'{step_column_name}_step_{i_step}'
             step2 = f'{step_column_name}_step_{i_step + step_size}'
@@ -223,9 +223,13 @@ class FunnelDiscovery:
             check_objectiv_dataframe(df=data, columns_to_check=['moment'])
             sort_by = 'moment'
 
-        column = location_stack or data['location_stack']
-        if type(column) == str:
-            column = data[column]
+        if location_stack is None:
+            column = data['location_stack']
+        elif type(location_stack) == str:
+            column = data[location_stack]
+        elif type(location_stack) in ['SeriesString', 'SeriesLocationStack', 'SeriesInt64']:
+            column = cast(bach.Series, location_stack)  # help mypy
+
 
         data[self.FEATURE_NICE_NAME_SERIES] = column
         if type(column) == SeriesLocationStack:
@@ -275,7 +279,7 @@ class FunnelDiscovery:
         data: bach.DataFrame,
         steps: int,
         by: List[str],
-        location_stack: Union['SeriesString', 'SeriesLocationStack', 'SeriesInt64'],
+        location_stack: Series,
         start_from_end: bool,
         add_first_conversion_column: bool,
         sort_by: str
@@ -328,7 +332,7 @@ class FunnelDiscovery:
         self,
         data: bach.DataFrame,
         by: List[str],
-        location_stack: 'SeriesLocationStack',
+        location_stack: Series,
         sort_by: str
     ) -> bach.DataFrame:
         """
