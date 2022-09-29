@@ -18,7 +18,7 @@ Generator.generateFromModel(
       export: true,
       name: 'ContextTypes',
       members: sortEnumMembers(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
-      description: `Context's _type discriminator attribute values`
+      description: `Context's _type discriminator attribute values`,
     });
     writer.writeLine();
 
@@ -27,7 +27,7 @@ Generator.generateFromModel(
       export: true,
       name: 'EventTypes',
       members: sortEnumMembers(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
-      description: `Event's _type discriminator attribute values`
+      description: `Event's _type discriminator attribute values`,
     });
     writer.writeLine();
 
@@ -54,7 +54,7 @@ Generator.generateFromModel(
       name: 'LocationStack',
       items: getContextChildren(model.LocationStack.items.type),
       discriminator: model.LocationStack.items.discriminator,
-      description: model.LocationStack.description
+      description: model.LocationStack.description,
     });
 
     // GlobalContexts array definition
@@ -62,7 +62,7 @@ Generator.generateFromModel(
       name: 'GlobalContexts',
       items: getContextChildren(model.GlobalContexts.items.type),
       discriminator: model.GlobalContexts.items.discriminator,
-      description: model.GlobalContexts.description
+      description: model.GlobalContexts.description,
     });
   }
 );
