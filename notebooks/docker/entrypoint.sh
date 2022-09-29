@@ -11,7 +11,7 @@ done
   
 >&2 echo "Postgres is up - executing command"
 
-if [ -z "$OBJECTIV_SKIP_IMPORT" ];
+if [ -z "$OBJECTIV_SKIP_IMPORT" -o "$OBJECTIV_SKIP_IMPORT" != 'true' ];
 then
   for sql in /services/*.sql
   do
