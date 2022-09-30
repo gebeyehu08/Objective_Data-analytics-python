@@ -132,7 +132,7 @@ def test_drop_off_locations_w_percentage(db_params):
 def test_drop_off_locations_w_location_stack(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
 
-    # location_stack
+    # location_stack - SeriesLocationStack
     location_stack = df.location_stack.json[{'url': 'https://objectiv.io/'}:]
     bts = modelhub.agg.drop_off_locations(df, location_stack=location_stack)
 
@@ -160,4 +160,31 @@ def test_drop_off_locations_w_location_stack(db_params):
         ],
         use_to_pandas=True,
         order_by=['sort_str'],
+    )
+
+    # location_stack - some other column
+    df['link_id'] = df.location_stack.ls.get_from_context_with_type_series(
+        type='LinkContext', key='id').str.lower()
+
+    bts = modelhub.agg.drop_off_locations(df, location_stack='link_id')
+
+    assert_equals_data(
+        bts,
+        expected_columns=['__feature_nice_name', 'value_counts'],
+        expected_data=[
+            [
+                'about us', 1
+            ],
+            [
+                'contact us', 1
+            ],
+            [
+                'cta-repo-button', 1
+            ],
+            [
+                'docs', 1
+            ],
+        ],
+        use_to_pandas=True,
+        order_by=['__feature_nice_name'],
     )
