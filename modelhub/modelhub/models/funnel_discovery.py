@@ -232,7 +232,6 @@ class FunnelDiscovery:
 
         data[self.FEATURE_NICE_NAME_SERIES] = column
         if type(column) == SeriesLocationStack:
-            # adds __feature_nice_name and __root_step_offset to DataFrame
             # extract the nice name per event
             data[self.FEATURE_NICE_NAME_SERIES] = column.ls.nice_name
 
