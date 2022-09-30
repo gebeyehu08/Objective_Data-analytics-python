@@ -39,8 +39,6 @@ export const uniqueContext =
         return true;
       });
 
-      console.log(contexts, excludeContexts, includeContexts);
-
       const seenContexts = [];
 
       return contexts.filter((contextEntity) => {
