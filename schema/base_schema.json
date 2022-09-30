@@ -4,6 +4,7 @@
     "base_schema": "0.0.5"
   },
   "description": "This is the Objectiv base schema for the Open Analytics Taxonomy.",
+
   "RequiresLocationContext" : {
     "description": "A validation rule that can be applied to the Location Stack. Checks whether the given AbstractLocationContext is present and, optionally, at the required position.",
     "properties" : {
@@ -18,6 +19,7 @@
       }
     }
   },
+
   "RequiresGlobalContext" : {
     "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.",
     "type": "validation_rule",
@@ -28,6 +30,7 @@
       }
     }
   },
+
   "UniqueContext" : {
     "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Checks whether contexts are uniquely identified by the given `by` properties. Optionally `context` can be specified to restrict the check to a specific AbstractContext only.",
     "type": "validation_rule",
@@ -46,6 +49,7 @@
       }
     }
   },
+
   "LocationStack": {
     "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
     "type": "array",
@@ -72,6 +76,7 @@
       ]
     }
   },
+
   "GlobalContexts": {
     "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.",
     "type": "array",
@@ -97,6 +102,7 @@
       ]
     }
   },
+
   "events": {
     "AbstractEvent": {
       "description": "This is the abstract parent of all Events.",
