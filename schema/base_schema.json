@@ -58,7 +58,7 @@
       "discriminator": "_type"
     },
     "validation": {
-      "description": "TODO",
+      "description": "TODO explain the basic requirements of a valid Location Stack",
       "allowed_rules": [
         "RequiresLocationContext",
         "UniqueContext"
@@ -85,7 +85,7 @@
       "discriminator":"_type"
     },
     "validation": {
-      "description": "TODO",
+      "description": "TODO explain the basic requirements of a valid Global Contexts",
       "allowed_rules": [
         "RequiresGlobalContext",
         "UniqueContext"
@@ -146,6 +146,7 @@
         }
       },
       "validation": {
+        "description": "TODO: explain why PathContext is validated, for example",
         "rules": [
           {
             "type": "RequiresLocationContext",
