@@ -491,7 +491,7 @@ class Aggregate:
         Find the locations/features where users drop off, and their usage/share.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location_stack: the column of which to create the paths.
+        :param location_stack: the column of which to create the drop-off locations.
             Can be a string of the name of the column in data, or a Series with the
             same base node as `data`. If None the default location stack is taken.
 
