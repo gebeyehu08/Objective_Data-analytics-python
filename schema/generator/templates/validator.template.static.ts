@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * A refinement that checks whether the given context type is present in the subject contexts
+ * A refinement that checks whether the given context type is present in the subject contexts or Event
  */
 export const requiresContext =
   ({ context, position }) =>
@@ -19,37 +19,54 @@ export const requiresContext =
   };
 
 /**
- * A refinement that checks whether the given context type is present only once in the subject contexts
+ * A refinement that checks whether the given context type is present only once in the subject contexts or Event
  */
 export const uniqueContext =
   ({ contextType, by }) =>
-  (allContexts, ctx) => {
-    const contexts = contextType ? allContexts.filter((context) => context._type === contextType) : allContexts;
-    const seenContexts = [];
+  (subject, ctx) => {
+    const findDuplicatedContexts = (allContexts) => {
+      const contexts = contextType ? allContexts.filter((context) => context._type === contextType) : allContexts;
+      const seenContexts = [];
 
-    const duplicatedContexts = contexts.filter((context) => {
-      if (
-        seenContexts.find((seenContext) => {
-          let matchCount = 0;
-          by.forEach((propertyToMatch) => {
-            if (seenContext[propertyToMatch] === context[propertyToMatch]) {
-              matchCount++;
-            }
-          });
-          return matchCount === by.length;
-        })
-      ) {
-        return true;
-      }
+      return contexts.filter((context) => {
+        if (
+          seenContexts.find((seenContext) => {
+            let matchCount = 0;
+            by.forEach((propertyToMatch) => {
+              const seenProperty = seenContext[propertyToMatch];
+              const contextProperty = context[propertyToMatch];
 
-      seenContexts.push(context);
-      return false;
-    });
+              if (seenProperty !== undefined && contextProperty !== undefined && seenProperty === contextProperty) {
+                matchCount++;
+              }
+            });
+            return matchCount === by.length;
+          })
+        ) {
+          return true;
+        }
+
+        seenContexts.push(context);
+        return false;
+      });
+    };
+
+    let duplicatedContexts;
+    if (Array.isArray(subject)) {
+      duplicatedContexts = findDuplicatedContexts(subject);
+    } else {
+      duplicatedContexts = [
+        ...findDuplicatedContexts(subject.location_stack),
+        ...findDuplicatedContexts(subject.global_contexts),
+      ];
+    }
 
     duplicatedContexts.forEach((duplicatedContext) => {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `No duplicate Contexts allowed: ${duplicatedContext._type}:${duplicatedContext.id}`,
+        message: `No duplicate Contexts allowed (same \`${by.join('` and `')}\`): ${duplicatedContext._type}:${
+          duplicatedContext.id
+        }`,
       });
     });
   };

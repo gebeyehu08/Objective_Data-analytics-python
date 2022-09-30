@@ -103,7 +103,7 @@ console.log(
 console.log(
   'PressEvent validation:',
   validate({
-    _type: 'PressEvent',
+    _type: 'InputChangeEvent',
     id: crypto.randomUUID(),
     time: Date.now(),
     location_stack: [
@@ -115,11 +115,20 @@ console.log(
         _type: 'PressableContext',
         id: 'button',
       },
+      {
+        _type: 'InputContext',
+        id: 'test',
+      },
     ],
     global_contexts: [
       {
         _type: 'ApplicationContext',
         id: 'test',
+      },
+      {
+        _type: 'InputValueContext',
+        id: 'test',
+        value: '1',
       },
     ],
   })
