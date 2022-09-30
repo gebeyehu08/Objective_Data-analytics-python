@@ -74,6 +74,7 @@ Generator.generateFromModel(
       const event = model.events[eventName];
       const properties = getProperties(model.events, eventName);
 
+      // TODO support Event validation rules
       zodWriter.writeObject({
         name: eventName,
         // TODO get description from parent as well
