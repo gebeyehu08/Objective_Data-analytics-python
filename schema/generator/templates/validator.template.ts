@@ -6,7 +6,14 @@ import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
 import { ZodWriter } from '../writers/ZodWriter';
-import { getContextChildren, getContexts, getEvents, getObjectKeys, getProperties, sortEnumMembers } from './common';
+import {
+  getChildren,
+  getContextNames,
+  getEntityProperties,
+  getEventNames,
+  getObjectKeys,
+  sortArrayByName
+} from './common';
 
 Generator.generateFromModel(
   { outputFile: '../generated/validator.js' },
@@ -17,7 +24,7 @@ Generator.generateFromModel(
     zodWriter.writeEnumeration({
       export: true,
       name: 'ContextTypes',
-      members: sortEnumMembers(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
+      members: sortArrayByName(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
       description: `Context's _type discriminator attribute values`,
     });
 
@@ -25,14 +32,14 @@ Generator.generateFromModel(
     zodWriter.writeEnumeration({
       export: true,
       name: 'EventTypes',
-      members: sortEnumMembers(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
+      members: sortArrayByName(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
       description: `Event's _type discriminator attribute values`,
     });
 
     // Context definitions
-    getContexts().forEach((contextName) => {
+    getContextNames().forEach((contextName) => {
       const context = model.contexts[contextName];
-      const properties = getProperties(model.contexts, contextName);
+      const properties = getEntityProperties(contextName);
 
       zodWriter.writeObject({
         name: contextName,
@@ -52,7 +59,7 @@ Generator.generateFromModel(
     // LocationStack array definition
     zodWriter.writeArray({
       name: 'LocationStack',
-      items: getContextChildren(model.LocationStack.items.type),
+      items: getChildren(model.LocationStack.items.type).sort(),
       discriminator: model.LocationStack.items.discriminator,
       description: model.LocationStack.description,
       rules: model.LocationStack.validation.rules,
@@ -61,16 +68,16 @@ Generator.generateFromModel(
     // GlobalContexts array definition
     zodWriter.writeArray({
       name: 'GlobalContexts',
-      items: getContextChildren(model.GlobalContexts.items.type),
+      items: getChildren(model.GlobalContexts.items.type).sort(),
       discriminator: model.GlobalContexts.items.discriminator,
       description: model.GlobalContexts.description,
       rules: model.GlobalContexts.validation.rules,
     });
 
     // Events
-    getEvents().forEach((eventName) => {
+    getEventNames().forEach((eventName) => {
       const event = model.events[eventName];
-      const properties = getProperties(model.events, eventName);
+      const properties = getEntityProperties(eventName);
 
       // TODO support Event validation rules
       zodWriter.writeObject({

@@ -4,56 +4,74 @@
 
 import Objectiv from '../../base_schema.json';
 
+/**
+ * TypeScript friendly Object.keys
+ */
 export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<keyof T>;
 
-// TODO make this is sortBy(subject, propertyName)
-export const sortEnumMembers = <T extends { name: string }>(members: T[]) =>
-  members.sort((a, b) => a.name.localeCompare(b.name));
+/**
+ * Sorts the given array of objects by their `name` property
+ */
+export const sortArrayByName = (array) => array.sort((a, b) => a.name.localeCompare(b.name));
 
-const filterAbstracts = (allContexts, includeAbstracts = false) => {
-  if (includeAbstracts) {
-    return allContexts;
-  }
+/**
+ * A utility to filter out Abstracts from the given list of Entity names (Contexts or Events)
+ */
+const filterAbstractNames = (entityNames) => entityNames.filter((entityName) => !entityName.startsWith('Abstract'));
 
-  return allContexts.filter((entityName) => !entityName.startsWith('Abstract'));
-};
+/**
+ * Gets a list of non-abstract Context names from the Objectiv schema
+ */
+export const getContextNames = () => filterAbstractNames(getObjectKeys(Objectiv.contexts));
 
-export const getContexts = (includeAbstracts = false) =>
-  filterAbstracts(getObjectKeys(Objectiv.contexts), includeAbstracts);
+/**
+ * Gets a list of non-abstract Event names from the Objectiv schema
+ */
+export const getEventNames = () => filterAbstractNames(getObjectKeys(Objectiv.events));
 
-export const getEvents = (includeAbstracts = false) =>
-  filterAbstracts(getObjectKeys(Objectiv.events), includeAbstracts);
+/**
+ * Gets a list of non-abstract Context and Event entities from the Objectiv schema
+ */
+export const getEntityNames = () => [...getContextNames(), ...getEventNames()];
 
-export const getEntityProperties = (entity) => entity['properties'] ?? {};
+/**
+ * Retrieves either a Context or Event entity, from the ObjectivSchema, by its `_type` name
+ */
+export const getEntityByName = (entityName) => Objectiv.contexts[entityName] ?? Objectiv.events[entityName];
 
-export const getEntity = (entityType) => Objectiv.contexts[entityType] ?? Objectiv.events[entityType];
-
+/**
+ * Recursively gets all the parents of the given Entity (either Context or Event)
+ */
 export const getEntityParents = (entity, parents = []) => {
-  const parentEntityType = entity['parent'];
+  const parentEntityName = entity['parent'];
 
-  if (!parentEntityType) {
+  if (!parentEntityName) {
     return parents;
   }
 
-  parents.push(parentEntityType);
+  parents.push(parentEntityName);
 
-  return getEntityParents(getEntity(parentEntityType), parents);
+  return getEntityParents(getEntityByName(parentEntityName), parents);
 };
 
-export const getContextChildren = (parentContext) =>
-  getContexts()
-    .filter((contextType) => {
-      const context = Objectiv.contexts[contextType];
-      const contextParents = getEntityParents(context);
-      return contextParents.includes(parentContext);
-    })
-    .sort();
+/**
+ * Gets all the children of the given Entity by checking all entities' `parent` attribute
+ */
+export const getChildren = (parentEntity) =>
+  getEntityNames().filter((entityName) => {
+    const entity = getEntityByName(entityName);
+    const parents = getEntityParents(entity);
+    return parents.includes(parentEntity);
+  });
 
-// recursive helper to fetch parent attributes
-export const getParentProperties = (entities, parents, properties = {}) =>
+/**
+ * Recursively gets all the parent entity's properties without overriding already inherited properties
+ */
+export const getParentProperties = (parents, properties = {}) =>
   parents.reduce((properties, parent) => {
-    const parentProperties = getEntityProperties(entities[parent]);
-    const parentParents = getEntityParents(entities[parent]);
+    const parentEntity = getEntityByName(parent);
+    const parentProperties = parentEntity['properties'] ?? {};
+    const parentParents = getEntityParents(parentEntity);
 
     const parentPropertyKeys = getObjectKeys(parentProperties);
     parentPropertyKeys.forEach((parentPropertyKey) => {
@@ -67,12 +85,15 @@ export const getParentProperties = (entities, parents, properties = {}) =>
       return properties;
     }
 
-    return getParentProperties(entities, parentParents, properties);
+    return getParentProperties(parentParents, properties);
   }, properties);
 
-export const getProperties = (entities, entityName) => {
-  const parents = getEntityParents(entities[entityName]);
-  const properties = getEntityProperties(entities[entityName]);
+/**
+ * Gets all the properties of the given entity, including all recursively inherited properties from its parents
+ */
+export const getEntityProperties = (entity) => {
+  const parents = getEntityParents(entity);
+  const properties = entity['properties'] ?? {};
 
-  return getParentProperties(entities, parents, properties);
+  return getParentProperties(parents, properties);
 };
