@@ -272,6 +272,7 @@ export class ZodWriter extends CodeWriter {
             parameters: [
               {
                 name: 'scope',
+                // TODO clean up this mess and print out literal arrays on multiple lines with indent
                 value: rule.scope.map(({ includeContexts, excludeContexts, by }) => ({
                   includeContexts:
                     includeContexts?.length > 0
