@@ -516,7 +516,16 @@ export const GlobalContexts = z
  * The parent of Events that are the direct result of a user interaction, e.g. a button click.
  */
 export const InteractiveEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -541,7 +550,16 @@ export const InteractiveEvent = z.object({
  * The parent of Events that are not directly triggered by a user action.
  */
 export const NonInteractiveEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -561,7 +579,16 @@ export const NonInteractiveEvent = z.object({
  * A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
  */
 export const ApplicationLoadedEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -586,7 +613,16 @@ export const FailureEvent = z.object({
    * Failure message.
    */
   message: z.string(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -606,7 +642,16 @@ export const FailureEvent = z.object({
  * Event triggered when user input is modified.
  */
 export const InputChangeEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -632,7 +677,16 @@ export const InputChangeEvent = z.object({
  * (like a link, button, icon).
  */
 export const PressEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -657,7 +711,16 @@ export const PressEvent = z.object({
  * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
  */
 export const HiddenEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -677,7 +740,16 @@ export const HiddenEvent = z.object({
  * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
  */
 export const VisibleEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -702,7 +774,16 @@ export const SuccessEvent = z.object({
    * Success message.
    */
   message: z.string(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -723,7 +804,16 @@ export const SuccessEvent = z.object({
  * It requires a MediaPlayerContext to detail the origin of the event.
  */
 export const MediaEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -748,7 +838,16 @@ export const MediaEvent = z.object({
  * A MediaEvent that's emitted after a media item completes loading.
  */
 export const MediaLoadEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -768,7 +867,16 @@ export const MediaLoadEvent = z.object({
  * A MediaEvent that's emitted after a media item pauses playback.
  */
 export const MediaPauseEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -788,7 +896,16 @@ export const MediaPauseEvent = z.object({
  * A MediaEvent that's emitted after a media item starts playback.
  */
 export const MediaStartEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.
@@ -808,7 +925,16 @@ export const MediaStartEvent = z.object({
  * A MediaEvent that's emitted after a media item stops playback.
  */
 export const MediaStopEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
   location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
   global_contexts: GlobalContexts,
   /**
    * A string literal used during serialization. Should always match the Event interface name.

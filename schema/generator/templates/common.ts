@@ -114,25 +114,11 @@ export const getEntityDescription = (entity) => {
 };
 
 /**
- * Gets the description of the given entity's property, recursively falling back to its parent's description if not set
+ * Gets the description of the given entity's property, falling back to the property's type description if not set
  */
 export const getPropertyDescription = (entity, propertyName) => {
   const properties = getEntityProperties(entity);
   const property = properties[propertyName];
 
-  if (!property) {
-    return;
-  }
-
-  console.log(property.description)
-
-  if (property.description) {
-    return property.description;
-  }
-
-  if(!entity.parent) {
-    return;
-  }
-
-  return getPropertyDescription(getEntityByName(entity.parent), propertyName);
+  return property.description ?? Objectiv[property.type]?.description;
 };
