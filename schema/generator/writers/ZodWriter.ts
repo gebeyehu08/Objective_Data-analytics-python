@@ -65,6 +65,7 @@ const SchemaToZodPropertyTypeMap = {
   literal: 'literal',
   string: 'string',
   discriminator: 'literal',
+  uuid: 'string().uuid',
 };
 
 export class ZodWriter extends CodeWriter {
@@ -104,7 +105,8 @@ export class ZodWriter extends CodeWriter {
 
     this.writeIndent();
 
-    this.write(`${property.name}: z.${SchemaToZodPropertyTypeMap[property.typeName]}(${property.value ?? ''})`);
+    const mappedType = SchemaToZodPropertyTypeMap[property.typeName];
+    this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${property.value ?? ''})` : property.typeName}`);
 
     if (property.isOptional) {
       this.write('.optional()');
@@ -210,7 +212,9 @@ export class ZodWriter extends CodeWriter {
     (subject.rules ?? []).forEach((rule, index) => {
       switch (rule.type) {
         case ValidationRuleTypes.RequiresLocationContext:
+        // TODO validate using the schema itself
         case ValidationRuleTypes.RequiresGlobalContext:
+          // TODO validate using the schema itself
           if (!rule.context) {
             throw new Error(`Validation rule ${rule.type} requires the \`context\` attribute to be set.`);
           }
@@ -223,6 +227,7 @@ export class ZodWriter extends CodeWriter {
           });
           break;
         case ValidationRuleTypes.UniqueContext:
+          // TODO validate using the schema itself
           if (!rule.by) {
             throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`);
           }

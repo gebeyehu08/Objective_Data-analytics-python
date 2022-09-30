@@ -6,7 +6,7 @@ import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
 import { ZodWriter } from '../writers/ZodWriter';
-import { getContextChildren, getContexts, getObjectKeys, getProperties, sortEnumMembers } from './common';
+import { getContextChildren, getContexts, getEvents, getObjectKeys, getProperties, sortEnumMembers } from './common';
 
 Generator.generateFromModel(
   { outputFile: '../generated/validator.js' },
@@ -38,15 +38,16 @@ Generator.generateFromModel(
 
       zodWriter.writeObject({
         name: contextName,
+        // TODO get description from parent as well
         description: context.description,
         properties: getObjectKeys(properties).map((property) => ({
           name: String(property),
+          // TODO get description from parent as well
           description: properties[property].description,
           typeName: properties[property].type,
           isOptional: properties[property].optional,
           value: properties[property].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
         })),
-        // TODO rules
       });
     });
 
@@ -66,6 +67,26 @@ Generator.generateFromModel(
       discriminator: model.GlobalContexts.items.discriminator,
       description: model.GlobalContexts.description,
       rules: model.GlobalContexts.validation.rules,
+    });
+
+    // Events
+    getEvents().forEach((eventName) => {
+      const event = model.events[eventName];
+      const properties = getProperties(model.events, eventName);
+
+      zodWriter.writeObject({
+        name: eventName,
+        // TODO get description from parent as well
+        description: event.description,
+        properties: getObjectKeys(properties).map((property) => ({
+          name: String(property),
+          // TODO get description from parent as well
+          description: properties[property].description,
+          typeName: properties[property].type,
+          isOptional: properties[property].optional,
+          value: properties[property].type === 'discriminator' ? `ContextTypes.enum.${eventName}` : undefined,
+        })),
+      });
     });
   }
 );

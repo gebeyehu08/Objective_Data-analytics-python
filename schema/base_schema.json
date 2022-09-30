@@ -115,13 +115,12 @@
           "type": "GlobalContexts"
         },
         "_type": {
-          "description": "String containing the name of the event type. (eg. ClickEvent).",
-          "type": "string"
+          "description": "A string literal used during serialization. Should always match the Event interface name.",
+          "type": "discriminator"
         },
         "id": {
-          "description": "Unique identifier for a specific instance of an event. Typically UUID's are a good way of \nimplementing this. On the collector side, events should be unique, this means duplicate id's result \nin `not ok` events.",
-          "type": "string",
-          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          "description": "Unique identifier for a specific instance of an event.",
+          "type": "uuid"
         },
         "time": {
           "description": "Timestamp indicating when the event was generated.",

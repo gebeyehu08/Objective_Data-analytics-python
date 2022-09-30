@@ -512,3 +512,295 @@ export const GlobalContexts = z
     })
   );
 
+/**
+ * The parent of Events that are the direct result of a user interaction, e.g. a button click.
+ */
+export const InteractiveEvent = z.object({
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.InteractiveEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * The parent of Events that are not directly triggered by a user action.
+ */
+export const NonInteractiveEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.NonInteractiveEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A NonInteractive event that is emitted after an application (eg. SPA) has finished loading.
+ */
+export const ApplicationLoadedEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.ApplicationLoadedEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A NonInteractiveEvent that is sent when a user action results in a error,
+ * like an invalid email when sending a form.
+ */
+export const FailureEvent = z.object({
+  /**
+   * Failure message.
+   */
+  message: z.string(),
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.FailureEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * Event triggered when user input is modified.
+ */
+export const InputChangeEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.InputChangeEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * An InteractiveEvent that is sent when a user presses on a pressable element
+ * (like a link, button, icon).
+ */
+export const PressEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.PressEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
+ */
+export const HiddenEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.HiddenEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
+ */
+export const VisibleEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.VisibleEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A NonInteractiveEvent that is sent when a user action is successfully completed,
+ * like sending an email form.
+ */
+export const SuccessEvent = z.object({
+  /**
+   * Success message.
+   */
+  message: z.string(),
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.SuccessEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * The parent of non-interactive events that are triggered by a media player.
+ * It requires a MediaPlayerContext to detail the origin of the event.
+ */
+export const MediaEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.MediaEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A MediaEvent that's emitted after a media item completes loading.
+ */
+export const MediaLoadEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.MediaLoadEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A MediaEvent that's emitted after a media item pauses playback.
+ */
+export const MediaPauseEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.MediaPauseEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A MediaEvent that's emitted after a media item starts playback.
+ */
+export const MediaStartEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.MediaStartEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
+/**
+ * A MediaEvent that's emitted after a media item stops playback.
+ */
+export const MediaStopEvent = z.object({
+  location_stack: LocationStack.optional(),
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(ContextTypes.enum.MediaStopEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.bigint(),
+});
+
