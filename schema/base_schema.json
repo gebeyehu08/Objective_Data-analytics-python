@@ -159,11 +159,11 @@
       "parent": "AbstractEvent"
     },
     "ApplicationLoadedEvent": {
-      "description": "A NonInteractive event that is emitted after an application (eg. SPA) has finished loading.",
+      "description": "A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.",
       "parent": "NonInteractiveEvent"
     },
     "FailureEvent": {
-      "description": "A NonInteractiveEvent that is sent when a user action results in a error, \nlike an invalid email when sending a form.",
+      "description": "A NonInteractiveEvent that is sent when a user action results in an error, \nlike an invalid email when sending a form.",
       "parent": "NonInteractiveEvent",
       "properties": {
         "message": {
@@ -396,11 +396,11 @@
       "parent": "AbstractLocationContext"
     },
     "PressableContext": {
-      "description": "An Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.",
+      "description": "A Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.",
       "parent": "AbstractLocationContext"
     },
     "LinkContext": {
-      "description": "A PressableContext that contains an href.",
+      "description": "A PressableContext that contains a destination (href).",
       "parent": "PressableContext",
       "properties": {
         "href": {

@@ -20,7 +20,6 @@ Generator.generateFromModel(
       members: sortEnumMembers(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
       description: `Context's _type discriminator attribute values`,
     });
-    writer.writeLine();
 
     // EventTypes enum
     zodWriter.writeEnumeration({
@@ -29,7 +28,6 @@ Generator.generateFromModel(
       members: sortEnumMembers(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
       description: `Event's _type discriminator attribute values`,
     });
-    writer.writeLine();
 
     // Context definitions
     getContexts().forEach((contextName) => {
@@ -85,7 +83,7 @@ Generator.generateFromModel(
           description: properties[property].description,
           typeName: properties[property].type,
           isOptional: properties[property].optional,
-          value: properties[property].type === 'discriminator' ? `ContextTypes.enum.${eventName}` : undefined,
+          value: properties[property].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,
         })),
       });
     });

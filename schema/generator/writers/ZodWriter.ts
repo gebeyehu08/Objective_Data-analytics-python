@@ -94,6 +94,7 @@ export class ZodWriter extends CodeWriter {
     this.decreaseIndent();
 
     this.writeLine(`]);`);
+    this.writeLine();
   }
 
   public writeProperty(property: PropertyDefinition): void {

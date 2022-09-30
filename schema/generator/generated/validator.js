@@ -327,7 +327,7 @@ export const InputContext = z.object({
 });
 
 /**
- * An Location Context that describes an interactive element (like a link, button, icon),
+ * A Location Context that describes an interactive element (like a link, button, icon),
  * that the user can press and will trigger an Interactive Event.
  */
 export const PressableContext = z.object({
@@ -343,7 +343,7 @@ export const PressableContext = z.object({
 });
 
 /**
- * A PressableContext that contains an href.
+ * A PressableContext that contains a destination (href).
  */
 export const LinkContext = z.object({
   /**
@@ -521,7 +521,7 @@ export const InteractiveEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.InteractiveEvent),
+  _type: z.literal(EventTypes.enum.InteractiveEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -541,7 +541,7 @@ export const NonInteractiveEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.NonInteractiveEvent),
+  _type: z.literal(EventTypes.enum.NonInteractiveEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -553,7 +553,7 @@ export const NonInteractiveEvent = z.object({
 });
 
 /**
- * A NonInteractive event that is emitted after an application (eg. SPA) has finished loading.
+ * A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
  */
 export const ApplicationLoadedEvent = z.object({
   location_stack: LocationStack.optional(),
@@ -561,7 +561,7 @@ export const ApplicationLoadedEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.ApplicationLoadedEvent),
+  _type: z.literal(EventTypes.enum.ApplicationLoadedEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -573,7 +573,7 @@ export const ApplicationLoadedEvent = z.object({
 });
 
 /**
- * A NonInteractiveEvent that is sent when a user action results in a error,
+ * A NonInteractiveEvent that is sent when a user action results in an error,
  * like an invalid email when sending a form.
  */
 export const FailureEvent = z.object({
@@ -586,7 +586,7 @@ export const FailureEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.FailureEvent),
+  _type: z.literal(EventTypes.enum.FailureEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -606,7 +606,7 @@ export const InputChangeEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.InputChangeEvent),
+  _type: z.literal(EventTypes.enum.InputChangeEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -627,7 +627,7 @@ export const PressEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.PressEvent),
+  _type: z.literal(EventTypes.enum.PressEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -647,7 +647,7 @@ export const HiddenEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.HiddenEvent),
+  _type: z.literal(EventTypes.enum.HiddenEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -667,7 +667,7 @@ export const VisibleEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.VisibleEvent),
+  _type: z.literal(EventTypes.enum.VisibleEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -692,7 +692,7 @@ export const SuccessEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.SuccessEvent),
+  _type: z.literal(EventTypes.enum.SuccessEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -713,7 +713,7 @@ export const MediaEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.MediaEvent),
+  _type: z.literal(EventTypes.enum.MediaEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -733,7 +733,7 @@ export const MediaLoadEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.MediaLoadEvent),
+  _type: z.literal(EventTypes.enum.MediaLoadEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -753,7 +753,7 @@ export const MediaPauseEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.MediaPauseEvent),
+  _type: z.literal(EventTypes.enum.MediaPauseEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -773,7 +773,7 @@ export const MediaStartEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.MediaStartEvent),
+  _type: z.literal(EventTypes.enum.MediaStartEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -793,7 +793,7 @@ export const MediaStopEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(ContextTypes.enum.MediaStopEvent),
+  _type: z.literal(EventTypes.enum.MediaStopEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
