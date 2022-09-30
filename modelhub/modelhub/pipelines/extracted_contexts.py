@@ -335,7 +335,6 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         )
         df_cp = df_cp.drop(columns=['network_userid', 'domain_sessionid'])
 
-
         # Mark duplicated event_ids
         # Unfortunately, some events might share an event ID due to
         # browser pre-cachers or scraping bots sending the same event multiple time. Although,
