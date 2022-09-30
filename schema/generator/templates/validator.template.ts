@@ -56,7 +56,7 @@ Generator.generateFromModel(
       items: getContextChildren(model.LocationStack.items.type),
       discriminator: model.LocationStack.items.discriminator,
       description: model.LocationStack.description,
-      rules: model.LocationStack.rules,
+      rules: model.LocationStack.validation.rules,
     });
 
     // GlobalContexts array definition
@@ -65,7 +65,7 @@ Generator.generateFromModel(
       items: getContextChildren(model.GlobalContexts.items.type),
       discriminator: model.GlobalContexts.items.discriminator,
       description: model.GlobalContexts.description,
-      rules: model.GlobalContexts.rules,
+      rules: model.GlobalContexts.validation.rules,
     });
   }
 );

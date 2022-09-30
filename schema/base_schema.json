@@ -4,6 +4,48 @@
     "base_schema": "0.0.5"
   },
   "description": "This is the Objectiv base schema for the Open Analytics Taxonomy.",
+  "RequiresLocationContext" : {
+    "description": "A validation rule that can be applied to the Location Stack. Checks whether the given AbstractLocationContext is present and, optionally, at the required position.",
+    "properties" : {
+      "context": {
+        "description": "The AbstractLocationContext to check in the Location Stack.",
+        "type": "AbstractLocationContext"
+      },
+      "position": {
+        "description": "Optional. Zero-based. The position the given `context` should be at.",
+        "type": "integer",
+        "optional": true
+      }
+    }
+  },
+  "RequiresGlobalContext" : {
+    "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.",
+    "type": "validation_rule",
+    "properties" : {
+      "context": {
+        "description": "The AbstractGlobalContext to check in the Global Contexts array",
+        "type": "AbstractGlobalContext"
+      }
+    }
+  },
+  "UniqueContext" : {
+    "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Checks whether contexts are uniquely identified by the given `by` properties. Optionally `context` can be specified to restrict the check to a specific AbstractContext only.",
+    "type": "validation_rule",
+    "properties": {
+      "context": {
+        "description": "Optional. Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
+        "type": "AbstractContext",
+        "optional": true
+      },
+      "by": {
+        "type": "array",
+        "description": "Which Context's properties to look at for comparison. Normally `_type` and `id`.",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "LocationStack": {
     "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
     "type": "array",
@@ -11,17 +53,24 @@
       "type":"AbstractLocationContext",
       "discriminator": "_type"
     },
-    "rules": [
-      {
-        "type": "requires_context",
-        "context": "RootLocationContext",
-        "position": 0
-      },
-      {
-        "type": "unique_context",
-        "by": ["_type", "id"]
-      }
-    ]
+    "validation": {
+      "description": "TODO",
+      "allowed_rules": [
+        "RequiresLocationContext",
+        "UniqueContext"
+      ],
+      "rules": [
+        {
+          "type": "RequiresLocationContext",
+          "context": "RootLocationContext",
+          "position": 0
+        },
+        {
+          "type": "UniqueContext",
+          "by": ["_type", "id"]
+        }
+      ]
+    }
   },
   "GlobalContexts": {
     "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.",
@@ -30,16 +79,23 @@
       "type":"AbstractGlobalContext",
       "discriminator":"_type"
     },
-    "rules": [
-      {
-        "type": "requires_context",
-        "context": "ApplicationContext"
-      },
-      {
-        "type": "unique_context",
-        "by": ["_type", "id"]
-      }
-    ]
+    "validation": {
+      "description": "TODO",
+      "allowed_rules": [
+        "RequiresGlobalContext",
+        "UniqueContext"
+      ],
+      "rules": [
+        {
+          "type": "RequiresGlobalContext",
+          "context": "ApplicationContext"
+        },
+        {
+          "type": "UniqueContext",
+          "by": ["_type", "id"]
+        }
+      ]
+    }
   },
   "events": {
     "AbstractEvent": {
@@ -65,6 +121,13 @@
           "description": "Timestamp indicating when the event was generated.",
           "type": "integer"
         }
+      },
+      "validation": {
+        "allowed_rules": [
+          "RequiresLocationContext",
+          "RequiresGlobalContext",
+          "UniqueContext"
+        ]
       }
     },
     "InteractiveEvent": {
@@ -76,12 +139,14 @@
           "optional": false
         }
       },
-      "rules": [
-        {
-          "type": "requires_context",
-          "context": "PathContext"
-        }
-      ]
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "context": "PathContext"
+          }
+        ]
+      }
     },
     "NonInteractiveEvent": {
       "description": "The parent of Events that are not directly triggered by a user action.",
@@ -104,22 +169,26 @@
     "InputChangeEvent": {
       "description": "Event triggered when user input is modified.",
       "parent": "InteractiveEvent",
-      "rules": [
-        {
-          "type": "requires_context",
-          "context": "InputContext"
-        }
-      ]
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "context": "InputContext"
+          }
+        ]
+      }
     },
     "PressEvent": {
       "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).",
       "parent": "InteractiveEvent",
-      "rules": [
-        {
-          "type": "requires_context",
-          "context": "PressableContext"
-        }
-      ]
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "context": "PressableContext"
+          }
+        ]
+      }
     },
     "HiddenEvent": {
       "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.",
@@ -142,12 +211,14 @@
     "MediaEvent": {
       "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.",
       "parent": "NonInteractiveEvent",
-      "rules": [
-        {
-          "type": "requires_context",
-          "context": "MediaPlayerContext"
-        }
-      ]
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "context": "MediaPlayerContext"
+          }
+        ]
+      }
     },
     "MediaLoadEvent": {
       "description": "A MediaEvent that's emitted after a media item completes loading.",
