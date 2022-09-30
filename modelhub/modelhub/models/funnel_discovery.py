@@ -129,7 +129,7 @@ class FunnelDiscovery:
         step_size = 1  # we want steps' pairs
         all_dfs = []
 
-        step_column_name = steps_counter_df.data_columns[0].replace('_step_1','')
+        step_column_name = steps_counter_df.data_columns[0].replace('_step_1', '')
         for i_step in range(1, max(step_numbers) - step_size + 1):
             step1 = f'{step_column_name}_step_{i_step}'
             step2 = f'{step_column_name}_step_{i_step + step_size}'
@@ -229,7 +229,6 @@ class FunnelDiscovery:
             column = data[location_stack]
         elif type(location_stack) in ['SeriesString', 'SeriesLocationStack', 'SeriesInt64']:
             column = cast(bach.Series, location_stack)  # help mypy
-
 
         data[self.FEATURE_NICE_NAME_SERIES] = column
         if type(column) == SeriesLocationStack:
