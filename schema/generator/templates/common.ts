@@ -97,3 +97,42 @@ export const getEntityProperties = (entity) => {
 
   return getParentProperties(parents, properties);
 };
+
+/**
+ * Gets the description of the given entity, recursively falling back to its parent's description if not set
+ */
+export const getEntityDescription = (entity) => {
+  if(entity.description) {
+    return entity.description;
+  }
+
+  if(!entity.parent) {
+    return;
+  }
+
+  return getEntityDescription(getEntityByName(entity.parent));
+};
+
+/**
+ * Gets the description of the given entity's property, recursively falling back to its parent's description if not set
+ */
+export const getPropertyDescription = (entity, propertyName) => {
+  const properties = getEntityProperties(entity);
+  const property = properties[propertyName];
+
+  if (!property) {
+    return;
+  }
+
+  console.log(property.description)
+
+  if (property.description) {
+    return property.description;
+  }
+
+  if(!entity.parent) {
+    return;
+  }
+
+  return getPropertyDescription(getEntityByName(entity.parent), propertyName);
+};

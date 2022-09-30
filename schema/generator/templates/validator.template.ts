@@ -8,10 +8,10 @@ import Objectiv from '../../base_schema.json';
 import { ZodWriter } from '../writers/ZodWriter';
 import {
   getChildren,
-  getContextNames,
+  getContextNames, getEntityDescription,
   getEntityProperties,
   getEventNames,
-  getObjectKeys,
+  getObjectKeys, getPropertyDescription,
   sortArrayByName
 } from './common';
 
@@ -39,19 +39,17 @@ Generator.generateFromModel(
     // Context definitions
     getContextNames().forEach((contextName) => {
       const context = model.contexts[contextName];
-      const properties = getEntityProperties(contextName);
+      const properties = getEntityProperties(context);
 
       zodWriter.writeObject({
         name: contextName,
-        // TODO get description from parent as well
-        description: context.description,
-        properties: getObjectKeys(properties).map((property) => ({
-          name: String(property),
-          // TODO get description from parent as well
-          description: properties[property].description,
-          typeName: properties[property].type,
-          isOptional: properties[property].optional,
-          value: properties[property].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+        description: getEntityDescription(context),
+        properties: getObjectKeys(properties).map((propertyName) => ({
+          name: String(propertyName),
+          description: getPropertyDescription(context, propertyName),
+          typeName: properties[propertyName].type,
+          isOptional: properties[propertyName].optional,
+          value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
         })),
       });
     });
@@ -77,20 +75,17 @@ Generator.generateFromModel(
     // Events
     getEventNames().forEach((eventName) => {
       const event = model.events[eventName];
-      const properties = getEntityProperties(eventName);
+      const properties = getEntityProperties(event);
 
-      // TODO support Event validation rules
       zodWriter.writeObject({
         name: eventName,
-        // TODO get description from parent as well
-        description: event.description,
-        properties: getObjectKeys(properties).map((property) => ({
-          name: String(property),
-          // TODO get description from parent as well
-          description: properties[property].description,
-          typeName: properties[property].type,
-          isOptional: properties[property].optional,
-          value: properties[property].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,
+        description: getEntityDescription(event),
+        properties: getObjectKeys(properties).map((propertyName) => ({
+          name: String(propertyName),
+          description: getPropertyDescription(event, propertyName),
+          typeName: properties[propertyName].type,
+          isOptional: properties[propertyName].optional,
+          value: properties[propertyName].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,
         })),
         rules: event.validation?.rules,
       });
