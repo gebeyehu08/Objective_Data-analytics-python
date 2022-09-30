@@ -3,6 +3,7 @@
  */
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
+import { getObjectKeys } from "../templates/common";
 
 export enum ValidationRuleTypes {
   RequiresLocationContext = 'RequiresLocationContext',
@@ -12,9 +13,11 @@ export enum ValidationRuleTypes {
 
 export type ValidationRule = {
   type: string;
-  context?: string;
-  position?: number;
-  by?: string[];
+  contexts?: Array<{
+    context: string;
+    position?: number;
+    by?: string[];
+  }>;
 };
 
 export type EnumMemberDefinition = {
@@ -38,7 +41,7 @@ export type PropertyDefinition = {
 
 export type ParameterDefinition = {
   name: string;
-  value: string | number | boolean;
+  value: string | number | boolean | object[];
 };
 
 type SuperRefineDefinition = {
@@ -118,6 +121,18 @@ export class ZodWriter extends CodeWriter {
     this.decreaseIndent();
   }
 
+  public writeInlineObject(object: object): void {
+    this.writeLine('{')
+    this.increaseIndent();
+    getObjectKeys(object).forEach(key => {
+      if(object[key] !== undefined) {
+        this.writeLine(`${key}: ${object[key]},`)
+      }
+    })
+    this.decreaseIndent();
+    this.writeLine('}')
+  }
+
   public writeObject(object: ObjectDefinition): void {
     if (object.description) {
       this.writeJsDocLines(object.description.split('\n'));
@@ -165,14 +180,18 @@ export class ZodWriter extends CodeWriter {
     this.increaseIndent();
     this.writeIndent();
 
-    let formattedValue = parameter.value;
+    this.write(`${parameter.name}: `);
     if (Array.isArray(parameter.value)) {
-      formattedValue = `['${parameter.value.join("', '")}']`;
+      this.write('[')
+      this.increaseIndent();
+      this.writeLine();
+      parameter.value.forEach(parameterValue => this.writeInlineObject(parameterValue))
+      this.decreaseIndent()
+      this.writeLine('],')
+    } else {
+      this.writeLine(`${parameter.value},`);
     }
 
-    this.write(`${parameter.name}: ${formattedValue}`);
-
-    this.writeEndOfLine(',');
     this.decreaseIndent();
   }
 
@@ -220,14 +239,19 @@ export class ZodWriter extends CodeWriter {
         // TODO validate using the schema itself
         case ValidationRuleTypes.RequiresGlobalContext:
           // TODO validate using the schema itself
-          if (!rule.context) {
-            throw new Error(`Validation rule ${rule.type} requires the \`context\` attribute to be set.`);
+          if (!rule.contexts || !rule.contexts.length) {
+            throw new Error(`Validation rule ${rule.type} requires the \`contexts\` attribute to be set with at least one item.`);
           }
           this.writeSuperRefine({
             name: 'requiresContext',
             parameters: [
-              { name: 'context', value: `ContextTypes.enum.${rule.context}` },
-              { name: 'position', value: rule.position },
+              {
+                name: 'contexts',
+                value: rule.contexts.map(({context, position})=>({
+                  context: `ContextTypes.enum.${context}`,
+                  position
+                }))
+              },
             ],
           });
           break;

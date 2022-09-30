@@ -4,18 +4,21 @@ import { z } from 'zod';
  * A refinement that checks whether the given context type is present in the subject contexts or Event
  */
 export const requiresContext =
-  ({ context, position }) =>
+  ({ contexts }) =>
   (subject, ctx) => {
-    const contexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
-    const contextIndex = contexts.findIndex(({ _type }) => _type === context);
+    const allContexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
 
-    if (contextIndex < 0) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required.` });
-    }
+    contexts.forEach(({context, position}) => {
+      const contextIndex = allContexts.findIndex(({ _type }) => _type === context);
 
-    if (contextIndex >= 0 && position !== undefined && position !== contextIndex) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required at position ${position}.` });
-    }
+      if (contextIndex < 0) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required.` });
+      }
+
+      if (contextIndex >= 0 && position !== undefined && position !== contextIndex) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required at position ${position}.` });
+      }
+    })
   };
 
 /**

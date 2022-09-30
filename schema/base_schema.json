@@ -8,14 +8,20 @@
   "RequiresLocationContext" : {
     "description": "A validation rule that can be applied to the Location Stack. Checks whether the given AbstractLocationContext is present and, optionally, at the required position.",
     "properties" : {
-      "context": {
-        "description": "The AbstractLocationContext to check in the Location Stack.",
-        "type": "AbstractLocationContext"
-      },
-      "position": {
-        "description": "[Optional] The position the given `context` should be at. Zero-based.",
-        "type": "integer",
-        "optional": true
+      "contexts": {
+        "description": "A list of AbstractLocationContexts, and optionally their positions, to check in the Location Stack.",
+        "type": "array",
+        "items": {
+          "context": {
+            "description": "The AbstractLocationContext to check in the Location Stack.",
+            "type": "AbstractLocationContext"
+          },
+          "position": {
+            "description": "[Optional] The position the given `context` should be at. Zero-based.",
+            "type": "integer",
+            "optional": true
+          }
+        }
       }
     }
   },
@@ -24,9 +30,15 @@
     "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.",
     "type": "validation_rule",
     "properties" : {
-      "context": {
-        "description": "The AbstractGlobalContext to check in the Global Contexts array",
-        "type": "AbstractGlobalContext"
+      "contexts": {
+        "description": "A list of AbstractGlobalContexts to check in the Global Contexts.",
+        "type": "array",
+        "items": {
+          "context": {
+            "description": "The AbstractGlobalContexts to check in the Global Contexts.",
+            "type": "AbstractGlobalContext"
+          }
+        }
       }
     }
   },
@@ -66,8 +78,12 @@
       "rules": [
         {
           "type": "RequiresLocationContext",
-          "context": "RootLocationContext",
-          "position": 0
+          "contexts": [
+            {
+              "context": "RootLocationContext",
+              "position": 0
+            }
+          ]
         },
         {
           "type": "UniqueContext",
@@ -93,7 +109,11 @@
       "rules": [
         {
           "type": "RequiresGlobalContext",
-          "context": "ApplicationContext"
+          "contexts": [
+            {
+              "context": "ApplicationContext"
+            }
+          ]
         },
         {
           "type": "UniqueContext",
@@ -148,8 +168,12 @@
         "description": "TODO: explain why PathContext is validated, for example",
         "rules": [
           {
-            "type": "RequiresLocationContext",
-            "context": "PathContext"
+            "type": "RequiresGlobalContext",
+            "contexts": [
+              {
+                "context": "PathContext"
+              }
+            ]
           }
         ]
       }
@@ -179,7 +203,11 @@
         "rules": [
           {
             "type": "RequiresLocationContext",
-            "context": "InputContext"
+            "contexts": [
+              {
+                "context": "InputContext"
+              }
+            ]
           }
         ]
       }
@@ -191,7 +219,11 @@
         "rules": [
           {
             "type": "RequiresLocationContext",
-            "context": "PressableContext"
+            "contexts": [
+              {
+                "context": "PressableContext"
+              }
+            ]
           }
         ]
       }
@@ -221,7 +253,11 @@
         "rules": [
           {
             "type": "RequiresLocationContext",
-            "context": "MediaPlayerContext"
+            "contexts": [
+              {
+                "context": "MediaPlayerContext"
+              }
+            ]
           }
         ]
       }
