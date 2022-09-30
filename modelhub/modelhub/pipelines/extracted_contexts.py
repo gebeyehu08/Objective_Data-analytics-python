@@ -322,16 +322,19 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
                 'se_category': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
             }
         )
+
+        # avoid having empty string in series that fill user_id series, otherwise
+        # there is a risk of raising an exception when trying to parse string values to UUID
+        uuid_series = ['network_userid', 'domain_sessionid']
+        for series in uuid_series:
+            df_cp.loc[df_cp[series] == '', series] = None
+
         # Anonymous users have no network_userid, but their domain_sessionid is useable as user_id as well
         df_cp[ObjectivSupportedColumns.USER_ID.value] = (
             df_cp['network_userid'].fillna(df_cp['domain_sessionid'])
         )
         df_cp = df_cp.drop(columns=['network_userid', 'domain_sessionid'])
 
-        # avoid having empty string in series that will be parsed as UUID
-        uuid_series = [ObjectivSupportedColumns.EVENT_ID, ObjectivSupportedColumns.USER_ID]
-        for series in uuid_series:
-            df_cp.loc[df_cp[series.value] == '', series.value] = None
 
         # Mark duplicated event_ids
         # Unfortunately, some events might share an event ID due to
