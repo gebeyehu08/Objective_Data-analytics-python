@@ -13,7 +13,7 @@
         "type": "AbstractLocationContext"
       },
       "position": {
-        "description": "Optional. Zero-based. The position the given `context` should be at.",
+        "description": "[Optional] The position the given `context` should be at. Zero-based.",
         "type": "integer",
         "optional": true
       }
@@ -36,7 +36,7 @@
     "type": "validation_rule",
     "properties": {
       "context": {
-        "description": "Optional. Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
+        "description": "[Optional] Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
         "type": "AbstractContext",
         "optional": true
       },
