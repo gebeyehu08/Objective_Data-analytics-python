@@ -3,7 +3,7 @@ import { z } from 'zod';
 /**
  * A refinement that checks whether the given context type is present in the subject contexts
  */
-const requiresContext =
+export const requiresContext =
   ({ context, position }) =>
   (contexts, ctx) => {
     const contextIndex = contexts.findIndex(({ _type }) => _type === context);
@@ -20,7 +20,7 @@ const requiresContext =
 /**
  * A refinement that checks whether the given context type is present only once in the subject contexts
  */
-const uniqueContext =
+export const uniqueContext =
   ({ contextType, by }) =>
   (allContexts, ctx) => {
     const contexts = contextType ? allContexts.filter((context) => context._type === contextType) : allContexts;

@@ -32,7 +32,7 @@ export const getEntityParents = (entity, parents = []) => {
   const parentEntityType = entity['parent'];
 
   if (!parentEntityType) {
-    return parents.sort();
+    return parents;
   }
 
   parents.push(parentEntityType);
