@@ -23,7 +23,7 @@ export enum ContextTypes {
   PathContext,
   PressableContext,
   RootLocationContext,
-  SessionContext
+  SessionContext,
 }
 
 export enum EventTypes {
@@ -41,6 +41,5 @@ export enum EventTypes {
   NonInteractiveEvent,
   PressEvent,
   SuccessEvent,
-  VisibleEvent
+  VisibleEvent,
 }
-

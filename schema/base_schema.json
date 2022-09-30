@@ -8,7 +8,7 @@
   "RequiresLocationContext" : {
     "description": "A validation rule that can be applied to the Location Stack. Checks whether the given AbstractLocationContext is present and, optionally, at the required position.",
     "properties" : {
-      "contexts": {
+      "scope": {
         "description": "A list of AbstractLocationContexts, and optionally their positions, to check in the Location Stack.",
         "type": "array",
         "items": {
@@ -30,7 +30,7 @@
     "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.",
     "type": "validation_rule",
     "properties" : {
-      "contexts": {
+      "scope": {
         "description": "A list of AbstractGlobalContexts to check in the Global Contexts.",
         "type": "array",
         "items": {
@@ -47,16 +47,33 @@
     "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Checks whether contexts are uniquely identified by the given `by` properties. Optionally `context` can be specified to restrict the check to a specific AbstractContext only.",
     "type": "validation_rule",
     "properties": {
-      "context": {
+      "scope": {
         "description": "[Optional] Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
-        "type": "AbstractContext",
-        "optional": true
-      },
-      "by": {
         "type": "array",
-        "description": "Which Context's properties to look at for comparison. Normally `_type` and `id`.",
         "items": {
-          "type": "string"
+          "includeContext": {
+            "description": "The AbstractContexts to include in the check.",
+            "type": "array",
+            "items" : {
+              "type": "AbstractContext"
+            },
+            "optional": true
+          },
+          "excludeContext": {
+            "description": "The AbstractContexts to exclude from the check.",
+            "type": "array",
+            "items" : {
+              "type": "AbstractContext"
+            },
+            "optional": true
+          },
+          "by": {
+            "type": "array",
+            "description": "Which Context's properties to look at for comparison. Normally `_type` and `id`.",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -78,7 +95,7 @@
       "rules": [
         {
           "type": "RequiresLocationContext",
-          "contexts": [
+          "scope": [
             {
               "context": "RootLocationContext",
               "position": 0
@@ -87,7 +104,11 @@
         },
         {
           "type": "UniqueContext",
-          "by": ["_type", "id"]
+          "scope": [
+            {
+              "by": ["_type", "id"]
+            }
+          ]
         }
       ]
     }
@@ -109,7 +130,7 @@
       "rules": [
         {
           "type": "RequiresGlobalContext",
-          "contexts": [
+          "scope": [
             {
               "context": "ApplicationContext"
             }
@@ -117,7 +138,16 @@
         },
         {
           "type": "UniqueContext",
-          "by": ["_type", "id"]
+          "scope": [
+            {
+              "excludeContexts": ["InputValueContext"],
+              "by": ["_type", "id"]
+            },
+            {
+              "includeContexts": ["InputValueContext"],
+              "by": ["_type", "id", "value"]
+            }
+          ]
         }
       ]
     }
@@ -169,7 +199,7 @@
         "rules": [
           {
             "type": "RequiresGlobalContext",
-            "contexts": [
+            "scope": [
               {
                 "context": "PathContext"
               }
@@ -203,7 +233,7 @@
         "rules": [
           {
             "type": "RequiresLocationContext",
-            "contexts": [
+            "scope": [
               {
                 "context": "InputContext"
               }
@@ -219,7 +249,7 @@
         "rules": [
           {
             "type": "RequiresLocationContext",
-            "contexts": [
+            "scope": [
               {
                 "context": "PressableContext"
               }
@@ -253,7 +283,7 @@
         "rules": [
           {
             "type": "RequiresLocationContext",
-            "contexts": [
+            "scope": [
               {
                 "context": "MediaPlayerContext"
               }

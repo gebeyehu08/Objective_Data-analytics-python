@@ -3,7 +3,7 @@
  */
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
-import { getObjectKeys } from "../templates/common";
+import { getObjectKeys } from '../templates/common';
 
 export enum ValidationRuleTypes {
   RequiresLocationContext = 'RequiresLocationContext',
@@ -13,9 +13,11 @@ export enum ValidationRuleTypes {
 
 export type ValidationRule = {
   type: string;
-  contexts?: Array<{
-    context: string;
+  scope?: Array<{
+    context?: string;
     position?: number;
+    includeContexts?: string[];
+    excludeContexts?: string[];
     by?: string[];
   }>;
 };
@@ -122,15 +124,15 @@ export class ZodWriter extends CodeWriter {
   }
 
   public writeInlineObject(object: object): void {
-    this.writeLine('{')
+    this.writeLine('{');
     this.increaseIndent();
-    getObjectKeys(object).forEach(key => {
-      if(object[key] !== undefined) {
-        this.writeLine(`${key}: ${object[key]},`)
+    getObjectKeys(object).forEach((key) => {
+      if (object[key] !== undefined) {
+        this.writeLine(`${key}: ${object[key]},`);
       }
-    })
+    });
     this.decreaseIndent();
-    this.writeLine('}')
+    this.writeLine('},');
   }
 
   public writeObject(object: ObjectDefinition): void {
@@ -182,12 +184,12 @@ export class ZodWriter extends CodeWriter {
 
     this.write(`${parameter.name}: `);
     if (Array.isArray(parameter.value)) {
-      this.write('[')
+      this.write('[');
       this.increaseIndent();
       this.writeLine();
-      parameter.value.forEach(parameterValue => this.writeInlineObject(parameterValue))
-      this.decreaseIndent()
-      this.writeLine('],')
+      parameter.value.forEach((parameterValue) => this.writeInlineObject(parameterValue));
+      this.decreaseIndent();
+      this.writeLine('],');
     } else {
       this.writeLine(`${parameter.value},`);
     }
@@ -239,32 +241,49 @@ export class ZodWriter extends CodeWriter {
         // TODO validate using the schema itself
         case ValidationRuleTypes.RequiresGlobalContext:
           // TODO validate using the schema itself
-          if (!rule.contexts || !rule.contexts.length) {
-            throw new Error(`Validation rule ${rule.type} requires the \`contexts\` attribute to be set with at least one item.`);
+          if (!rule.scope || !rule.scope.length) {
+            throw new Error(
+              `Validation rule ${rule.type} requires the \`scope\` attribute to be set with at least one item.`
+            );
           }
+
           this.writeSuperRefine({
             name: 'requiresContext',
             parameters: [
               {
-                name: 'contexts',
-                value: rule.contexts.map(({context, position})=>({
+                name: 'scope',
+                value: rule.scope.map(({ context, position }) => ({
                   context: `ContextTypes.enum.${context}`,
-                  position
-                }))
+                  position,
+                })),
               },
             ],
           });
           break;
         case ValidationRuleTypes.UniqueContext:
           // TODO validate using the schema itself
-          if (!rule.by) {
-            throw new Error(`Validation rule ${rule.type} requires the \`by\` attribute to be set.`);
+          if (!rule.scope || !rule.scope.length) {
+            throw new Error(
+              `Validation rule ${rule.type} requires the \`scope\` attribute to be set with at least one item.`
+            );
           }
           this.writeSuperRefine({
             name: 'uniqueContext',
             parameters: [
-              { name: 'context', value: rule.context ? `ContextTypes.enum.${rule.context}` : undefined },
-              { name: 'by', value: `['${rule.by.join("', '")}']` },
+              {
+                name: 'scope',
+                value: rule.scope.map(({ includeContexts, excludeContexts, by }) => ({
+                  includeContexts:
+                    includeContexts?.length > 0
+                      ? `[${includeContexts.map((contextType) => `ContextTypes.enum.${contextType}`).join(', ')}]`
+                      : undefined,
+                  excludeContexts:
+                    excludeContexts?.length > 0
+                      ? `[${excludeContexts.map((contextType) => `ContextTypes.enum.${contextType}`).join(', ')}]`
+                      : undefined,
+                  by: `['${by.join("', '")}']`,
+                })),
+              },
             ],
           });
           break;

@@ -130,6 +130,11 @@ console.log(
         id: 'test',
         value: '1',
       },
+      {
+        _type: 'InputValueContext',
+        id: 'test',
+        value: '2',
+      },
     ],
   })
 );
