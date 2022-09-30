@@ -8,11 +8,13 @@ import Objectiv from '../../base_schema.json';
 import { ZodWriter } from '../writers/ZodWriter';
 import {
   getChildren,
-  getContextNames, getEntityDescription,
+  getContextNames,
+  getEntityDescription,
   getEntityProperties,
   getEventNames,
-  getObjectKeys, getPropertyDescription,
-  sortArrayByName
+  getObjectKeys,
+  getPropertyDescription,
+  sortArrayByName,
 } from './common';
 
 Generator.generateFromModel(
@@ -90,5 +92,13 @@ Generator.generateFromModel(
         rules: event.validation?.rules,
       });
     });
+
+    // Main `validate` endpoint
+    zodWriter.writeLine(`export const validate = z.union([`);
+    zodWriter.increaseIndent();
+    getEventNames().forEach((eventName) => zodWriter.writeLine(`${eventName},`));
+    zodWriter.decreaseIndent();
+    zodWriter.writeLine(`]).safeParse;`);
+    zodWriter.writeLine();
   }
 );

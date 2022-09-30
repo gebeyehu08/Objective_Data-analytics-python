@@ -5,7 +5,8 @@ import { z } from 'zod';
  */
 export const requiresContext =
   ({ context, position }) =>
-  (contexts, ctx) => {
+  (subject, ctx) => {
+    const contexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
     const contextIndex = contexts.findIndex(({ _type }) => _type === context);
 
     if (contextIndex < 0) {

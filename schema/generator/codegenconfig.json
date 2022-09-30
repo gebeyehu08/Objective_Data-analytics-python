@@ -4,22 +4,6 @@
   "templates": [
     {
       "modelFile": "../base_schema.json",
-      "templateFile": "writers/MarkdownWriter.ts"
-    },
-    {
-      "modelFile": "../base_schema.json",
-      "templateFile": "writers/TypescriptWriter.ts"
-    },
-    {
-      "modelFile": "../base_schema.json",
-      "templateFile": "writers/ZodWriter.ts"
-    },
-    {
-      "modelFile": "../base_schema.json",
-      "templateFile": "templates/common.ts"
-    },
-    {
-      "modelFile": "../base_schema.json",
       "templateFile": "templates/docs.template.ts"
     },
     {

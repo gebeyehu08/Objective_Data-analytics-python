@@ -46,6 +46,7 @@ console.log(
   InputChangeEvent.parse({
     _type: 'InputChangeEvent',
     id: crypto.randomUUID(),
+    time: Date.now(),
     location_stack: [
       {
         _type: 'RootLocationContext',
@@ -74,6 +75,7 @@ console.log(
   validate({
     _type: 'InputChangeEvent',
     id: crypto.randomUUID(),
+    time: Date.now(),
     location_stack: [
       {
         _type: 'RootLocationContext',
@@ -103,6 +105,7 @@ console.log(
   validate({
     _type: 'PressEvent',
     id: crypto.randomUUID(),
+    time: Date.now(),
     location_stack: [
       {
         _type: 'RootLocationContext',

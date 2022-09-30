@@ -62,7 +62,7 @@ export type ArrayDefinition = {
 };
 
 const SchemaToZodPropertyTypeMap = {
-  integer: 'bigint',
+  integer: 'number',
   literal: 'literal',
   string: 'string',
   discriminator: 'literal',

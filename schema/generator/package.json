@@ -7,8 +7,7 @@
   "repository": "https://github.com/objectiv/objectiv-analytics/schema/generator",
   "scripts": {
     "prettier": "prettier --write .",
-    "generate": "yellicode",
-    "generate:watch": "yellicode --watch"
+    "generate": "yellicode"
   },
   "author": {
     "name": "Surai Di Rosa",

@@ -9,7 +9,8 @@ import { z } from 'zod';
  */
 export const requiresContext =
   ({ context, position }) =>
-  (contexts, ctx) => {
+  (subject, ctx) => {
+    const contexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
     const contextIndex = contexts.findIndex(({ _type }) => _type === context);
 
     if (contextIndex < 0) {
@@ -230,7 +231,7 @@ export const SessionContext = z.object({
   /**
    * Hit counter relative to the current session, this event originated in.
    */
-  hit_number: z.bigint(),
+  hit_number: z.number(),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -538,7 +539,7 @@ export const InteractiveEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 })
   .superRefine(
     requiresContext({
@@ -572,7 +573,7 @@ export const NonInteractiveEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -601,7 +602,7 @@ export const ApplicationLoadedEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -635,7 +636,7 @@ export const FailureEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -664,7 +665,7 @@ export const InputChangeEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 })
   .superRefine(
     requiresContext({
@@ -699,7 +700,7 @@ export const PressEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 })
   .superRefine(
     requiresContext({
@@ -733,7 +734,7 @@ export const HiddenEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -762,7 +763,7 @@ export const VisibleEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -796,7 +797,7 @@ export const SuccessEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -826,7 +827,7 @@ export const MediaEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 })
   .superRefine(
     requiresContext({
@@ -860,7 +861,7 @@ export const MediaLoadEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -889,7 +890,7 @@ export const MediaPauseEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -918,7 +919,7 @@ export const MediaStartEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
 
 /**
@@ -947,6 +948,23 @@ export const MediaStopEvent = z.object({
   /**
    * Timestamp indicating when the event was generated.
    */
-  time: z.bigint(),
+  time: z.number(),
 });
+
+export const validate = z.union([
+  InteractiveEvent,
+  NonInteractiveEvent,
+  ApplicationLoadedEvent,
+  FailureEvent,
+  InputChangeEvent,
+  PressEvent,
+  HiddenEvent,
+  VisibleEvent,
+  SuccessEvent,
+  MediaEvent,
+  MediaLoadEvent,
+  MediaPauseEvent,
+  MediaStartEvent,
+  MediaStopEvent,
+]).safeParse;
 

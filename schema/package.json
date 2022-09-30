@@ -8,8 +8,7 @@
     "serve": "node validator-service.js",
     "validate": "node validator-cli.js",
     "prettier": "prettier --write validator*.js generator",
-    "generate": "(cd generator && yarn generate)",
-    "generate:watch": "(cd generator && yarn generate:watch)"
+    "generate": "(cd generator && yarn generate) && cp generator/generated/validator.js ./validator.js"
   },
   "type": "module",
   "author": {

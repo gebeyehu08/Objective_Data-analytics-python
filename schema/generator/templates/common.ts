@@ -102,11 +102,11 @@ export const getEntityProperties = (entity) => {
  * Gets the description of the given entity, recursively falling back to its parent's description if not set
  */
 export const getEntityDescription = (entity) => {
-  if(entity.description) {
+  if (entity.description) {
     return entity.description;
   }
 
-  if(!entity.parent) {
+  if (!entity.parent) {
     return;
   }
 
