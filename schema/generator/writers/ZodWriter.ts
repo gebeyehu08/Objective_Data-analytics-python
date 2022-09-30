@@ -50,6 +50,7 @@ export type ObjectDefinition = {
   name: string;
   properties: PropertyDefinition[];
   description?: string;
+  rules?: ValidationRule[];
 };
 
 export type ArrayDefinition = {
@@ -126,7 +127,10 @@ export class ZodWriter extends CodeWriter {
 
     object.properties.forEach((property) => this.writeProperty(property));
 
-    this.writeLine(`});\n`);
+    this.writeIndent();
+    this.write(`})`);
+    this.writeRules(object);
+    this.writeLine();
   }
 
   public writeArray = (array: ArrayDefinition) => {
@@ -148,9 +152,9 @@ export class ZodWriter extends CodeWriter {
     this.decreaseIndent();
     this.writeLine(`])`);
     this.decreaseIndent();
+
     this.writeIndent();
     this.write(`)`);
-
     this.writeRules(array);
 
     this.decreaseIndent();

@@ -530,7 +530,12 @@ export const InteractiveEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.bigint(),
-});
+})
+  .superRefine(
+    requiresContext({
+      context: ContextTypes.enum.PathContext,
+    })
+  );
 
 /**
  * The parent of Events that are not directly triggered by a user action.
@@ -615,7 +620,12 @@ export const InputChangeEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.bigint(),
-});
+})
+  .superRefine(
+    requiresContext({
+      context: ContextTypes.enum.InputContext,
+    })
+  );
 
 /**
  * An InteractiveEvent that is sent when a user presses on a pressable element
@@ -636,7 +646,12 @@ export const PressEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.bigint(),
-});
+})
+  .superRefine(
+    requiresContext({
+      context: ContextTypes.enum.PressableContext,
+    })
+  );
 
 /**
  * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
@@ -722,7 +737,12 @@ export const MediaEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.bigint(),
-});
+})
+  .superRefine(
+    requiresContext({
+      context: ContextTypes.enum.MediaPlayerContext,
+    })
+  );
 
 /**
  * A MediaEvent that's emitted after a media item completes loading.

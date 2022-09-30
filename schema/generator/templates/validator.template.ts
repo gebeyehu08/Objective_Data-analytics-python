@@ -85,6 +85,7 @@ Generator.generateFromModel(
           isOptional: properties[property].optional,
           value: properties[property].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,
         })),
+        rules: event.validation?.rules,
       });
     });
   }
