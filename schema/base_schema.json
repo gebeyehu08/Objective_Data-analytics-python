@@ -28,7 +28,6 @@
 
   "RequiresGlobalContext" : {
     "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.",
-    "type": "validation_rule",
     "properties" : {
       "scope": {
         "description": "A list of AbstractGlobalContexts to check in the Global Contexts.",
@@ -45,7 +44,6 @@
 
   "UniqueContext" : {
     "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Checks whether contexts are uniquely identified by the given `by` properties. Optionally `context` can be specified to restrict the check to a specific AbstractContext only.",
-    "type": "validation_rule",
     "properties": {
       "scope": {
         "description": "[Optional] Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
@@ -73,6 +71,30 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      }
+    }
+  },
+
+  "MatchContextProperty" : {
+    "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Given two AbstractContexts checks whether the specified property matches.",
+    "properties" : {
+      "scope": {
+        "description": "A list with items composed of two AbstractContexts and the property to compare between them.",
+        "type": "array",
+        "items": {
+          "contextA": {
+            "description": "The first AbstractContext to check.",
+            "type": "AbstractContext"
+          },
+          "contextB": {
+            "description": "The second AbstractContext to check.",
+            "type": "AbstractContext"
+          },
+          "property": {
+            "description": "The property to compare in the two AbstractContexts.",
+            "type": "string"
           }
         }
       }
