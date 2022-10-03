@@ -203,7 +203,8 @@
         "allowed_rules": [
           "RequiresLocationContext",
           "RequiresGlobalContext",
-          "UniqueContext"
+          "UniqueContext",
+          "MatchContextProperty"
         ]
       }
     },
