@@ -19,8 +19,7 @@ from modelhub.series.series_objectiv import MetaBase
 from sql_models.constants import NotSet
 from sql_models.util import is_bigquery, is_athena
 
-if TYPE_CHECKING:
-    from modelhub.series import SeriesLocationStack
+from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, bach.Series]], str, bach.Series, NotSet]
 ConversionEventDefinitionType = Tuple[Optional['SeriesLocationStack'], Optional[str]]
@@ -298,3 +297,60 @@ class ModelHub:
         """
 
         return FunnelDiscovery()
+
+    def visualize_location_stack(self, data, root_location=None, location_stack: SeriesLocationStack = None,
+                                 n_top_examples=40):
+        """
+        Shows the location stack.
+
+        :param data: the data
+        :param root_location: if None, it will use the most common root location in the data
+        :param location_stack: if None, it will use the standard location stack
+        """
+
+        from modelhub.util import check_objectiv_dataframe
+
+        if location_stack is None:
+            check_objectiv_dataframe(df=data, columns_to_check=['location_stack', 'user_id', 'event_id'])
+
+        filtered_df_dedup = data.copy()
+        result_item, result_offset = filtered_df_dedup.location_stack.json.flatten_array()
+
+        result_item_df = result_item.sort_by_series(
+            by=[result_offset]
+        ).to_frame()
+
+        result_item_df = result_item_df.rename(columns={'location_stack': '__location_stack_exploded'})
+
+        result_item_df['__result_offset'] = 1
+        result_item_df['__result_offset'] = result_item_df['__result_offset'].copy_override(
+            expression=result_item_df.order_by[0].expression)
+
+        filtered_df_dedup_merged = filtered_df_dedup.merge(result_item_df, left_index=True, right_index=True)
+
+        filtered_df_dedup_merged['__type'] = filtered_df_dedup_merged['__location_stack_exploded'].ls[
+                                                '_type'].astype('string')
+        filtered_df_dedup_merged['__id'] = filtered_df_dedup_merged['__location_stack_exploded'].ls[
+                                                'id'].astype('string')
+        filtered_df_dedup_merged['__name'] = filtered_df_dedup_merged['__type'] + \
+            filtered_df_dedup_merged['__id']
+
+        if root_location is None:
+            a = filtered_df_dedup_merged[filtered_df_dedup_merged['__type'] ==
+                                         '"RootLocationContext"'].groupby('__id').user_id.count().sort_values(
+                ascending=False).head()
+            root_location = a.index[0].strip('"')
+            print(root_location)
+
+        filtered_df_dedup_merged[
+            'root_location'] = filtered_df_dedup_merged.location_stack.ls.get_from_context_with_type_series(
+            type='RootLocationContext', key='id')
+        filtered_df_cp = filtered_df_dedup_merged[
+            filtered_df_dedup_merged.root_location == root_location].copy().reset_index()
+
+        funnel = FunnelDiscovery()
+        funnel_df = funnel.get_navigation_paths(filtered_df_cp, steps=2, by='event_id',
+                                                location_stack='__name', sort_by='__result_offset')
+
+        funnel.plot_sankey_diagram(funnel_df.materialize(materialization='temp_table'),
+                                   n_top_examples=n_top_examples)
