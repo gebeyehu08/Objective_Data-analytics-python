@@ -260,6 +260,16 @@
                 "context": "InputContext"
               }
             ]
+          },
+          {
+            "type": "MatchContextProperty",
+            "scope": [
+              {
+                "contextA": "InputContext",
+                "contextB": "InputValueContext",
+                "property": "id"
+              }
+            ]
           }
         ]
       }

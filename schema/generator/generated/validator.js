@@ -91,6 +91,31 @@ export const uniqueContext =
   };
 
 /**
+ * A refinement that checks whether the specified property matches between two contexts.
+ */
+export const matchContextProperty =
+  ({ scope }) =>
+  (subject, ctx) => {
+    const allContexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
+
+    scope.forEach(({ contextA, contextB, property }) => {
+      const contexts = allContexts.filter(({ _type }) => _type === contextA || _type === contextB);
+
+      const groupsByProperty = contexts.reduce((accumulator, item) => {
+        (accumulator[item[property]] = accumulator[item[property]] || []).push(item);
+        return accumulator;
+      }, {});
+
+      if (Object.keys(groupsByProperty).length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `\`${contextA}\` and \`${contextB}\` must have matching \`${property}\` properties.`,
+        });
+      }
+    });
+  };
+
+/**
  * Context's _type discriminator attribute values
  */
 export const ContextTypes = z.enum([
@@ -569,32 +594,31 @@ export const GlobalContexts = z
 /**
  * The parent of Events that are the direct result of a user interaction, e.g. a button click.
  */
-export const InteractiveEvent = z
-  .object({
-    /**
-     * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-     * deterministically describes where an event took place from global to specific.
-     * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-     */
-    location_stack: LocationStack,
-    /**
-     * Global contexts add global / general information about the event. They carry information that is not
-     * related to where the Event originated (location), such as device, platform or business data.
-     */
-    global_contexts: GlobalContexts,
-    /**
-     * A string literal used during serialization. Should always match the Event interface name.
-     */
-    _type: z.literal(EventTypes.enum.InteractiveEvent),
-    /**
-     * Unique identifier for a specific instance of an event.
-     */
-    id: z.string().uuid(),
-    /**
-     * Timestamp indicating when the event was generated.
-     */
-    time: z.number(),
-  })
+export const InteractiveEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.InteractiveEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+})
   .superRefine(
     requiresContext({
       scope: [
@@ -700,37 +724,47 @@ export const FailureEvent = z.object({
 /**
  * Event triggered when user input is modified.
  */
-export const InputChangeEvent = z
-  .object({
-    /**
-     * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-     * deterministically describes where an event took place from global to specific.
-     * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-     */
-    location_stack: LocationStack,
-    /**
-     * Global contexts add global / general information about the event. They carry information that is not
-     * related to where the Event originated (location), such as device, platform or business data.
-     */
-    global_contexts: GlobalContexts,
-    /**
-     * A string literal used during serialization. Should always match the Event interface name.
-     */
-    _type: z.literal(EventTypes.enum.InputChangeEvent),
-    /**
-     * Unique identifier for a specific instance of an event.
-     */
-    id: z.string().uuid(),
-    /**
-     * Timestamp indicating when the event was generated.
-     */
-    time: z.number(),
-  })
+export const InputChangeEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.InputChangeEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+})
   .superRefine(
     requiresContext({
       scope: [
         {
           context: ContextTypes.enum.InputContext,
+        },
+      ],
+    })
+  )
+  .superRefine(
+    matchContextProperty({
+      scope: [
+        {
+          contextA: ContextTypes.enum.InputContext,
+          contextB: ContextTypes.enum.InputValueContext,
+          property: 'id',
         },
       ],
     })
@@ -740,32 +774,31 @@ export const InputChangeEvent = z
  * An InteractiveEvent that is sent when a user presses on a pressable element
  * (like a link, button, icon).
  */
-export const PressEvent = z
-  .object({
-    /**
-     * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-     * deterministically describes where an event took place from global to specific.
-     * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-     */
-    location_stack: LocationStack,
-    /**
-     * Global contexts add global / general information about the event. They carry information that is not
-     * related to where the Event originated (location), such as device, platform or business data.
-     */
-    global_contexts: GlobalContexts,
-    /**
-     * A string literal used during serialization. Should always match the Event interface name.
-     */
-    _type: z.literal(EventTypes.enum.PressEvent),
-    /**
-     * Unique identifier for a specific instance of an event.
-     */
-    id: z.string().uuid(),
-    /**
-     * Timestamp indicating when the event was generated.
-     */
-    time: z.number(),
-  })
+export const PressEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.PressEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+})
   .superRefine(
     requiresContext({
       scope: [
@@ -872,32 +905,31 @@ export const SuccessEvent = z.object({
  * The parent of non-interactive events that are triggered by a media player.
  * It requires a MediaPlayerContext to detail the origin of the event.
  */
-export const MediaEvent = z
-  .object({
-    /**
-     * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-     * deterministically describes where an event took place from global to specific.
-     * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-     */
-    location_stack: LocationStack.optional(),
-    /**
-     * Global contexts add global / general information about the event. They carry information that is not
-     * related to where the Event originated (location), such as device, platform or business data.
-     */
-    global_contexts: GlobalContexts,
-    /**
-     * A string literal used during serialization. Should always match the Event interface name.
-     */
-    _type: z.literal(EventTypes.enum.MediaEvent),
-    /**
-     * Unique identifier for a specific instance of an event.
-     */
-    id: z.string().uuid(),
-    /**
-     * Timestamp indicating when the event was generated.
-     */
-    time: z.number(),
-  })
+export const MediaEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack.optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.MediaEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+})
   .superRefine(
     requiresContext({
       scope: [
@@ -1040,3 +1072,4 @@ export const validate = z.union([
   MediaStartEvent,
   MediaStopEvent,
 ]).safeParse;
+

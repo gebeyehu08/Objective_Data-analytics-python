@@ -85,3 +85,28 @@ export const uniqueContext =
       });
     });
   };
+
+/**
+ * A refinement that checks whether the specified property matches between two contexts.
+ */
+export const matchContextProperty =
+  ({ scope }) =>
+  (subject, ctx) => {
+    const allContexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
+
+    scope.forEach(({ contextA, contextB, property }) => {
+      const contexts = allContexts.filter(({ _type }) => _type === contextA || _type === contextB);
+
+      const groupsByProperty = contexts.reduce((accumulator, item) => {
+        (accumulator[item[property]] = accumulator[item[property]] || []).push(item);
+        return accumulator;
+      }, {});
+
+      if (Object.keys(groupsByProperty).length > 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `\`${contextA}\` and \`${contextB}\` must have matching \`${property}\` properties.`,
+        });
+      }
+    });
+  };

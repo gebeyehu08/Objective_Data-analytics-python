@@ -9,6 +9,7 @@ export enum ValidationRuleTypes {
   RequiresLocationContext = 'RequiresLocationContext',
   RequiresGlobalContext = 'RequiresGlobalContext',
   UniqueContext = 'UniqueContext',
+  MatchContextProperty = 'MatchContextProperty',
 }
 
 export type ValidationRule = {
@@ -283,6 +284,27 @@ export class ZodWriter extends CodeWriter {
                       ? `[${excludeContexts.map((contextType) => `ContextTypes.enum.${contextType}`).join(', ')}]`
                       : undefined,
                   by: `['${by.join("', '")}']`,
+                })),
+              },
+            ],
+          });
+          break;
+        case ValidationRuleTypes.MatchContextProperty:
+          // TODO validate using the schema itself
+          if (!rule.scope || !rule.scope.length) {
+            throw new Error(
+              `Validation rule ${rule.type} requires the \`scope\` attribute to be set with at least one item.`
+            );
+          }
+          this.writeSuperRefine({
+            name: 'matchContextProperty',
+            parameters: [
+              {
+                name: 'scope',
+                value: rule.scope.map(({ contextA, contextB, property }) => ({
+                  contextA: `ContextTypes.enum.${contextA}`,
+                  contextB: `ContextTypes.enum.${contextB}`,
+                  property: `'${property}'`,
                 })),
               },
             ],

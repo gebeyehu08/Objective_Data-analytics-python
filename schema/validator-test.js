@@ -101,7 +101,7 @@ console.log(
 );
 
 console.log(
-  'PressEvent validation:',
+  'InputChangeEvent validation (multiple input values):',
   validate({
     _type: 'InputChangeEvent',
     id: crypto.randomUUID(),
