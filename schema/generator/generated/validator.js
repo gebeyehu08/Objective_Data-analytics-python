@@ -106,7 +106,7 @@ export const matchContextProperty =
         return accumulator;
       }, {});
 
-      if (Object.keys(groupsByProperty).length > 0) {
+      if (Object.keys(groupsByProperty).length > 1) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `\`${contextA}\` and \`${contextB}\` must have matching \`${property}\` properties.`,
