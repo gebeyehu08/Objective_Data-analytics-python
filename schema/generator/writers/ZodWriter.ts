@@ -3,7 +3,7 @@
  */
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
-import { getObjectKeys } from '../templates/common';
+import { getEntityDescription, getObjectKeys, getPropertyDescription } from '../templates/common';
 
 export enum ValidationRuleTypes {
   RequiresLocationContext = 'RequiresLocationContext',
@@ -53,10 +53,17 @@ type SuperRefineDefinition = {
 };
 
 export type ObjectDefinition = {
-  name: string;
+  name?: string;
   properties: PropertyDefinition[];
   description?: string;
   rules?: ValidationRule[];
+};
+
+type DiscriminatedUnionDefinition = {
+  name: string;
+  description?: string;
+  discriminator: string;
+  items: Array<string | ObjectDefinition>;
 };
 
 export type ArrayDefinition = {
@@ -141,15 +148,39 @@ export class ZodWriter extends CodeWriter {
       this.writeJsDocLines(object.description.split('\n'));
     }
 
-    this.writeLine(`export const ${object.name} = z.object({`);
+    if (object.name) {
+      this.write(`export const ${object.name} = `);
+    }
+    this.writeLine(`z.object({`);
 
     object.properties.forEach((property) => this.writeProperty(property));
 
     this.writeIndent();
-    this.write(`})`);
+    this.write(`}).strict()`);
     this.writeRules(object);
-    this.writeLine();
   }
+
+  public writeDiscriminatedUnion = ({ name, description, discriminator, items }: DiscriminatedUnionDefinition) => {
+    if (description) {
+      this.writeJsDocLines(description.split('\n'));
+    }
+
+    this.writeLine(`export const ${name} = z.discriminatedUnion('${discriminator}', [`);
+    this.increaseIndent();
+    items.forEach((item) => {
+      if (typeof item === 'string') {
+        this.increaseIndent();
+        this.writeLine(`${item},`);
+        this.decreaseIndent();
+      } else {
+        this.writeObject(item);
+        this.write(`,`);
+        this.writeEndOfLine();
+      }
+    });
+    this.decreaseIndent();
+    this.writeLine(`]);\n`);
+  };
 
   public writeArray = (array: ArrayDefinition) => {
     if (array.description) {
@@ -174,7 +205,9 @@ export class ZodWriter extends CodeWriter {
     this.writeIndent();
     this.write(`)`);
     this.writeRules(array);
-
+    if (array.rules?.length) {
+      this.writeLine(';');
+    }
     this.decreaseIndent();
     this.writeLine();
   };
@@ -199,6 +232,7 @@ export class ZodWriter extends CodeWriter {
   }
 
   public writeSuperRefine = (refineDefinition: SuperRefineDefinition) => {
+    this.writeLine();
     this.increaseIndent();
     this.writeLine(`.superRefine(`);
 
@@ -229,14 +263,9 @@ export class ZodWriter extends CodeWriter {
   }
 
   private writeRules(subject) {
-    if (!subject.rules?.length) {
-      this.writeLine(';');
-    } else {
-      this.writeEndOfLine();
-    }
     this.decreaseIndent();
 
-    (subject.rules ?? []).forEach((rule, index) => {
+    (subject.rules ?? []).forEach((rule) => {
       switch (rule.type) {
         case ValidationRuleTypes.RequiresLocationContext:
         // TODO validate using the schema itself
@@ -313,10 +342,6 @@ export class ZodWriter extends CodeWriter {
         default:
           throw new Error(`Validation rule ${rule.type} cannot be applied to ${subject.name}.`);
       }
-      if (index === subject.rules.length - 1) {
-        this.write(';');
-      }
-      this.writeLine();
     });
   }
 }

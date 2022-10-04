@@ -7,6 +7,7 @@ import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
 import { ZodWriter } from '../writers/ZodWriter';
 import {
+  filterAbstractNames,
   getChildren,
   getContextNames,
   getEntityDescription,
@@ -39,7 +40,9 @@ Generator.generateFromModel(
     });
 
     // Context definitions
-    getContextNames().forEach((contextName) => {
+    const allContexts = filterAbstractNames(getContextNames());
+    const childContexts = allContexts.filter((context) => getChildren(context).length === 0);
+    childContexts.forEach((contextName) => {
       const context = model.contexts[contextName];
       const properties = getEntityProperties(context);
 
@@ -54,12 +57,55 @@ Generator.generateFromModel(
           value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
         })),
       });
+      zodWriter.writeLine(';');
+      zodWriter.writeLine();
+    });
+    const parentContexts = allContexts.filter((context) => getChildren(context).length > 0);
+    parentContexts.forEach((contextName) => {
+      const context = model.contexts[contextName];
+      const properties = getEntityProperties(context);
+      const childrenNames = getChildren(contextName);
+
+      zodWriter.writeObject({
+        name: `${contextName}Entity`,
+        description: getEntityDescription(context),
+        properties: getObjectKeys(properties).map((propertyName) => ({
+          name: String(propertyName),
+          description: getPropertyDescription(context, propertyName),
+          typeName: properties[propertyName].type,
+          isOptional: properties[propertyName].optional,
+          value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+        })),
+      });
+      zodWriter.writeLine(';');
+      zodWriter.writeLine();
+
+      zodWriter.writeDiscriminatedUnion({
+        name: contextName,
+        description: getEntityDescription(context),
+        discriminator: '_type',
+        items: [
+          {
+            properties: getObjectKeys(properties).map((propertyName) => ({
+              name: String(propertyName),
+              description: getPropertyDescription(context, propertyName),
+              typeName: properties[propertyName].type,
+              isOptional: properties[propertyName].optional,
+              value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+            })),
+          },
+          ...childrenNames,
+        ],
+      });
     });
 
     // LocationStack array definition
+    const allLocationContexts = getChildren(model.LocationStack.items.type).sort();
+    const ChildLocationContexts = allLocationContexts.filter((context) => getChildren(context).length === 0);
+    const ParentLocationContexts = allLocationContexts.filter((context) => getChildren(context).length > 0);
     zodWriter.writeArray({
       name: 'LocationStack',
-      items: getChildren(model.LocationStack.items.type).sort(),
+      items: [...ChildLocationContexts, ...ParentLocationContexts.map((contextName) => `${contextName}Entity`)],
       discriminator: model.LocationStack.items.discriminator,
       description: model.LocationStack.description,
       rules: model.LocationStack.validation.rules,
@@ -75,7 +121,7 @@ Generator.generateFromModel(
     });
 
     // Events
-    getEventNames().forEach((eventName) => {
+    filterAbstractNames(getEventNames()).forEach((eventName) => {
       const event = model.events[eventName];
       const properties = getEntityProperties(event);
 
@@ -91,12 +137,20 @@ Generator.generateFromModel(
         })),
         rules: event.validation?.rules,
       });
+      zodWriter.writeLine(';');
+      zodWriter.writeLine();
     });
 
     // Main `validate` endpoint
+    zodWriter.writeJsDocLines([
+      `The validate method can be used to safely parse an Event.`,
+      `Possible return values:`,
+      `  - Valid event: { success: true, data: <parsed event object> }.`,
+      `  - Invalid event: { success: false, error: <error collection> }.`,
+    ]);
     zodWriter.writeLine(`export const validate = z.union([`);
     zodWriter.increaseIndent();
-    getEventNames().forEach((eventName) => zodWriter.writeLine(`${eventName},`));
+    filterAbstractNames(getEventNames()).forEach((eventName) => zodWriter.writeLine(`${eventName},`));
     zodWriter.decreaseIndent();
     zodWriter.writeLine(`]).safeParse;`);
     zodWriter.writeLine();

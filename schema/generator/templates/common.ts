@@ -17,17 +17,18 @@ export const sortArrayByName = (array) => array.sort((a, b) => a.name.localeComp
 /**
  * A utility to filter out Abstracts from the given list of Entity names (Contexts or Events)
  */
-const filterAbstractNames = (entityNames) => entityNames.filter((entityName) => !entityName.startsWith('Abstract'));
+export const filterAbstractNames = (entityNames) =>
+  entityNames.filter((entityName) => !entityName.startsWith('Abstract'));
 
 /**
  * Gets a list of non-abstract Context names from the Objectiv schema
  */
-export const getContextNames = () => filterAbstractNames(getObjectKeys(Objectiv.contexts));
+export const getContextNames = () => getObjectKeys(Objectiv.contexts);
 
 /**
  * Gets a list of non-abstract Event names from the Objectiv schema
  */
-export const getEventNames = () => filterAbstractNames(getObjectKeys(Objectiv.events));
+export const getEventNames = () => getObjectKeys(Objectiv.events);
 
 /**
  * Gets a list of non-abstract Context and Event entities from the Objectiv schema

@@ -176,7 +176,7 @@ export const ApplicationContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.ApplicationContext),
-});
+}).strict();
 
 /**
  * Global context with information needed to reconstruct a user session.
@@ -195,7 +195,7 @@ export const CookieIdContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.CookieIdContext),
-});
+}).strict();
 
 /**
  * A GlobalContext describing meta information about the agent that sent the event.
@@ -222,7 +222,7 @@ export const HttpContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.HttpContext),
-});
+}).strict();
 
 /**
  * A GlobalContext containing the value of a single input element. Multiple can be present.
@@ -241,7 +241,7 @@ export const InputValueContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.InputValueContext),
-});
+}).strict();
 
 /**
  * A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).
@@ -264,7 +264,7 @@ export const LocaleContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.LocaleContext),
-});
+}).strict();
 
 /**
  * A GlobalContext describing the path where the user is when an event is sent.
@@ -279,7 +279,7 @@ export const PathContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.PathContext),
-});
+}).strict();
 
 /**
  * A GlobalContext describing meta information about the current session.
@@ -298,7 +298,7 @@ export const SessionContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.SessionContext),
-});
+}).strict();
 
 /**
  * a context that captures marketing channel info, so users can do attribution, campaign
@@ -346,7 +346,7 @@ export const MarketingContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.MarketingContext),
-});
+}).strict();
 
 /**
  * A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
@@ -367,7 +367,7 @@ export const IdentityContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.IdentityContext),
-});
+}).strict();
 
 /**
  * A Location Context that describes an element that accepts user input, i.e. a form field.
@@ -382,23 +382,7 @@ export const InputContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.InputContext),
-});
-
-/**
- * A Location Context that describes an interactive element (like a link, button, icon),
- * that the user can press and will trigger an Interactive Event.
- */
-export const PressableContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.PressableContext),
-});
+}).strict();
 
 /**
  * A PressableContext that contains a destination (href).
@@ -417,7 +401,7 @@ export const LinkContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.LinkContext),
-});
+}).strict();
 
 /**
  * A Location Context that uniquely represents the top-level UI location of the user.
@@ -432,7 +416,7 @@ export const RootLocationContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.RootLocationContext),
-});
+}).strict();
 
 /**
  * A Location Context that describes a section of the UI that can expand & collapse.
@@ -447,7 +431,7 @@ export const ExpandableContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.ExpandableContext),
-});
+}).strict();
 
 /**
  * A Location Context that describes a section of the UI containing a media player.
@@ -462,7 +446,7 @@ export const MediaPlayerContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.MediaPlayerContext),
-});
+}).strict();
 
 /**
  * A Location Context that describes a section of the UI containing navigational elements, for example a menu.
@@ -477,7 +461,7 @@ export const NavigationContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.NavigationContext),
-});
+}).strict();
 
 /**
  * A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.
@@ -492,7 +476,7 @@ export const OverlayContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.OverlayContext),
-});
+}).strict();
 
 /**
  * A Location Context that describes a logical section of the UI that contains other Location Contexts.
@@ -508,7 +492,42 @@ export const ContentContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.ContentContext),
-});
+}).strict();
+
+/**
+ * A Location Context that describes an interactive element (like a link, button, icon),
+ * that the user can press and will trigger an Interactive Event.
+ */
+export const PressableContextEntity = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.PressableContext),
+}).strict();
+
+/**
+ * A Location Context that describes an interactive element (like a link, button, icon),
+ * that the user can press and will trigger an Interactive Event.
+ */
+export const PressableContext = z.discriminatedUnion('_type', [
+  z.object({
+    /**
+     * A unique string identifier to be combined with the Context Type (`_type`)
+     * for Context instance uniqueness.
+     */
+    id: z.string(),
+    /**
+     * A string literal used during serialization. Should always match the Context interface name.
+     */
+    _type: z.literal(ContextTypes.enum.PressableContext),
+  }).strict(),
+  LinkContext,
+]);
 
 /**
  * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
@@ -525,8 +544,8 @@ export const LocationStack = z
       MediaPlayerContext,
       NavigationContext,
       OverlayContext,
-      PressableContext,
       RootLocationContext,
+      PressableContextEntity,
     ])
   )
   .superRefine(
@@ -618,7 +637,7 @@ export const InteractiveEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-})
+}).strict()
   .superRefine(
     requiresContext({
       scope: [
@@ -656,7 +675,7 @@ export const NonInteractiveEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
@@ -685,7 +704,7 @@ export const ApplicationLoadedEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * A NonInteractiveEvent that is sent when a user action results in an error,
@@ -719,7 +738,7 @@ export const FailureEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * Event triggered when user input is modified.
@@ -748,7 +767,7 @@ export const InputChangeEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-})
+}).strict()
   .superRefine(
     requiresContext({
       scope: [
@@ -798,7 +817,7 @@ export const PressEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-})
+}).strict()
   .superRefine(
     requiresContext({
       scope: [
@@ -836,7 +855,7 @@ export const HiddenEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
@@ -865,7 +884,7 @@ export const VisibleEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * A NonInteractiveEvent that is sent when a user action is successfully completed,
@@ -899,7 +918,7 @@ export const SuccessEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * The parent of non-interactive events that are triggered by a media player.
@@ -929,7 +948,7 @@ export const MediaEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-})
+}).strict()
   .superRefine(
     requiresContext({
       scope: [
@@ -967,7 +986,7 @@ export const MediaLoadEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * A MediaEvent that's emitted after a media item pauses playback.
@@ -996,7 +1015,7 @@ export const MediaPauseEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * A MediaEvent that's emitted after a media item starts playback.
@@ -1025,7 +1044,7 @@ export const MediaStartEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
 /**
  * A MediaEvent that's emitted after a media item stops playback.
@@ -1054,8 +1073,14 @@ export const MediaStopEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
-});
+}).strict();
 
+/**
+ * The validate method can be used to safely parse an Event.
+ * Possible return values:
+ * - Valid event: { success: true, data: <parsed event object> }.
+ * - Invalid event: { success: false, error: <error collection> }.
+ */
 export const validate = z.union([
   InteractiveEvent,
   NonInteractiveEvent,
