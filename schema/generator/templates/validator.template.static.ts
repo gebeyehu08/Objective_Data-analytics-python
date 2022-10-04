@@ -9,7 +9,9 @@ export const requiresContext =
     const allContexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
 
     scope.forEach(({ context, position }) => {
-      const contextIndex = allContexts.findIndex(({ _type }) => _type === context);
+      const contextIndex = allContexts.findIndex(
+        (contextToVerify) => entityMap[context].safeParse(contextToVerify).success
+      );
 
       if (contextIndex < 0) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required.` });

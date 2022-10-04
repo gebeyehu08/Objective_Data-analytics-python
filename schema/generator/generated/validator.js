@@ -13,7 +13,9 @@ export const requiresContext =
     const allContexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
 
     scope.forEach(({ context, position }) => {
-      const contextIndex = allContexts.findIndex(({ _type }) => _type === context);
+      const contextIndex = allContexts.findIndex(
+        (contextToVerify) => entityMap[context].safeParse(contextToVerify).success
+      );
 
       if (contextIndex < 0) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${context} is required.` });
@@ -549,16 +551,6 @@ export const LocationStack = z
     ])
   )
   .superRefine(
-    requiresContext({
-      scope: [
-        {
-          context: ContextTypes.enum.RootLocationContext,
-          position: 0,
-        },
-      ],
-    })
-  )
-  .superRefine(
     uniqueContext({
       scope: [
         {
@@ -642,6 +634,16 @@ export const InteractiveEvent = z.object({
     requiresContext({
       scope: [
         {
+          context: ContextTypes.enum.RootLocationContext,
+          position: 0,
+        },
+      ],
+    })
+  )
+  .superRefine(
+    requiresContext({
+      scope: [
+        {
           context: ContextTypes.enum.PathContext,
         },
       ],
@@ -657,7 +659,7 @@ export const NonInteractiveEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -686,7 +688,7 @@ export const ApplicationLoadedEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -720,7 +722,7 @@ export const FailureEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -837,7 +839,7 @@ export const HiddenEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -866,7 +868,7 @@ export const VisibleEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -900,7 +902,7 @@ export const SuccessEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -930,7 +932,7 @@ export const MediaEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -968,7 +970,7 @@ export const MediaLoadEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -997,7 +999,7 @@ export const MediaPauseEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -1026,7 +1028,7 @@ export const MediaStartEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -1055,7 +1057,7 @@ export const MediaStopEvent = z.object({
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
-  location_stack: LocationStack.optional(),
+  location_stack: LocationStack,
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -1074,6 +1076,30 @@ export const MediaStopEvent = z.object({
    */
   time: z.number(),
 }).strict();
+
+/**
+ * This map is used by refinements to easily access required context entities and run validation checks.
+ */
+export const entityMap = {
+  'ApplicationContext': ApplicationContext,
+  'CookieIdContext': CookieIdContext,
+  'HttpContext': HttpContext,
+  'InputValueContext': InputValueContext,
+  'LocaleContext': LocaleContext,
+  'PathContext': PathContext,
+  'SessionContext': SessionContext,
+  'MarketingContext': MarketingContext,
+  'IdentityContext': IdentityContext,
+  'InputContext': InputContext,
+  'PressableContext': PressableContext,
+  'LinkContext': LinkContext,
+  'RootLocationContext': RootLocationContext,
+  'ExpandableContext': ExpandableContext,
+  'MediaPlayerContext': MediaPlayerContext,
+  'NavigationContext': NavigationContext,
+  'OverlayContext': OverlayContext,
+  'ContentContext': ContentContext,
+};
 
 /**
  * The validate method can be used to safely parse an Event.

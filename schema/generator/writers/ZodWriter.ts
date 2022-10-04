@@ -3,7 +3,7 @@
  */
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
-import { getEntityDescription, getObjectKeys, getPropertyDescription } from '../templates/common';
+import { getObjectKeys } from '../templates/common';
 
 export enum ValidationRuleTypes {
   RequiresLocationContext = 'RequiresLocationContext',

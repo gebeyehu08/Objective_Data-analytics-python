@@ -116,15 +116,6 @@
       ],
       "rules": [
         {
-          "type": "RequiresLocationContext",
-          "scope": [
-            {
-              "context": "RootLocationContext",
-              "position": 0
-            }
-          ]
-        },
-        {
           "type": "UniqueContext",
           "scope": [
             {
@@ -180,8 +171,7 @@
       "description": "This is the abstract parent of all Events.",
       "properties":{
         "location_stack": {
-          "type": "LocationStack",
-          "optional": true
+          "type": "LocationStack"
         },
         "global_contexts": {
           "type": "GlobalContexts"
@@ -220,6 +210,15 @@
       "validation": {
         "description": "TODO: explain why PathContext is validated, for example",
         "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "scope": [
+              {
+                "context": "RootLocationContext",
+                "position": 0
+              }
+            ]
+          },
           {
             "type": "RequiresGlobalContext",
             "scope": [

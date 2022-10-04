@@ -11,6 +11,7 @@ import {
   getChildren,
   getContextNames,
   getEntityDescription,
+  getEntityNames,
   getEntityProperties,
   getEventNames,
   getObjectKeys,
@@ -112,9 +113,12 @@ Generator.generateFromModel(
     });
 
     // GlobalContexts array definition
+    const allGlobalContexts = getChildren(model.GlobalContexts.items.type).sort();
+    const ChildGlobalContexts = allGlobalContexts.filter((context) => getChildren(context).length === 0);
+    const ParentGlobalContexts = allGlobalContexts.filter((context) => getChildren(context).length > 0);
     zodWriter.writeArray({
       name: 'GlobalContexts',
-      items: getChildren(model.GlobalContexts.items.type).sort(),
+      items: [...ChildGlobalContexts, ...ParentGlobalContexts.map((contextName) => `${contextName}Entity`)],
       discriminator: model.GlobalContexts.items.discriminator,
       description: model.GlobalContexts.description,
       rules: model.GlobalContexts.validation.rules,
@@ -140,6 +144,18 @@ Generator.generateFromModel(
       zodWriter.writeLine(';');
       zodWriter.writeLine();
     });
+
+    // Entity map for refinements and validation code
+    zodWriter.writeJsDocLines([
+      `This map is used by refinements to easily access required context entities and run validation checks.`,
+    ]);
+    zodWriter.writeLine(`export const entityMap = {`);
+    zodWriter.increaseIndent();
+    allContexts.forEach((context) => {
+      zodWriter.writeLine(`'${context}': ${context},`);
+    });
+    zodWriter.decreaseIndent();
+    zodWriter.writeLine(`};\n`);
 
     // Main `validate` endpoint
     zodWriter.writeJsDocLines([
