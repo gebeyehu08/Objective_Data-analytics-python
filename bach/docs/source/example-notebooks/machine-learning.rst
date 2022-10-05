@@ -14,9 +14,8 @@ Machine Learning directly on the raw data in your SQL database. We also have an 
 
 This notebook is also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/machine-learning.ipynb>`_
-to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__.
 
 Get started
 -----------
@@ -215,7 +214,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. doctest:: machine-learning
 	:hide:
@@ -304,7 +303,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
 	          FROM "session_id_and_count___a4a712e42ece50e5846f84e4aa99f981"
 	       ),
-	       "getitem_where_boolean___b21b5c45d052ff9d2c59e2660f8bcc9f" AS (
+	       "getitem_where_boolean___7266549eddda372e4585e53004302dfd" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -314,29 +313,28 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "stack_event_types" AS "stack_event_types",
 	               "session_id" AS "session_id",
 	               "session_hit_number" AS "session_hit_number",
-	               REPLACE(jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id', '-', '_') AS "root"
+	               REPLACE(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id', '-', '_') AS "root"
 	          FROM "objectiv_sessionized_data___35e440d72c941de548e6a8af397e8c76"
 	         WHERE ("event_type" = 'PressEvent')
 	       ) SELECT "user_id" AS "user_id",
 	       "root" AS "root",
 	       cast(sum(cast(1 AS bigint)) AS bigint) AS "value_counts"
-	  FROM "getitem_where_boolean___b21b5c45d052ff9d2c59e2660f8bcc9f"
+	  FROM "getitem_where_boolean___7266549eddda372e4585e53004302dfd"
 	 GROUP BY "user_id",
 	          "root"
 	 ORDER BY cast(sum(cast(1 AS bigint)) AS bigint) DESC NULLS LAST
 	<BLANKLINE>
-
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 
 Next Steps
 ----------
 
-Play with this notebook in the demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Try the notebooks in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a fully functional `Objectiv demo pipeline <https://objectiv.io/docs/home/try-the-demo>`_ in under 5 
-minutes, and play with any of the example notebooks yourself.
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
 
 Use this notebook with your own data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

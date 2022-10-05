@@ -11,9 +11,8 @@ Explore your data
 This example notebook shows how you can easily explore your data collected with Objectiv. It's also available 
 as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/explore-your-data.ipynb>`_
-to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`). 
+The dataset used here is the same as in `Objectiv Up </docs/home/up>`__.
 
 Get started
 -----------
@@ -259,7 +258,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. doctest:: explore-data-features
 	:hide:
@@ -367,9 +366,32 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	          "event_type"
 	<BLANKLINE>
 
-Where to go next
-----------------
+That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 
-Now that you've had a first look at your new data collected with Objectiv, the best next step is to 
-:doc:`see the basic product analytics example notebook <./product-analytics>`. It shows you to how to easily 
-get product analytics metrics straight from your raw Objectiv data.
+Next Steps
+----------
+
+Try the notebooks in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that you've discovered the customer journeys that lead to conversion or drop-off, you can further analyze 
+each of them to understand which ones could be optimized, or should get more/less focus. Another next step 
+could be to have a more in-depth look at the marketing campaign data differences per source. 
+
+* :doc:`Product Analytics notebook <./product-analytics>` - easily run basic product analytics on your data.
+* :doc:`Marketing Analytics notebook <./marketing-analytics>` - analyze the above metrics and more for users 
+	coming from marketing efforts.

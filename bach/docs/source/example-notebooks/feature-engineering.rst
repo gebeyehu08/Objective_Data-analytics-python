@@ -13,9 +13,8 @@ engineering.
 
 It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/feature-engineering.ipynb>`_
-to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`).
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__.
 
 We'll go through describing the data, finding outliers, transforming data, and grouping & aggregating data so 
 that a useful feature set is created that can be used for machine learning. To see details of how such a 
@@ -117,8 +116,8 @@ which captures the main areas users have visited. Using `to_numpy()` shows the r
 	>>> # which are not allowed in BigQuery column names, lets replace them
 	>>> df['root_location'] = df['root_location'].str.replace('-', '_')
 	>>> df.root_location.unique().to_numpy()
-	array(['join_slack', 'jobs', 'home', 'tracking', 'blog', 'about',
-	       'taxonomy', 'modeling', 'privacy'], dtype=object)
+	array(['about', 'blog', 'home', 'jobs', 'join_slack', 'modeling',
+	       'privacy', 'taxonomy', 'tracking'], dtype=object)
 
 This returns `['jobs', 'docs', 'home'...]` etc., which in this example are the sections of the objectiv.io 
 website.
@@ -317,17 +316,17 @@ Also :doc:`see the example notebook on how to use Objectiv data and sklearn <./m
 	>>> pdf
 	                                      about  blog  home  jobs  modeling  privacy  taxonomy  tracking       session_duration
 	user_id
-	2b3f3950-340a-42f3-ac79-ca78c42c583d      1     1     8     0         0        0         2        16 0 days 00:06:18.779538
-	81a8ace2-273b-4b95-b6a6-0fba33858a22      0     0     8     0         1        0         0         0 0 days 00:00:13.821333
-	4bf23e9f-0085-4994-bd00-e00eec1eea14      1     0     8     0        23        0         3         5 0 days 00:10:48.314000
-	4edc3d2c-a4ce-4ff4-9350-997d72300954      0     0     1     0         0        0         0         0 0 days 00:00:00.007000
-	d5c59cef-a567-4266-9756-a2566331a5ab      0     0    17     0         0        0         0         2 0 days 00:05:17.355500
+	005aa19c-7e80-4960-928c-a0853355ee5f      2     0     0     0         0        0         0         0 0 days 00:00:11.502000
+	01891784-6333-40f1-8be6-739f3adfdb97      0     0     9     0         0        0         2         0        0 days 00:11:33
+	031943b0-d8a9-4efc-a111-525fe56a619f      1     0     1     2         0        0         0         0 0 days 00:04:50.600000
+	068e5bb3-00c5-4b2d-a4c3-71632d5fb9a3      0     0     1     0         0        0         0         0        0 days 00:00:00
+	0b7fa533-64ca-48c9-84d9-04c54b0fa069      0     0     7     0         0        0         0         0 0 days 00:01:19.056000
 	...                                     ...   ...   ...   ...       ...      ...       ...       ...                    ...
-	0d94e986-3340-425a-a4b9-6cea1508fcc3      0     0     1     0         0        0         0         0        0 days 00:00:00
-	a49b8feb-cc1b-4f2f-aef3-377b2a72e06b      0     0     1     0         0        0         0         0        0 days 00:00:00
-	91393380-1bc8-477e-aaeb-fde1796a60d1      0     0     1     0         0        0         0         0        0 days 00:00:00
-	a8f5bba8-1221-4e3f-95d4-f929159383ef      0     0     1     0         0        0         0         0        0 days 00:00:00
-	a81abce1-fa6a-4aee-a523-79d529956d4a      0     0     1     0         0        0         0         0        0 days 00:00:00
+	f885c01d-5bfd-422e-aef5-8d04f2602927      0     0     2     0         0        0         0         0 0 days 00:01:08.091000
+	f8bc663c-c83b-4e33-9ae0-f984f6eb1a09      0     0     7     0         2        0         0         0 0 days 00:06:13.484000
+	f8fc2575-1272-4781-b1ed-11b6c9083ac3      0     0     2     0         0        0         0         0 0 days 00:00:13.428000
+	fc4389c3-6931-4323-ba38-211d5eb4874d      2     0     2     0         0        0         0         0 0 days 00:01:35.546000
+	ff48d79a-195a-476a-b49d-0e212de43c96      0     0     4     1         0        0         0         0 0 days 00:00:57.196500
 	<BLANKLINE>
 	[162 rows x 9 columns]
 
@@ -341,7 +340,7 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
 .. doctest:: feature-engineering
 	:hide:
@@ -430,7 +429,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
 	          FROM "session_id_and_count___766015b8f4afe35c2a46f582f7f7f7e7"
 	       ),
-	       "getitem_where_boolean___d4fe3c3c09fb76e919f12b1baa6efe63" AS (
+	       "getitem_where_boolean___097fe114cf091f3c40fd3a274ea7ac96" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -440,19 +439,19 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               "stack_event_types" AS "stack_event_types",
 	               "session_id" AS "session_id",
 	               "session_hit_number" AS "session_hit_number",
-	               REPLACE(jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id', '-', '_') AS "root_location"
+	               REPLACE(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id', '-', '_') AS "root_location"
 	          FROM "objectiv_sessionized_data___bd69174ccede8591d3839d22ec8f0a00"
 	         WHERE ("event_type" = 'PressEvent')
 	       ),
-	       "reset_index___bba721c8361156e1a86903dce88acb46" AS (
+	       "reset_index___47c7da161f0c5318dc0dffd23313ded0" AS (
 	        SELECT "user_id" AS "user_id",
 	               "root_location" AS "root_location",
 	               count("session_hit_number") AS "session_hit_number"
-	          FROM "getitem_where_boolean___d4fe3c3c09fb76e919f12b1baa6efe63"
+	          FROM "getitem_where_boolean___097fe114cf091f3c40fd3a274ea7ac96"
 	         GROUP BY "user_id",
 	                  "root_location"
 	       ),
-	       "unstack___757b4718b8eba9f9f2578abb80f4f580" AS (
+	       "unstack___db12cce5c452bda4c38a5aca6389a30b" AS (
 	        SELECT "user_id" AS "user_id",
 	               max("session_hit_number") AS "session_hit_number",
 	               max("root_location") AS "root_location",
@@ -464,7 +463,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               max(CASE WHEN ("root_location" = 'privacy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "privacy__session_hit_number",
 	               max(CASE WHEN ("root_location" = 'taxonomy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "taxonomy__session_hit_number",
 	               max(CASE WHEN ("root_location" = 'tracking') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "tracking__session_hit_number"
-	          FROM "reset_index___bba721c8361156e1a86903dce88acb46"
+	          FROM "reset_index___47c7da161f0c5318dc0dffd23313ded0"
 	         GROUP BY "user_id"
 	       ),
 	       "getitem_having_boolean___bb91956150f694a8673ab91ca8069ce4" AS (
@@ -484,7 +483,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	          FROM "getitem_having_boolean___bb91956150f694a8673ab91ca8069ce4"
 	         GROUP BY "user_id"
 	       ),
-	       "merge_sql___c1220e7d8a9011bc8d33050e3521812c" AS (
+	       "merge_sql___13bc402a6186f2efbe529cf4eb4646b4" AS (
 	        SELECT COALESCE("l"."user_id", "r"."user_id") AS "user_id",
 	               (COALESCE("l"."about__session_hit_number", cast(0 AS bigint))) AS "about",
 	               (COALESCE("l"."blog__session_hit_number", cast(0 AS bigint))) AS "blog",
@@ -495,7 +494,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	               (COALESCE("l"."taxonomy__session_hit_number", cast(0 AS bigint))) AS "taxonomy",
 	               (COALESCE("l"."tracking__session_hit_number", cast(0 AS bigint))) AS "tracking",
 	               "r"."session_duration" AS "session_duration"
-	          FROM "unstack___757b4718b8eba9f9f2578abb80f4f580" AS l
+	          FROM "unstack___db12cce5c452bda4c38a5aca6389a30b" AS l
 	          LEFT
 	            JOIN "merge_right___1c30913fb6ff459358acacf19290c224" AS r
 	            ON ("l"."user_id" = "r"."user_id")
@@ -509,7 +508,7 @@ dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-das
 	       "taxonomy" AS "taxonomy",
 	       "tracking" AS "tracking",
 	       (COALESCE("session_duration", cast('P0DT0H0M0S' AS interval))) AS "session_duration"
-	  FROM "merge_sql___c1220e7d8a9011bc8d33050e3521812c"
+	  FROM "merge_sql___13bc402a6186f2efbe529cf4eb4646b4"
 	<BLANKLINE>
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
@@ -517,11 +516,11 @@ That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any 
 Next Steps
 ----------
 
-Play with this notebook in the demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Try the notebooks in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spin up a fully functional `Objectiv demo pipeline <https://objectiv.io/docs/home/try-the-demo>`_ in under 5 
-minutes, and play with any of the example notebooks yourself.
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
 
 Use this notebook with your own data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
