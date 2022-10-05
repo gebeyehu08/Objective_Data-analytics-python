@@ -143,9 +143,7 @@ Generator.generateFromModel(
     });
 
     // Entity map for refinements and validation code
-    zodWriter.writeJsDocLines([
-      `Set validators in validatorMap for the refinements.`,
-    ]);
+    zodWriter.writeJsDocLines([`Set validators in validatorMap for the refinements.`]);
     zodWriter.writeLine(`entityMap = {`);
     zodWriter.exportList.push('entityMap');
     zodWriter.increaseIndent();

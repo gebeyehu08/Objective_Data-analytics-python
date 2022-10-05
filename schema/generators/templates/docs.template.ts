@@ -4,10 +4,26 @@
 
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
-import Objectiv from '../../base_schema.json';
 import { MarkdownWriter } from '../writers/MarkdownWriter';
+import { getEntityByName, getEntityDescription, getEntityNames, getEntityParents } from './common';
 
-Generator.generateFromModel({ outputFile: '../generated/docs.md' }, (writer: TextWriter, model: typeof Objectiv) => {
-  const docsWriter = new MarkdownWriter(writer);
-  // TODO
+const destination = '../generated/docs/';
+
+getEntityNames().forEach((entityName) => {
+  const entityCategory = entityName.endsWith('Event') ? 'event' : 'context';
+  const entity = getEntityByName(entityName);
+  const entityParents = getEntityParents(entity);
+  const isAbstract = entityName.startsWith('Abstract');
+  const isLocationContext = entityParents.includes('AbstractLocationContext');
+  const isGlobalContext = entityParents.includes('AbstractGlobalContext');
+  const folderPrefix = isAbstract ? 'abstract_' : isLocationContext ? 'location_' : isGlobalContext ? 'global_' : '';
+  const fullFolderName = `${folderPrefix}${entityCategory}s`;
+  Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entityName}.md` }, (writer: TextWriter) => {
+    const docsWriter = new MarkdownWriter(writer);
+
+    docsWriter.writeH1(entityName);
+    docsWriter.writeLine(getEntityDescription(entity));
+
+    // TODO generate mermaid, tables (we have to implement that in the writer), etc
+  });
 });
