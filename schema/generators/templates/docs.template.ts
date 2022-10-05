@@ -16,8 +16,8 @@ getEntityNames().forEach((entityName) => {
   const isAbstract = entityName.startsWith('Abstract');
   const isLocationContext = entityParents.includes('AbstractLocationContext');
   const isGlobalContext = entityParents.includes('AbstractGlobalContext');
-  const folderPrefix = isAbstract ? 'abstract_' : isLocationContext ? 'location_' : isGlobalContext ? 'global_' : '';
-  const fullFolderName = `${folderPrefix}${entityCategory}s`;
+  const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location_' : isGlobalContext ? 'global_' : '';
+  const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
   Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entityName}.md` }, (writer: TextWriter) => {
     const docsWriter = new MarkdownWriter(writer);
 
