@@ -59,6 +59,7 @@ class BachSqlModel(SqlModel[T]):
 
     @property
     def columns(self) -> Tuple[str, ...]:
+        # TODO: rename this, series_names? columns is confusing
         """
         Names of the columns, as used by Bach, that the query of this model returns, in order.
 

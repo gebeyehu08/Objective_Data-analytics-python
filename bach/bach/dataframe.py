@@ -339,8 +339,8 @@ class DataFrame:
         a DataFrame will change it to be not materialized. Calling :py:meth:`materialize` on a
         non-materialized DataFrame will return a new DataFrame that is materialized.
 
-        TODO: a known problem is that DataFrames with 'json_postgres' columns are never in a materialized
-         state, and cannot be materialized with materialize()
+        A known problem is that DataFrames with 'json_postgres' columns are never in a materialized
+        state, and cannot be materialized with materialize()
 
         :returns: True if this DataFrame is in a materialized state, False otherwise
         """
@@ -348,8 +348,19 @@ class DataFrame:
             return False
         if tuple(self.all_series.keys()) != self.base_node.columns:
             return False
+        dialect = self.engine.dialect
         for name, series in self.all_series.items():
-            if series.expression != Expression.column_reference(name):
+            # In some cases there are two possible expected column names: For BigQuery we only allow
+            # lower-case series names, as mixing upper and lower case can lead to duplicate names. So names
+            # with upper-case characters will be escaped and get_sql_column_name() will return a name
+            # different from the series name.
+            # However, if we are querying directly from a table, then it is okay to query a column with upper
+            # case characters in the name, as then there is a guarantee that the column name is unique.
+            possible_column_expressions = [
+                Expression.column_reference(name),
+                Expression.column_reference(get_sql_column_name(dialect, name))
+            ]
+            if series.expression not in possible_column_expressions:
                 return False
         return True
 
