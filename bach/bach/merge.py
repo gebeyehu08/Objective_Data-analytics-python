@@ -306,7 +306,7 @@ def merge(
     right: DataFrameOrSeries,
     how: str,
     on: Union[str, 'SeriesBoolean', List[Union[str, 'SeriesBoolean']], None],
-    left_on: Union[str, List[str],  None],  # todo: also support array-like arguments?
+    left_on: Union[str, List[str],  None],
     right_on: Union[str, List[str], None],
     left_index: bool,
     right_index: bool,
@@ -360,13 +360,15 @@ def merge(
     variables = copy(right_variables)
     variables.update(left.variables)
 
+    new_column_list = new_index_list + new_data_list
+
     model = _get_merge_sql_model(
         dialect=dialect,
         left=left,
         right=right,
         how=real_how,
         merge_on=merge_on,
-        new_column_list=new_index_list + new_data_list,
+        new_column_list=new_column_list,
         variables=variables
     )
 
@@ -485,22 +487,29 @@ def _determine_series_per_source(
                     expression=expr,
                 )
 
-    # sort mapping based in order from node's columns
-    ordered_left_series = {
-        **{col: left_series[col] for col in left_node.columns if col in left_series},
-        **{
-            series_name: series for series_name, series in left_series.items()
-            if series_name not in left_node.columns
-        },
-    }
-    ordered_right_series = {
-        **{col: right_series[col] for col in right_node.columns if col in right_series},
-        **{
-            series_name: series for series_name, series in right_series.items()
-            if series_name not in right_node.columns
-        },
-    }
+    ordered_left_series = _order_series_based_on_node(left_node, left_series)
+    ordered_right_series = _order_series_based_on_node(right_node, right_series)
     return ordered_left_series, ordered_right_series
+
+
+def _order_series_based_on_node(
+        original_node: BachSqlModel,
+        unordered_series: Mapping[str, Series]
+) -> Dict[str, Series]:
+    """
+    Sort the given mapping of Series name to Series in the same way as the columns are sorted in the
+    original_node. Series that are not in original_node are sorted at the end.
+
+    :return: A sorted dictionary mapping Series.name to Series
+    """
+    ordered_series = {}
+    for series_name in original_node.columns:
+        if series_name in unordered_series:
+            ordered_series[series_name] = unordered_series[series_name]
+    for series_name, series in unordered_series.items():
+        if series_name not in ordered_series:
+            ordered_series[series_name] = series
+    return ordered_series
 
 
 def _get_merge_sql_model(
@@ -526,8 +535,9 @@ def _get_merge_sql_model(
     )
     join_type_expr = Expression.construct('full outer' if how == How.outer else how.value)
 
+    column_expressions = {rc.name: rc.expression for rc in new_column_list}
     return MergeSqlModel.get_instance(
-        column_expressions={rc.name: rc.expression for rc in new_column_list},
+        column_expressions=column_expressions,
         dialect=dialect,
         columns_expr=columns_expr,
         join_type_expr=join_type_expr,
