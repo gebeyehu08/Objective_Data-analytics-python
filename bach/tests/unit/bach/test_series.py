@@ -43,6 +43,7 @@ def test_equals(dialect):
     assert not left['c'].equals(right['c'])
 
     engine = left.engine
+    base_node = left.base_node
     engine_other = FakeEngine(dialect=engine.dialect, url='sql://some_other_string')
 
     int_type = get_series_type_from_dtype('int64')
@@ -51,22 +52,22 @@ def test_equals(dialect):
     expr_test = Expression.construct('test')
     expr_other = Expression.construct('test::text')
 
-    sleft = int_type(engine=engine, base_node=None, index={}, name='test',
+    sleft = int_type(engine=engine, base_node=base_node, index={}, name='test',
                      expression=expr_test, group_by=None, order_by=[],
                      instance_dtype='int64')
-    sright = int_type(engine=engine, base_node=None, index={}, name='test',
+    sright = int_type(engine=engine, base_node=base_node, index={}, name='test',
                       expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert sleft.equals(sright)
 
     # different expression
-    sright = int_type(engine=engine, base_node=None, index={}, name='test',
+    sright = int_type(engine=engine, base_node=base_node, index={}, name='test',
                       expression=expr_other, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different name
-    sright = int_type(engine=engine, base_node=None, index={}, name='test_2',
+    sright = int_type(engine=engine, base_node=base_node, index={}, name='test_2',
                       expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
@@ -78,26 +79,26 @@ def test_equals(dialect):
     assert not sleft.equals(sright)
 
     # different engine
-    sright = int_type(engine=engine_other, base_node=None, index={}, name='test',
+    sright = int_type(engine=engine_other, base_node=base_node, index={}, name='test',
                       expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different type
-    sright = float_type(engine=engine, base_node=None, index={}, name='test',
+    sright = float_type(engine=engine, base_node=base_node, index={}, name='test',
                         expression=expr_test, group_by=None, order_by=[],
                         instance_dtype='float64')
     assert not sleft.equals(sright)
 
     # different group_by
-    sright = int_type(engine=engine, base_node=None, index={}, name='test', expression=expr_test,
+    sright = int_type(engine=engine, base_node=base_node, index={}, name='test', expression=expr_test,
                       group_by=GroupBy(group_by_columns=[]), order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different sorting
     sright = int_type(
-        engine=engine, base_node=None, index={}, name='test', expression=expr_test,
+        engine=engine, base_node=base_node, index={}, name='test', expression=expr_test,
         group_by=None, order_by=[SortColumn(expression=expr_test, asc=True)],
         instance_dtype='int64',
     )
@@ -106,10 +107,10 @@ def test_equals(dialect):
     assert sleft.equals(sright)
 
     index_series = sleft
-    sleft = int_type(engine=engine, base_node=None, index={'a': index_series}, name='test',
+    sleft = int_type(engine=engine, base_node=base_node, index={'a': index_series}, name='test',
                      expression=expr_test, group_by=None, order_by=[],
                      instance_dtype='int64')
-    sright = int_type(engine=engine, base_node=None, index={'a': index_series}, name='test',
+    sright = int_type(engine=engine, base_node=base_node, index={'a': index_series}, name='test',
                       expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert sleft.equals(sright)
