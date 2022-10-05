@@ -7,7 +7,7 @@
   "scripts": {
     "serve": "node validator-service.js",
     "validate": "node validator-cli.js",
-    "test": "node validator.test.js",
+    "test": "jest",
     "prettier": "prettier --write validator*.js",
     "generate": "(cd generator && yarn generate) && cp generator/generated/validator.js ./validator.js"
   },
