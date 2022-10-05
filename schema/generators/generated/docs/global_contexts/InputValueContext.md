@@ -1,0 +1,8 @@
+# InputValueContext
+A GlobalContext containing the value of a single input element. Multiple can be present.
+
+### Properties
+`string` value: The value of the input element.
+`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+for Context instance uniqueness.
+`discriminator` _type: A string literal used during serialization. Should always match the Context interface name.

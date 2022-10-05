@@ -1,0 +1,10 @@
+# MediaEvent
+The parent of non-interactive events that are triggered by a media player. 
+It requires a MediaPlayerContext to detail the origin of the event.
+
+### Properties
+`LocationStack` location_stack: undefined
+`GlobalContexts` global_contexts: undefined
+`discriminator` _type: A string literal used during serialization. Should always match the Event interface name.
+`uuid` id: Unique identifier for a specific instance of an event.
+`integer` time: Timestamp indicating when the event was generated.
