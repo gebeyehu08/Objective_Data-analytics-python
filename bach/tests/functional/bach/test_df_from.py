@@ -70,7 +70,7 @@ def _create_test_table(engine: Engine, table_name: str, add_data: bool):
     sql_statements = [s for s in sql_strings.split(';') if s.strip()]
     assert len(sql_statements) == 3
 
-    if not add_data:  # Only keep the 'drop table' and 'create table' statements
+    if not add_data:  # Only keep the 'drop table' and 'create table' statements. This saves a query.
         sql_statements = sql_statements[:2]
 
     if not is_athena(engine):
@@ -121,7 +121,10 @@ def test_from_table_basic(engine, unique_table_test_name):
     with pytest.raises(Exception, match="No models to compile"):
         to_sql(dialect=engine.dialect, model=df.base_node)
     assert df.base_node.references == {}
-    df.to_pandas()  # test that the main function works on the created DataFrame
+    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
+    # All other functional tests that we have use a CTE as base data. So this is the only place where we
+    # actually test functionality of table-based DataFrames.
+    _assert_df_supports_basic_operations(df)
 
     # now create same DataFrame, but specify all_dtypes.
     df_all_dtypes = DataFrame.from_table(
@@ -129,10 +132,6 @@ def test_from_table_basic(engine, unique_table_test_name):
         all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
     )
     assert df == df_all_dtypes
-    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
-    # All other functional tests that we have use a CTE as base data. So this is the only place where we
-    # actually test functionality of table-based DataFrames.
-    _assert_df_supports_basic_operations(df)
 
 
 def _assert_df_supports_basic_operations(df: DataFrame):
@@ -141,6 +140,7 @@ def _assert_df_supports_basic_operations(df: DataFrame):
     we get the expected output.
     :param df: DataFrame based on the table as created by `_create_test_table()`.
     """
+    df = df.copy()
     df_original = df.copy()
     df['b'] = df['b'] + '-test'
     df['c'] = df['c'] + 100
@@ -176,7 +176,10 @@ def test_from_model_basic(engine, unique_table_test_name):
     assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.references == {}
-    df.to_pandas()  # test that the main function works on the created DataFrame
+    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
+    # All other functional tests that we have use a CTE as base data. So this is the only place where we
+    # actually test functionality of sqlmodel-based DataFrames.
+    _assert_df_supports_basic_operations(df)
 
     # now create same DataFrame, but specify all_dtypes.
     df_all_dtypes = DataFrame.from_model(
@@ -184,10 +187,6 @@ def test_from_model_basic(engine, unique_table_test_name):
         all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
     )
     assert df == df_all_dtypes
-    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
-    # All other functional tests that we have use a CTE as base data. So this is the only place where we
-    # actually test functionality of sqlmodel-based DataFrames.
-    _assert_df_supports_basic_operations(df)
 
 
 def test_from_table_column_ordering(engine, unique_table_test_name):
