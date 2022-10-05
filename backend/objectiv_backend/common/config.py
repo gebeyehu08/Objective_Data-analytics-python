@@ -9,20 +9,11 @@ from typing import NamedTuple, Optional
 # complete overview.
 # These settings should not be accessed by the constants here, but through the functions defined
 # below (e.g. get_config_output())
-from objectiv_backend.schema.event_schemas import EventSchema, get_event_schema, get_event_list_schema
-from objectiv_backend.common.types import EventListSchema
-
-LOAD_BASE_SCHEMA = os.environ.get('LOAD_BASE_SCHEMA', 'true') == 'true'
-SCHEMA_EXTENSION_DIRECTORY = os.environ.get('SCHEMA_EXTENSION_DIRECTORY')
-
-# when set to true, the collector will return detailed validation errors per event
+SCHEMA_VALIDATION_SERVICE_URL = os.environ.get('SCHEMA_VALIDATION_SERVICE_URL', 'http://localhost:8082')
 SCHEMA_VALIDATION_ERROR_REPORTING = os.environ.get('SCHEMA_VALIDATION_ERROR_REPORTING', 'false') == 'true'
 
 # Number of ms before an event is considered too old. set to 0 to disable
 MAX_DELAYED_EVENTS_MILLIS = 1000 * 3600
-
-# Whether to run in sync mode (default) or async-mode.
-_ASYNC_MODE = os.environ.get('ASYNC_MODE', '') == 'true'
 
 # ### Postgres values.
 # We define some default values here. DO NOT put actual passwords in here
@@ -151,13 +142,11 @@ class TimestampValidationConfig(NamedTuple):
 
 
 class CollectorConfig(NamedTuple):
-    async_mode: bool
     anonymous_mode: AnonymousModeConfig
     cookie: Optional[CookieConfig]
     error_reporting: bool
     output: OutputConfig
-    event_schema: EventSchema
-    event_list_schema: EventListSchema
+    schema_validation_service_url: str
 
 
 def get_config_anonymous_mode() -> AnonymousModeConfig:
@@ -234,8 +223,8 @@ def get_config_output_snowplow() -> Optional[SnowplowConfig]:
     else:
         aws_message_raw_type = 'kinesis'
 
-    schema = get_config_event_schema()
-    version = map_schema_version_to_snowplow(schema.version['base_schema'])
+    # TODO: this needs proper fixing
+    version = map_schema_version_to_snowplow('0.0.5')
 
     config = SnowplowConfig(
         gcp_enabled=gcp_enabled,
@@ -294,14 +283,6 @@ def get_config_cookie() -> CookieConfig:
     )
 
 
-def get_config_event_schema() -> EventSchema:
-    return get_event_schema(SCHEMA_EXTENSION_DIRECTORY)
-
-
-def get_config_event_list_schema() -> EventListSchema:
-    return get_event_list_schema()
-
-
 def get_config_timestamp_validation() -> TimestampValidationConfig:
     return TimestampValidationConfig(max_delay=MAX_DELAYED_EVENTS_MILLIS)
 
@@ -315,13 +296,11 @@ def init_collector_config():
     """ Load collector config into cache. """
     global _CACHED_COLLECTOR_CONFIG
     _CACHED_COLLECTOR_CONFIG = CollectorConfig(
-        async_mode=_ASYNC_MODE,
         anonymous_mode=get_config_anonymous_mode(),
         cookie=get_config_cookie(),
         error_reporting=SCHEMA_VALIDATION_ERROR_REPORTING,
         output=get_config_output(),
-        event_schema=get_config_event_schema(),
-        event_list_schema=get_config_event_list_schema()
+        schema_validation_service_url=SCHEMA_VALIDATION_SERVICE_URL
     )
 
 
