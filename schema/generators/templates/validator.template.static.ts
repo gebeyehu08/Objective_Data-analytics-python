@@ -1,9 +1,9 @@
-import { z } from 'zod';
+const { z } = require('zod');
 
 /**
  * A refinement that checks whether the given context type is present in the subject contexts or Event
  */
-export const requiresContext =
+const requiresContext =
   ({ scope }) =>
   (subject, ctx) => {
     const allContexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];
@@ -26,7 +26,7 @@ export const requiresContext =
 /**
  * A refinement that checks whether the given context type is present only once in the subject contexts or Event
  */
-export const uniqueContext =
+const uniqueContext =
   ({ scope }) =>
   (subject, ctx) => {
     const findDuplicatedContexts = (allContexts, includeContexts, excludeContexts, by) => {
@@ -91,7 +91,7 @@ export const uniqueContext =
 /**
  * A refinement that checks whether the specified property matches between two contexts.
  */
-export const matchContextProperty =
+const matchContextProperty =
   ({ scope }) =>
   (subject, ctx) => {
     const allContexts = Array.isArray(subject) ? subject : [...subject.location_stack, ...subject.global_contexts];

@@ -7,10 +7,10 @@
   "scripts": {
     "serve": "node validator-service.js",
     "validate": "node validator-cli.js",
-    "prettier": "prettier --write validator*.js generator",
+    "test": "node validator.test.js",
+    "prettier": "prettier --write validator*.js",
     "generate": "(cd generator && yarn generate) && cp generator/generated/validator.js ./validator.js"
   },
-  "type": "module",
   "author": {
     "name": "Surai Di Rosa",
     "email": "surai.dirosa@gmail.com",
@@ -19,6 +19,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "express": "^4.18.1",
+    "jest": "^29.1.2",
     "zod": "^3.19.1"
   },
   "devDependencies": {

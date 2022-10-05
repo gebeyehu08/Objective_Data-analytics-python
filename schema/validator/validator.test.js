@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import crypto from 'crypto';
-import {
+const crypto = require('crypto');
+const {
   ApplicationLoadedEvent,
   InputChangeEvent,
   LinkContext,
@@ -12,7 +12,7 @@ import {
   PressEvent,
   RootLocationContext,
   validate,
-} from './validator.js';
+} = require('./validator.js');
 
 console.assert(
   RootLocationContext.safeParse({
@@ -358,7 +358,7 @@ console.assert(
       },
       {
         _type: 'PressableContext',
-        id: 'link'
+        id: 'link',
       },
     ],
     global_contexts: [

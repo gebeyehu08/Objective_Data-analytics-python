@@ -28,7 +28,6 @@ export type EnumMemberDefinition = {
 };
 
 export type Enumeration = {
-  export?: boolean;
   name: string;
   members: EnumMemberDefinition[];
   description?: string;
@@ -84,6 +83,7 @@ const SchemaToZodPropertyTypeMap = {
 
 export class ZodWriter extends CodeWriter {
   documentationLineLength = 120;
+  exportList: string[] = [];
 
   constructor(writer: TextWriter) {
     super(writer);
@@ -98,8 +98,8 @@ export class ZodWriter extends CodeWriter {
       this.writeJsDocLines(enumeration.description.split('\n'));
     }
 
-    enumeration.export && this.write('export ');
     this.writeLine(`const ${enumeration.name} = z.enum([`);
+    this.exportList.push(enumeration.name);
 
     this.increaseIndent();
     enumeration.members.forEach((members) => {
@@ -149,7 +149,8 @@ export class ZodWriter extends CodeWriter {
     }
 
     if (object.name) {
-      this.write(`export const ${object.name} = `);
+      this.write(`const ${object.name} = `);
+      this.exportList.push(object.name);
     }
     this.writeLine(`z.object({`);
 
@@ -165,7 +166,8 @@ export class ZodWriter extends CodeWriter {
       this.writeJsDocLines(description.split('\n'));
     }
 
-    this.writeLine(`export const ${name} = z.discriminatedUnion('${discriminator}', [`);
+    this.writeLine(`const ${name} = z.discriminatedUnion('${discriminator}', [`);
+    this.exportList.push(name);
     this.increaseIndent();
     items.forEach((item) => {
       if (typeof item === 'string') {
@@ -187,7 +189,8 @@ export class ZodWriter extends CodeWriter {
       this.writeJsDocLines(array.description.split('\n'));
     }
 
-    this.writeLine(`export const ${array.name} = z`);
+    this.writeLine(`const ${array.name} = z`);
+    this.exportList.push(array.name);
     this.increaseIndent();
     this.writeLine(`.array(`);
     this.increaseIndent();

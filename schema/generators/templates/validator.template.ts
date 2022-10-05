@@ -20,13 +20,12 @@ import {
 } from './common';
 
 Generator.generateFromModel(
-  { outputFile: '../generated/validator.js' },
+  { outputFile: '../../validator/validator.js' },
   (writer: TextWriter, model: typeof Objectiv) => {
     const zodWriter = new ZodWriter(writer);
 
     // ContextTypes enum
     zodWriter.writeEnumeration({
-      export: true,
       name: 'ContextTypes',
       members: sortArrayByName(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
       description: `Context's _type discriminator attribute values`,
@@ -34,7 +33,6 @@ Generator.generateFromModel(
 
     // EventTypes enum
     zodWriter.writeEnumeration({
-      export: true,
       name: 'EventTypes',
       members: sortArrayByName(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
       description: `Event's _type discriminator attribute values`,
@@ -149,7 +147,8 @@ Generator.generateFromModel(
     zodWriter.writeJsDocLines([
       `This map is used by refinements to easily access required context entities and run validation checks.`,
     ]);
-    zodWriter.writeLine(`export const entityMap = {`);
+    zodWriter.writeLine(`const entityMap = {`);
+    zodWriter.exportList.push('entityMap');
     zodWriter.increaseIndent();
     allContexts.forEach((context) => {
       zodWriter.writeLine(`'${context}': ${context},`);
@@ -164,11 +163,17 @@ Generator.generateFromModel(
       `  - Valid event: { success: true, data: <parsed event object> }.`,
       `  - Invalid event: { success: false, error: <error collection> }.`,
     ]);
-    zodWriter.writeLine(`export const validate = z.union([`);
+    zodWriter.writeLine(`const validate = z.union([`);
+    zodWriter.exportList.push('validate');
     zodWriter.increaseIndent();
     filterAbstractNames(getEventNames()).forEach((eventName) => zodWriter.writeLine(`${eventName},`));
     zodWriter.decreaseIndent();
     zodWriter.writeLine(`]).safeParse;`);
     zodWriter.writeLine();
+
+    // Exports
+    zodWriter.exportList.forEach((name) => {
+      zodWriter.writeLine(`exports.${name} = ${name};`);
+    });
   }
 );

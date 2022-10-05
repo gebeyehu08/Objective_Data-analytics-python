@@ -4,8 +4,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { validate } from './validator.js';
-import yargs from 'yargs/yargs';
+const { validate } = require('./validator.js');
+const yargs = require('yargs/yargs');
 
 const [event] = yargs(process.argv.slice(2)).usage('Usage: $0 <event JSON string>').demandCommand(1).argv._;
 
