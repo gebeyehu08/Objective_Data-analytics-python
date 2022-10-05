@@ -11,7 +11,6 @@ import {
   getChildren,
   getContextNames,
   getEntityDescription,
-  getEntityNames,
   getEntityProperties,
   getEventNames,
   getObjectKeys,
@@ -145,9 +144,9 @@ Generator.generateFromModel(
 
     // Entity map for refinements and validation code
     zodWriter.writeJsDocLines([
-      `This map is used by refinements to easily access required context entities and run validation checks.`,
+      `Set validators in validatorMap for the refinements.`,
     ]);
-    zodWriter.writeLine(`const entityMap = {`);
+    zodWriter.writeLine(`entityMap = {`);
     zodWriter.exportList.push('entityMap');
     zodWriter.increaseIndent();
     allContexts.forEach((context) => {

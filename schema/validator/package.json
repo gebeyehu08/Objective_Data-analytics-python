@@ -9,7 +9,7 @@
     "validate": "node validator-cli.js",
     "test": "jest",
     "prettier": "prettier --write validator*.js",
-    "generate": "(cd generator && yarn generate) && cp generator/generated/validator.js ./validator.js"
+    "generate": "(cd ../generators && yarn generate)"
   },
   "author": {
     "name": "Surai Di Rosa",

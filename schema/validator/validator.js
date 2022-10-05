@@ -5,6 +5,11 @@
 const { z } = require('zod');
 
 /**
+ * This map is used by refinements to easily access required context entities and run validation checks.
+ */
+let entityMap;
+
+/**
  * A refinement that checks whether the given context type is present in the subject contexts or Event
  */
 const requiresContext =
@@ -1078,9 +1083,9 @@ const MediaStopEvent = z.object({
 }).strict();
 
 /**
- * This map is used by refinements to easily access required context entities and run validation checks.
+ * Set validators in validatorMap for the refinements.
  */
-const entityMap = {
+entityMap = {
   'ApplicationContext': ApplicationContext,
   'CookieIdContext': CookieIdContext,
   'HttpContext': HttpContext,
