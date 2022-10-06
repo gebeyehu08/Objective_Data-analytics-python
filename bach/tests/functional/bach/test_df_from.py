@@ -324,7 +324,3 @@ def test_big_query_from_other_project(engine):
         expected_columns=expected_columns,
         expected_data=expected_data
     )
-
-
-# TODO: test for table with column names with capitals in it.
-#  https://github.com/objectiv/objectiv-analytics/issues/1318
