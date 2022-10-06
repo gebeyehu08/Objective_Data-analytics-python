@@ -28,7 +28,7 @@
 A number of [example notebooks](https://objectiv.io/docs/modeling/example-notebooks/) are available to demonstrate what you can do with Objectiv. 
 
 ### 2. Get Objectiv Up
-[Objectiv Up](https://objectiv.io/docs/home/up.md) is a pre-packaged, dockerized version of Objectiv's powerful open-source analytics platform that can be self-hosted in under five minutes.
+[Objectiv Up](https://objectiv.io/docs/home/up/) is a pre-packaged, dockerized version of Objectiv's powerful open-source analytics platform that can be self-hosted in under five minutes.
 
 All the necessary infrastructure comes ready to go. Pre-built notebooks, models & dashboards are included for common product & marketing use cases, so you can get to work directly. A demo app & data are included for testing.
 
