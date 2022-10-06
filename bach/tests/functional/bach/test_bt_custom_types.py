@@ -17,6 +17,7 @@ class ReversedStringType(Series):
     dtype_aliases = ('reversed_text', 'backwards_string')
     supported_db_dtype = {
         DBDialect.POSTGRES: 'text',
+        DBDialect.ATHENA: 'varchar',
         DBDialect.BIGQUERY: 'string',
     }
     supported_value_types = (str,)
@@ -35,7 +36,6 @@ class ReversedStringType(Series):
             return Expression.construct(f'reverse(cast({{}} as {cls.get_db_dtype(dialect)}))', expression)
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_custom_type(monkeypatch, engine):
     # make sure monkeypatch the type-registry, as it should be restored after this test finishes.
     monkeypatch.setattr('bach.types._registry', TypeRegistry())
