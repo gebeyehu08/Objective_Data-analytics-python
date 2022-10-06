@@ -59,5 +59,5 @@ Also see the [full overview of Objectiv’s components & compatibility](https://
 
 ## Get Help
 * [Check out the documentation](https://objectiv.io/docs/) for instructions on how to set up and run Objectiv
-* [Join Objectiv on Slack](https://objectiv.io/docs/join-slack) to get help from the team and community.
+* [Join Objectiv on Slack](https://objectiv.io/join-slack) to get help from the team and community.
 * [Create an issue](https://github.com/objectiv/objectiv-analytics/issues) to report a bug or request a feature. 
