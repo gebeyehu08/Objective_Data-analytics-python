@@ -2,8 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
+import { TextWriter } from '@yellicode/core';
 import { getObjectKeys } from '../templates/common';
+import { JavaScriptWriter } from './JavaScriptWriter';
 
 export enum ValidationRuleTypes {
   RequiresLocationContext = 'RequiresLocationContext',
@@ -81,14 +82,13 @@ const SchemaToZodPropertyTypeMap = {
   uuid: 'string().uuid',
 };
 
-export class ZodWriter extends CodeWriter {
+export class ZodWriter extends JavaScriptWriter {
   documentationLineLength = 120;
   exportList: string[] = [];
 
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
-    writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
     this.writeFile('./validator.template.static.ts');
     this.writeLine();
   }
@@ -251,19 +251,6 @@ export class ZodWriter extends CodeWriter {
     this.write(`)`);
     this.decreaseIndent();
   };
-
-  public writeJsDocLines(lines: string[]) {
-    this.writeLine('/**');
-
-    lines.forEach((line) => {
-      const lineLength = line ? line.length : 0;
-      if (this.documentationLineLength > 0 && lineLength > this.documentationLineLength) {
-        CodeWriterUtility.wordWrap(line, this.documentationLineLength).forEach((s) => this.writeLine(` * ${s}`));
-      } else this.writeLine(` * ${line.trim()}`);
-    });
-
-    this.writeLine(' */');
-  }
 
   private writeRules(subject) {
     this.decreaseIndent();

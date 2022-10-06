@@ -11,7 +11,7 @@ import {
   getEntityNames,
   getEntityParents,
   getEntityProperties,
-  getObjectKeys
+  getObjectKeys,
 } from './common';
 
 const destination = '../generated/docs/';
@@ -37,10 +37,10 @@ getEntityNames().forEach((entityName) => {
 
     docsWriter.writeH3('Properties');
     // TODO implement writeTable in docsWriter, e.g. writeTable({title, rows:[cell1, cell2, ...cellN]})
-    getObjectKeys(entityProperties).forEach(entityPropertyName => {
+    getObjectKeys(entityProperties).forEach((entityPropertyName) => {
       const { type, description } = entityProperties[entityPropertyName];
       docsWriter.writeLine(`\`${type}\` ${entityPropertyName.toString()}: ${description}`);
-    })
+    });
 
     // TODO we have some admonitions in the current docs that would be nice to keep
     // TODO Think of how can we add those to the base_schema OR use a map here, e.g. {entityName: admonition_text}

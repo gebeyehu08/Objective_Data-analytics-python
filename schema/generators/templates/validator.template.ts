@@ -18,9 +18,9 @@ import {
   sortArrayByName,
 } from './common';
 
-Generator.generateFromModel(
-  { outputFile: '../../validator/validator.js' },
-  (writer: TextWriter, model: typeof Objectiv) => {
+const schemaVersion = Objectiv.version.base_schema;
+
+const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
     const zodWriter = new ZodWriter(writer);
 
     // ContextTypes enum
@@ -173,4 +173,6 @@ Generator.generateFromModel(
       zodWriter.writeLine(`exports.${name} = ${name};`);
     });
   }
-);
+
+Generator.generateFromModel({ outputFile: `../../validator/validator-v${schemaVersion}.js` }, validatorGenerator);
+Generator.generateFromModel({ outputFile: `../../validator/validator.js` }, validatorGenerator);
