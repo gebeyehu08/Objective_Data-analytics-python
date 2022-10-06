@@ -2,6 +2,7 @@
 A MediaEvent that's emitted after a media item starts playback.
 
 ### Properties
+`string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.
 `LocationStack` location_stack: undefined
 `GlobalContexts` global_contexts: undefined
 `discriminator` _type: A string literal used during serialization. Should always match the Event interface name.

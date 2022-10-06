@@ -1,7 +1,3 @@
-/*
- * Copyright 2022 Objectiv B.V.
- */
-
 const express = require('express');
 
 let port = '8082';
@@ -64,5 +60,3 @@ const validate = (event) => {
     validator_version: validatorVersion
   };
 }
-
-versions.push('1.0.0');

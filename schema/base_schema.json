@@ -1,7 +1,7 @@
 {
   "name": "base_schema",
   "version": {
-    "base_schema": "0.0.5"
+    "base_schema": "1.0.0"
   },
   "description": "This is the Objectiv base schema for the Open Analytics Taxonomy.",
 
@@ -170,6 +170,11 @@
     "AbstractEvent": {
       "description": "This is the abstract parent of all Events.",
       "properties":{
+        "schema_version": {
+          "description": "The version of the Objectiv Taxonomy Schema used to generate this event.",
+          "type": "string",
+          "optional": "true"
+        },
         "location_stack": {
           "type": "LocationStack"
         },
