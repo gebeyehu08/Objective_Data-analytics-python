@@ -25,7 +25,7 @@
 
 ### 1. Check out the example notebooks
 
-A number of [example notebooks](/modeling/example-notebooks/index.mdx) are available to demonstrate what you can do with Objectiv. 
+A number of [example notebooks](https://objectiv.io/docs/modeling/example-notebooks/) are available to demonstrate what you can do with Objectiv. 
 
 ### 2. Get Objectiv Up
 [Objectiv Up](https://objectiv.io/docs/home/up.md) is a pre-packaged, dockerized version of Objectiv's powerful open-source analytics platform that can be self-hosted in under five minutes.
