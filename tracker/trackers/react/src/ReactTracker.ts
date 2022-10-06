@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ContextsConfig, isPluginsArray, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
+import { ContextsConfig, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
 import { makeReactTrackerDefaultPluginsList } from './common/factories/makeReactTrackerDefaultPluginsList';
 import { makeReactTrackerDefaultQueue } from './common/factories/makeReactTrackerDefaultQueue';
 import { makeReactTrackerDefaultTransport } from './common/factories/makeReactTrackerDefaultTransport';
@@ -12,11 +12,6 @@ import { makeReactTrackerDefaultTransport } from './common/factories/makeReactTr
  * The minimum required parameters are the `applicationId` and either an `endpoint` or a `transport` object.
  */
 export type ReactTrackerConfig = Omit<TrackerConfig, 'platform'> & {
-  /**
-   * The collector endpoint URL.
-   */
-  endpoint?: string;
-
   /**
    * Optional. Whether to track ApplicationContext automatically. Enabled by default.
    */
@@ -95,17 +90,13 @@ export class ReactTracker extends Tracker {
     if (trackerConfig.endpoint) {
       config = {
         ...config,
-        transport: makeReactTrackerDefaultTransport(config),
+        transport: makeReactTrackerDefaultTransport(),
         queue: config.queue ?? makeReactTrackerDefaultQueue(config),
       };
     }
 
-    // Configure to use provided `plugins` or automatically create a Plugins instance with some sensible web defaults
-    if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
-      config.plugins = [...makeReactTrackerDefaultPluginsList(trackerConfig), ...(trackerConfig.plugins ?? [])];
-    } else {
-      config.plugins = trackerConfig.plugins;
-    }
+    // Add default plugins for React
+    config.plugins = [...makeReactTrackerDefaultPluginsList(trackerConfig), ...(config.plugins ?? [])];
 
     // Initialize Core Tracker
     super(config, ...contextConfigs);

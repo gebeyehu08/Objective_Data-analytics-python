@@ -3,6 +3,7 @@
  */
 
 import { NonEmptyArray } from './helpers';
+import { TrackerInterface } from './Tracker';
 import { TrackerTransportInterface, TransportableEvent } from './TrackerTransportInterface';
 import { TrackerTransportRetryAttempt } from './TrackerTransportRetryAttempt';
 
@@ -85,6 +86,12 @@ export class TrackerTransportRetry implements TrackerTransportInterface {
       globalThis.objectiv.devTools.TrackerConsole.log(`Retry Factor: ${this.retryFactor}`);
       globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
+  }
+  /**
+   * Simply proxy the `initialize` method to the configured transport.
+   */
+  initialize(tracker: TrackerInterface): void {
+    this.transport.initialize && this.transport.initialize(tracker);
   }
 
   /**

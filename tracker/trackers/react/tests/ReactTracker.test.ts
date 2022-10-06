@@ -12,7 +12,6 @@ import {
   makeIdentityContext,
   makeSuccessEvent,
   TrackerEvent,
-  TrackerPlugins,
   TrackerQueue,
   TrackerQueueMemoryStore,
   TrackerTransportRetry,
@@ -47,9 +46,7 @@ describe('ReactTracker', () => {
         new ReactTracker({
           applicationId: 'app-id',
           endpoint: 'localhost',
-          transport: new FetchTransport({
-            endpoint: 'localhost',
-          }),
+          transport: new FetchTransport(),
         })
     );
   });
@@ -96,7 +93,7 @@ describe('ReactTracker', () => {
   it('should instantiate with given `transport`', () => {
     const testTracker = new ReactTracker({
       applicationId: 'app-id',
-      transport: new FetchTransport({ endpoint: 'localhost' }),
+      transport: new FetchTransport(),
     });
     expect(testTracker).toBeInstanceOf(ReactTracker);
     expect(testTracker.transport).toBeInstanceOf(FetchTransport);
@@ -116,8 +113,9 @@ describe('ReactTracker', () => {
     it('should have some Web Plugins configured by default when no `plugins` have been specified', () => {
       const testTracker = new ReactTracker({ applicationId: 'app-id', endpoint: 'localhost' });
       expect(testTracker).toBeInstanceOf(ReactTracker);
-      expect(testTracker.plugins?.plugins).toEqual(
+      expect(testTracker.plugins).toEqual(
         expect.arrayContaining([
+          expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
           expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
           expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
           expect.objectContaining({ pluginName: 'PathContextFromURLPlugin' }),
@@ -126,7 +124,7 @@ describe('ReactTracker', () => {
       );
     });
 
-    it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
+    it('should allow disabling all plugins, exception made for the Core ones', () => {
       const testTracker = new ReactTracker({
         applicationId: 'app-id',
         endpoint: 'localhost',
@@ -136,9 +134,7 @@ describe('ReactTracker', () => {
         trackRootLocationContextFromURL: false,
       });
       expect(testTracker).toBeInstanceOf(ReactTracker);
-      expect(testTracker.plugins?.plugins).toEqual([
-        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
-      ]);
+      expect(testTracker.plugins).toEqual([expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' })]);
     });
 
     it('should allow customizing a plugin, without affecting the existing ones', () => {
@@ -152,7 +148,7 @@ describe('ReactTracker', () => {
         ],
       });
       expect(testTracker).toBeInstanceOf(ReactTracker);
-      expect(testTracker.plugins?.plugins).toEqual([
+      expect(testTracker.plugins).toEqual([
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
@@ -169,11 +165,11 @@ describe('ReactTracker', () => {
       const trackerClone = new ReactTracker({
         applicationId: 'app-id',
         endpoint: 'localhost',
-        plugins: new TrackerPlugins({ tracker: testTracker, plugins: testTracker.plugins.plugins }),
+        plugins: testTracker.plugins,
       });
 
       expect(trackerClone).toBeInstanceOf(ReactTracker);
-      expect(trackerClone.plugins?.plugins).toEqual([
+      expect(trackerClone.plugins).toEqual([
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
@@ -251,10 +247,9 @@ describe('ReactTracker', () => {
        */
       const testTracker1 = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
       testTracker1.global_contexts.push(makeIdentityContext(identityMetadata));
-      expect(testTracker1.global_contexts).toHaveLength(2);
+      expect(testTracker1.global_contexts).toHaveLength(1);
       expect(testTracker1.global_contexts).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ _type: GlobalContextName.HttpContext }),
           expect.objectContaining({ _type: GlobalContextName.IdentityContext, ...identityMetadata }),
         ])
       );
@@ -268,10 +263,7 @@ describe('ReactTracker', () => {
        * Test #2 - Add the IdentityContext to any Event Tracker method
        */
       const testTracker2 = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
-      expect(testTracker2.global_contexts).toHaveLength(1);
-      expect(testTracker2.global_contexts).toEqual(
-        expect.arrayContaining([expect.objectContaining({ _type: GlobalContextName.HttpContext })])
-      );
+      expect(testTracker2.global_contexts).toHaveLength(0);
       const trackedEvent2 = await trackSuccessEvent({
         tracker: testTracker2,
         message: 'Login successful',

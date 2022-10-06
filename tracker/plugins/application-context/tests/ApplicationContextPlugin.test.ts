@@ -21,7 +21,7 @@ describe('ApplicationContextPlugin', () => {
   });
 
   it('should generate an ApplicationContext when initialized', () => {
-    expect(coreTracker.plugins.get('ApplicationContextPlugin')).toEqual(
+    expect(coreTracker.plugins.find((plugin) => plugin.pluginName === 'ApplicationContextPlugin')).toEqual(
       expect.objectContaining({
         applicationContext: {
           __instance_id: matchUUID,
