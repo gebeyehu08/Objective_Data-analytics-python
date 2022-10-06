@@ -55,7 +55,7 @@ Objectiv runs in your favorite Python notebook and integrates with Snowplow for 
 
 ![objectiv-stack-compatibility](https://user-images.githubusercontent.com/82152911/194339752-1ccce4bc-fb67-41e6-aa7d-c0ec6586e2d5.svg)
 
-A full overview of Objectiv’s components & compatibility is available [here](https://objectiv.io/docshome/compatibility).
+Also see the [full overview of Objectiv’s components & compatibility](https://objectiv.io/docs/home/compatibility/).
 
 ## Get Help
 * [Check out the documentation](https://objectiv.io/docs/) for instructions on how to set up and run Objectiv
