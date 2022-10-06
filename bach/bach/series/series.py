@@ -732,7 +732,7 @@ class Series(ABC):
         }
         if (
             other.base_node == left.base_node
-            and not set(self.base_node.columns) >= {other.name, f'{other.name}__other'}
+            and not set(self.base_node.series_names) >= {other.name, f'{other.name}__other'}
             and f'{other.name}__other' in df.all_series
         ):
             # column was referenced before from right node

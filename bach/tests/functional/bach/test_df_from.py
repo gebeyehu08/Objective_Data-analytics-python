@@ -105,7 +105,7 @@ def test_from_table_structural_big_query(engine, unique_table_test_name):
     assert df.index_dtypes == {'a': 'int64'}
     assert df.dtypes == {'b': 'dict', 'c': 'list'}
     assert df.is_materialized
-    assert df.base_node.columns == ('a', 'b', 'c')
+    assert df.base_node.series_names == ('a', 'b', 'c')
     assert df['b'].instance_dtype == {'f1': 'int64', 'f2': 'float64', 'f3': {'f31': ['int64'], 'f32': 'bool'}}
     assert df['c'].instance_dtype == [{'f1': 'int64', 'f2': 'int64'}]
 
@@ -124,7 +124,7 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df.index_dtypes == {'a': 'int64'}
     assert df.dtypes == expected_dtypes
     assert df.is_materialized
-    assert df.base_node.columns == expected_base_node_columns
+    assert df.base_node.series_names == expected_base_node_columns
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.materialization == Materialization.SOURCE
     with pytest.raises(Exception, match="No models to compile"):
@@ -190,7 +190,7 @@ def test_from_model_basic(engine, unique_table_test_name):
     assert df.index_dtypes == {'a': 'int64'}
     assert df.dtypes == {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
     assert df.is_materialized
-    assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'F')
+    assert df.base_node.series_names == ('a', 'b', 'c', 'd', 'e', 'F')
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.references == {}
     # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
@@ -224,7 +224,7 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
     assert df.is_materialized
     # We should have an extra model in the sql-model graph, because 'b' is the index and should thus be the
     # first column.
-    assert df.base_node.columns == expected_base_node_columns
+    assert df.base_node.series_names == expected_base_node_columns
     assert 'prev' in df.base_node.references
     assert df.base_node.references['prev'].references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
@@ -256,7 +256,7 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
     assert df.is_materialized
     # We should have an extra model in the sql-model graph, because 'b' is the index and should thus be the
     # first column.
-    assert df.base_node.columns == ('b', 'a', 'c', 'd', 'e', 'F')
+    assert df.base_node.series_names == ('b', 'a', 'c', 'd', 'e', 'F')
     assert 'prev' in df.base_node.references
     assert df.base_node.references['prev'].references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
@@ -299,7 +299,7 @@ def test_from_table_column_mapping(engine, unique_table_test_name):
     assert df.index_dtypes == {'A': 'int64'}
     assert df.dtypes == expected_dtypes
     assert df.is_materialized
-    assert df.base_node.columns == expected_base_node_columns
+    assert df.base_node.series_names == expected_base_node_columns
 
     # We should have an extra model in the sql-model graph, because the column names don't match the series
     # names, and thus we try to materialize this.

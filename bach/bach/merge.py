@@ -407,7 +407,7 @@ def revert_merge(base: DataFrame) -> Tuple[DataFrame, DataFrame]:
 
     left_series, right_series = _determine_series_per_source(
         base=base,
-        series_to_unmerge=list(set(base.base_node.columns) - set(base.index_columns)),
+        series_to_unmerge=list(set(base.base_node.series_names) - set(base.index_columns)),
         left_index=left_index,
         right_index=right_index,
     )
@@ -506,7 +506,7 @@ def _order_series_based_on_node(
     :return: A sorted dictionary mapping Series.name to Series
     """
     ordered_series = {}
-    for series_name in original_node.columns:
+    for series_name in original_node.series_names:
         if series_name in unordered_series:
             ordered_series[series_name] = unordered_series[series_name]
     for series_name, series in unordered_series.items():

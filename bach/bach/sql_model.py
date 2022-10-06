@@ -58,10 +58,10 @@ class BachSqlModel(SqlModel[T]):
         )
 
     @property
-    def columns(self) -> Tuple[str, ...]:
+    def series_names(self) -> Tuple[str, ...]:
         # TODO: rename this, series_names? columns is confusing
         """
-        Names of the columns, as used by Bach, that the query of this model returns, in order.
+        Names of the Series that the query of this model returns, in order.
 
         Note: These are the names as they would appear in a Bach DataFrame. Columns might have a different
         name in the sql query of this model than they have in a Bach DataFrame, depending on what characters
@@ -74,9 +74,9 @@ class BachSqlModel(SqlModel[T]):
     @property
     def column_expressions(self) -> Dict[str, Expression]:
         """
-        Mapping containing the expression used per Bach column-name .
+        Mapping containing the expression used per Bach series-name.
 
-        Note: The column names are as they would appear in a bach DataFrame. Within the sql query of this
+        Note: The series names are as they would appear in a bach DataFrame. Within the sql query of this
         model the columns might be called differently. See the description of :meth:`columns` for more
         information.
         """

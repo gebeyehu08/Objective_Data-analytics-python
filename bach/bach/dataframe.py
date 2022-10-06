@@ -346,7 +346,7 @@ class DataFrame:
         """
         if self.group_by or self.order_by:
             return False
-        if tuple(self.all_series.keys()) != self.base_node.columns:
+        if tuple(self.all_series.keys()) != self.base_node.series_names:
             return False
         dialect = self.engine.dialect
         for name, series in self.all_series.items():
@@ -2056,7 +2056,7 @@ class DataFrame:
             sql = escape_parameter_characters(conn, sql)
             pandas_df = pandas.read_sql_query(sql, conn, dtype=series_name_to_dtype)
 
-        # Rename the columns that the query gives, to the actual column names of the DataFrame
+        # Rename the columns that the query gives, to the actual series names of the DataFrame
         columns = {get_sql_column_name(dialect=dialect, name=name): name for name in self.all_series.keys()}
         pandas_df = pandas_df.rename(columns=columns)
 
