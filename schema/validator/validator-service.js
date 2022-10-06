@@ -7,9 +7,12 @@ const { validate } = require('./validator.js');
 
 var app = express();
 app.use(express.json());
-
-app.listen(8082, () => {
-  console.log('Objectiv Validation Service ready on port 8082');
+var port = 8082;
+if (process.env.PORT) {
+  port = process.env.PORT;
+}
+app.listen(port, () => {
+  console.log(`Objectiv Validation Service ready on port ${port}`);
 });
 
 app.post('/', (req, res) => {
