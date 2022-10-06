@@ -339,17 +339,28 @@ class DataFrame:
         a DataFrame will change it to be not materialized. Calling :py:meth:`materialize` on a
         non-materialized DataFrame will return a new DataFrame that is materialized.
 
-        TODO: a known problem is that DataFrames with 'json_postgres' columns are never in a materialized
-         state, and cannot be materialized with materialize()
+        A known problem is that DataFrames with 'json_postgres' columns are never in a materialized
+        state, and cannot be materialized with materialize()
 
         :returns: True if this DataFrame is in a materialized state, False otherwise
         """
         if self.group_by or self.order_by:
             return False
-        if tuple(self.all_series.keys()) != self.base_node.columns:
+        if tuple(self.all_series.keys()) != self.base_node.series_names:
             return False
+        dialect = self.engine.dialect
         for name, series in self.all_series.items():
-            if series.expression != Expression.column_reference(name):
+            # In some cases there are two possible expected column names: For BigQuery we only allow
+            # lower-case series names, as mixing upper and lower case can lead to duplicate names. So names
+            # with upper-case characters will be escaped and get_sql_column_name() will return a name
+            # different from the series name.
+            # However, if we are querying directly from a table, then it is okay to query a column with upper
+            # case characters in the name, as then there is a guarantee that the column name is unique.
+            possible_column_expressions = [
+                Expression.column_reference(name),
+                Expression.column_reference(get_sql_column_name(dialect, name))
+            ]
+            if series.expression not in possible_column_expressions:
                 return False
         return True
 
@@ -563,12 +574,14 @@ class DataFrame:
         .. note::
             If all_dtypes is not set, then this will query the database.
         """
+        name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
         if all_dtypes is not None:
             dtypes = all_dtypes
         else:
             dtypes = get_dtypes_from_table(
                 engine=engine,
                 table_name=table_name,
+                name_to_column_mapping=name_to_column_mapping
             )
 
         # We just generate a reference to the base table
@@ -612,10 +625,15 @@ class DataFrame:
             If all_dtypes is not set, then this will query the database and create and remove a temporary
             table.
         """
+        name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
         if all_dtypes is not None:
             dtypes = all_dtypes
         else:
-            dtypes = get_dtypes_from_model(engine=engine, node=model)
+            dtypes = get_dtypes_from_model(
+                engine=engine,
+                node=model,
+                name_to_column_mapping=name_to_column_mapping
+            )
         return cls._from_node(
             engine=engine,
             model=model,
@@ -631,7 +649,7 @@ class DataFrame:
             model: SqlModel,
             index: List[str],
             all_dtypes: Mapping[str, StructuredDtype],
-            name_to_column_mapping: Optional[Mapping[str, str]] = None
+            name_to_column_mapping: Mapping[str, str]
     ) -> 'DataFrame':
         """
         INTERNAL: Instantiate a new DataFrame based on the result of the query defined in `model`.
@@ -643,14 +661,12 @@ class DataFrame:
         :param all_dtypes: Dictionary mapping series name to dtype.
             Must contain all index and data series.
             Must be in same order as the columns appear in the sql-model.
-        :param name_to_column_mapping: Optional mapping from series names to the actual column names in the
-            model result. If mapping is None or missing a specific name, then the column name is assumed to
+        :param name_to_column_mapping: Mapping from series names to the actual column names in the
+            model result. If mapping is missing a specific name, then the column name is assumed to
             be the same as the series name.
         :returns: A DataFrame based on an SqlModel
 
         """
-        name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
-
         missing_index_keys = {k for k in index if k not in all_dtypes}
         if missing_index_keys:
             raise ValueError(f'Specified index keys ({missing_index_keys} not found in'
@@ -659,9 +675,11 @@ class DataFrame:
         index_dtypes = {k: all_dtypes[k] for k in index}
         series_dtypes = {k: all_dtypes[k] for k in all_dtypes.keys() if k not in index}
 
+        column_expressions = {c: Expression.column_reference(name_to_column_mapping.get(c, c))
+                              for c in all_dtypes.keys()}
         bach_model = BachSqlModel.from_sql_model(
             sql_model=model,
-            column_expressions={c: Expression.column_reference(c) for c in all_dtypes.keys()},
+            column_expressions=column_expressions,
         )
 
         from bach.savepoints import Savepoints
@@ -767,7 +785,8 @@ class DataFrame:
         INTERNAL: Get an instance with the right series instantiated based on the dtypes array.
 
         This assumes that base_node has a column for all names in index_dtypes and dtypes.
-        If name_to_column_mapping is set, it maps series names to the sql column names in base_node.
+        name_to_column_mapping maps series names to the sql column names in base_node, for missing entries
+        the column name is assumed to be the series name.
         """
         base_params = {
             'engine': engine,
@@ -2037,7 +2056,7 @@ class DataFrame:
             sql = escape_parameter_characters(conn, sql)
             pandas_df = pandas.read_sql_query(sql, conn, dtype=series_name_to_dtype)
 
-        # Rename the columns that the query gives, to the actual column names of the DataFrame
+        # Rename the columns that the query gives, to the actual series names of the DataFrame
         columns = {get_sql_column_name(dialect=dialect, name=name): name for name in self.all_series.keys()}
         pandas_df = pandas_df.rename(columns=columns)
 

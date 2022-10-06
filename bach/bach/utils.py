@@ -161,7 +161,7 @@ def validate_node_column_references_in_sorting_expressions(
     """
     Validate that all ColumnReferenceTokens in order_by expressions refer columns that exist in node.
     """
-    sql_column_names = set(get_sql_column_name(dialect=dialect, name=column) for column in node.columns)
+    sql_column_names = set(get_sql_column_name(dialect=dialect, name=column) for column in node.series_names)
     for ob in order_by:
         invalid_column_references = [
             token.column_name
