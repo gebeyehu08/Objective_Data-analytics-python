@@ -41,7 +41,7 @@ All the necessary infrastructure comes ready to go. Pre-built notebooks, models 
 
 Objectiv is also available as [a fully managed cloud setup](https://objectiv.io/docshttps://www.objectiv.io/cloud), enabling you to run Objectiv's open-source analytics platform at scale without worrying about the Ops part. It connects to your own data store, so you'll remain in full control over your data.
 
-> Objectiv is 100% open-source, so you can also manually build & run your own custom Objectiv platform, or [integrate it into an existing Snowplow pipeline](https://objectiv.io/docs/tracking/collector).
+> Objectiv is 100% open-source, so you can also manually build & run your own custom Objectiv platform, or [integrate it into an existing Snowplow pipeline](https://objectiv.io/docs/tracking/collector/snowplow-pipeline).
 
 ### 3. Instrument the tracker
 
