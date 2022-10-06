@@ -2,36 +2,32 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { isNonEmptyArray, NonEmptyArray, TrackerTransportInterface, TransportableEvent } from '@objectiv/tracker-core';
+import {
+  isNonEmptyArray,
+  NonEmptyArray,
+  TrackerInterface,
+  TrackerTransportInterface,
+  TransportableEvent,
+} from '@objectiv/tracker-core';
 import { defaultFetchFunction } from './defaultFetchFunction';
-
-/**
- * The configuration of the FetchTransport class
- */
-export type FetchTransportConfig = {
-  /**
-   * The collector endpoint URL.
-   */
-  endpoint?: string;
-
-  /**
-   * Optional. Override the default fetch API implementation with a custom one.
-   */
-  fetchFunction?: typeof defaultFetchFunction;
-};
 
 /**
  * A TrackerTransport based on Fetch API. Sends event to the specified Collector endpoint.
  * Optionally supports specifying a custom `fetchFunction`.
  */
 export class FetchTransport implements TrackerTransportInterface {
-  readonly endpoint?: string;
   readonly transportName = 'FetchTransport';
-  readonly fetchFunction: typeof defaultFetchFunction;
+  fetchFunction: typeof defaultFetchFunction = defaultFetchFunction;
+  endpoint?: string;
 
-  constructor(config: FetchTransportConfig) {
-    this.endpoint = config.endpoint;
-    this.fetchFunction = config.fetchFunction ?? defaultFetchFunction;
+  initialize(tracker: TrackerInterface) {
+    this.endpoint = tracker.endpoint;
+
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Endpoint: ${this.endpoint}`);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
+    }
   }
 
   async handle(...args: NonEmptyArray<TransportableEvent>): Promise<Response | void> {
