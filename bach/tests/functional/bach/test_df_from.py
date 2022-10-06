@@ -20,7 +20,7 @@ from tests.conftest import DB_ATHENA_LOCATION
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
-def _create_test_table(engine: Engine, table_name: str):
+def _create_test_table(engine: Engine, table_name: str, add_data: bool):
     all_sql_strings = {
         DBDialect.POSTGRES: f'''
                 drop table if exists {table_name};
@@ -70,13 +70,17 @@ def _create_test_table(engine: Engine, table_name: str):
             '''
     }
     sql_strings = all_sql_strings[DBDialect.from_engine(engine)]
+    sql_statements = [s for s in sql_strings.split(';') if s.strip()]
+    assert len(sql_statements) == 3
 
-    if is_athena(engine):
+    if not add_data:  # Only keep the 'drop table' and 'create table' statements. This saves a query.
+        sql_statements = sql_statements[:2]
+
+    if not is_athena(engine):
         # Athena does not support combining multiple statements in one call to conn.execute(). Other
         # databases do support that.
-        sql_statements = [s for s in sql_strings.split(';') if s.strip()]
-    else:
-        sql_statements = [sql_strings]
+        combined = '; '.join(sql_statements)
+        sql_statements = [combined]
 
     with engine.connect() as conn:
         for sql_statement in sql_statements:
@@ -108,7 +112,7 @@ def test_from_table_structural_big_query(engine, unique_table_test_name):
 
 def test_from_table_basic(engine, unique_table_test_name):
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=True)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['a'])
     expected_dtypes = {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
@@ -179,7 +183,7 @@ def test_from_model_basic(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=True)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['a'])
@@ -191,7 +195,7 @@ def test_from_model_basic(engine, unique_table_test_name):
     assert df.base_node.references == {}
     # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
     # All other functional tests that we have use a CTE as base data. So this is the only place where we
-    # actually test functionality of table-based DataFrames.
+    # actually test functionality of sqlmodel-based DataFrames.
     _assert_df_supports_basic_operations(df)
 
     # now create same DataFrame, but specify all_dtypes.
@@ -205,7 +209,7 @@ def test_from_model_basic(engine, unique_table_test_name):
 def test_from_table_column_ordering(engine, unique_table_test_name):
     # Create a Dataframe in which the index is not the first column in the table.
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=False)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['b'])
 
@@ -243,7 +247,7 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
 
     # Create a Dataframe in which the index is not the first column in the table.
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=False)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['b'])
