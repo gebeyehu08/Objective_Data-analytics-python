@@ -142,8 +142,8 @@ See step sequences per user
 ---------------------------
 Before we see what helped conversion and what didn't, let's have a look at which consecutive steps each user 
 took (aka the features they used) in general, after starting their session, based on the 
-`location stack <https://objectiv.io/docs/tracking/core-concepts/locations>`_. We have to specify the maximum 
-n steps, and use the :doc:`get_navigation_paths 
+`location stack <https://objectiv.io/docs/tracking/locations>`_. We have to specify the maximum n steps, and 
+use the :doc:`get_navigation_paths 
 <../open-model-hub/models/funnels/FunnelDiscovery/modelhub.FunnelDiscovery.get_navigation_paths>` operation.
 
 .. doctest:: funnel-discovery
@@ -178,7 +178,7 @@ n steps, and use the :doc:`get_navigation_paths
 See top step sequences for all users
 ------------------------------------
 For the bigger picture, calculate the most frequent consecutive steps that all users took after starting 
-their session, based on the `location stack <https://objectiv.io/docs/tracking/core-concepts/locations>`_.
+their session, based on the `location stack <https://objectiv.io/docs/tracking/locations>`_.
 
 .. doctest:: funnel-discovery
 	:skipif: engine is None
