@@ -268,6 +268,76 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
+def test_from_table_column_mapping(engine, unique_table_test_name):
+    table_name = unique_table_test_name
+    _create_test_table(engine, table_name, add_data=True)
+
+    name_to_column_mapping = {
+        'A': 'a',
+        '~!@#$%': 'b',
+        '__x': 'c',
+        'd': 'd',
+        'ヽ(。_°)ノ': 'e',
+        'f': 'F'
+    }
+
+    df = DataFrame.from_table(
+        engine=engine,
+        table_name=table_name,
+        index=['A'],
+        name_to_column_mapping=name_to_column_mapping
+    )
+    expected_dtypes = {
+        '~!@#$%': 'string',
+        '__x': 'float64',
+        'd': 'date',
+        'ヽ(。_°)ノ': 'timestamp',
+        'f': 'bool'
+    }
+    expected_base_node_columns = ('A', '~!@#$%', '__x', 'd', 'ヽ(。_°)ノ', 'f')
+
+    assert df.index_dtypes == {'A': 'int64'}
+    assert df.dtypes == expected_dtypes
+    assert df.is_materialized
+    assert df.base_node.columns == expected_base_node_columns
+
+    # We should have an extra model in the sql-model graph, because the column names don't match the series
+    # names, and thus we try to materialize this.
+    assert 'prev' in df.base_node.references
+    assert df.base_node.references['prev'].references == {}
+    assert df.base_node.references['prev'].materialization == Materialization.SOURCE
+
+    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
+    # All other functional tests that we have use a CTE as base data. So this is the only place where we
+    # actually test functionality of table-based DataFrames.
+    df_original = df.copy()
+    df['__x'] = df['__x'] + 100
+    assert_equals_data(
+        df,
+        use_to_pandas=True,
+        expected_columns=list(expected_base_node_columns),
+        expected_data=[[123, 'test', 101.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True]]
+    )
+
+    # now create same DataFrame, but specify all_dtypes.
+    all_dtypes = {
+        'A': 'int64',
+        '~!@#$%': 'string',
+        '__x': 'float64',
+        'd': 'date',
+        'ヽ(。_°)ノ': 'timestamp',
+        'f': 'bool'
+    }
+    df_all_dtypes = DataFrame.from_table(
+        engine=engine,
+        table_name=table_name,
+        index=['A'],
+        all_dtypes=all_dtypes,
+        name_to_column_mapping=name_to_column_mapping
+    )
+    assert df_original == df_all_dtypes
+
+
 @pytest.mark.skip_postgres
 @pytest.mark.skip_athena
 def test_big_query_from_other_project(engine):
