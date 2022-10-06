@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict, Tuple, Mapping
+from typing import Dict, Tuple, Mapping, Optional
 
 from sqlalchemy.engine import Engine
 
@@ -17,7 +17,7 @@ from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigqu
 def get_dtypes_from_model(
         engine: Engine,
         node: SqlModel,
-        name_to_column_mapping: Mapping[str, str]
+        name_to_column_mapping: Optional[Mapping[str, str]] = None
 ) -> Dict[str, StructuredDtype]:
     """
     Create a temporary database table from model and use it to deduce the model's dtypes.
@@ -26,6 +26,7 @@ def get_dtypes_from_model(
 
     :return: Dictionary with as key the column names, and as values the dtype of the column.
     """
+    name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
     if not is_postgres(engine):
         message_override = f'We cannot automatically derive dtypes from a SqlModel for database ' \
                            f'dialect "{engine.name}".'
@@ -50,18 +51,20 @@ def get_dtypes_from_model(
 def get_dtypes_from_table(
     engine: Engine,
     table_name: str,
-    name_to_column_mapping: Mapping[str, str]
+    name_to_column_mapping: Optional[Mapping[str, str]] = None
 ) -> Dict[str, StructuredDtype]:
     """
     Query database to get dtypes of the given table.
     :param engine: sqlalchemy engine for the database.
     :param table_name: the table name for which to get the dtypes. Can include project_id and dataset on
         BigQuery, e.g. 'project_id.dataset.table_name'
-    :param name_to_column_mapping: Mapping from series-name to column-names. The names in the
-        returned dictionary will be reverse mapped with this mapping. If incomplete, the table's column names
-        will be assumed to be the series-names.
+    :param name_to_column_mapping: Optional mapping from series-name to column-names. The names in the
+        returned dictionary will be reverse mapped with this mapping. If a column name is missing, then the
+        table's column name will be assumed to be the series-names.
     :return: Dictionary with as key the series names, and as values the dtype of the matching column.
     """
+    name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
+
     filters_expr = []
     if is_postgres(engine):
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
