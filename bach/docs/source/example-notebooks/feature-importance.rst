@@ -13,8 +13,8 @@ achieving a conversion goal. Such features can be any interactions with your pro
 run this directly using the open model hub is currently still in development; `see the draft PR 
 <https://github.com/objectiv/objectiv-analytics/pull/662/>`_. 
 
-The dataset used in this example is the same as in the `Demo </docs/home/try-the-demo/>`_. To run this on your
-own data, see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`.
+The dataset used here is the same as in `Objectiv Up </docs/home/up/>`__. To run this on your own data, see 
+how to :doc:`get started in your notebook <../get-started-in-your-notebook>`.
 
 Get started
 -----------
@@ -59,7 +59,7 @@ use as predictors.
 
 For this example, we define the conversion goal as reaching the :doc:`modeling section <../index>` in our 
 documentation. We want to model the impact of users clicking/pressing in any of the main sections 
-(`root locations <http://localhost:3000/docs/taxonomy/reference/location-contexts/RootLocationContext>`_) in 
+(`root locations <http://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext>`_) in 
 our website. This works for our example, as there are only a limited amount of root locations in the dataset, 
 and we make an assumption that there is as causal relation between the number of clicks in these root 
 locations and conversion. Make sure to think of this assumption when using this model on your own data.
@@ -356,13 +356,23 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-Where to go next
-----------------
+That's it! The model to run this directly using the open model hub is currently still in development; 
+`see the draft PR <https://github.com/objectiv/objectiv-analytics/pull/662/>`_. 
 
-The model to run this directly using the open model hub is currently still in development; `see the draft PR 
-<https://github.com/objectiv/objectiv-analytics/pull/662/>`_. 
+`Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 
-Now that you've seen how to model feature importance, the best next step is to 
-:doc:`see the basic user intent example notebook <./user-intent>`.
+Next Steps
+----------
+
+Try the notebooks in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in under 5 minutes, 
+and play with the included example notebooks yourself.
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* :doc:`Basic User Intent notebook <./user-intent>` - easily run basic User Intent analysis with Objectiv.

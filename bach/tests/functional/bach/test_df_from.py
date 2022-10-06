@@ -6,41 +6,82 @@ tests for:
  * DataFrame.from_model()
 
 """
+from datetime import date, datetime
+
 import pytest
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
+from sql_models.constants import DBDialect
 from sql_models.model import CustomSqlModelBuilder, SqlModel, Materialization
 from sql_models.sql_generator import to_sql
-from sql_models.util import is_postgres, is_bigquery, is_athena
+from sql_models.util import is_athena
 from tests.conftest import DB_ATHENA_LOCATION
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
-def _create_test_table(engine: Engine, table_name: str):
-    # TODO: insert data too, and check in the tests below that we get that data back in the DataFrame
-    #  https://github.com/objectiv/objectiv-analytics/issues/1093
-    if is_athena(engine):
-        with engine.connect() as conn:
-            conn.execute(f'drop table if exists {table_name};')
-            conn.execute(
-                (
-                    f'create external table {table_name}'
-                    '(a bigint, b string, c double, d date, e timestamp, f boolean) \n'
-                    f"location '{DB_ATHENA_LOCATION}/{table_name}/';"
+def _create_test_table(engine: Engine, table_name: str, add_data: bool):
+    all_sql_strings = {
+        DBDialect.POSTGRES: f'''
+                drop table if exists {table_name};
+                create table {table_name}(
+                    a bigint,
+                    b text,
+                    c double precision,
+                    d date,
+                    e timestamp,
+                    f boolean
+                );
+
+                insert into {table_name}(a, b, c, d, e, f) values
+                (123, 'test', 1.2345, '2022-01-01', '2000-03-04 05:43:21', true);
+            ''',
+        DBDialect.ATHENA: f'''
+                drop table if exists {table_name};
+                create external table {table_name}(
+                    a bigint,
+                    b string,
+                    c double,
+                    d date,
+                    e timestamp,
+                    f boolean
                 )
-            )
-            return
-    if is_postgres(engine):
-        sql = f'drop table if exists {table_name}; ' \
-              f'create table {table_name}(a bigint, b text, c double precision, d date, e timestamp, f boolean); '
-    elif is_bigquery(engine):
-        sql = f'drop table if exists {table_name}; ' \
-              f'create table {table_name}(a int64, b string, c float64, d date, e timestamp, f bool); '
-    else:
-        raise Exception('Incomplete tests')
+                location '{DB_ATHENA_LOCATION}/{table_name}/';
+
+                insert into {table_name}(a, b, c, d, e, f) values
+                (123, 'test', 1.2345, DATE '2022-01-01', TIMESTAMP '2000-03-04 05:43:21', true);
+            ''',
+        DBDialect.BIGQUERY: f'''
+                drop table if exists {table_name};
+                create table {table_name}(
+                    a int64,
+                    b string,
+                    c float64,
+                    d date,
+                    e timestamp,
+                    f bool
+                );
+
+                insert into {table_name}(a, b, c, d, e, f) values
+                (123, 'test', 1.2345, '2022-01-01', '2000-03-04 05:43:21', true);
+            '''
+    }
+    sql_strings = all_sql_strings[DBDialect.from_engine(engine)]
+    sql_statements = [s for s in sql_strings.split(';') if s.strip()]
+    assert len(sql_statements) == 3
+
+    if not add_data:  # Only keep the 'drop table' and 'create table' statements. This saves a query.
+        sql_statements = sql_statements[:2]
+
+    if not is_athena(engine):
+        # Athena does not support combining multiple statements in one call to conn.execute(). Other
+        # databases do support that.
+        combined = '; '.join(sql_statements)
+        sql_statements = [combined]
+
     with engine.connect() as conn:
-        conn.execute(sql)
+        for sql_statement in sql_statements:
+            conn.execute(sql_statement)
 
 
 @pytest.mark.skip_postgres
@@ -49,14 +90,11 @@ def test_from_table_structural_big_query(engine, unique_table_test_name):
     # Test specifically for structural types on BigQuery. We don't support that on Postgres, so we skip
     # postgres for this test
     table_name = unique_table_test_name
-    if is_bigquery(engine):
-        sql = f'drop table if exists {table_name}; ' \
-              f'create table {table_name}(' \
-              f'a INT64, ' \
-              f'b STRUCT<f1 INT64, f2 FLOAT64, f3 STRUCT<f31 ARRAY<INT64>, f32 BOOL>>, ' \
-              f'c ARRAY<STRUCT<f1 INT64, f2 INT64>>);'
-    else:
-        raise Exception('Incomplete tests')
+    sql = f'drop table if exists {table_name}; ' \
+          f'create table {table_name}(' \
+          f'a INT64, ' \
+          f'b STRUCT<f1 INT64, f2 FLOAT64, f3 STRUCT<f31 ARRAY<INT64>, f32 BOOL>>, ' \
+          f'c ARRAY<STRUCT<f1 INT64, f2 INT64>>);'
     with engine.connect() as conn:
         conn.execute(sql)
 
@@ -71,7 +109,7 @@ def test_from_table_structural_big_query(engine, unique_table_test_name):
 
 def test_from_table_basic(engine, unique_table_test_name):
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=True)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['a'])
     assert df.index_dtypes == {'a': 'int64'}
@@ -83,7 +121,10 @@ def test_from_table_basic(engine, unique_table_test_name):
     with pytest.raises(Exception, match="No models to compile"):
         to_sql(dialect=engine.dialect, model=df.base_node)
     assert df.base_node.references == {}
-    df.to_pandas()  # test that the main function works on the created DataFrame
+    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
+    # All other functional tests that we have use a CTE as base data. So this is the only place where we
+    # actually test functionality of table-based DataFrames.
+    _assert_df_supports_basic_operations(df)
 
     # now create same DataFrame, but specify all_dtypes.
     df_all_dtypes = DataFrame.from_table(
@@ -93,13 +134,39 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
+def _assert_df_supports_basic_operations(df: DataFrame):
+    """
+    Helper for test_from_table_basic() and test_from_model_basic(). Does some basic operations, and asserts
+    we get the expected output.
+    :param df: DataFrame based on the table as created by `_create_test_table()`.
+    """
+    df = df.copy()
+    df_original = df.copy()
+    df['b'] = df['b'] + '-test'
+    df['c'] = df['c'] + 100
+    df = df.append(df)
+    df = df.sort_index()
+    df = df.merge(df_original, on=['a'])
+    assert_equals_data(
+        df,
+        use_to_pandas=True,
+        expected_columns=['a', 'b_x', 'c_x', 'd_x', 'e_x', 'f_x', 'b_y', 'c_y', 'd_y', 'e_y', 'f_y'],
+        expected_data=[
+            [123, 'test-test', 101.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True,
+             'test', 1.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True],
+            [123, 'test-test', 101.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True,
+             'test', 1.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True]
+        ]
+    )
+
+
 @pytest.mark.skip_bigquery_todo()
 @pytest.mark.skip_athena_todo()
 def test_from_model_basic(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=True)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['a'])
@@ -109,7 +176,10 @@ def test_from_model_basic(engine, unique_table_test_name):
     assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.references == {}
-    df.to_pandas()  # test that the main function works on the created DataFrame
+    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
+    # All other functional tests that we have use a CTE as base data. So this is the only place where we
+    # actually test functionality of sqlmodel-based DataFrames.
+    _assert_df_supports_basic_operations(df)
 
     # now create same DataFrame, but specify all_dtypes.
     df_all_dtypes = DataFrame.from_model(
@@ -122,7 +192,7 @@ def test_from_model_basic(engine, unique_table_test_name):
 def test_from_table_column_ordering(engine, unique_table_test_name):
     # Create a Dataframe in which the index is not the first column in the table.
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=False)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['b'])
     assert df.index_dtypes == {'b': 'string'}
@@ -150,7 +220,7 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
 
     # Create a Dataframe in which the index is not the first column in the table.
     table_name = unique_table_test_name
-    _create_test_table(engine, table_name)
+    _create_test_table(engine, table_name, add_data=False)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['b'])

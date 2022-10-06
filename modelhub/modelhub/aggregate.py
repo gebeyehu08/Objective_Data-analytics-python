@@ -2,13 +2,12 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
-from bach.series import Series
+from bach.series import Series, SeriesString, SeriesInt64
 from sql_models.constants import NotSet, not_set
 from typing import cast, List, Union, TYPE_CHECKING
 
-from sql_models.util import is_bigquery, is_postgres
-
 from modelhub.decorators import use_only_required_objectiv_series
+from modelhub.series import SeriesLocationStack
 from modelhub.util import check_groupby
 
 if TYPE_CHECKING:
@@ -16,6 +15,7 @@ if TYPE_CHECKING:
     from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, Series]], str, Series, NotSet]
+LocationStackType = Union[str, SeriesString, SeriesLocationStack, SeriesInt64]
 
 
 class Aggregate:
@@ -427,17 +427,22 @@ class Aggregate:
         if _end_date is not None:
             data = data[data['moment'] < _end_date]
 
-        # in BigQuery columns cannot start with numbers
+        # prepare cohort_distance value as a valid column name based on engine
+        # e.g in BigQuery columns cannot start with numbers, and Athena does not allow dots in column names.
+        cd_series = data['cohort_distance'].copy_override_type(bach.SeriesFloat64).round()
+        formatted_cd_series = (
+            cd_series.astype(dtype=bach.SeriesString.dtype).copy_override_type(bach.SeriesString)
+        )
+        formatted_cd_series = formatted_cd_series.str.replace('.0', '')
         data['cohort_distance_prefix'] = '_'
-        data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
-        data['cohort_distance'] = data['cohort_distance_prefix'] + data['cohort_distance']
+        data['cohort_distance'] = data['cohort_distance_prefix'] + formatted_cd_series
 
         retention_matrix = data.groupby(['first_cohort',
                                          'cohort_distance']).agg({'user_id': 'nunique'}).unstack(
             level='cohort_distance')
 
         # renaming columns, removing string attached after unstacking
-        column_name_map = {col: col.replace('__user_id_nunique', '').replace('.0', '')
+        column_name_map = {col: col.replace('__user_id_nunique', '')
                            for col in retention_matrix.data_columns}
         retention_matrix = retention_matrix.rename(columns=column_name_map)
 
@@ -479,14 +484,16 @@ class Aggregate:
 
     @staticmethod
     def drop_off_locations(data: bach.DataFrame,
-                           location_stack: 'SeriesLocationStack' = None,
+                           location_stack: LocationStackType = None,
                            groupby: Union[List[Union[str, Series]], str, Series] = 'user_id',
                            percentage=False) -> bach.DataFrame:
         """
         Find the locations/features where users drop off, and their usage/share.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location_stack: the slice of the location stack to consider.
+        :param location_stack: the column of which to create the drop-off locations.
+            Can be a string of the name of the column in data, or a Series with the
+            same base node as `data`. If None the default location stack is taken.
 
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
             - if `None`, the whole location stack is taken.
@@ -498,28 +505,28 @@ class Aggregate:
 
         data = data.copy()
 
-        if location_stack is not None:
-            data['__feature_nice_name'] = location_stack.ls.nice_name
-        else:
-            data['__feature_nice_name'] = data.location_stack.ls.nice_name
+        column = location_stack or data['location_stack']
+        if type(column) == str:
+            column = data[column]
+
+        data['__feature_nice_name'] = column
+        if type(column) == SeriesLocationStack:
+            # extract the nice name per event
+            data['__feature_nice_name'] = column.ls.nice_name
 
         # need to drop missing values because we don't
         # want to get as a last step None value
         data = data.dropna(subset='__feature_nice_name')
 
-        by = [data['moment']]
-        series = data.groupby(groupby)['__feature_nice_name'].sort_by_series(by=by,
-                                                                             ascending=True)
-        series_json_array = cast(bach.SeriesString, series).to_json_array()
+        window = data.sort_values(by='moment', ascending=True).groupby(groupby).window(
+            end_boundary=bach.partitioning.WindowFrameBoundary.FOLLOWING,
+        )
+        drop_loc = window['__feature_nice_name'].window_last_value()
+        drop_loc = drop_loc.materialize(distinct=True)
 
-        drop_loc = series_json_array.json[-1].materialize()
-
+        result = drop_loc.value_counts(normalize=percentage).to_frame()
         if percentage:
-            total_count = drop_loc.count().value
-            drop_loc = (drop_loc.value_counts() / total_count) * 100
-            drop_loc = drop_loc.to_frame().rename(
-                columns={'value_counts': 'percentage'})
-            drop_loc = drop_loc.sort_values(by='percentage', ascending=False)
-            return drop_loc
-
-        return drop_loc.value_counts().to_frame()
+            result = result.rename(columns={'value_counts': 'percentage'})
+            result['percentage'] *= 100
+            result = result.sort_values(by='percentage', ascending=False)
+        return result

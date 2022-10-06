@@ -11,11 +11,6 @@ import { TrackerConfig } from '@objectiv/tracker-core';
  */
 export type BrowserTrackerConfig = Omit<TrackerConfig, 'platform'> & {
   /**
-   * The collector endpoint URL.
-   */
-  endpoint?: string;
-
-  /**
    * Optional. Whether to track application loaded events automatically. Enabled by default.
    */
   trackApplicationLoadedEvent?: boolean;

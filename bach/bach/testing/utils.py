@@ -102,8 +102,8 @@ def assert_equals_data(
     else:
         column_names, db_values = _get_to_pandas_data(bt)
 
-    assert len(db_values) == len(expected_data)
-    assert column_names == expected_columns
+    assert len(db_values) == len(expected_data), f'{len(db_values)} != {len(expected_data)}'
+    assert column_names == expected_columns, f'{column_names} != {expected_columns}'
 
     _date_freq = 'ms' if is_athena(bt.engine) else 'us'
     for i, df_row in enumerate(db_values):
