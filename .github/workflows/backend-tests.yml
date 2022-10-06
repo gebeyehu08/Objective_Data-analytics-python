@@ -12,6 +12,14 @@ on:
 jobs:
   typecheck-and-run-tests:
     runs-on: ubuntu-latest
+    services:
+      objectiv-validator:
+        image: node:16
+        ports:
+          - 8082:8082
+        volumes:
+          - /schema/validation:/schema
+        options: --entrypoint /schema/start.sh
     strategy:
       max-parallel: 4
       matrix:

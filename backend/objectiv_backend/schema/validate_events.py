@@ -47,16 +47,13 @@ def validate_event_adheres_to_schema(event: EventData) -> List[ErrorInfo]:
         if response.status_code == 200:
             # we have a valid response, let's check the validation result
             result = response.json()
-            print(f'git validation result: {result}')
             if not result['success']:
                 for e in result['error']['issues']:
                     errors.append(ErrorInfo(data=event, info=e))
 
-    except e:
-        errors.append(ErrorInfo(data=event, info=f'validation failed {e}'))
+    except requests.exceptions.ConnectionError as e:
+        errors.append(ErrorInfo(data=event, info=f'calling validation service failed: {e}'))
 
-    # print(f'validation called for {event} // {response.status_code} // {response.json()}')
-    print(f'returning {errors}')
     return errors
 
 
