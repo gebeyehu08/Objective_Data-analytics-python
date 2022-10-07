@@ -408,6 +408,36 @@ const MarketingContext = z.object({
 }).strict();
 
 /**
+ * A Location Context that describes a section of the UI containing a media player.
+ */
+const MediaPlayerContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.MediaPlayerContext),
+}).strict();
+
+/**
+ * A Location Context that describes a section of the UI containing navigational elements, for example a menu.
+ */
+const NavigationContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.NavigationContext),
+}).strict();
+
+/**
  * A GlobalContext describing the path where the user is when an event is sent.
  */
 const PathContext = z.object({
@@ -454,36 +484,6 @@ const RootLocationContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.RootLocationContext),
-}).strict();
-
-/**
- * A Location Context that describes a section of the UI containing a media player.
- */
-const MediaPlayerContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.MediaPlayerContext),
-}).strict();
-
-/**
- * A Location Context that describes a section of the UI containing navigational elements, for example a menu.
- */
-const NavigationContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.NavigationContext),
 }).strict();
 
 /**
@@ -1153,12 +1153,12 @@ entityMap = {
   'LinkContext': LinkContext,
   'LocaleContext': LocaleContext,
   'MarketingContext': MarketingContext,
+  'MediaPlayerContext': MediaPlayerContext,
+  'NavigationContext': NavigationContext,
   'PathContext': PathContext,
   'SessionContext': SessionContext,
   'PressableContext': PressableContext,
   'RootLocationContext': RootLocationContext,
-  'MediaPlayerContext': MediaPlayerContext,
-  'NavigationContext': NavigationContext,
   'OverlayContext': OverlayContext,
 };
 
@@ -1198,11 +1198,11 @@ exports.InputValueContext = InputValueContext;
 exports.LinkContext = LinkContext;
 exports.LocaleContext = LocaleContext;
 exports.MarketingContext = MarketingContext;
+exports.MediaPlayerContext = MediaPlayerContext;
+exports.NavigationContext = NavigationContext;
 exports.PathContext = PathContext;
 exports.SessionContext = SessionContext;
 exports.RootLocationContext = RootLocationContext;
-exports.MediaPlayerContext = MediaPlayerContext;
-exports.NavigationContext = NavigationContext;
 exports.OverlayContext = OverlayContext;
 exports.PressableContextEntity = PressableContextEntity;
 exports.PressableContext = PressableContext;
