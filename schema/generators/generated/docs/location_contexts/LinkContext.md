@@ -1,5 +1,5 @@
 # LinkContext
-A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains an href.
+A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains a href.
 
 ### Properties
 `string` href: URL (href) the link points to.

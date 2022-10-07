@@ -1,5 +1,5 @@
 # NonInteractiveEvent
-
+The parent of [Events](/taxonomy/events) that are not directly triggered by a user action.
 
 ### Properties
 `string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.

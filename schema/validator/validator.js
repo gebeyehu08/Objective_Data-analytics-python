@@ -608,91 +608,6 @@ const GlobalContexts = z
   );
 
 /**
- * The parent of Events that are the direct result of a user interaction, e.g. a button click.
- */
-const InteractiveEvent = z.object({
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.InteractiveEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict()
-  .superRefine(
-    requiresContext({
-      scope: [
-        {
-          context: ContextTypes.enum.RootLocationContext,
-          position: 0,
-        },
-      ],
-    })
-  )
-  .superRefine(
-    requiresContext({
-      scope: [
-        {
-          context: ContextTypes.enum.PathContext,
-        },
-      ],
-    })
-  );
-
-/**
- * The parent of Events that are not directly triggered by a user action.
- */
-const NonInteractiveEvent = z.object({
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.NonInteractiveEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
-
-/**
  * A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
  */
 const ApplicationLoadedEvent = z.object({
@@ -764,6 +679,39 @@ const FailureEvent = z.object({
 }).strict();
 
 /**
+ * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
+ */
+const HiddenEvent = z.object({
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.HiddenEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
  * Event triggered when user input is modified.
  */
 const InputChangeEvent = z.object({
@@ -817,10 +765,9 @@ const InputChangeEvent = z.object({
   );
 
 /**
- * An InteractiveEvent that is sent when a user presses on a pressable element
- * (like a link, button, icon).
+ * The parent of Events that are the direct result of a user interaction, e.g. a button click.
  */
-const PressEvent = z.object({
+const InteractiveEvent = z.object({
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -839,7 +786,7 @@ const PressEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(EventTypes.enum.PressEvent),
+  _type: z.literal(EventTypes.enum.InteractiveEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -853,115 +800,21 @@ const PressEvent = z.object({
     requiresContext({
       scope: [
         {
-          context: ContextTypes.enum.PressableContext,
+          context: ContextTypes.enum.RootLocationContext,
+          position: 0,
+        },
+      ],
+    })
+  )
+  .superRefine(
+    requiresContext({
+      scope: [
+        {
+          context: ContextTypes.enum.PathContext,
         },
       ],
     })
   );
-
-/**
- * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
- */
-const HiddenEvent = z.object({
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.HiddenEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
-
-/**
- * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
- */
-const VisibleEvent = z.object({
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.VisibleEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
-
-/**
- * A NonInteractiveEvent that is sent when a user action is successfully completed,
- * like sending an email form.
- */
-const SuccessEvent = z.object({
-  /**
-   * Success message.
-   */
-  message: z.string(),
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.SuccessEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
 
 /**
  * The parent of non-interactive events that are triggered by a media player.
@@ -1139,6 +992,153 @@ const MediaStopEvent = z.object({
 }).strict();
 
 /**
+ * The parent of Events that are not directly triggered by a user action.
+ */
+const NonInteractiveEvent = z.object({
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.NonInteractiveEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
+ * An InteractiveEvent that is sent when a user presses on a pressable element
+ * (like a link, button, icon).
+ */
+const PressEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.PressEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict()
+  .superRefine(
+    requiresContext({
+      scope: [
+        {
+          context: ContextTypes.enum.PressableContext,
+        },
+      ],
+    })
+  );
+
+/**
+ * A NonInteractiveEvent that is sent when a user action is successfully completed,
+ * like sending an email form.
+ */
+const SuccessEvent = z.object({
+  /**
+   * Success message.
+   */
+  message: z.string(),
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.SuccessEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
+ * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
+ */
+const VisibleEvent = z.object({
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.VisibleEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
  * Set validators in validatorMap for the refinements.
  */
 entityMap = {
@@ -1169,20 +1169,20 @@ entityMap = {
  * - Invalid event: { success: false, error: <error collection> }.
  */
 const validate = z.union([
-  InteractiveEvent,
-  NonInteractiveEvent,
   ApplicationLoadedEvent,
   FailureEvent,
-  InputChangeEvent,
-  PressEvent,
   HiddenEvent,
-  VisibleEvent,
-  SuccessEvent,
+  InputChangeEvent,
+  InteractiveEvent,
   MediaEvent,
   MediaLoadEvent,
   MediaPauseEvent,
   MediaStartEvent,
   MediaStopEvent,
+  NonInteractiveEvent,
+  PressEvent,
+  SuccessEvent,
+  VisibleEvent,
 ]).safeParse;
 
 exports.ContextTypes = ContextTypes;
@@ -1208,19 +1208,19 @@ exports.PressableContextEntity = PressableContextEntity;
 exports.PressableContext = PressableContext;
 exports.LocationStack = LocationStack;
 exports.GlobalContexts = GlobalContexts;
-exports.InteractiveEvent = InteractiveEvent;
-exports.NonInteractiveEvent = NonInteractiveEvent;
 exports.ApplicationLoadedEvent = ApplicationLoadedEvent;
 exports.FailureEvent = FailureEvent;
-exports.InputChangeEvent = InputChangeEvent;
-exports.PressEvent = PressEvent;
 exports.HiddenEvent = HiddenEvent;
-exports.VisibleEvent = VisibleEvent;
-exports.SuccessEvent = SuccessEvent;
+exports.InputChangeEvent = InputChangeEvent;
+exports.InteractiveEvent = InteractiveEvent;
 exports.MediaEvent = MediaEvent;
 exports.MediaLoadEvent = MediaLoadEvent;
 exports.MediaPauseEvent = MediaPauseEvent;
 exports.MediaStartEvent = MediaStartEvent;
 exports.MediaStopEvent = MediaStopEvent;
+exports.NonInteractiveEvent = NonInteractiveEvent;
+exports.PressEvent = PressEvent;
+exports.SuccessEvent = SuccessEvent;
+exports.VisibleEvent = VisibleEvent;
 exports.entityMap = entityMap;
 exports.validate = validate;

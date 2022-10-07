@@ -235,9 +235,70 @@
         ]
       }
     },
+    "ApplicationLoadedEvent": {
+      "documentation": [
+        { "description": "A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is emitted after an application (eg. SPA) or a website has finished loading.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent"
+    },
+    "FailureEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that is sent when a user action results in an error, \nlike an invalid email when sending a form.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action results in a error, like an invalid email when sending a form.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties. The message is an error code or short message captured from the occurring error. This is purely for descriptive purposes.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent",
+      "properties": {
+        "message": {
+          "description": "Failure message.",
+          "type": "string"
+        }
+      }
+    },
+    "HiddenEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become invisible.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent"
+    },
+    "InputChangeEvent": {
+      "documentation": [
+        { "description": "Event triggered when user input is modified.", "type": "text", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that's triggered when user input is modified. Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value from the user.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "InteractiveEvent",
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "scope": [
+              {
+                "context": "InputContext"
+              }
+            ]
+          },
+          {
+            "type": "MatchContextProperty",
+            "scope": [
+              {
+                "contextA": "InputContext",
+                "contextB": "InputValueContext",
+                "property": "id"
+              }
+            ]
+          }
+        ]
+      }
+    },
     "InteractiveEvent": {
       "documentation": [
-        { "description": "The parent of Events that are the direct result of a user interaction, e.g. a button click.", "type": "text", "target": "primary" }
+        { "description": "The parent of Events that are the direct result of a user interaction, e.g. a button click.", "type": "text", "target": "primary" },
+        { "description": "The parent of [Events](/taxonomy/events) that are the direct result of a user interaction, e.g. a button click.", "type": "markdown", "target": "primary" }
       ],
       "parent": "AbstractEvent",
       "properties": {
@@ -269,103 +330,11 @@
         ]
       }
     },
-    "NonInteractiveEvent": {
-      "documentation": [
-        { "description": "The parent of Events that are not directly triggered by a user action.", "type": "text", "target": "primary" }
-      ],
-      "parent": "AbstractEvent"
-    },
-    "ApplicationLoadedEvent": {
-      "documentation": [
-        { "description": "A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.", "type": "text", "target": "primary" }
-      ],
-      "parent": "NonInteractiveEvent"
-    },
-    "FailureEvent": {
-      "documentation": [
-        { "description": "A NonInteractiveEvent that is sent when a user action results in an error, \nlike an invalid email when sending a form.", "type": "text", "target": "primary" }
-      ],
-      "parent": "NonInteractiveEvent",
-      "properties": {
-        "message": {
-          "description": "Failure message.",
-          "type": "string"
-        }
-      }
-    },
-    "InputChangeEvent": {
-      "documentation": [
-        { "description": "Event triggered when user input is modified.", "type": "text", "target": "primary" }
-      ],
-      "parent": "InteractiveEvent",
-      "validation": {
-        "rules": [
-          {
-            "type": "RequiresLocationContext",
-            "scope": [
-              {
-                "context": "InputContext"
-              }
-            ]
-          },
-          {
-            "type": "MatchContextProperty",
-            "scope": [
-              {
-                "contextA": "InputContext",
-                "contextB": "InputValueContext",
-                "property": "id"
-              }
-            ]
-          }
-        ]
-      }
-    },
-    "PressEvent": {
-      "documentation": [
-        { "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).", "type": "text", "target": "primary" }
-      ],
-      "parent": "InteractiveEvent",
-      "validation": {
-        "rules": [
-          {
-            "type": "RequiresLocationContext",
-            "scope": [
-              {
-                "context": "PressableContext"
-              }
-            ]
-          }
-        ]
-      }
-    },
-    "HiddenEvent": {
-      "documentation": [
-        { "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.", "type": "text", "target": "primary" }
-      ],
-      "parent": "NonInteractiveEvent"
-    },
-    "VisibleEvent": {
-      "documentation": [
-        { "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.", "type": "text", "target": "primary" }
-      ],
-      "parent": "NonInteractiveEvent"
-    },
-    "SuccessEvent": {
-      "documentation": [
-        { "description": "A NonInteractiveEvent that is sent when a user action is successfully completed, \nlike sending an email form.", "type": "text", "target": "primary" }
-      ],
-      "parent": "NonInteractiveEvent",
-      "properties": {
-        "message": {
-          "description": "Success message.",
-          "type": "string"
-        }
-      }
-    },
     "MediaEvent": {
       "documentation": [
-        { "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.", "type": "text", "target": "primary" }
+        { "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.", "type": "text", "target": "primary" },
+        { "description": "The parent of [non-interactive events](/taxonomy/reference/events/NonInteractiveEvent.md) that are triggered by a media player. It requires a [MediaPlayerContext](/taxonomy/reference/location-contexts/MediaPlayerContext) to detail the origin of the event.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "NonInteractiveEvent",
       "validation": {
@@ -383,27 +352,84 @@
     },
     "MediaLoadEvent": {
       "documentation": [
-        { "description": "A MediaEvent that's emitted after a media item completes loading.", "type": "text", "target": "primary" }
+        { "description": "A MediaEvent that's emitted after a media item completes loading.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item completes loading.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "MediaEvent"
     },
     "MediaPauseEvent": {
       "documentation": [
-        { "description": "A MediaEvent that's emitted after a media item pauses playback.", "type": "text", "target": "primary" }
+        { "description": "A MediaEvent that's emitted after a media item pauses playback.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item pauses playback.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "MediaEvent"
     },
     "MediaStartEvent": {
       "documentation": [
-        { "description": "A MediaEvent that's emitted after a media item starts playback.", "type": "text", "target": "primary" }
+        { "description": "A MediaEvent that's emitted after a media item starts playback.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item starts playback.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "MediaEvent"
     },
     "MediaStopEvent": {
       "documentation": [
-        { "description": "A MediaEvent that's emitted after a media item stops playback.", "type": "text", "target": "primary" }
+        { "description": "A MediaEvent that's emitted after a media item stops playback.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item stops playback.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "MediaEvent"
+    },
+    "NonInteractiveEvent": {
+      "documentation": [
+        { "description": "The parent of Events that are not directly triggered by a user action.", "type": "text", "target": "primary" },
+        { "description": "The parent of [Events](/taxonomy/events) that are not directly triggered by a user action.", "type": "markdown", "target": "primary" }
+      ],
+      "parent": "AbstractEvent"
+    },
+    "PressEvent": {
+      "documentation": [
+        { "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).", "type": "text", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is sent when a user presses on a pressable element (like a link, button, icon). Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value(s) from the user.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "InteractiveEvent",
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "scope": [
+              {
+                "context": "PressableContext"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "SuccessEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that is sent when a user action is successfully completed, \nlike sending an email form.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action is successfully completed, like sending an email form.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties. The message is an error code or short message captured from the occurring success event. This is purely for descriptive purposes.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent",
+      "properties": {
+        "message": {
+          "description": "Success message.",
+          "type": "string"
+        }
+      }
+    },
+    "VisibleEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become visible.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent"
     }
   },
   "contexts": {
@@ -534,7 +560,7 @@
     "LinkContext": {
       "documentation": [
         { "description": "A PressableContext that contains a destination (href).", "type": "text", "target": "primary" },
-        { "description": "A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains an href.", "type": "markdown", "target": "primary" },
+        { "description": "A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains a href.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the link element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "PressableContext",
