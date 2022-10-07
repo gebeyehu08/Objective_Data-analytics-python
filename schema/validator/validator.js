@@ -438,6 +438,21 @@ const NavigationContext = z.object({
 }).strict();
 
 /**
+ * A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.
+ */
+const OverlayContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.OverlayContext),
+}).strict();
+
+/**
  * A GlobalContext describing the path where the user is when an event is sent.
  */
 const PathContext = z.object({
@@ -450,6 +465,21 @@ const PathContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.PathContext),
+}).strict();
+
+/**
+ * A Location Context that uniquely represents the top-level UI location of the user.
+ */
+const RootLocationContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.RootLocationContext),
 }).strict();
 
 /**
@@ -469,36 +499,6 @@ const SessionContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.SessionContext),
-}).strict();
-
-/**
- * A Location Context that uniquely represents the top-level UI location of the user.
- */
-const RootLocationContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.RootLocationContext),
-}).strict();
-
-/**
- * A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.
- */
-const OverlayContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.OverlayContext),
 }).strict();
 
 /**
@@ -1155,11 +1155,11 @@ entityMap = {
   'MarketingContext': MarketingContext,
   'MediaPlayerContext': MediaPlayerContext,
   'NavigationContext': NavigationContext,
+  'OverlayContext': OverlayContext,
   'PathContext': PathContext,
-  'SessionContext': SessionContext,
   'PressableContext': PressableContext,
   'RootLocationContext': RootLocationContext,
-  'OverlayContext': OverlayContext,
+  'SessionContext': SessionContext,
 };
 
 /**
@@ -1200,10 +1200,10 @@ exports.LocaleContext = LocaleContext;
 exports.MarketingContext = MarketingContext;
 exports.MediaPlayerContext = MediaPlayerContext;
 exports.NavigationContext = NavigationContext;
-exports.PathContext = PathContext;
-exports.SessionContext = SessionContext;
-exports.RootLocationContext = RootLocationContext;
 exports.OverlayContext = OverlayContext;
+exports.PathContext = PathContext;
+exports.RootLocationContext = RootLocationContext;
+exports.SessionContext = SessionContext;
 exports.PressableContextEntity = PressableContextEntity;
 exports.PressableContext = PressableContext;
 exports.LocationStack = LocationStack;

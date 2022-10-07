@@ -428,6 +428,12 @@
       ],
       "parent": "AbstractContext"
     },
+    "AbstractLocationContext": {
+      "documentation": [
+        { "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.", "type": "text", "intent": "primary" }
+      ],
+      "parent": "AbstractContext"
+    },
     "ApplicationContext": {
       "documentation": [
         { "description": "A GlobalContext describing in which app the event happens, like a website or iOS app.", "type": "text", "intent": "primary" },
@@ -623,6 +629,14 @@
       ],
       "parent": "AbstractLocationContext"
     },
+    "OverlayContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.", "type": "text", "intent": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a section of the UI that represents an overlay, i.e. a Modal.", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the overlay element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "intent": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
     "PathContext": {
       "documentation": [
         { "description": "A GlobalContext describing the path where the user is when an event is sent.", "type": "text", "intent": "primary" },
@@ -630,6 +644,22 @@
         { "description": ":::info setting of the id & type\nThe tracker will automatically set the `id` and `_type` based on path on web (including URL parameters, hashes) and pathname on native. When this is not possible on a specific platform, it will ask for a manual `id` and `_type` to be set.\n:::", "type": "markdown", "intent": "admonition" }
       ],
       "parent": "AbstractGlobalContext"
+    },
+    "PressableContext": {
+      "documentation": [
+        { "description": "A Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.", "type": "text", "intent": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes an interactive element (like a link, button, icon), that the user can press.", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the `id` and `_type` based on the pressable element. When this is not possible on a specific platform, it will ask for a manual `id` and `_type` to be set.\n:::", "type": "markdown", "intent": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "RootLocationContext": {
+      "documentation": [
+        { "description": "A Location Context that uniquely represents the top-level UI location of the user.", "type": "text", "intent": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that uniquely represents the top-level UI location of the user.", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the top-level UI location of the user. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "intent": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
     },
     "SessionContext": {
       "documentation": [
@@ -644,30 +674,6 @@
           "type": "integer"
         }
       }
-    },
-    "AbstractLocationContext": {
-      "documentation": [
-        { "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.", "type": "text", "intent": "primary" }
-      ],
-      "parent": "AbstractContext"
-    },
-    "PressableContext": {
-      "documentation": [
-        { "description": "A Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.", "type": "text", "intent": "primary" }
-      ],
-      "parent": "AbstractLocationContext"
-    },
-    "RootLocationContext": {
-      "documentation": [
-        { "description": "A Location Context that uniquely represents the top-level UI location of the user.", "type": "text", "intent": "primary" }
-      ],
-      "parent": "AbstractLocationContext"
-    },
-    "OverlayContext": {
-      "documentation": [
-        { "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.", "type": "text", "intent": "primary" }
-      ],
-      "parent": "AbstractLocationContext"
     }
   }
 }
