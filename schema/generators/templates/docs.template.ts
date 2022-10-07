@@ -22,7 +22,7 @@ getEntityNames().forEach((entityName) => {
   const entityProperties = getEntityProperties(entity);
   const entityParents = getEntityParents(entity);
   const primaryDescription = getEntityMarkdownDescription(entity, 'primary');
-  const admonition = getEntityMarkdownDescription(entity, 'admonition');
+  const admonitionDescription = getEntityMarkdownDescription(entity, 'admonition');
 
   const isAbstract = entityName.startsWith('Abstract');
   const isLocationContext = entityParents.includes('AbstractLocationContext');
@@ -49,7 +49,7 @@ getEntityNames().forEach((entityName) => {
 
     docsWriter.writeEndOfLine();
 
-    docsWriter.writeLine(admonition);
+    docsWriter.writeLine(admonitionDescription);
 
     // TODO we have some admonitions in the current docs that would be nice to keep
     // TODO Think of how can we add those to the base_schema OR use a map here, e.g. {entityName: admonition_text}
