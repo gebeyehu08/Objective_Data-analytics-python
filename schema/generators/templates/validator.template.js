@@ -9,7 +9,7 @@ const ZodWriter_1 = require("../writers/ZodWriter");
 const common_1 = require("./common");
 const schemaVersion = base_schema_json_1.default.version.base_schema;
 const descriptionsType = 'text';
-const descriptionsIntent = 'primary';
+const descriptionsTarget = 'primary';
 const validatorGenerator = (writer, model) => {
     const zodWriter = new ZodWriter_1.ZodWriter(writer);
     zodWriter.writeEnumeration({
@@ -29,10 +29,10 @@ const validatorGenerator = (writer, model) => {
         const properties = common_1.getEntityProperties(context);
         zodWriter.writeObject({
             name: contextName,
-            description: common_1.getEntityDescription(context, descriptionsType, descriptionsIntent),
+            description: common_1.getEntityDescription(context, descriptionsType, descriptionsTarget),
             properties: common_1.getObjectKeys(properties).map((propertyName) => ({
                 name: String(propertyName),
-                description: common_1.getPropertyDescription(context, propertyName, descriptionsType, descriptionsIntent),
+                description: common_1.getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
                 typeName: properties[propertyName].type,
                 isOptional: properties[propertyName].optional,
                 value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
@@ -48,10 +48,10 @@ const validatorGenerator = (writer, model) => {
         const childrenNames = common_1.getChildren(contextName);
         zodWriter.writeObject({
             name: `${contextName}Entity`,
-            description: common_1.getEntityDescription(context, descriptionsType, descriptionsIntent),
+            description: common_1.getEntityDescription(context, descriptionsType, descriptionsTarget),
             properties: common_1.getObjectKeys(properties).map((propertyName) => ({
                 name: String(propertyName),
-                description: common_1.getPropertyDescription(context, propertyName, descriptionsType, descriptionsIntent),
+                description: common_1.getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
                 typeName: properties[propertyName].type,
                 isOptional: properties[propertyName].optional,
                 value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
@@ -61,13 +61,13 @@ const validatorGenerator = (writer, model) => {
         zodWriter.writeLine();
         zodWriter.writeDiscriminatedUnion({
             name: contextName,
-            description: common_1.getEntityDescription(context, descriptionsType, descriptionsIntent),
+            description: common_1.getEntityDescription(context, descriptionsType, descriptionsTarget),
             discriminator: '_type',
             items: [
                 {
                     properties: common_1.getObjectKeys(properties).map((propertyName) => ({
                         name: String(propertyName),
-                        description: common_1.getPropertyDescription(context, propertyName, descriptionsType, descriptionsIntent),
+                        description: common_1.getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
                         typeName: properties[propertyName].type,
                         isOptional: properties[propertyName].optional,
                         value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
@@ -84,7 +84,7 @@ const validatorGenerator = (writer, model) => {
         name: 'LocationStack',
         items: [...ChildLocationContexts, ...ParentLocationContexts.map((contextName) => `${contextName}Entity`)],
         discriminator: model.LocationStack.items.discriminator,
-        description: common_1.getEntityDescription(model.LocationStack, descriptionsType, descriptionsIntent),
+        description: common_1.getEntityDescription(model.LocationStack, descriptionsType, descriptionsTarget),
         rules: model.LocationStack.validation.rules,
     });
     const allGlobalContexts = common_1.getChildren(model.GlobalContexts.items.type).sort();
@@ -94,7 +94,7 @@ const validatorGenerator = (writer, model) => {
         name: 'GlobalContexts',
         items: [...ChildGlobalContexts, ...ParentGlobalContexts.map((contextName) => `${contextName}Entity`)],
         discriminator: model.GlobalContexts.items.discriminator,
-        description: common_1.getEntityDescription(model.GlobalContexts, descriptionsType, descriptionsIntent),
+        description: common_1.getEntityDescription(model.GlobalContexts, descriptionsType, descriptionsTarget),
         rules: model.GlobalContexts.validation.rules,
     });
     common_1.filterAbstractNames(common_1.getEventNames()).forEach((eventName) => {
@@ -103,10 +103,10 @@ const validatorGenerator = (writer, model) => {
         const properties = common_1.getEntityProperties(event);
         zodWriter.writeObject({
             name: eventName,
-            description: common_1.getEntityDescription(event, descriptionsType, descriptionsIntent),
+            description: common_1.getEntityDescription(event, descriptionsType, descriptionsTarget),
             properties: common_1.getObjectKeys(properties).map((propertyName) => ({
                 name: String(propertyName),
-                description: common_1.getPropertyDescription(event, propertyName, descriptionsType, descriptionsIntent),
+                description: common_1.getPropertyDescription(event, propertyName, descriptionsType, descriptionsTarget),
                 typeName: properties[propertyName].type,
                 isOptional: properties[propertyName].optional,
                 value: properties[propertyName].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,

@@ -20,7 +20,7 @@ import {
 
 const schemaVersion = Objectiv.version.base_schema;
 const descriptionsType = 'text';
-const descriptionsIntent = 'primary';
+const descriptionsTarget = 'primary';
 
 const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
   const zodWriter = new ZodWriter(writer);
@@ -48,10 +48,10 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
 
     zodWriter.writeObject({
       name: contextName,
-      description: getEntityDescription(context, descriptionsType, descriptionsIntent),
+      description: getEntityDescription(context, descriptionsType, descriptionsTarget),
       properties: getObjectKeys(properties).map((propertyName) => ({
         name: String(propertyName),
-        description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsIntent),
+        description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
         isOptional: properties[propertyName].optional,
         value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
@@ -68,10 +68,10 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
 
     zodWriter.writeObject({
       name: `${contextName}Entity`,
-      description: getEntityDescription(context, descriptionsType, descriptionsIntent),
+      description: getEntityDescription(context, descriptionsType, descriptionsTarget),
       properties: getObjectKeys(properties).map((propertyName) => ({
         name: String(propertyName),
-        description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsIntent),
+        description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
         isOptional: properties[propertyName].optional,
         value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
@@ -82,13 +82,13 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
 
     zodWriter.writeDiscriminatedUnion({
       name: contextName,
-      description: getEntityDescription(context, descriptionsType, descriptionsIntent),
+      description: getEntityDescription(context, descriptionsType, descriptionsTarget),
       discriminator: '_type',
       items: [
         {
           properties: getObjectKeys(properties).map((propertyName) => ({
             name: String(propertyName),
-            description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsIntent),
+            description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
             typeName: properties[propertyName].type,
             isOptional: properties[propertyName].optional,
             value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
@@ -107,7 +107,7 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
     name: 'LocationStack',
     items: [...ChildLocationContexts, ...ParentLocationContexts.map((contextName) => `${contextName}Entity`)],
     discriminator: model.LocationStack.items.discriminator,
-    description: getEntityDescription(model.LocationStack, descriptionsType, descriptionsIntent),
+    description: getEntityDescription(model.LocationStack, descriptionsType, descriptionsTarget),
     rules: model.LocationStack.validation.rules,
   });
 
@@ -119,7 +119,7 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
     name: 'GlobalContexts',
     items: [...ChildGlobalContexts, ...ParentGlobalContexts.map((contextName) => `${contextName}Entity`)],
     discriminator: model.GlobalContexts.items.discriminator,
-    description: getEntityDescription(model.GlobalContexts, descriptionsType, descriptionsIntent),
+    description: getEntityDescription(model.GlobalContexts, descriptionsType, descriptionsTarget),
     rules: model.GlobalContexts.validation.rules,
   });
 
@@ -130,10 +130,10 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
 
     zodWriter.writeObject({
       name: eventName,
-      description: getEntityDescription(event, descriptionsType, descriptionsIntent),
+      description: getEntityDescription(event, descriptionsType, descriptionsTarget),
       properties: getObjectKeys(properties).map((propertyName) => ({
         name: String(propertyName),
-        description: getPropertyDescription(event, propertyName, descriptionsType, descriptionsIntent),
+        description: getPropertyDescription(event, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
         isOptional: properties[propertyName].optional,
         value: properties[propertyName].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,

@@ -101,23 +101,23 @@ export const getEntityProperties = (entity) => {
 };
 
 /**
- * Gets the descriptions from an Entity documentation array matching the given type and intent
+ * Gets the descriptions from an Entity documentation array matching the given type and target
  */
-export const getEntityDescriptionsFromDocumentation = (entity, type, intent) => {
+export const getEntityDescriptionsFromDocumentation = (entity, type, target) => {
   if(!entity.documentation) {
     return [];
   }
 
   return entity.documentation
     .filter((documentationBlock) => {
-      if (type && intent) {
-        return documentationBlock?.type === type && documentationBlock.intent === intent;
+      if (type && target) {
+        return documentationBlock?.type === type && documentationBlock.target === target;
       }
       if (type) {
         return documentationBlock.type === type;
       }
-      if (intent) {
-        return documentationBlock.intent === intent;
+      if (target) {
+        return documentationBlock.target === target;
       }
       return true;
     })
@@ -125,24 +125,24 @@ export const getEntityDescriptionsFromDocumentation = (entity, type, intent) => 
 };
 
 /**
- * Gets the first description from an Entity documentation array matching the given type and intent
+ * Gets the first description from an Entity documentation array matching the given type and target
  */
-export const getEntityDescriptionFromDocumentation = (entity, type, intent) => {
-  return getEntityDescriptionsFromDocumentation(entity, type, intent)[0];
+export const getEntityDescriptionFromDocumentation = (entity, type, target) => {
+  return getEntityDescriptionsFromDocumentation(entity, type, target)[0];
 }
 
 /**
- * Gets the first markdown description from an Entity documentation array matching the intent
+ * Gets the first markdown description from an Entity documentation array matching the target
  */
-export const getEntityMarkdownDescription = (entity, intent) => {
-  return getEntityDescriptionsFromDocumentation(entity, 'markdown', intent)[0];
+export const getEntityMarkdownDescription = (entity, target) => {
+  return getEntityDescriptionsFromDocumentation(entity, 'markdown', target)[0];
 }
 
 /**
  * Gets the description of the given entity, recursively falling back to its parent's description if not set
  */
-export const getEntityDescription = (entity, type, intent) => {
-  const entityDescriptions = getEntityDescriptionsFromDocumentation(entity, type, intent);
+export const getEntityDescription = (entity, type, target) => {
+  const entityDescriptions = getEntityDescriptionsFromDocumentation(entity, type, target);
   const mainEntityDescription = entityDescriptions.length ? entityDescriptions[0] : null;
 
   if (mainEntityDescription) {
@@ -153,13 +153,13 @@ export const getEntityDescription = (entity, type, intent) => {
     return;
   }
 
-  return getEntityDescription(getEntityByName(entity.parent), type, intent);
+  return getEntityDescription(getEntityByName(entity.parent), type, target);
 };
 
 /**
  * Gets the description of the given entity's property, falling back to the property's type description if not set
  */
-export const getPropertyDescription = (entity, propertyName, type, intent) => {
+export const getPropertyDescription = (entity, propertyName, type, target) => {
   const properties = getEntityProperties(entity);
   const property = properties[propertyName];
 
@@ -168,6 +168,6 @@ export const getPropertyDescription = (entity, propertyName, type, intent) => {
   }
 
   const typeEntity = getEntityByName(property.type);
-  const entityDescriptions = getEntityDescriptionsFromDocumentation(typeEntity, type, intent);
+  const entityDescriptions = getEntityDescriptionsFromDocumentation(typeEntity, type, target);
   return entityDescriptions.length ? entityDescriptions[0] : null;
 };
