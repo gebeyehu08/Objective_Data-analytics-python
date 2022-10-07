@@ -16,11 +16,10 @@ from modelhub.map import Map
 from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.models.funnel_discovery import FunnelDiscovery
 from modelhub.series.series_objectiv import MetaBase
+from modelhub.series import SeriesLocationStack
 from sql_models.constants import NotSet
 from sql_models.util import is_bigquery, is_athena
 
-if TYPE_CHECKING:
-    from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, bach.Series]], str, bach.Series, NotSet]
 ConversionEventDefinitionType = Tuple[Optional['SeriesLocationStack'], Optional[str]]
@@ -302,7 +301,7 @@ class ModelHub:
     def visualize_location_stack(self,
                                  data: bach.DataFrame,
                                  root_location: str = None,
-                                 location_stack: 'SeriesLocationStack' = None,
+                                 location_stack: Union[str, 'SeriesLocationStack'] = None,
                                  n_top_examples=40,
                                  return_df: bool = False):
         """
@@ -313,7 +312,9 @@ class ModelHub:
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param root_location: the name of the root location to use for visualization of the location stack.
             If None, it will use the most common root location in the data.
-        :param location_stack: if None, it will use the standard location stack.
+        :param location_stack: the column of which to create the paths. Can be a string of the name of a
+            SeriesLocationStack type column, or a Series with the same base node as `data`. If None the
+            default location stack is taken.
         :param n_top_examples: number of top examples  from the location stack to plot (if we have
             too many examples to plot it can slow down the browser).
         :param return_df: returns a :py:class:`bach.DataFrame` with the data from which the sankey diagram is
@@ -323,17 +324,27 @@ class ModelHub:
 
         from modelhub.util import check_objectiv_dataframe
 
+        columns_to_check = ['user_id', 'event_id']
         if location_stack is None:
-            check_objectiv_dataframe(df=data, columns_to_check=['location_stack', 'user_id', 'event_id'])
+            columns_to_check = ['location_stack', 'user_id', 'event_id']
+            location_stack = 'location_stack'
+        check_objectiv_dataframe(df=data, columns_to_check=columns_to_check)
+
+        if type(location_stack) == str:
+            location_stack_series = data[location_stack]
+        if type(location_stack) == SeriesLocationStack:
+            location_stack_series = location_stack
+
+        column = cast(SeriesLocationStack, location_stack_series)  # help mypy
 
         data_cp = data.copy()
-        result_item, result_offset = data_cp.location_stack.json.flatten_array()
+        result_item, result_offset = column.json.flatten_array()
 
         result_item_df = result_item.sort_by_series(
             by=[result_offset]
         ).to_frame()
 
-        result_item_df = result_item_df.rename(columns={'location_stack': '__location_stack_exploded'})
+        result_item_df = result_item_df.rename(columns={result_item.name: '__location_stack_exploded'})
 
         result_item_df['__result_offset'] = 1
         result_item_df['__result_offset'] = result_item_df['__result_offset'].copy_override(

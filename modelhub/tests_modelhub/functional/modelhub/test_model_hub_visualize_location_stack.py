@@ -1,6 +1,4 @@
-import bach
 import pytest
-from bach import SortColumn
 from bach.testing import assert_equals_data
 
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
@@ -39,3 +37,30 @@ def test_visualize_location_stack(db_params):
         order_by=['source', 'target'],
         use_to_pandas=True,
     )
+
+    # test custom location stack
+    df['ls2'] = df.location_stack.ls[:3]
+    # test as string and series
+    for ls in ['ls2', df.ls2]:
+        results = modelhub.visualize_location_stack(df, location_stack=ls, return_df=True)
+
+        assert_equals_data(
+            results,
+            expected_columns=['source', 'target', 'value'],
+            expected_data=[
+                ['"SectionContext": "footer"', '"LinkContext": "Cookies"', 1],
+                ['"SectionContext": "header"', '"LinkContext": "cta-repo-button"', 1],
+                ['"SectionContext": "main"', '"SectionContext": "location-stack"', 1],
+                ['"SectionContext": "main"', '"SectionContext": "taxonomy"', 1],
+                ['"SectionContext": "navbar-top"', '"LinkContext": "About Us"', 1],
+                ['"SectionContext": "navbar-top"', '"LinkContext": "logo"', 1],
+                ['"SectionContext": "navbar-top"', '"OverlayContext": "hamburger-menu"', 5],
+                ['"WebDocumentContext": "#document"', '"LinkContext": "notebook-product-analytics"', 1],
+                ['"WebDocumentContext": "#document"', '"SectionContext": "footer"', 1],
+                ['"WebDocumentContext": "#document"', '"SectionContext": "header"', 1],
+                ['"WebDocumentContext": "#document"', '"SectionContext": "main"', 2],
+                ['"WebDocumentContext": "#document"', '"SectionContext": "navbar-top"', 7]
+            ],
+            order_by=['source', 'target'],
+            use_to_pandas=True,
+        )
