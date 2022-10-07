@@ -166,6 +166,24 @@
     }
   },
 
+  "Documentation": {
+    "description": "Documentation blocks are comprised of a `description`, an optional type (`text` or `markdown`) which defaults to `text` and and optional `intent`. Intent can be used to identify the importance or position of a documentation block over another. This is mainly useful when generating documentation.",
+    "type": "array",
+    "items": {
+      "description": {
+        "type": "string"
+      },
+      "type" : {
+        "enum": ["text", "markdown"],
+        "optional": true
+      },
+      "intent" : {
+        "type": "string",
+        "optional": true
+      }
+    }
+  },
+
   "events": {
     "AbstractEvent": {
       "description": "This is the abstract parent of all Events.",
@@ -408,6 +426,12 @@
       }
     },
     "LocaleContext": {
+      "documentation": [
+        { "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2)." },
+        { "description": "A [GlobalContext](/taxonomy/global-contexts) describing the users' language ([ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)) and country ([ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)).", "type": "markdown" },
+        { "description": "Some *extra* info to show before the **Properties** table.", "type": "markdown", "intent": "properties-description" },
+        { "description": ":::info setting of properties\nThe tracker can automatically set the `id` when using the official Plugin. On manual creation, `id` must be provided. \n:::", "type": "markdown", "intent": "bottom-admonition" }
+      ],
       "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).",
       "parent": "AbstractGlobalContext",
       "properties": {
