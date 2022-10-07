@@ -1,5 +1,5 @@
 # MarketingContext
-
+A [GlobalContext](/taxonomy/global-contexts) describing the marketing channel & campaign from where the user came.
 
 ### Properties
 `string` source: Identifies the advertiser, site, publication, etc.
@@ -14,4 +14,6 @@
 for Context instance uniqueness.
 `discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
 
-
+:::info setting of the properties
+The backend will automatically set all the properties based on the UTM parameters in the PathContext.
+:::

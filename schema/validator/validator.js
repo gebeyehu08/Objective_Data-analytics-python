@@ -232,6 +232,27 @@ const HttpContext = z.object({
 }).strict();
 
 /**
+ * A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+ * The `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.
+ * The `value` field should contain the unique identifier within that scope.
+ */
+const IdentityContext = z.object({
+  /**
+   * The unique identifier for this user/group/entity within the scope defined by `id`.
+   */
+  value: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.IdentityContext),
+}).strict();
+
+/**
  * A GlobalContext containing the value of a single input element. Multiple can be present.
  */
 const InputValueContext = z.object({
@@ -271,40 +292,6 @@ const LocaleContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.LocaleContext),
-}).strict();
-
-/**
- * A GlobalContext describing the path where the user is when an event is sent.
- */
-const PathContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.PathContext),
-}).strict();
-
-/**
- * A GlobalContext describing meta information about the current session.
- */
-const SessionContext = z.object({
-  /**
-   * Hit counter relative to the current session, this event originated in.
-   */
-  hit_number: z.number(),
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.SessionContext),
 }).strict();
 
 /**
@@ -356,15 +343,9 @@ const MarketingContext = z.object({
 }).strict();
 
 /**
- * A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
- * The `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.
- * The `value` field should contain the unique identifier within that scope.
+ * A GlobalContext describing the path where the user is when an event is sent.
  */
-const IdentityContext = z.object({
-  /**
-   * The unique identifier for this user/group/entity within the scope defined by `id`.
-   */
-  value: z.string(),
+const PathContext = z.object({
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -373,7 +354,26 @@ const IdentityContext = z.object({
   /**
    * A string literal used during serialization. Should always match the Context interface name.
    */
-  _type: z.literal(ContextTypes.enum.IdentityContext),
+  _type: z.literal(ContextTypes.enum.PathContext),
+}).strict();
+
+/**
+ * A GlobalContext describing meta information about the current session.
+ */
+const SessionContext = z.object({
+  /**
+   * Hit counter relative to the current session, this event originated in.
+   */
+  hit_number: z.number(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.SessionContext),
 }).strict();
 
 /**
@@ -1145,12 +1145,12 @@ entityMap = {
   'ApplicationContext': ApplicationContext,
   'CookieIdContext': CookieIdContext,
   'HttpContext': HttpContext,
+  'IdentityContext': IdentityContext,
   'InputValueContext': InputValueContext,
   'LocaleContext': LocaleContext,
+  'MarketingContext': MarketingContext,
   'PathContext': PathContext,
   'SessionContext': SessionContext,
-  'MarketingContext': MarketingContext,
-  'IdentityContext': IdentityContext,
   'InputContext': InputContext,
   'PressableContext': PressableContext,
   'LinkContext': LinkContext,
@@ -1190,12 +1190,12 @@ exports.EventTypes = EventTypes;
 exports.ApplicationContext = ApplicationContext;
 exports.CookieIdContext = CookieIdContext;
 exports.HttpContext = HttpContext;
+exports.IdentityContext = IdentityContext;
 exports.InputValueContext = InputValueContext;
 exports.LocaleContext = LocaleContext;
+exports.MarketingContext = MarketingContext;
 exports.PathContext = PathContext;
 exports.SessionContext = SessionContext;
-exports.MarketingContext = MarketingContext;
-exports.IdentityContext = IdentityContext;
 exports.InputContext = InputContext;
 exports.LinkContext = LinkContext;
 exports.RootLocationContext = RootLocationContext;

@@ -1,5 +1,5 @@
 # HttpContext
-
+A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing meta information about the agent that sent the event.
 
 ### Properties
 `string` referrer: Full URL to HTTP referrer of the current page.
@@ -9,4 +9,6 @@
 for Context instance uniqueness.
 `discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
 
-
+:::info setting of properties
+The tracker will automatically set the `_type`, `referrer` and `user_agent` properties, while the collector will automatically set the `remote_address`.
+:::
