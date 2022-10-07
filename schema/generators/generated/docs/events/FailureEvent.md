@@ -1,6 +1,5 @@
 # FailureEvent
-A NonInteractiveEvent that is sent when a user action results in an error, 
-like an invalid email when sending a form.
+
 
 ### Properties
 `string` message: Failure message.
@@ -10,3 +9,5 @@ like an invalid email when sending a form.
 `discriminator` _type: A string literal used during serialization. Should always match the Event interface name.
 `uuid` id: Unique identifier for a specific instance of an event.
 `integer` time: Timestamp indicating when the event was generated.
+
+

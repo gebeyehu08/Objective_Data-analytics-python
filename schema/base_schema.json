@@ -5,8 +5,28 @@
   },
   "description": "This is the Objectiv base schema for the Open Analytics Taxonomy.",
 
+  "Documentation": {
+    "documentation": [
+      { "description": "Documentation blocks are comprised of a `description`, an optional type (`text` or `markdown`) which defaults to `text` and and optional `intent`. Intent can be used to identify the importance or position of a documentation block over another. This is mainly useful when generating documentation.", "type": "text", "intent": "primary" }
+    ],
+    "type": "array",
+    "items": {
+      "description": {
+        "type": "string"
+      },
+      "type" : {
+        "enum": ["text", "markdown"]
+      },
+      "intent" : {
+        "type": "string"
+      }
+    }
+  },
+
   "RequiresLocationContext" : {
-    "description": "A validation rule that can be applied to the Location Stack. Checks whether the given AbstractLocationContext is present and, optionally, at the required position.",
+    "documentation": [
+      { "description": "A validation rule that can be applied to the Location Stack. Checks whether the given AbstractLocationContext is present and, optionally, at the required position.", "type": "text", "intent": "primary" }
+    ],
     "properties" : {
       "scope": {
         "description": "A list of AbstractLocationContexts, and optionally their positions, to check in the Location Stack.",
@@ -27,7 +47,9 @@
   },
 
   "RequiresGlobalContext" : {
-    "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.",
+    "documentation": [
+      { "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.", "type": "text", "intent": "primary" }
+    ],
     "properties" : {
       "scope": {
         "description": "A list of AbstractGlobalContexts to check in the Global Contexts.",
@@ -43,7 +65,9 @@
   },
 
   "UniqueContext" : {
-    "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Checks whether contexts are uniquely identified by the given `by` properties. Optionally `context` can be specified to restrict the check to a specific AbstractContext only.",
+    "documentation": [
+      { "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Checks whether contexts are uniquely identified by the given `by` properties. Optionally `context` can be specified to restrict the check to a specific AbstractContext only.", "type": "text", "intent": "primary" }
+    ],
     "properties": {
       "scope": {
         "description": "[Optional] Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
@@ -78,7 +102,9 @@
   },
 
   "MatchContextProperty" : {
-    "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Given two AbstractContexts checks whether the specified property matches.",
+    "documentation": [
+      { "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Given two AbstractContexts checks whether the specified property matches.", "type": "text", "intent": "primary" }
+    ],
     "properties" : {
       "scope": {
         "description": "A list with items composed of two AbstractContexts and the property to compare between them.",
@@ -102,7 +128,9 @@
   },
 
   "LocationStack": {
-    "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
+    "documentation": [
+      { "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.", "type": "text", "intent": "primary" }
+    ],
     "type": "array",
     "items": {
       "type":"AbstractLocationContext",
@@ -128,7 +156,9 @@
   },
 
   "GlobalContexts": {
-    "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.",
+    "documentation": [
+      { "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.", "type": "text", "intent": "primary" }
+    ],
     "type": "array",
     "items": {
       "type":"AbstractGlobalContext",
@@ -166,28 +196,11 @@
     }
   },
 
-  "Documentation": {
-    "description": "Documentation blocks are comprised of a `description`, an optional type (`text` or `markdown`) which defaults to `text` and and optional `intent`. Intent can be used to identify the importance or position of a documentation block over another. This is mainly useful when generating documentation.",
-    "type": "array",
-    "items": {
-      "description": {
-        "type": "string"
-      },
-      "type" : {
-        "enum": ["text", "markdown"],
-        "optional": true,
-        "default": "text"
-      },
-      "intent" : {
-        "type": "string",
-        "optional": true
-      }
-    }
-  },
-
   "events": {
     "AbstractEvent": {
-      "description": "This is the abstract parent of all Events.",
+      "documentation": [
+        { "description": "This is the abstract parent of all Events.", "type": "text", "intent": "primary" }
+      ],
       "properties":{
         "schema_version": {
           "description": "The version of the Objectiv Taxonomy Schema used to generate this event.",
@@ -223,7 +236,9 @@
       }
     },
     "InteractiveEvent": {
-      "description": "The parent of Events that are the direct result of a user interaction, e.g. a button click.",
+      "documentation": [
+        { "description": "The parent of Events that are the direct result of a user interaction, e.g. a button click.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractEvent",
       "properties": {
         "location_stack": {
@@ -255,15 +270,21 @@
       }
     },
     "NonInteractiveEvent": {
-      "description": "The parent of Events that are not directly triggered by a user action.",
+      "documentation": [
+        { "description": "The parent of Events that are not directly triggered by a user action.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractEvent"
     },
     "ApplicationLoadedEvent": {
-      "description": "A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.",
+      "documentation": [
+        { "description": "A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.", "type": "text", "intent": "primary" }
+      ],
       "parent": "NonInteractiveEvent"
     },
     "FailureEvent": {
-      "description": "A NonInteractiveEvent that is sent when a user action results in an error, \nlike an invalid email when sending a form.",
+      "documentation": [
+        { "description": "A NonInteractiveEvent that is sent when a user action results in an error, \nlike an invalid email when sending a form.", "type": "text", "intent": "primary" }
+      ],
       "parent": "NonInteractiveEvent",
       "properties": {
         "message": {
@@ -273,7 +294,9 @@
       }
     },
     "InputChangeEvent": {
-      "description": "Event triggered when user input is modified.",
+      "documentation": [
+        { "description": "Event triggered when user input is modified.", "type": "text", "intent": "primary" }
+      ],
       "parent": "InteractiveEvent",
       "validation": {
         "rules": [
@@ -299,7 +322,9 @@
       }
     },
     "PressEvent": {
-      "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).",
+      "documentation": [
+        { "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).", "type": "text", "intent": "primary" }
+      ],
       "parent": "InteractiveEvent",
       "validation": {
         "rules": [
@@ -315,15 +340,21 @@
       }
     },
     "HiddenEvent": {
-      "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.",
+      "documentation": [
+        { "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.", "type": "text", "intent": "primary" }
+      ],
       "parent": "NonInteractiveEvent"
     },
     "VisibleEvent": {
-      "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.",
+      "documentation": [
+        { "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.", "type": "text", "intent": "primary" }
+      ],
       "parent": "NonInteractiveEvent"
     },
     "SuccessEvent": {
-      "description": "A NonInteractiveEvent that is sent when a user action is successfully completed, \nlike sending an email form.",
+      "documentation": [
+        { "description": "A NonInteractiveEvent that is sent when a user action is successfully completed, \nlike sending an email form.", "type": "text", "intent": "primary" }
+      ],
       "parent": "NonInteractiveEvent",
       "properties": {
         "message": {
@@ -333,7 +364,9 @@
       }
     },
     "MediaEvent": {
-      "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.",
+      "documentation": [
+        { "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.", "type": "text", "intent": "primary" }
+      ],
       "parent": "NonInteractiveEvent",
       "validation": {
         "rules": [
@@ -349,25 +382,35 @@
       }
     },
     "MediaLoadEvent": {
-      "description": "A MediaEvent that's emitted after a media item completes loading.",
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item completes loading.", "type": "text", "intent": "primary" }
+      ],
       "parent": "MediaEvent"
     },
     "MediaPauseEvent": {
-      "description": "A MediaEvent that's emitted after a media item pauses playback.",
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item pauses playback.", "type": "text", "intent": "primary" }
+      ],
       "parent": "MediaEvent"
     },
     "MediaStartEvent": {
-      "description": "A MediaEvent that's emitted after a media item starts playback.",
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item starts playback.", "type": "text", "intent": "primary" }
+      ],
       "parent": "MediaEvent"
     },
     "MediaStopEvent": {
-      "description": "A MediaEvent that's emitted after a media item stops playback.",
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item stops playback.", "type": "text", "intent": "primary" }
+      ],
       "parent": "MediaEvent"
     }
   },
   "contexts": {
     "AbstractContext": {
-      "description": "AbstractContext defines the bare minimum properties for every Context. All Contexts inherit from it.",
+      "documentation": [
+        { "description": "AbstractContext defines the bare minimum properties for every Context. All Contexts inherit from it.", "type": "text", "intent": "primary" }
+      ],
       "properties": {
         "id": {
           "description":"A unique string identifier to be combined with the Context Type (`_type`) \nfor Context instance uniqueness.",
@@ -380,15 +423,21 @@
       }
     },
     "AbstractGlobalContext": {
-      "description": "This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.",
+      "documentation": [
+        { "description": "This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractContext"
     },
     "ApplicationContext": {
-      "description": "A GlobalContext describing in which app the event happens, like a website or iOS app.",
+      "documentation": [
+        { "description": "A GlobalContext describing in which app the event happens, like a website or iOS app.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext"
     },
     "CookieIdContext": {
-      "description": "Global context with information needed to reconstruct a user session.",
+      "documentation": [
+        { "description": "Global context with information needed to reconstruct a user session.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext",
       "properties": {
         "cookie_id": {
@@ -398,7 +447,9 @@
       }
     },
     "HttpContext": {
-      "description": "A GlobalContext describing meta information about the agent that sent the event.",
+      "documentation": [
+        { "description": "A GlobalContext describing meta information about the agent that sent the event.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext",
       "properties": {
         "referrer": {
@@ -417,7 +468,9 @@
       }
     },
     "InputValueContext": {
-      "description": "A GlobalContext containing the value of a single input element. Multiple can be present.",
+      "documentation": [
+        { "description": "A GlobalContext containing the value of a single input element. Multiple can be present.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext",
       "properties": {
         "value": {
@@ -428,10 +481,9 @@
     },
     "LocaleContext": {
       "documentation": [
-        { "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2)." },
-        { "description": "A [GlobalContext](/taxonomy/global-contexts) describing the users' language ([ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)) and country ([ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)).", "type": "markdown" },
-        { "description": "Some *extra* info to show before the **Properties** table.", "type": "markdown", "intent": "properties-description" },
-        { "description": ":::info setting of properties\nThe tracker can automatically set the `id` when using the official Plugin. On manual creation, `id` must be provided. \n:::", "type": "markdown", "intent": "bottom-admonition" }
+        { "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).", "type": "text", "intent": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/global-contexts) describing the users' language ([ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)) and country ([ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)).", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of properties\nThe tracker can automatically set the `id` when using the official Plugin. On manual creation, `id` must be provided. \n:::", "type": "markdown", "intent": "admonition" }
       ],
       "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).",
       "parent": "AbstractGlobalContext",
@@ -449,11 +501,15 @@
       }
     },
     "PathContext": {
-      "description": "A GlobalContext describing the path where the user is when an event is sent.",
+      "documentation": [
+        { "description": "A GlobalContext describing the path where the user is when an event is sent.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext"
     },
     "SessionContext": {
-      "description": "A GlobalContext describing meta information about the current session.",
+      "documentation": [
+        { "description": "A GlobalContext describing meta information about the current session.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext",
       "properties": {
         "hit_number": {
@@ -463,7 +519,9 @@
       }
     },
     "MarketingContext": {
-      "description": "a context that captures marketing channel info, so users can do attribution, campaign \neffectiveness and other models.",
+      "documentation": [
+        { "description": "a context that captures marketing channel info, so users can do attribution, campaign \neffectiveness and other models.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext",
       "properties": {
         "source": {
@@ -506,7 +564,9 @@
       }
     },
     "IdentityContext": {
-      "description": "A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.",
+      "documentation": [
+        { "description": "A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractGlobalContext",
       "properties": {
         "value": {
@@ -516,19 +576,27 @@
       }
     },
     "AbstractLocationContext": {
-      "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.",
+      "documentation": [
+        { "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractContext"
     },
     "InputContext": {
-      "description": "A Location Context that describes an element that accepts user input, i.e. a form field.",
+      "documentation": [
+        { "description": "A Location Context that describes an element that accepts user input, i.e. a form field.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     },
     "PressableContext": {
-      "description": "A Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.",
+      "documentation": [
+        { "description": "A Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     },
     "LinkContext": {
-      "description": "A PressableContext that contains a destination (href).",
+      "documentation": [
+        { "description": "A PressableContext that contains a destination (href).", "type": "text", "intent": "primary" }
+      ],
       "parent": "PressableContext",
       "properties": {
         "href": {
@@ -538,27 +606,39 @@
       }
     },
     "RootLocationContext": {
-      "description": "A Location Context that uniquely represents the top-level UI location of the user.",
+      "documentation": [
+        { "description": "A Location Context that uniquely represents the top-level UI location of the user.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     },
     "ExpandableContext": {
-      "description": "A Location Context that describes a section of the UI that can expand & collapse.",
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI that can expand & collapse.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     },
     "MediaPlayerContext": {
-      "description": "A Location Context that describes a section of the UI containing a media player.",
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI containing a media player.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     },
     "NavigationContext": {
-      "description": "A Location Context that describes a section of the UI containing navigational elements, for example a menu.",
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI containing navigational elements, for example a menu.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     },
     "OverlayContext": {
-      "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.",
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     },
     "ContentContext": {
-      "description": "A Location Context that describes a logical section of the UI that contains other Location Contexts. \nEnabling Data Science to analyze this section specifically.",
+      "documentation": [
+        { "description": "A Location Context that describes a logical section of the UI that contains other Location Contexts. \nEnabling Data Science to analyze this section specifically.", "type": "text", "intent": "primary" }
+      ],
       "parent": "AbstractLocationContext"
     }
   }

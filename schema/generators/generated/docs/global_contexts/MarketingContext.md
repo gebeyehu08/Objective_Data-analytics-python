@@ -1,6 +1,5 @@
 # MarketingContext
-a context that captures marketing channel info, so users can do attribution, campaign 
-effectiveness and other models.
+
 
 ### Properties
 `string` source: Identifies the advertiser, site, publication, etc.
@@ -14,3 +13,5 @@ effectiveness and other models.
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 `discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
+
+

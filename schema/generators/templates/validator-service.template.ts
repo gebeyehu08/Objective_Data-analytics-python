@@ -5,7 +5,7 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { JavaScriptWriter } from '../writers/JavaScriptWriter';
-import glob from "glob";
+import glob from 'glob';
 
 const validatorFolder = '../../validator/';
 
@@ -17,7 +17,7 @@ Generator.generateFromModel({ outputFile: `${validatorFolder}/validator-service.
   jsWriter.writeEndOfLine();
 
   const validatorFiles = glob.sync(`${validatorFolder}/validator-v*.js`);
-  validatorFiles.forEach(validator => {
+  validatorFiles.forEach((validator) => {
     const validatorVersion = validator.replace(`${validatorFolder}validator-v`, '').replace('.js', '');
     jsWriter.writeLine(`versions.push('${validatorVersion.toString()}');`);
   });

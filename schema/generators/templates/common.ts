@@ -38,7 +38,8 @@ export const getEntityNames = () => [...getContextNames(), ...getEventNames()];
 /**
  * Retrieves either a Context or Event entity, from the ObjectivSchema, by its `_type` name
  */
-export const getEntityByName = (entityName) => Objectiv.contexts[entityName] ?? Objectiv.events[entityName];
+export const getEntityByName = (entityName) =>
+  Objectiv.contexts[entityName] ?? Objectiv.events[entityName] ?? Objectiv[entityName];
 
 /**
  * Recursively gets all the parents of the given Entity (either Context or Event)
@@ -100,26 +101,73 @@ export const getEntityProperties = (entity) => {
 };
 
 /**
+ * Gets the descriptions from an Entity documentation array matching the given type and intent
+ */
+export const getEntityDescriptionsFromDocumentation = (entity, type, intent) => {
+  if(!entity.documentation) {
+    return [];
+  }
+
+  return entity.documentation
+    .filter((documentationBlock) => {
+      if (type && intent) {
+        return documentationBlock?.type === type && documentationBlock.intent === intent;
+      }
+      if (type) {
+        return documentationBlock.type === type;
+      }
+      if (intent) {
+        return documentationBlock.intent === intent;
+      }
+      return true;
+    })
+    .map((documentationBlock) => documentationBlock.description);
+};
+
+/**
+ * Gets the first description from an Entity documentation array matching the given type and intent
+ */
+export const getEntityDescriptionFromDocumentation = (entity, type, intent) => {
+  return getEntityDescriptionsFromDocumentation(entity, type, intent)[0];
+}
+
+/**
+ * Gets the first markdown description from an Entity documentation array matching the intent
+ */
+export const getEntityMarkdownDescription = (entity, intent) => {
+  return getEntityDescriptionsFromDocumentation(entity, 'markdown', intent)[0];
+}
+
+/**
  * Gets the description of the given entity, recursively falling back to its parent's description if not set
  */
-export const getEntityDescription = (entity) => {
-  if (entity.description) {
-    return entity.description;
+export const getEntityDescription = (entity, type, intent) => {
+  const entityDescriptions = getEntityDescriptionsFromDocumentation(entity, type, intent);
+  const mainEntityDescription = entityDescriptions.length ? entityDescriptions[0] : null;
+
+  if (mainEntityDescription) {
+    return mainEntityDescription;
   }
 
   if (!entity.parent) {
     return;
   }
 
-  return getEntityDescription(getEntityByName(entity.parent));
+  return getEntityDescription(getEntityByName(entity.parent), type, intent);
 };
 
 /**
  * Gets the description of the given entity's property, falling back to the property's type description if not set
  */
-export const getPropertyDescription = (entity, propertyName) => {
+export const getPropertyDescription = (entity, propertyName, type, intent) => {
   const properties = getEntityProperties(entity);
   const property = properties[propertyName];
 
-  return property.description ?? Objectiv[property.type]?.description;
+  if(property.description) {
+    return property.description;
+  }
+
+  const typeEntity = getEntityByName(property.type);
+  const entityDescriptions = getEntityDescriptionsFromDocumentation(typeEntity, type, intent);
+  return entityDescriptions.length ? entityDescriptions[0] : null;
 };

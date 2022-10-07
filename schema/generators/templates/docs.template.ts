@@ -7,7 +7,7 @@ import { Generator } from '@yellicode/templating';
 import { MarkdownWriter } from '../writers/MarkdownWriter';
 import {
   getEntityByName,
-  getEntityDescription,
+  getEntityDescriptionFromDocumentation, getEntityMarkdownDescription,
   getEntityNames,
   getEntityParents,
   getEntityProperties,
@@ -21,16 +21,21 @@ getEntityNames().forEach((entityName) => {
   const entity = getEntityByName(entityName);
   const entityProperties = getEntityProperties(entity);
   const entityParents = getEntityParents(entity);
+  const primaryDescription = getEntityMarkdownDescription(entity, 'primary');
+  const admonition = getEntityMarkdownDescription(entity, 'admonition');
+
   const isAbstract = entityName.startsWith('Abstract');
   const isLocationContext = entityParents.includes('AbstractLocationContext');
   const isGlobalContext = entityParents.includes('AbstractGlobalContext');
+
   const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location_' : isGlobalContext ? 'global_' : '';
   const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
+
   Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entityName}.md` }, (writer: TextWriter) => {
     const docsWriter = new MarkdownWriter(writer);
 
     docsWriter.writeH1(entityName);
-    docsWriter.writeLine(getEntityDescription(entity));
+    docsWriter.writeLine(primaryDescription);
     docsWriter.writeLine();
 
     // TODO implement writeMermaid in docsWriter, e.g. writeMermaid({chart, caption, links})
@@ -41,6 +46,10 @@ getEntityNames().forEach((entityName) => {
       const { type, description } = entityProperties[entityPropertyName];
       docsWriter.writeLine(`\`${type}\` ${entityPropertyName.toString()}: ${description}`);
     });
+
+    docsWriter.writeEndOfLine();
+
+    docsWriter.writeLine(admonition);
 
     // TODO we have some admonitions in the current docs that would be nice to keep
     // TODO Think of how can we add those to the base_schema OR use a map here, e.g. {entityName: admonition_text}

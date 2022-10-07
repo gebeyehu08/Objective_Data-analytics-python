@@ -1,5 +1,5 @@
 # MediaPauseEvent
-A MediaEvent that's emitted after a media item pauses playback.
+
 
 ### Properties
 `string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.
@@ -8,3 +8,5 @@ A MediaEvent that's emitted after a media item pauses playback.
 `discriminator` _type: A string literal used during serialization. Should always match the Event interface name.
 `uuid` id: Unique identifier for a specific instance of an event.
 `integer` time: Timestamp indicating when the event was generated.
+
+

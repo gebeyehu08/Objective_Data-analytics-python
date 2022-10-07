@@ -1,6 +1,5 @@
 # PressEvent
-An InteractiveEvent that is sent when a user presses on a pressable element 
-(like a link, button, icon).
+
 
 ### Properties
 `LocationStack` location_stack: undefined
@@ -9,3 +8,5 @@ An InteractiveEvent that is sent when a user presses on a pressable element
 `discriminator` _type: A string literal used during serialization. Should always match the Event interface name.
 `uuid` id: Unique identifier for a specific instance of an event.
 `integer` time: Timestamp indicating when the event was generated.
+
+
