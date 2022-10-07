@@ -530,3 +530,91 @@ class Aggregate:
             result['percentage'] *= 100
             result = result.sort_values(by='percentage', ascending=False)
         return result
+
+    def funnel_conversion(self,
+                          data: bach.DataFrame,
+                          completion_column: str,
+                          location_stack: LocationStackType = None,
+                          steps_list: List = None) -> bach.DataFrame:
+        """
+        Calculates for each funnel step number of unique users,
+        conversion rate (n_users_completed_step / n_users),
+        full conversion rate (n_users_completed_step / n_users_at_the_beginning_of_funnel)
+        and drop off percentage.
+
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param completion_column: the column name which shows if the step was completed.
+        :param location_stack: the column where steps info can be found.
+            Can be a string of the name of the column in data, or a Series with the
+            same base node as `data`. If None the default location stack is taken.
+
+            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
+            - if `None`, the whole location stack is taken.
+
+        :param steps_list: list of funnel steps.
+            - only values for provided steps are taken.
+            - if `None`, the whole location stack is taken.
+
+        :returns: :py:class:`bach.DataFrame` with the following columns: step, n_users,
+            step_conversion_rate, full_conversion_rate and dropoff_percentage.
+        """
+        data = data.copy()
+
+        if completion_column not in data.columns:
+            raise ValueError(f'{completion_column} column is missing.')
+
+        steps_column = location_stack or data['location_stack']
+        if type(steps_column) == str:
+            steps_column = data[steps_column]
+
+        data['step'] = steps_column
+        if type(steps_column) == SeriesLocationStack:
+            # extract the nice name per event
+            data['step'] = steps_column.ls.nice_name
+
+        # select only those columns that we'll use later
+        data = data[['user_id', 'step', 'moment', completion_column]]
+
+        # filter with steps that we are interested in
+        if steps_list is not None:
+            import pandas as pd
+            steps_df = bach.DataFrame.from_pandas(engine=data.engine,
+                                                  df=pd.DataFrame({'step': steps_list}),
+                                                  convert_objects=True)
+            data = data[data['step'].isin(steps_df['step'])]
+
+        data = data.sort_values('moment').drop_duplicates(subset=['user_id', 'step',
+                                                                  completion_column])
+
+        step_visitors_df = data.groupby('step')['user_id'].nunique().reset_index().rename(
+            columns={'user_id': 'n_users'})
+
+        step_completion_df = data[data[completion_column]].groupby('step')['user_id']\
+            .nunique().reset_index().rename(columns={'user_id': 'n_users_completed_step'})\
+            .fillna(value={'n_users_completed_step': 0})
+
+        dropoff_df = self.drop_off_locations(data, location_stack='step',
+                                             groupby='user_id',
+                                             percentage=True).reset_index()\
+            .rename(columns={'percentage': 'dropoff_percentage'})\
+
+        # merge the above dataframes
+        result_df = step_visitors_df.merge(step_completion_df, on='step', how='left')
+        result_df = result_df.merge(dropoff_df, left_on='step', right_on='__location', how='left')
+
+        result_df['step_conversion_rate'] = (result_df['n_users_completed_step'] / result_df['n_users'])\
+            .round(2)
+
+        # steps ordering
+        if steps_list is not None:
+            result_df = result_df.merge(steps_df.reset_index(), on='step').sort_values('_index_0')
+        else:
+            result_df = result_df.sort_values('n_users', ascending=False)
+
+        n_users_start = result_df.materialize(limit=1)['n_users'].head(1).iloc[0]
+        result_df['full_conversion_rate'] = (result_df['n_users_completed_step'] / n_users_start).round(2)
+
+        columns = ['step', 'n_users', 'step_conversion_rate',
+                   'full_conversion_rate', 'dropoff_percentage']
+
+        return result_df[columns]
