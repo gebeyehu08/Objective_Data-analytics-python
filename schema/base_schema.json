@@ -175,7 +175,8 @@
       },
       "type" : {
         "enum": ["text", "markdown"],
-        "optional": true
+        "optional": true,
+        "default": "text"
       },
       "intent" : {
         "type": "string",
