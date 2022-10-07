@@ -436,6 +436,14 @@
       ],
       "parent": "AbstractGlobalContext"
     },
+    "ContentContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a logical section of the UI that contains other Location Contexts. \nEnabling Data Science to analyze this section specifically.", "type": "text", "intent": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the navigation element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "intent": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
     "CookieIdContext": {
       "documentation": [
         { "description": "Global context with information needed to reconstruct a user session.", "type": "text", "intent": "primary" },
@@ -449,6 +457,14 @@
           "type": "string"
         }
       }
+    },
+    "ExpandableContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI that can expand & collapse.", "type": "text", "intent": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes a section of the UI that can expand & collapse.", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the expandable element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "intent": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
     },
     "HttpContext": {
       "documentation": [
@@ -487,6 +503,14 @@
         }
       }
     },
+    "InputContext": {
+      "documentation": [
+        { "description": "A Location Context that describes an element that accepts user input, i.e. a form field.", "type": "text", "intent": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes an element that accepts user input, i.e. a form field.", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the input element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "intent": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
     "InputValueContext": {
       "documentation": [
         { "description": "A GlobalContext containing the value of a single input element. Multiple can be present.", "type": "text", "intent": "primary" },
@@ -497,6 +521,20 @@
       "properties": {
         "value": {
           "description": "The value of the input element.",
+          "type": "string"
+        }
+      }
+    },
+    "LinkContext": {
+      "documentation": [
+        { "description": "A PressableContext that contains a destination (href).", "type": "text", "intent": "primary" },
+        { "description": "A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains an href.", "type": "markdown", "intent": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the link element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "intent": "admonition" }
+      ],
+      "parent": "PressableContext",
+      "properties": {
+        "href": {
+          "description": "URL (href) the link points to.",
           "type": "string"
         }
       }
@@ -597,39 +635,17 @@
       ],
       "parent": "AbstractContext"
     },
-    "InputContext": {
-      "documentation": [
-        { "description": "A Location Context that describes an element that accepts user input, i.e. a form field.", "type": "text", "intent": "primary" }
-      ],
-      "parent": "AbstractLocationContext"
-    },
+
     "PressableContext": {
       "documentation": [
         { "description": "A Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.", "type": "text", "intent": "primary" }
       ],
       "parent": "AbstractLocationContext"
     },
-    "LinkContext": {
-      "documentation": [
-        { "description": "A PressableContext that contains a destination (href).", "type": "text", "intent": "primary" }
-      ],
-      "parent": "PressableContext",
-      "properties": {
-        "href": {
-          "description": "URL (href) the link points to.",
-          "type": "string"
-        }
-      }
-    },
+
     "RootLocationContext": {
       "documentation": [
         { "description": "A Location Context that uniquely represents the top-level UI location of the user.", "type": "text", "intent": "primary" }
-      ],
-      "parent": "AbstractLocationContext"
-    },
-    "ExpandableContext": {
-      "documentation": [
-        { "description": "A Location Context that describes a section of the UI that can expand & collapse.", "type": "text", "intent": "primary" }
       ],
       "parent": "AbstractLocationContext"
     },
@@ -648,12 +664,6 @@
     "OverlayContext": {
       "documentation": [
         { "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.", "type": "text", "intent": "primary" }
-      ],
-      "parent": "AbstractLocationContext"
-    },
-    "ContentContext": {
-      "documentation": [
-        { "description": "A Location Context that describes a logical section of the UI that contains other Location Contexts. \nEnabling Data Science to analyze this section specifically.", "type": "text", "intent": "primary" }
       ],
       "parent": "AbstractLocationContext"
     }

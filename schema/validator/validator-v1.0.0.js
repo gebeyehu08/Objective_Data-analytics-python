@@ -186,6 +186,22 @@ const ApplicationContext = z.object({
 }).strict();
 
 /**
+ * A Location Context that describes a logical section of the UI that contains other Location Contexts.
+ * Enabling Data Science to analyze this section specifically.
+ */
+const ContentContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.ContentContext),
+}).strict();
+
+/**
  * Global context with information needed to reconstruct a user session.
  */
 const CookieIdContext = z.object({
@@ -202,6 +218,21 @@ const CookieIdContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.CookieIdContext),
+}).strict();
+
+/**
+ * A Location Context that describes a section of the UI that can expand & collapse.
+ */
+const ExpandableContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.ExpandableContext),
 }).strict();
 
 /**
@@ -253,6 +284,21 @@ const IdentityContext = z.object({
 }).strict();
 
 /**
+ * A Location Context that describes an element that accepts user input, i.e. a form field.
+ */
+const InputContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.InputContext),
+}).strict();
+
+/**
  * A GlobalContext containing the value of a single input element. Multiple can be present.
  */
 const InputValueContext = z.object({
@@ -269,6 +315,25 @@ const InputValueContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.InputValueContext),
+}).strict();
+
+/**
+ * A PressableContext that contains a destination (href).
+ */
+const LinkContext = z.object({
+  /**
+   * URL (href) the link points to.
+   */
+  href: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.LinkContext),
 }).strict();
 
 /**
@@ -377,40 +442,6 @@ const SessionContext = z.object({
 }).strict();
 
 /**
- * A Location Context that describes an element that accepts user input, i.e. a form field.
- */
-const InputContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.InputContext),
-}).strict();
-
-/**
- * A PressableContext that contains a destination (href).
- */
-const LinkContext = z.object({
-  /**
-   * URL (href) the link points to.
-   */
-  href: z.string(),
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.LinkContext),
-}).strict();
-
-/**
  * A Location Context that uniquely represents the top-level UI location of the user.
  */
 const RootLocationContext = z.object({
@@ -423,21 +454,6 @@ const RootLocationContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.RootLocationContext),
-}).strict();
-
-/**
- * A Location Context that describes a section of the UI that can expand & collapse.
- */
-const ExpandableContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.ExpandableContext),
 }).strict();
 
 /**
@@ -483,22 +499,6 @@ const OverlayContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.OverlayContext),
-}).strict();
-
-/**
- * A Location Context that describes a logical section of the UI that contains other Location Contexts.
- * Enabling Data Science to analyze this section specifically.
- */
-const ContentContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.ContentContext),
 }).strict();
 
 /**
@@ -1143,23 +1143,23 @@ const MediaStopEvent = z.object({
  */
 entityMap = {
   'ApplicationContext': ApplicationContext,
+  'ContentContext': ContentContext,
   'CookieIdContext': CookieIdContext,
+  'ExpandableContext': ExpandableContext,
   'HttpContext': HttpContext,
   'IdentityContext': IdentityContext,
+  'InputContext': InputContext,
   'InputValueContext': InputValueContext,
+  'LinkContext': LinkContext,
   'LocaleContext': LocaleContext,
   'MarketingContext': MarketingContext,
   'PathContext': PathContext,
   'SessionContext': SessionContext,
-  'InputContext': InputContext,
   'PressableContext': PressableContext,
-  'LinkContext': LinkContext,
   'RootLocationContext': RootLocationContext,
-  'ExpandableContext': ExpandableContext,
   'MediaPlayerContext': MediaPlayerContext,
   'NavigationContext': NavigationContext,
   'OverlayContext': OverlayContext,
-  'ContentContext': ContentContext,
 };
 
 /**
@@ -1188,22 +1188,22 @@ const validate = z.union([
 exports.ContextTypes = ContextTypes;
 exports.EventTypes = EventTypes;
 exports.ApplicationContext = ApplicationContext;
+exports.ContentContext = ContentContext;
 exports.CookieIdContext = CookieIdContext;
+exports.ExpandableContext = ExpandableContext;
 exports.HttpContext = HttpContext;
 exports.IdentityContext = IdentityContext;
+exports.InputContext = InputContext;
 exports.InputValueContext = InputValueContext;
+exports.LinkContext = LinkContext;
 exports.LocaleContext = LocaleContext;
 exports.MarketingContext = MarketingContext;
 exports.PathContext = PathContext;
 exports.SessionContext = SessionContext;
-exports.InputContext = InputContext;
-exports.LinkContext = LinkContext;
 exports.RootLocationContext = RootLocationContext;
-exports.ExpandableContext = ExpandableContext;
 exports.MediaPlayerContext = MediaPlayerContext;
 exports.NavigationContext = NavigationContext;
 exports.OverlayContext = OverlayContext;
-exports.ContentContext = ContentContext;
 exports.PressableContextEntity = PressableContextEntity;
 exports.PressableContext = PressableContext;
 exports.LocationStack = LocationStack;
