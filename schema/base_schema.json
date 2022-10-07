@@ -7,7 +7,7 @@
 
   "Documentation": {
     "documentation": [
-      { "description": "Documentation blocks are comprised of a `description`, an optional type (`text` or `markdown`) which defaults to `text` and and optional `intent`. Intent can be used to identify the importance or position of a documentation block over another. This is mainly useful when generating documentation.", "type": "text", "intent": "primary" }
+      { "description": "Documentation blocks are comprised of a `description`, a type (`text` or `markdown`) and an `intent`. Intent can be used to identify the importance or position of a documentation block over another. This is mainly useful when generating documentation.", "type": "text", "intent": "primary" }
     ],
     "type": "array",
     "items": {
