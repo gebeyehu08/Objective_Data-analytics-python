@@ -177,8 +177,11 @@ class SeriesAbstractNumeric(Series, ABC):
         :param partition: The partition or window to apply
         :param q: A quantile or list of quantiles to be calculated
         """
-        from bach.quantile import calculate_quantiles
-        result = calculate_quantiles(self, partition=partition, q=q)
+        result = self.to_frame().quantile(q=q, partition=partition)[f'{self.name}_quantile']
+        result = result.copy_override(name=self.name)
+
+        if not isinstance(q, list):
+            result = result.reset_index(level='quantile', drop=True)
         return cast('SeriesFloat64', result)
 
     def var(self, partition: WrappedPartition = None, skipna: bool = True, ddof: int = None, **kwargs):

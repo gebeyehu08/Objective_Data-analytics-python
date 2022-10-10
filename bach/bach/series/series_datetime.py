@@ -917,15 +917,13 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         In case multiple quantiles are calculated, the resultant series index will have all calculated
         quantiles as index values.
         """
-        from bach.quantile import calculate_quantiles
+        series = self.copy() if not is_bigquery(self.engine) else self.dt.total_seconds
+        result = series.to_frame().quantile(q=q, partition=partition)[f'{series.name}_quantile']
+        result = result.copy_override(name=self.name)
 
         if not is_bigquery(self.engine):
-            return (
-                calculate_quantiles(series=self.copy(), partition=partition, q=q)
-                .copy_override_type(SeriesTimedelta)
-            )
+            return result.copy_override_type(SeriesTimedelta)
 
-        result = calculate_quantiles(series=self.dt.total_seconds, partition=partition, q=q)
         # result must be a timedelta
         return self._convert_total_seconds_to_timedelta(result.copy_override_type(SeriesFloat64))
 

@@ -17,7 +17,7 @@ PD_TESTING_SETTINGS = {
 
 
 def compare_boundaries(expected: pd.Series, result: Series) -> None:
-    for exp, res in zip(expected.to_numpy(), result.to_numpy()):
+    for exp, res in zip(expected.to_numpy(), result.sort_index().to_numpy()):
         if not isinstance(exp, pd.Interval):
             assert res is None or np.isnan(res)
             continue

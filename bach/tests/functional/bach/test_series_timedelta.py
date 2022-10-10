@@ -117,7 +117,6 @@ def test_to_pandas(engine):
     assert bt[['td']].to_numpy()[0] == [27744277000000000]
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_timedelta_operations(engine):
     pdf = pd.DataFrame(
         data={
