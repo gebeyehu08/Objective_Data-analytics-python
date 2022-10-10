@@ -1,12 +1,10 @@
 import numpy as np
-from decimal import Decimal
 
+import pandas as pd
 import pytest
-from psycopg2._range import NumericRange
+from tests.functional.bach.test_data_and_utils import get_df_with_railway_data, get_df_with_test_data
 
-from sql_models.util import is_postgres, is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-    get_df_with_railway_data, get_df_with_test_data
+from bach.testing import assert_equals_data
 
 
 def test_value_counts_basic(engine):
@@ -43,7 +41,6 @@ def test_value_counts_basic(engine):
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_value_counts_w_bins(engine) -> None:
     bins = 4
     inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']
@@ -52,19 +49,11 @@ def test_value_counts_w_bins(engine) -> None:
         inhabitants.to_pandas().value_counts(bins=bins).to_numpy(),
         result.to_numpy(),
     )
-    bounds_right = '(]'
-    if is_postgres(engine):
-        bin1 = NumericRange(Decimal('607.215'),  Decimal('23896.25'), bounds=bounds_right)
-        bin2 = NumericRange(Decimal('23896.25'),  Decimal('47092.5'), bounds=bounds_right)
-        bin3 = NumericRange(Decimal('47092.5'),  Decimal('70288.75'), bounds=bounds_right)
-        bin4 = NumericRange(Decimal('70288.75'), Decimal('93485'), bounds=bounds_right)
-    elif is_bigquery(engine):
-        bin1 = {'lower': 607.215, 'upper': 23896.25, 'bounds': bounds_right}
-        bin2 = {'lower': 23896.25, 'upper': 47092.5, 'bounds': bounds_right}
-        bin3 = {'lower': 47092.5, 'upper': 70288.75, 'bounds': bounds_right}
-        bin4 = {'lower': 70288.75, 'upper': 93485, 'bounds': bounds_right}
-    else:
-        raise Exception()
+    closed = 'right'
+    bin1 = pd.Interval(607.215, 23896.25,  closed)
+    bin2 = pd.Interval(23896.25, 47092.5,  closed)
+    bin3 = pd.Interval(47092.5, 70288.75,  closed)
+    bin4 = pd.Interval(70288.75, 93485.,  closed)
 
     assert_equals_data(
         result.sort_index(),
@@ -75,14 +64,11 @@ def test_value_counts_w_bins(engine) -> None:
             [bin3, 0],
             [bin4, 1],
         ],
+        use_to_pandas=True,
     )
 
-    if is_postgres(engine):
-        bin1_bach = NumericRange(Decimal('700'), Decimal('23896.25'), bounds='[]')
-    elif is_bigquery(engine):
-        bin1_bach = {'lower': 700, 'upper': 23896.25, 'bounds': '[]'}
-    else:
-        raise Exception()
+    bin1_bach = pd.Interval(700., 23896.25, closed='both')
+
     result_w_bach_method = inhabitants.value_counts(bins=bins, method='bach')
     assert_equals_data(
         result_w_bach_method.sort_index(),
@@ -93,6 +79,7 @@ def test_value_counts_w_bins(engine) -> None:
             [bin3, 0],
             [bin4, 1],
         ],
+        use_to_pandas=True,
     )
 
 

@@ -111,7 +111,7 @@ def _calculate_quantiles_with_percentile_cont(
         final_series.append(q_series_name)
 
     quantiles_df = quantiles_df.set_index(_QUANTILES_SERIES_NAME, append=True)
-    return quantiles_df[final_series]
+    return quantiles_df[final_series].materialize(node_name='quantile_calculation')
 
 
 def _calculate_quantiles_with_linear_interpolation(
@@ -241,7 +241,7 @@ def _calculate_quantiles_with_linear_interpolation(
         calculated_quantiles[q_series_name] = result_series.copy_override(name=f'{series_name}_quantile')
 
     quantiles_df = quantiles_df.copy_override(series=calculated_quantiles)
-    return quantiles_df
+    return quantiles_df.materialize(node_name='quantile_calculation')
 
 
 def calculate_quantiles_df(
