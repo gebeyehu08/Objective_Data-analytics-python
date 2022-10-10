@@ -36,7 +36,7 @@ getEntityNames().forEach((entityName) => {
   const isGlobalContext = entityParents.includes('AbstractGlobalContext');
   const isEvent = entityCategory == 'event';
 
-  // for Events: list of required contexts
+  // for Events: create a list of required contexts
   let requiredContexts = [] as RequiredContextsDefinition[];
   if (isEvent && validationRules) {
     validationRules.forEach((validationRule) => {
@@ -49,6 +49,24 @@ getEntityNames().forEach((entityName) => {
       }
     });
   }
+
+  // for this entity, get all properties for each of its parents, and just its own properties
+  let entityParentsWithProperties = [] as object[];
+  let entityDeepCopy = JSON.parse(JSON.stringify(entity));
+  const entityOwnProperties = entityDeepCopy['properties'] ?? {};
+  entityParents.forEach(parent => {
+    let parentEntity = getEntityByName(parent);
+    parentEntity.name = parent;
+    if (parentEntity.properties) {
+      for (const [key, value] of Object.entries(parentEntity.properties)) {
+        delete entityOwnProperties[key];
+      };
+    }
+    entityParentsWithProperties.push(parentEntity);
+  });
+  // if (entityName == 'FailureEvent') {
+  //   debugger;
+  // }
 
   const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location-' : isGlobalContext ? 'global-' : '';
   const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
@@ -65,13 +83,12 @@ getEntityNames().forEach((entityName) => {
     docsWriter.writeLine("import Mermaid from '@theme/Mermaid'");
     docsWriter.writeLine();
     
-    docsWriter.writeMermaidChart(entityName, entityProperties, entityParents, requiredContexts, 
-      "Diagram: " + entityName);
+    // Mermaid chart
+    docsWriter.writeMermaidChart(entityName, entityOwnProperties, entityParentsWithProperties, 
+      requiredContexts, "Diagram: " + entityName);
     docsWriter.writeLine();
 
-    // TODO implement writeMermaid in docsWriter, e.g. writeMermaid({chart, caption, links})
-
-    // for Events: list of required contexts
+    // for Events: write list of required contexts
     if (requiredContexts) {
       docsWriter.writeH3('Requires');
       docsWriter.writeLine();
@@ -81,7 +98,6 @@ getEntityNames().forEach((entityName) => {
           let requiredContext = requiredContexts[i];
           let ruleType = requiredContext.ruleType.toString();
           let context = requiredContext.context.toString();
-          debugger;
           if (ruleType == 'RequiresLocationContext' || ruleType == 'RequiresGlobalContext') {
             const url = (ruleType == 'RequiresLocationContext' ? '../location' : '../global') + 
               '-contexts/' + context + '.md';

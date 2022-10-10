@@ -113,7 +113,7 @@ export class DocusaurusWriter extends CodeWriter {
     this.increaseIndent();
     this.writeIndent();
     for (let i = 0; i < parents.length; i++ ) {
-      this.write(parents[i]);
+      this.write(parents[i].name);
       // TODO: write the parents' requirements & properties
       if (i < parents.length) {
         this.write(" --> ");
@@ -121,21 +121,30 @@ export class DocusaurusWriter extends CodeWriter {
     }
     
     // write this entity and its requirements & properties
+    const hasContextsOrProperties = (requiredContexts.length > 0 || Object.entries(entityProperties).length > 0)
+    this.write(entityName);
+    if (hasContextsOrProperties) {
+      this.write('["' + entityName);
+    }
     if (requiredContexts.length > 0) {
-      debugger;
-      this.write(entityName + '["' + entityName + '<br /><span class=\'requires_context\'>requires:<br />');
+      this.write('<span class=\'requires_context\'>requires:<br />');
       requiredContexts.forEach(requiredContext => {
-        this.write(requiredContext.context);
+        this.write(requiredContext.context + '<br />');
       });
-      this.write('</span>"];');
+      this.write('</span>');
     }
-    else {
-      this.write(entityName + ';');
+    if (Object.entries(entityProperties).length > 0) {
+      this.write('<br /><span class=\'properties\'>');
+      for (const [key, value] of Object.entries(entityProperties)) {
+        // TODO: fix typing
+        this.write(key + ': ' + value.type + '<br />')
+      }
+      this.write('</span>');
     }
-    // TODO: write its properties
-    if (entityName == 'FailureEvent') {
-      debugger;
+    if (hasContextsOrProperties) {
+      this.write('"]');
     }
+    this.write(';')
     this.writeEndOfLine();
     
     this.decreaseIndent();
