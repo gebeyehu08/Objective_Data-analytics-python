@@ -30,12 +30,15 @@ def _create_test_table(engine: Engine, table_name: str, add_data: bool):
                     c double precision,
                     d date,
                     e timestamp,
-                    f boolean
+                    "F" boolean
                 );
 
-                insert into {table_name}(a, b, c, d, e, f) values
+                insert into {table_name}(a, b, c, d, e, "F") values
                 (123, 'test', 1.2345, '2022-01-01', '2000-03-04 05:43:21', true);
             ''',
+        # Note that for Athena we have the `F` column, but it is created by Athena as lower-case `f` [1].
+        # Verified this in the web-interface, the actual column-name is lower-case there too.
+        # [1] https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
         DBDialect.ATHENA: f'''
                 drop table if exists {table_name};
                 create external table {table_name}(
@@ -44,11 +47,11 @@ def _create_test_table(engine: Engine, table_name: str, add_data: bool):
                     c double,
                     d date,
                     e timestamp,
-                    f boolean
+                    `F` boolean
                 )
                 location '{DB_ATHENA_LOCATION}/{table_name}/';
 
-                insert into {table_name}(a, b, c, d, e, f) values
+                insert into {table_name}(a, b, c, d, e, "F") values
                 (123, 'test', 1.2345, DATE '2022-01-01', TIMESTAMP '2000-03-04 05:43:21', true);
             ''',
         DBDialect.BIGQUERY: f'''
@@ -59,10 +62,10 @@ def _create_test_table(engine: Engine, table_name: str, add_data: bool):
                     c float64,
                     d date,
                     e timestamp,
-                    f bool
+                    `F` bool
                 );
 
-                insert into {table_name}(a, b, c, d, e, f) values
+                insert into {table_name}(a, b, c, d, e, `F`) values
                 (123, 'test', 1.2345, '2022-01-01', '2000-03-04 05:43:21', true);
             '''
     }
@@ -112,10 +115,16 @@ def test_from_table_basic(engine, unique_table_test_name):
     _create_test_table(engine, table_name, add_data=True)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['a'])
+    expected_dtypes = {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    expected_base_node_columns = ('a', 'b', 'c', 'd', 'e', 'F')
+    if is_athena(engine):  # Athena automatically lower-cases capital letters in column-names of tables.
+        expected_dtypes = {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+        expected_base_node_columns = ('a', 'b', 'c', 'd', 'e', 'f')
+
     assert df.index_dtypes == {'a': 'int64'}
-    assert df.dtypes == {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+    assert df.dtypes == expected_dtypes
     assert df.is_materialized
-    assert df.base_node.series_names == ('a', 'b', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == expected_base_node_columns
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.materialization == Materialization.SOURCE
     with pytest.raises(Exception, match="No models to compile"):
@@ -127,9 +136,12 @@ def test_from_table_basic(engine, unique_table_test_name):
     _assert_df_supports_basic_operations(df)
 
     # now create same DataFrame, but specify all_dtypes.
+    all_dtypes = {'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    if is_athena(engine):
+        all_dtypes = {k.lower(): v for k, v in all_dtypes.items()}
     df_all_dtypes = DataFrame.from_table(
         engine=engine, table_name=table_name, index=['a'],
-        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+        all_dtypes=all_dtypes
     )
     assert df == df_all_dtypes
 
@@ -147,10 +159,15 @@ def _assert_df_supports_basic_operations(df: DataFrame):
     df = df.append(df)
     df = df.sort_index()
     df = df.merge(df_original, on=['a'])
+
+    expected_columns = ['a', 'b_x', 'c_x', 'd_x', 'e_x', 'F_x', 'b_y', 'c_y', 'd_y', 'e_y', 'F_y']
+    if is_athena(df.engine):
+        # Athena automatically lower-cases capital letters in column-names of tables [1].
+        expected_columns = [name.lower() for name in expected_columns]
     assert_equals_data(
         df,
         use_to_pandas=True,
-        expected_columns=['a', 'b_x', 'c_x', 'd_x', 'e_x', 'f_x', 'b_y', 'c_y', 'd_y', 'e_y', 'f_y'],
+        expected_columns=expected_columns,
         expected_data=[
             [123, 'test-test', 101.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True,
              'test', 1.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True],
@@ -171,9 +188,9 @@ def test_from_model_basic(engine, unique_table_test_name):
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['a'])
     assert df.index_dtypes == {'a': 'int64'}
-    assert df.dtypes == {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+    assert df.dtypes == {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
     assert df.is_materialized
-    assert df.base_node.series_names == ('a', 'b', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == ('a', 'b', 'c', 'd', 'e', 'F')
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.references == {}
     # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
@@ -184,7 +201,7 @@ def test_from_model_basic(engine, unique_table_test_name):
     # now create same DataFrame, but specify all_dtypes.
     df_all_dtypes = DataFrame.from_model(
         engine=engine, model=sql_model, index=['a'],
-        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
     )
     assert df == df_all_dtypes
 
@@ -195,19 +212,29 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
     _create_test_table(engine, table_name, add_data=False)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['b'])
+
+    expected_dtypes = {'a': 'int64', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    expected_base_node_columns = ('b', 'a', 'c', 'd', 'e', 'F')
+    if is_athena(engine):  # Athena automatically lower-cases capital letters in column-names of tables.
+        expected_dtypes = {k.lower(): v for k, v in expected_dtypes.items()}
+        expected_base_node_columns = tuple(n.lower() for n in expected_base_node_columns)
+
     assert df.index_dtypes == {'b': 'string'}
-    assert df.dtypes == {'a': 'int64', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+    assert df.dtypes == expected_dtypes
     assert df.is_materialized
     # We should have an extra model in the sql-model graph, because 'b' is the index and should thus be the
     # first column.
-    assert df.base_node.series_names == ('b', 'a', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == expected_base_node_columns
     assert 'prev' in df.base_node.references
     assert df.base_node.references['prev'].references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 
+    all_dtypes = {'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    if is_athena(engine):
+        all_dtypes = {k.lower(): v for k, v in all_dtypes.items()}
     df_all_dtypes = DataFrame.from_table(
         engine=engine, table_name=table_name, index=['b'],
-        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+        all_dtypes=all_dtypes
     )
     assert df == df_all_dtypes
 
@@ -225,20 +252,88 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['b'])
     assert df.index_dtypes == {'b': 'string'}
-    assert df.dtypes == {'a': 'int64', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+    assert df.dtypes == {'a': 'int64', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
     assert df.is_materialized
     # We should have an extra model in the sql-model graph, because 'b' is the index and should thus be the
     # first column.
-    assert df.base_node.series_names == ('b', 'a', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == ('b', 'a', 'c', 'd', 'e', 'F')
     assert 'prev' in df.base_node.references
     assert df.base_node.references['prev'].references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 
     df_all_dtypes = DataFrame.from_model(
         engine=engine, model=sql_model, index=['b'],
-        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
     )
     assert df == df_all_dtypes
+
+
+def test_from_table_column_mapping(engine, unique_table_test_name):
+    table_name = unique_table_test_name
+    _create_test_table(engine, table_name, add_data=True)
+
+    name_to_column_mapping = {
+        'A': 'a',
+        '~!@#$%': 'b',
+        '__x': 'c',
+        'd': 'd',
+        'ヽ(。_°)ノ': 'e',
+        'f': 'F'
+    }
+
+    df = DataFrame.from_table(
+        engine=engine,
+        table_name=table_name,
+        index=['A'],
+        name_to_column_mapping=name_to_column_mapping
+    )
+    expected_dtypes = {
+        '~!@#$%': 'string',
+        '__x': 'float64',
+        'd': 'date',
+        'ヽ(。_°)ノ': 'timestamp',
+        'f': 'bool'
+    }
+    expected_base_node_columns = ('A', '~!@#$%', '__x', 'd', 'ヽ(。_°)ノ', 'f')
+
+    assert df.index_dtypes == {'A': 'int64'}
+    assert df.dtypes == expected_dtypes
+    assert df.is_materialized
+    assert df.base_node.series_names == expected_base_node_columns
+
+    # We should have an extra model in the sql-model graph, because the column names don't match the series
+    # names, and thus we try to materialize this.
+    assert 'prev' in df.base_node.references
+    assert df.base_node.references['prev'].references == {}
+    assert df.base_node.references['prev'].materialization == Materialization.SOURCE
+
+    # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
+    df_original = df.copy()
+    df['__x'] = df['__x'] + 100
+    assert_equals_data(
+        df,
+        use_to_pandas=True,
+        expected_columns=list(expected_base_node_columns),
+        expected_data=[[123, 'test', 101.2345, date(2022, 1, 1), datetime(2000, 3, 4, 5, 43, 21), True]]
+    )
+
+    # now create same DataFrame, but specify all_dtypes.
+    all_dtypes = {
+        'A': 'int64',
+        '~!@#$%': 'string',
+        '__x': 'float64',
+        'd': 'date',
+        'ヽ(。_°)ノ': 'timestamp',
+        'f': 'bool'
+    }
+    df_all_dtypes = DataFrame.from_table(
+        engine=engine,
+        table_name=table_name,
+        index=['A'],
+        all_dtypes=all_dtypes,
+        name_to_column_mapping=name_to_column_mapping
+    )
+    assert df_original == df_all_dtypes
 
 
 @pytest.mark.skip_postgres
@@ -297,7 +392,3 @@ def test_big_query_from_other_project(engine):
         expected_columns=expected_columns,
         expected_data=expected_data
     )
-
-
-# TODO: test for table with column names with capitals in it.
-#  https://github.com/objectiv/objectiv-analytics/issues/1318
