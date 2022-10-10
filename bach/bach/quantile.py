@@ -224,14 +224,14 @@ def _calculate_quantiles_with_linear_interpolation(
             expression=Expression.construct(
                 "try({}[cast({} as bigint)])", array_series, virtual_index // 1,
             )
-        )
+        ).fillna(0.)
 
         # X_j: element after X_i
         X_j_series = gamma_series.copy_override(
             expression=Expression.construct(
                 "try({}[cast({} as bigint) + 1])", array_series, virtual_index // 1,
             )
-        )
+        ).fillna(0.)
 
         # final result
         # X_i + gamma * (X_j - X_i)
