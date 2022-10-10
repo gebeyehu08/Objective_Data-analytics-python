@@ -4,7 +4,6 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from bach import DataFrame
-from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import TEST_DATA_CITIES, CITIES_COLUMNS, \
     assert_equals_data, convert_expected_data_timestamps
 import datetime
@@ -67,29 +66,20 @@ def test_from_pandas_table(engine, unique_table_test_name):
 
 def test_from_pandas_table_injection(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
-    if is_postgres(engine):
-        bt = DataFrame.from_pandas(
-            engine=engine,
-            df=pdf,
-            convert_objects=True,
-            name=unique_table_test_name,
-            materialization='table',
-            if_exists='replace',
-        )
-        assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
-
-    elif is_bigquery(engine):
-        with pytest.raises(ValueError, match=r'Invalid column names'):
-            DataFrame.from_pandas(
-                engine=engine,
-                df=pdf,
-                convert_objects=True,
-                name=unique_table_test_name,
-                materialization='table',
-                if_exists='replace',
-            )
-    else:
-        raise Exception()
+    bt = DataFrame.from_pandas(
+        engine=engine,
+        df=pdf,
+        convert_objects=True,
+        name=unique_table_test_name,
+        materialization='table',
+        if_exists='replace',
+    )
+    assert_equals_data(
+        bt,
+        use_to_pandas=True,
+        expected_columns=EXPECTED_COLUMNS_INJECTION,
+        expected_data=EXPECTED_DATA_INJECTION
+    )
 
 
 def test_from_pandas_ephemeral_basic(engine):
@@ -105,33 +95,25 @@ def test_from_pandas_ephemeral_basic(engine):
 
 
 def test_from_pandas_ephemeral_injection(engine):
-    # We only support 'weird' Series names on Postgres. We must make sure tho that these 'weird' names are
-    # handled correctly, which we test here.
-    # On bigquery we cannot support 'weird' series names, because we map Series names directly to column
-    # names and BigQuery only allows [a-zA-Z0-9_] in quoted column names. This behaviour for BigQuery is
-    # tested in tests/unit/bach/test_df_from_pandas.py
+    # On Postgres 'weird' Series names are used directly as column names. We must make sure that the column
+    # names are escaped properly.
+    # On Athena and BigQuery, we encode the 'weird' names into legal column names, that we map internally
+    # to the 'weird' columns names.
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
 
-    if is_postgres(engine):
-        bt = DataFrame.from_pandas(
-            engine=engine,
-            df=pdf,
-            convert_objects=True,
-            materialization='cte',
-            name='ephemeral data'
-        )
-        assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
-    elif is_bigquery(engine):
-        with pytest.raises(ValueError, match='Invalid column name'):
-            DataFrame.from_pandas(
-                engine=engine,
-                df=pdf,
-                convert_objects=True,
-                materialization='cte',
-                name='ephemeral data'
-            )
-    else:
-        raise Exception(f'Test does not support {engine.dialect}')
+    bt = DataFrame.from_pandas(
+        engine=engine,
+        df=pdf,
+        convert_objects=True,
+        materialization='cte',
+        name='ephemeral data'
+    )
+    assert_equals_data(
+        bt,
+        use_to_pandas=True,
+        expected_columns=EXPECTED_COLUMNS_INJECTION,
+        expected_data=EXPECTED_DATA_INJECTION
+    )
 
 
 def test_from_pandas_non_happy_path(engine, unique_table_test_name):
@@ -266,7 +248,6 @@ def test_from_pandas_types(materialization: str, engine, unique_table_test_name)
     )
 
 
-@pytest.mark.skip_bigquery_todo()
 def test_from_pandas_types_cte(engine, unique_table_test_name):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)

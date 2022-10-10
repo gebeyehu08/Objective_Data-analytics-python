@@ -102,7 +102,7 @@ def test_from_table_structural_big_query(engine, unique_table_test_name):
     assert df.index_dtypes == {'a': 'int64'}
     assert df.dtypes == {'b': 'dict', 'c': 'list'}
     assert df.is_materialized
-    assert df.base_node.columns == ('a', 'b', 'c')
+    assert df.base_node.series_names == ('a', 'b', 'c')
     assert df['b'].instance_dtype == {'f1': 'int64', 'f2': 'float64', 'f3': {'f31': ['int64'], 'f32': 'bool'}}
     assert df['c'].instance_dtype == [{'f1': 'int64', 'f2': 'int64'}]
 
@@ -115,7 +115,7 @@ def test_from_table_basic(engine, unique_table_test_name):
     assert df.index_dtypes == {'a': 'int64'}
     assert df.dtypes == {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
     assert df.is_materialized
-    assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.materialization == Materialization.SOURCE
     with pytest.raises(Exception, match="No models to compile"):
@@ -173,7 +173,7 @@ def test_from_model_basic(engine, unique_table_test_name):
     assert df.index_dtypes == {'a': 'int64'}
     assert df.dtypes == {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
     assert df.is_materialized
-    assert df.base_node.columns == ('a', 'b', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == ('a', 'b', 'c', 'd', 'e', 'f')
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.references == {}
     # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
@@ -200,7 +200,7 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
     assert df.is_materialized
     # We should have an extra model in the sql-model graph, because 'b' is the index and should thus be the
     # first column.
-    assert df.base_node.columns == ('b', 'a', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == ('b', 'a', 'c', 'd', 'e', 'f')
     assert 'prev' in df.base_node.references
     assert df.base_node.references['prev'].references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
@@ -229,7 +229,7 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
     assert df.is_materialized
     # We should have an extra model in the sql-model graph, because 'b' is the index and should thus be the
     # first column.
-    assert df.base_node.columns == ('b', 'a', 'c', 'd', 'e', 'f')
+    assert df.base_node.series_names == ('b', 'a', 'c', 'd', 'e', 'f')
     assert 'prev' in df.base_node.references
     assert df.base_node.references['prev'].references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
@@ -297,3 +297,7 @@ def test_big_query_from_other_project(engine):
         expected_columns=expected_columns,
         expected_data=expected_data
     )
+
+
+# TODO: test for table with column names with capitals in it.
+#  https://github.com/objectiv/objectiv-analytics/issues/1318

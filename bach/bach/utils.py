@@ -1,5 +1,6 @@
+import base64
 import re
-from typing import NamedTuple, Dict, List, Set
+from typing import NamedTuple, Dict, List, Set, Iterable
 from sqlalchemy.engine import Connection, Dialect
 
 from bach.expression import Expression, ColumnReferenceToken
@@ -67,18 +68,23 @@ def is_valid_column_name(dialect: Dialect, name: str) -> bool:
         # Identifiers longer than 63 characters are not necessarily wrong, but they will be truncated which
         # could lead to identifier collisions, so we just disallow it.
         # source: https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
-        return len(name) < 64
+        return 0 < len(name) < 64
     if is_athena(dialect):
         # Source: https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
+
+        # Only allow lower-case a-z, to make sure we don't have duplicate case-insensitive column names
         regex = '^[a-z0-9_]*$'
-        len_ok = len(name) <= 255
+        len_ok = 0 < len(name) <= 255
         pattern_ok = bool(re.match(pattern=regex, string=name))
         return len_ok and pattern_ok
     if is_bigquery(dialect):
-        # sources:
+        # Sources:
         #  https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#column_names
+        #  https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#case_sensitivity
         #  https://cloud.google.com/bigquery/docs/schemas#column_names
-        regex = '^[a-zA-Z_][a-zA-Z0-9_]*$'
+
+        # Only allow lower-case a-z, to make sure we don't have duplicate case-insensitive column names
+        regex = '^[a-z_][a-z0-9_]*$'
         reserved_prefixes = [
             '_TABLE_',
             '_FILE_',
@@ -87,24 +93,80 @@ def is_valid_column_name(dialect: Dialect, name: str) -> bool:
             '__ROOT__',
             '_COLIDENTIFIER'
         ]
-        len_ok = len(name) <= 300
+        len_ok = 0 < len(name) <= 300
         pattern_ok = bool(re.match(pattern=regex, string=name))
-        prefix_ok = not any(name.startswith(prefix) for prefix in reserved_prefixes)
+        prefix_ok = not any(name.startswith(prefix.lower()) for prefix in reserved_prefixes)
         return len_ok and pattern_ok and prefix_ok
     raise DatabaseNotSupportedException(dialect)
 
 
+def get_sql_column_name(dialect: Dialect, name: str) -> str:
+    """
+    Given the name of a series and dialect, return the sql column name.
+
+    If the name contains no characters that require escaping, for the given dialect, then the same string is
+    returned. Otherwise, a column name is that can be safely used with the given dialect. The generated name
+    will be based on the given name, and can be reverted again with :meth:`get_name_from_sql_column_name()`
+
+    **Background**
+    Each Bach Series is mapped to a column in queries. Unfortunately, some databases only supported a limited
+    set of characters in column names. To work around this limitation we distinguish the Series name from the
+    sql-column name. The former is the name a Bach user will see and use, the latter is the name that will
+    appear in SQL queries.
+
+    The algorithm we use to map series names to column names is deterministic and reversible.
+
+    :raises ValueError: if name cannot be appropriately escaped or is too long for the given dialect
+    :return: column name for the given series name.
+    """
+    if is_valid_column_name(dialect, name):
+        return name
+    escaped = base64.b32encode(name.encode('utf-8')).decode('utf-8').lower().replace('=', '')
+    escaped = f'__esc_{escaped}'
+    if not is_valid_column_name(dialect, escaped):
+        raise ValueError(f'Column name "{name}" is not valid for SQL dialect {dialect.name}, and cannot be '
+                         f'escaped. Try making the series name shorter and/or using characters [a-z] only.')
+    return escaped
+
+
+def get_name_to_column_mapping(dialect: Dialect, names: Iterable[str]) -> Dict[str, str]:
+    """ Give a mapping of series names to sql column names. """
+    return {
+        name: get_sql_column_name(dialect=dialect, name=name) for name in names
+    }
+
+
+def get_name_from_sql_column_name(sql_column_name: str) -> str:
+    """
+    Given a sql column name, give the Series name.
+
+    This is the reverese operation of :meth:`get_sql_column_name()`.
+    """
+    escape_indicator = '__esc_'
+    if not sql_column_name.startswith(escape_indicator):
+        return sql_column_name
+    rest = sql_column_name[len(escape_indicator):]
+    # In get_sql_column_name() we removed the padding, but b32decode() requires the padding, so add it again.
+    # Padding should make each string a multiple of 8 characters [1].
+    # [1]: https://datatracker.ietf.org/doc/html/rfc4648.html#section-6
+    padding = '=' * (8 - (len(rest) % 8))
+    b32_encoded = (rest + padding).upper()
+    original = base64.b32decode(b32_encoded.encode('utf-8')).decode('utf-8')
+    return original
+
+
 def validate_node_column_references_in_sorting_expressions(
-    node: BachSqlModel, order_by: List[SortColumn],
+    dialect: Dialect, node: BachSqlModel, order_by: List[SortColumn],
 ) -> None:
     """
     Validate that all ColumnReferenceTokens in order_by expressions refer columns that exist in node.
     """
+    sql_column_names = set(get_sql_column_name(dialect=dialect, name=column) for column in node.series_names)
     for ob in order_by:
         invalid_column_references = [
             token.column_name
             for token in ob.expression.get_all_tokens()
-            if isinstance(token, ColumnReferenceToken) and token.column_name not in node.column_expressions
+            if isinstance(token, ColumnReferenceToken) and token.column_name not in sql_column_names
         ]
         if invalid_column_references:
             raise ValueError(

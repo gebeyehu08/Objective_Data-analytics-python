@@ -2,7 +2,6 @@
 Copyright 2021 Objectiv B.V.
 """
 import pandas as pd
-import pytest
 
 from bach import Series, SeriesString, DataFrame
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
@@ -109,7 +108,6 @@ def test_add_string_series(engine):
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_get_dummies(engine) -> None:
     bt = get_df_with_test_data(engine)
     result = bt['city'].get_dummies()

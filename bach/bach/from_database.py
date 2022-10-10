@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Mapping, Optional
 
 from sqlalchemy.engine import Engine
 
@@ -14,8 +14,19 @@ from sql_models.sql_generator import to_sql
 from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
 
 
-def get_dtypes_from_model(engine: Engine, node: SqlModel) -> Dict[str, StructuredDtype]:
-    """ Create a temporary database table from model and use it to deduce the model's dtypes. """
+def get_dtypes_from_model(
+        engine: Engine,
+        node: SqlModel,
+        name_to_column_mapping: Optional[Mapping[str, str]] = None
+) -> Dict[str, StructuredDtype]:
+    """
+    Create a temporary database table from model and use it to deduce the model's dtypes.
+
+    Does not support all database engines.
+
+    :return: Dictionary with as key the column names, and as values the dtype of the column.
+    """
+    name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
     if not is_postgres(engine):
         message_override = f'We cannot automatically derive dtypes from a SqlModel for database ' \
                            f'dialect "{engine.name}".'
@@ -30,20 +41,30 @@ def get_dtypes_from_model(engine: Engine, node: SqlModel) -> Dict[str, Structure
         where table_name = 'tmp_table_name'
         order by ordinal_position;
     """
-    return _get_dtypes_from_information_schema_query(engine=engine, query=sql)
+    return _get_dtypes_from_information_schema_query(
+        engine=engine,
+        query=sql,
+        name_to_column_mapping=name_to_column_mapping
+    )
 
 
 def get_dtypes_from_table(
     engine: Engine,
     table_name: str,
+    name_to_column_mapping: Optional[Mapping[str, str]] = None
 ) -> Dict[str, StructuredDtype]:
     """
     Query database to get dtypes of the given table.
     :param engine: sqlalchemy engine for the database.
     :param table_name: the table name for which to get the dtypes. Can include project_id and dataset on
         BigQuery, e.g. 'project_id.dataset.table_name'
-    :return: Dictionary with as key the column names of the table, and as values the dtype of the column.
+    :param name_to_column_mapping: Optional mapping from series-name to column-names. The names in the
+        returned dictionary will be reverse mapped with this mapping. If a column name is missing, then the
+        table's column name will be assumed to be the series-names.
+    :return: Dictionary with as key the series names, and as values the dtype of the matching column.
     """
+    name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
+
     filters_expr = []
     if is_postgres(engine):
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
@@ -67,7 +88,11 @@ def get_dtypes_from_table(
         where {filters_stmt}
         order by ordinal_position;
     """
-    return _get_dtypes_from_information_schema_query(engine=engine, query=sql)
+    return _get_dtypes_from_information_schema_query(
+        engine=engine,
+        query=sql,
+        name_to_column_mapping=name_to_column_mapping
+    )
 
 
 def _get_bq_meta_data_table_from_table_name(table_name) -> Tuple[str, str]:
@@ -90,12 +115,27 @@ def _get_bq_meta_data_table_from_table_name(table_name) -> Tuple[str, str]:
     return f'{project_id_dataset}INFORMATION_SCHEMA.COLUMNS', table_name
 
 
-def _get_dtypes_from_information_schema_query(engine: Engine, query: str) -> Dict[str, StructuredDtype]:
-    """ Parse information_schema.columns to dtypes. """
+def _get_dtypes_from_information_schema_query(
+        engine: Engine,
+        query: str,
+        name_to_column_mapping: Mapping[str, str]
+) -> Dict[str, StructuredDtype]:
+    """
+    Execute query and parse information_schema.columns data to a dictionary mapping Series-names to dtypes.
+
+    If name_to_column_mapping is incomplete, the column names that the query renders will be assumed to be
+    series-names.
+    """
+    column_to_name_mapping = {column: name for name, column in name_to_column_mapping.items()}
     with engine.connect() as conn:
         sql = escape_parameter_characters(conn, query)
         res = conn.execute(sql)
         rows = res.fetchall()
 
     db_dialect = DBDialect.from_engine(engine)
-    return {row[0]: get_dtype_from_db_dtype(db_dialect, row[1]) for row in rows}
+    result = {}
+    for row in rows:
+        column_name, db_dtype = row
+        series_name = column_to_name_mapping.get(column_name, column_name)
+        result[series_name] = get_dtype_from_db_dtype(db_dialect, db_dtype)
+    return result

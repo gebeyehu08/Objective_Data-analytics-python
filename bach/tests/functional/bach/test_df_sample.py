@@ -126,7 +126,6 @@ def test_sample_operations_filter(engine, unique_table_test_name):
     )
 
 
-@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_sample_column_name_special_char(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
     bt_sample = bt.get_sample(table_name=unique_table_test_name,
