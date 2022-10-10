@@ -2,6 +2,21 @@
 
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractLocationContext --> ContentContext;
+    class ContentContext diagramActive
+  `}
+  caption="Diagram: ContentContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |           | type          | description                                                                                                 | contains |

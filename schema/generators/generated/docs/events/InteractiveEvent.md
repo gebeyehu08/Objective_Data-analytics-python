@@ -2,6 +2,17 @@
 
 The parent of [Events](/taxonomy/events) that are the direct result of a user interaction, e.g. a button click.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> InteractiveEvent["InteractiveEvent<br /><span class='properties'>requires:<br />RootLocationContextPathContext</span>"];
+    class InteractiveEvent diagramActive
+  `}
+  caption="Diagram: InteractiveEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 * [RootLocationContext](../location-contexts/RootLocationContext.md).

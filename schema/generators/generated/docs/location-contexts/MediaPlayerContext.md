@@ -2,6 +2,21 @@
 
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes a section of the UI containing a media player.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractLocationContext --> MediaPlayerContext;
+    class MediaPlayerContext diagramActive
+  `}
+  caption="Diagram: MediaPlayerContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |           | type          | description                                                                                                 | contains |

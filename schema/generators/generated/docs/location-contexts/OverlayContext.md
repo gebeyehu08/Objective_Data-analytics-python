@@ -2,6 +2,21 @@
 
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a section of the UI that represents an overlay, i.e. a Modal.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractLocationContext --> OverlayContext;
+    class OverlayContext diagramActive
+  `}
+  caption="Diagram: OverlayContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |           | type          | description                                                                                                 | contains |

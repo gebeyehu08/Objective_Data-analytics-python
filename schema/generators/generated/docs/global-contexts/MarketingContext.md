@@ -2,6 +2,21 @@
 
 A [GlobalContext](/taxonomy/global-contexts) describing the marketing channel & campaign from where the user came.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractGlobalContext --> MarketingContext;
+    class MarketingContext diagramActive
+  `}
+  caption="Diagram: MarketingContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |                      | type          | description                                                                                                 | contains |

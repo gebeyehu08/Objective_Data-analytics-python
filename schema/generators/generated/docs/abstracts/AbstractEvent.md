@@ -2,6 +2,17 @@
 
 
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent;
+    class AbstractEvent diagramActive
+  `}
+  caption="Diagram: AbstractEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

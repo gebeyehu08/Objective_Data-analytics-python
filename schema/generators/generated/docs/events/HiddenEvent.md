@@ -2,6 +2,17 @@
 
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become invisible.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> HiddenEvent;
+    class HiddenEvent diagramActive
+  `}
+  caption="Diagram: HiddenEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

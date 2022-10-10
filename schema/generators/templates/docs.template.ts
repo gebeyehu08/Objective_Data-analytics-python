@@ -17,6 +17,11 @@ import {
 
 const destination = '../generated/docs/';
 
+export type RequiredContextsDefinition = {
+  ruleType: string;
+  context: string;
+};
+
 getEntityNames().forEach((entityName) => {
   const entityCategory = entityName.endsWith('Event') ? 'event' : 'context';
   const entity = getEntityByName(entityName);
@@ -31,6 +36,20 @@ getEntityNames().forEach((entityName) => {
   const isGlobalContext = entityParents.includes('AbstractGlobalContext');
   const isEvent = entityCategory == 'event';
 
+  // for Events: list of required contexts
+  let requiredContexts = [] as RequiredContextsDefinition[];
+  if (isEvent && validationRules) {
+    validationRules.forEach((validationRule) => {
+      const ruleType = validationRule.type;
+      if (ruleType == 'RequiresLocationContext' || ruleType == 'RequiresGlobalContext') {
+          requiredContexts.push({
+            'ruleType': ruleType,
+            'context': validationRule.scope[0].context
+          });
+      }
+    });
+  }
+
   const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location-' : isGlobalContext ? 'global-' : '';
   const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
 
@@ -42,23 +61,33 @@ getEntityNames().forEach((entityName) => {
     docsWriter.writeLine();
     docsWriter.writeLine(primaryDescription);
     docsWriter.writeLine();
+    
+    docsWriter.writeLine("import Mermaid from '@theme/Mermaid'");
+    docsWriter.writeLine();
+    
+    docsWriter.writeMermaidChart(entityName, entityProperties, entityParents, requiredContexts, 
+      "Diagram: " + entityName);
+    docsWriter.writeLine();
 
     // TODO implement writeMermaid in docsWriter, e.g. writeMermaid({chart, caption, links})
 
     // for Events: list of required contexts
-    if (isEvent) {
+    if (requiredContexts) {
       docsWriter.writeH3('Requires');
       docsWriter.writeLine();
-      if (validationRules) {
-        validationRules.forEach((validationRule) => {
-          const ruleType = validationRule.type;
+      
+      if (requiredContexts.length > 0) {
+        for (let i = 0; i < requiredContexts.length; i++) {
+          let requiredContext = requiredContexts[i];
+          let ruleType = requiredContext.ruleType.toString();
+          let context = requiredContext.context.toString();
+          debugger;
           if (ruleType == 'RequiresLocationContext' || ruleType == 'RequiresGlobalContext') {
-              const requiredContext = validationRule.scope[0].context;
-              const url = (ruleType == 'RequiresLocationContext' ? '../location' : '../global') + '-contexts/' 
-                + requiredContext + '.md';
-              docsWriter.writeRequiredContext(requiredContext, url);
-            }
-        });
+            const url = (ruleType == 'RequiresLocationContext' ? '../location' : '../global') + 
+              '-contexts/' + context + '.md';
+            docsWriter.writeRequiredContext(context, url);
+          }
+        }
       } else {
         docsWriter.writeLine('None.');
       }

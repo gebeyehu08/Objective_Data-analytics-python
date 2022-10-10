@@ -2,6 +2,17 @@
 
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is emitted after an application (eg. SPA) or a website has finished loading.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> ApplicationLoadedEvent;
+    class ApplicationLoadedEvent diagramActive
+  `}
+  caption="Diagram: ApplicationLoadedEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

@@ -2,6 +2,21 @@
 
 A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing meta information about the agent that sent the event.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractGlobalContext --> HttpContext;
+    class HttpContext diagramActive
+  `}
+  caption="Diagram: HttpContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |                    | type          | description                                                                                                 | contains |

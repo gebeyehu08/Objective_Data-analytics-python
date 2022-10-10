@@ -2,6 +2,21 @@
 
 
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext;
+    class AbstractContext diagramActive
+  `}
+  caption="Diagram: AbstractContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |           | type          | description                                                                                                 | contains |

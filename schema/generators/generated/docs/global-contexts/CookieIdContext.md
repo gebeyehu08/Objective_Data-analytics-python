@@ -2,6 +2,21 @@
 
 A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing information needed to reconstruct a user session.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractGlobalContext --> CookieIdContext;
+    class CookieIdContext diagramActive
+  `}
+  caption="Diagram: CookieIdContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |               | type          | description                                                                                                 | contains |

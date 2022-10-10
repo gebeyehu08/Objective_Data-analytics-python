@@ -2,6 +2,21 @@
 
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a section of the UI containing navigational elements, for example a menu.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractLocationContext --> NavigationContext;
+    class NavigationContext diagramActive
+  `}
+  caption="Diagram: NavigationContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |           | type          | description                                                                                                 | contains |

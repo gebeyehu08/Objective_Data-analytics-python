@@ -2,6 +2,17 @@
 
 A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item starts playback.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> MediaEvent --> MediaStartEvent;
+    class MediaStartEvent diagramActive
+  `}
+  caption="Diagram: MediaStartEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

@@ -2,6 +2,17 @@
 
 The parent of [non-interactive events](/taxonomy/reference/events/NonInteractiveEvent.md) that are triggered by a media player. It requires a [MediaPlayerContext](/taxonomy/reference/location-contexts/MediaPlayerContext) to detail the origin of the event.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> MediaEvent["MediaEvent<br /><span class='properties'>requires:<br />MediaPlayerContext</span>"];
+    class MediaEvent diagramActive
+  `}
+  caption="Diagram: MediaEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 * [MediaPlayerContext](../location-contexts/MediaPlayerContext.md).

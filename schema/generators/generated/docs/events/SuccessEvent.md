@@ -2,6 +2,17 @@
 
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action is successfully completed, like sending an email form.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> SuccessEvent;
+    class SuccessEvent diagramActive
+  `}
+  caption="Diagram: SuccessEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

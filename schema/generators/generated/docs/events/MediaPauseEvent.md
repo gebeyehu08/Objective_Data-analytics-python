@@ -2,6 +2,17 @@
 
 A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item pauses playback.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> MediaEvent --> MediaPauseEvent;
+    class MediaPauseEvent diagramActive
+  `}
+  caption="Diagram: MediaPauseEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

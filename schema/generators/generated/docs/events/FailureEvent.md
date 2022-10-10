@@ -2,6 +2,17 @@
 
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action results in a error, like an invalid email when sending a form.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> FailureEvent;
+    class FailureEvent diagramActive
+  `}
+  caption="Diagram: FailureEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

@@ -2,6 +2,21 @@
 
 A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing meta information about the current session.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractGlobalContext --> SessionContext;
+    class SessionContext diagramActive
+  `}
+  caption="Diagram: SessionContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |                | type          | description                                                                                                 | contains |

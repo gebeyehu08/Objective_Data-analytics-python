@@ -2,6 +2,17 @@
 
 The parent of [Events](/taxonomy/events) that are not directly triggered by a user action.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent;
+    class NonInteractiveEvent diagramActive
+  `}
+  caption="Diagram: NonInteractiveEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

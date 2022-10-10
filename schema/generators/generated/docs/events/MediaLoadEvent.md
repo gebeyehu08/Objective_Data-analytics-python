@@ -2,6 +2,17 @@
 
 A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item completes loading.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> MediaEvent --> MediaLoadEvent;
+    class MediaLoadEvent diagramActive
+  `}
+  caption="Diagram: MediaLoadEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.

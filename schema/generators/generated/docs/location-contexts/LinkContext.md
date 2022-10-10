@@ -2,6 +2,21 @@
 
 A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains a href.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractContext --> AbstractLocationContext --> PressableContext --> LinkContext;
+    class LinkContext diagramActive
+  `}
+  caption="Diagram: LinkContext"
+  baseColor="blue"
+/>
+
+### Requires
+
+None.
+
 ### Properties
 
 |           | type          | description                                                                                                 | contains |

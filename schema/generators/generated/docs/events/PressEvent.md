@@ -2,6 +2,17 @@
 
 An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is sent when a user presses on a pressable element (like a link, button, icon). Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value(s) from the user.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> InteractiveEvent --> PressEvent["PressEvent<br /><span class='properties'>requires:<br />PressableContext</span>"];
+    class PressEvent diagramActive
+  `}
+  caption="Diagram: PressEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 * [PressableContext](../location-contexts/PressableContext.md).

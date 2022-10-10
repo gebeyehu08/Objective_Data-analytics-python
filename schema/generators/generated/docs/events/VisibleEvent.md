@@ -2,6 +2,17 @@
 
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become visible.
 
+import Mermaid from '@theme/Mermaid'
+
+<Mermaid chart={`
+    graph LR
+      AbstractEvent --> NonInteractiveEvent --> VisibleEvent;
+    class VisibleEvent diagramActive
+  `}
+  caption="Diagram: VisibleEvent"
+  baseColor="blue"
+/>
+
 ### Requires
 
 None.
