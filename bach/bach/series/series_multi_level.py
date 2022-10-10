@@ -482,13 +482,13 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
             # Athena has no proper datatype for numeric intervals,
             # therefore we should represent it as a "row" structure type and cast it as a json.
             # If we do not cast the row value to json, the engine will return a stringified structure
-            # on the following format: "{lower=#, upper=#, bounds= ""}", whichs is harder to pass.
+            # on the following format: "{lower=#, upper=#, bounds= ""}", which is harder to parse.
             # Meanwhile, casting it as a json will result with an array of 3 elements.
             # Explicitly creating the array in the expression is not possible, as Athena does not
             # allow arrays of different db types.
-            base_expr_stmt = f'''
-             cast(cast(row({{}}, {{}}, {{}}) as row(lower double, upper double, bounds varchar(2))) as json)
-            '''
+            base_expr_stmt = (
+                'cast(cast(row({}, {}, {}) as row(lower double, upper double, bounds varchar(2))) as json)'
+            )
         else:
             raise DatabaseNotSupportedException(self.engine)
 
