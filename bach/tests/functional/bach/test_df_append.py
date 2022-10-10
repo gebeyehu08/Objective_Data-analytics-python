@@ -15,7 +15,7 @@ def test_append_w_aligned_columns(engine) -> None:
     other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
 
     result = caller_df.append(other_df).sort_values('A').reset_index(drop=False)
-    expected = caller_pdf.append(other_pdf).sort_values('A').reset_index(drop=False)
+    expected = pd.concat([caller_pdf, other_pdf]).sort_values('A').reset_index(drop=False)
     np.testing.assert_equal(expected.to_numpy(), result.to_numpy())
 
 
@@ -31,7 +31,7 @@ def test_append_w_non_aligned_columns(engine) -> None:
     other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
     result = caller_df.append(other_df).sort_values(['A#', 'a#']).reset_index(drop=False)
 
-    expected = caller_pdf.append(other_pdf).sort_values(['A#', 'a#']).reset_index(drop=False)
+    expected = pd.concat([caller_pdf, other_pdf]).sort_values(['A#', 'a#']).reset_index(drop=False)
     expected = expected.rename(columns={'index': '_index_0'})
 
     result_pdf = result.to_pandas()
@@ -66,7 +66,7 @@ def test_append_w_ignore_index_n_sort(engine) -> None:
 
     result = caller_df.append(other_df, ignore_index=True).sort_values('a')
 
-    expected = caller_pdf.append(other_pdf.set_index(['d']), ignore_index=True).sort_values('a')
+    expected = pd.concat([caller_pdf, other_pdf.set_index(['d'])], ignore_index=True).sort_values('a')
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
     assert_equals_data(
@@ -88,7 +88,7 @@ def test_append_w_ignore_index_n_sort(engine) -> None:
     other_df2 = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
     result2 = caller_df.append(other_df2, ignore_index=True, sort=True).sort_values('a')
 
-    expected2 = caller_pdf.append(other_pdf, ignore_index=True, sort=True)
+    expected2 = pd.concat([caller_pdf, other_pdf], ignore_index=True, sort=True)
     pd.testing.assert_frame_equal(expected2, result2.to_pandas())
     assert_equals_data(
         result2,
@@ -119,7 +119,7 @@ def test_append_w_list_dfs(engine) -> None:
 
     result = caller_df.append(other_dfs).sort_values(['a', 'd'])
 
-    expected = caller_pdf.append([other_pdf] * 3).sort_values(['a', 'd'])
+    expected = pd.concat([caller_pdf] + [other_pdf] * 3).sort_values(['a', 'd'])
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_names=False)
 

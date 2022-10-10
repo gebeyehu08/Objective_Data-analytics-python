@@ -117,9 +117,11 @@ def assert_equals_data(
                 actual = round(Decimal(actual), decimal)
                 expected = round(Decimal(expected), decimal)
 
-            if isinstance(actual, pd.Timestamp):
+            if isinstance(actual, (datetime.date, pd.Timestamp)):
+                actual = pd.Timestamp(actual)
                 actual = actual.floor(freq=_date_freq)
-                if isinstance(expected, (pd.Timestamp, datetime.datetime)):
+
+                if isinstance(expected, (pd.Timestamp, datetime.datetime, datetime.date)):
                     pdt_expected = pd.Timestamp(expected)
                     expected = pdt_expected.floor(freq=_date_freq)
 
