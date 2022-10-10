@@ -5,7 +5,6 @@ jsonschema
 flask
 flask-cors
 psycopg2-binary
-json5
 
 google-cloud-pubsub
 thrift

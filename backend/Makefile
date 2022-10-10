@@ -34,7 +34,6 @@ $(PACKAGE_NAME): base_schema $(PYTHON_DIRECTORIES)
 clean:
 	rm dist/*
 	rm -r build
-	rm objectiv_backend/schema/base_schema.json5
 
 tests:
 	mypy objectiv_backend

@@ -145,10 +145,6 @@ jmespath==0.10.0 \
     # via
     #   boto3
     #   botocore
-json5==0.9.6 \
-    --hash=sha256:823e510eb355949bed817e1f3e2d682455dc6af9daf6066d5698d6a2ca4481c2 \
-    --hash=sha256:9175ad1bc248e22bb8d95a8e8d765958bf0008fef2fe8abab5bc04e0f1ac8302
-    # via -r requirements.in
 jsonschema==4.4.0 \
     --hash=sha256:636694eb41b3535ed608fe04129f26542b59ed99808b4f688aa32dcf55317a83 \
     --hash=sha256:77281a1f71684953ee8b3d488371b162419767973789272434bbc3f29d9c8823
