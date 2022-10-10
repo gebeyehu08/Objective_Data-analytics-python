@@ -4,7 +4,7 @@ The parent of [non-interactive events](/taxonomy/reference/events/NonInteractive
 
 ### Requires
 
-[MediaPlayerContext](../location-contexts/MediaPlayerContext.md)* undefined
+* [MediaPlayerContext](../location-contexts/MediaPlayerContext.md).
 
 ### Properties
 `string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.

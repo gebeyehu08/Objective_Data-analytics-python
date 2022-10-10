@@ -4,8 +4,8 @@ The parent of [Events](/taxonomy/events) that are the direct result of a user in
 
 ### Requires
 
-[RootLocationContext](../location-contexts/RootLocationContext.md)* undefined
-[PathContext](../global-contexts/PathContext.md)* undefined
+* [RootLocationContext](../location-contexts/RootLocationContext.md).
+* [PathContext](../global-contexts/PathContext.md).
 
 ### Properties
 `LocationStack` location_stack: undefined

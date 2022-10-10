@@ -4,7 +4,7 @@ An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that's tri
 
 ### Requires
 
-[InputContext](../location-contexts/InputContext.md)* undefined
+* [InputContext](../location-contexts/InputContext.md).
 
 ### Properties
 `LocationStack` location_stack: undefined

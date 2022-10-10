@@ -4,7 +4,7 @@ An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is se
 
 ### Requires
 
-[PressableContext](../location-contexts/PressableContext.md)* undefined
+* [PressableContext](../location-contexts/PressableContext.md).
 
 ### Properties
 `LocationStack` location_stack: undefined
