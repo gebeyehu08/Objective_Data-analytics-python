@@ -8,11 +8,14 @@ The parent of [Events](/taxonomy/events) that are the direct result of a user in
 * [PathContext](../global-contexts/PathContext.md).
 
 ### Properties
-`LocationStack` location_stack: undefined
-`string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.
-`GlobalContexts` global_contexts: undefined
-`discriminator` _type: A string literal used during serialization. Should always match the Event interface name.
-`uuid` id: Unique identifier for a specific instance of an event.
-`integer` time: Timestamp indicating when the event was generated.
+
+|                     | type           | description                                                                               | contains |
+|:--------------------|:---------------|:------------------------------------------------------------------------------------------|:---------|
+| **location_stack**  | LocationStack  |                                                                                           |          |
+| **schema_version**  | string         | The version of the Objectiv Taxonomy Schema used to generate this event.                  |          |
+| **global_contexts** | GlobalContexts |                                                                                           |          |
+| **_type**           | discriminator  | A string literal used during serialization. Should always match the Event interface name. |          |
+| **id**              | uuid           | Unique identifier for a specific instance of an event.                                    |          |
+| **time**            | integer        | Timestamp indicating when the event was generated.                                        |          |
 
 

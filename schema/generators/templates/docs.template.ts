@@ -66,13 +66,14 @@ getEntityNames().forEach((entityName) => {
     }
 
     // table of properties
-    docsWriter.writeH3('Properties');
-
-    // TODO implement writeTable in docsWriter, e.g. writeTable({title, rows:[cell1, cell2, ...cellN]})
+    let properties = [[]] as [string[]];
     getObjectKeys(entityProperties).forEach((entityPropertyName) => {
       const { type, description } = entityProperties[entityPropertyName];
-      docsWriter.writeLine(`\`${type}\` ${entityPropertyName.toString()}: ${description}`);
+      properties.push(["**" + entityPropertyName.toString() + "**", type, description, ""]);
     });
+    docsWriter.writeH3('Properties');
+    docsWriter.writeLine();
+    docsWriter.writeTable(['', 'type', 'description', 'contains'], properties);
 
     docsWriter.writeEndOfLine();
 
