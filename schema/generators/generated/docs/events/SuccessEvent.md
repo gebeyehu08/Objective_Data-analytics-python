@@ -1,5 +1,10 @@
 # SuccessEvent
+
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action is successfully completed, like sending an email form.
+
+### Requires
+
+None.
 
 ### Properties
 `string` message: Success message.

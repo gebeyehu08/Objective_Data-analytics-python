@@ -1,5 +1,10 @@
 # FailureEvent
+
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action results in a error, like an invalid email when sending a form.
+
+### Requires
+
+None.
 
 ### Properties
 `string` message: Failure message.

@@ -1,5 +1,11 @@
 # InteractiveEvent
+
 The parent of [Events](/taxonomy/events) that are the direct result of a user interaction, e.g. a button click.
+
+### Requires
+
+[RootLocationContext](../location-contexts/RootLocationContext.md)* undefined
+[PathContext](../global-contexts/PathContext.md)* undefined
 
 ### Properties
 `LocationStack` location_stack: undefined

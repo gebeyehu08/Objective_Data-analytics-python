@@ -1,5 +1,10 @@
 # VisibleEvent
+
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become visible.
+
+### Requires
+
+None.
 
 ### Properties
 `string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.

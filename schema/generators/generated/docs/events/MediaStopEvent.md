@@ -1,5 +1,10 @@
 # MediaStopEvent
+
 A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item stops playback.
+
+### Requires
+
+None.
 
 ### Properties
 `string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.

@@ -1,6 +1,11 @@
 # AbstractEvent
 
 
+
+### Requires
+
+None.
+
 ### Properties
 `string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.
 `LocationStack` location_stack: undefined

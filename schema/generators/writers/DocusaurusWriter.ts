@@ -4,7 +4,7 @@
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
 
-export class MarkdownWriter extends CodeWriter {
+export class DocusaurusWriter extends CodeWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
@@ -25,6 +25,14 @@ export class MarkdownWriter extends CodeWriter {
 
   public writeListItem(text: string) {
     this.writeLine('* ' + text);
+  }
+
+  public writeLink(text: string, url: string) {
+    this.write('[' + text + '](' + url + ')');
+  }
+
+  public writeRequiredContext(text: string, url: string) {
+    this.writeLine('* [' + text + '](' + url + ').');
   }
 
   public writeEmphasisLine(text: string, strong: boolean = false) {
