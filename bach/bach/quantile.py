@@ -222,14 +222,14 @@ def _calculate_quantiles_with_linear_interpolation(
         # X_i: element located at floor(virtual_index) in the agg array
         X_i_series = gamma_series.copy_override(
             expression=Expression.construct(
-                "{}[cast({} as bigint)]", array_series, virtual_index // 1,
+                "try({}[cast({} as bigint)])", array_series, virtual_index // 1,
             )
         )
 
         # X_j: element after X_i
         X_j_series = gamma_series.copy_override(
             expression=Expression.construct(
-                "{}[cast({} as bigint) + 1]", array_series, virtual_index // 1,
+                "try({}[cast({} as bigint) + 1])", array_series, virtual_index // 1,
             )
         )
 
