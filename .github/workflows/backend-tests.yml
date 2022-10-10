@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set up Validation service
         run: |
-          docker run  -d --rm --name ${{ env.validation_service }} -p 8082:8082 -v ${{ github.workspace }}/schema:/schema node:16 cd /schema && validator/start.sh
+          docker run  -d --rm --name ${{ env.validation_service }} -p 8082:8082 -v ${{ github.workspace }}/schema:/schema node:16 sh -c 'cd /schema && validator/start.sh'
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
