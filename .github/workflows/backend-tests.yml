@@ -18,7 +18,7 @@ jobs:
         ports:
           - 8082:8082
         volumes:
-          - /schema/validation:/schema
+          - /schema/validator:/schema
         options: --entrypoint /schema/start.sh
     strategy:
       max-parallel: 4
