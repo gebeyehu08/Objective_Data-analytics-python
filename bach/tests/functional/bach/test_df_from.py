@@ -308,8 +308,6 @@ def test_from_table_column_mapping(engine, unique_table_test_name):
     assert df.base_node.references['prev'].materialization == Materialization.SOURCE
 
     # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
-    # All other functional tests that we have use a CTE as base data. So this is the only place where we
-    # actually test functionality of table-based DataFrames.
     df_original = df.copy()
     df['__x'] = df['__x'] + 100
     assert_equals_data(
