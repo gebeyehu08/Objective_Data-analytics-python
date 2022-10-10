@@ -11,15 +11,9 @@ on:
 
 jobs:
   typecheck-and-run-tests:
+    env:
+      validation_service: objectiv-validator
     runs-on: ubuntu-latest
-    services:
-      objectiv-validator:
-        image: node:16
-        ports:
-          - 8082:8082
-        volumes:
-          -  ${{ github.workspace }}/schema/validator:/schema
-        options: --entrypoint /schema/start.sh
     strategy:
       max-parallel: 4
       matrix:
@@ -36,6 +30,9 @@ jobs:
             python-version: '3.10'
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Validation service
+        run: |
+          docker run  -d --rm --name ${{ env.validation_service }} --network ${{ job.container.network }} -v ${{ github.workspace }}/schema:/schema node:16 cd /schema && validator/start.sh
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -72,3 +69,6 @@ jobs:
           pip install autopep8
           autopep8 -i schema.py
           diff schema.py objectiv_backend/schema/schema.py
+      - name: clean up validation service
+        run: |
+          docker stop ${{ env.validation_service }}
