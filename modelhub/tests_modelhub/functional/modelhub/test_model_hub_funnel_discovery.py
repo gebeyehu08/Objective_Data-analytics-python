@@ -5,7 +5,6 @@ from bach.testing import assert_equals_data
 
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1264')  # TODO: Athena
 
 def _add_root_offset_sorting(df: bach.DataFrame, asc: bool = True) -> bach.DataFrame:
     if '__root_step_offset' in df.base_node.series_names:

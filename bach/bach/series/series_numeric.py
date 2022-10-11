@@ -12,7 +12,7 @@ from bach import DataFrameOrSeries
 from bach.series import Series
 from bach.expression import Expression, AggregateFunctionExpression
 from bach.series.series import WrappedPartition
-from bach.types import StructuredDtype
+from bach.types import StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 

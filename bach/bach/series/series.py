@@ -26,7 +26,7 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction

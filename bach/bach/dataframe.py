@@ -13,7 +13,7 @@ import pandas
 import sqlparse
 from sqlalchemy.engine import Engine
 
-from bach.expression import Expression, SingleValueExpression, VariableToken, ColumnReferenceToken
+from bach.expression import Expression, SingleValueExpression, VariableToken, NonAtomicExpression
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
@@ -3124,7 +3124,14 @@ class DataFrame:
         for ds in dropna_series:
             main_condition = self.all_series[ds].isnull()
             if self.all_series[ds].dtype in ['float64', 'int64']:
-                main_condition = main_condition | (self.all_series[ds] == float('nan'))
+                # PG
+                nan_condition = self.all_series[ds] == float('nan')
+                if is_athena(self.engine) or is_bigquery(self.engine):
+                    nan_condition = nan_condition.copy_override(
+                        expression=NonAtomicExpression.construct('is_nan({})', self.all_series[ds]),
+                    )
+
+                main_condition = main_condition | nan_condition
 
             conditions.append(main_condition)
 
