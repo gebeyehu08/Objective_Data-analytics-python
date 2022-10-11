@@ -7,13 +7,14 @@ import Mermaid from '@theme/Mermaid'
 <Mermaid chart={`
     graph LR
       AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
-      AbstractGlobalContext --> CookieIdContext["CookieIdContext<span class='properties'>cookie_id: string<br /></span>"];
+      AbstractGlobalContext --> CookieIdContext["CookieIdContext<span class='properties'>cookie_id: string<br />id: string<br />_type: discriminator<br /></span>"];
     class CookieIdContext diagramActive
   `}
   caption="Diagram: CookieIdContext"
   baseColor="blue"
   links={[
-    { name: 'AbstractGlobalContext', to: '/taxonomy/reference/AbstractGlobalContext' }
+    { name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' },
+    { name: 'AbstractGlobalContext', to: '/taxonomy/reference/abstracts/AbstractGlobalContext' },
   ]}
 />
 

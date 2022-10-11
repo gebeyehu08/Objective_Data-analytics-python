@@ -6,11 +6,24 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] -->       AbstractEvent --> NonInteractiveEvent;
+      AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] -->       NonInteractiveEvent["NonInteractiveEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"];
+      NonInteractiveEvent --> ApplicationLoadedEvent;
+      NonInteractiveEvent --> FailureEvent;
+      NonInteractiveEvent --> HiddenEvent;
+      NonInteractiveEvent --> MediaEvent;
+      NonInteractiveEvent --> MediaLoadEvent;
+      NonInteractiveEvent --> MediaPauseEvent;
+      NonInteractiveEvent --> MediaStartEvent;
+      NonInteractiveEvent --> MediaStopEvent;
+      NonInteractiveEvent --> SuccessEvent;
+      NonInteractiveEvent --> VisibleEvent;
     class NonInteractiveEvent diagramActive
   `}
   caption="Diagram: NonInteractiveEvent"
   baseColor="blue"
+  links={[
+    { name: 'AbstractEvent', to: '/taxonomy/reference/abstracts/AbstractEvent' },
+  ]}
 />
 
 ### Requires

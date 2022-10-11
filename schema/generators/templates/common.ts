@@ -101,6 +101,14 @@ export const getEntityProperties = (entity) => {
 };
 
 /**
+ * Gets all the properties of the given entity, excluding all recursively inherited properties from its parents
+ */
+export const getEntityOwnProperties = (entity) => {
+  const properties = entity['properties'] ?? {};
+  return properties;
+};
+
+/**
  * Gets the descriptions from an Entity documentation array matching the given type and target
  */
 export const getEntityDescriptionsFromDocumentation = (entity, type, target) => {

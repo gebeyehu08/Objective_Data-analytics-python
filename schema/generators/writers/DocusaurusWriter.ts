@@ -3,7 +3,6 @@
  */
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
-import { PrefixingTransform } from '@yellicode/elements';
 
 export type TaxonomyPropertyDefinition = {
   name: string;
@@ -20,6 +19,7 @@ export type EntityPropertyDefinition = {
 
 export type RequiredContextsDefinition = {
   contextClass: string;
+  contextType: string;
   contextName: string;
 };
 
@@ -91,10 +91,11 @@ export class DocusaurusWriter extends CodeWriter {
    * Write a list item line with a required context and its link.
    * @param {string} text - The content of the required context line.
    * @param {string} url - The URL of the link to the required context.
+   * @param {string} type - The type of required context (e.g. 'LocationContext').
    */
   // required contexts list item for a taxonomy doc
-  public writeRequiredContext(text: string, url: string) {
-    this.writeLine('* [' + text + '](' + url + ').');
+  public writeRequiredContext(text: string, url: string, type: string) {
+    this.writeLine('* [' + text + '](' + url + ') (a ' + type + ').');
   }
 
   /**
@@ -168,8 +169,9 @@ export class DocusaurusWriter extends CodeWriter {
   public writeMermaidChartForEntity(
     entityName: string,
     entityProperties: EntityPropertyDefinition[],
-    entityParents: EntityParentDefinition[],
     requiredContexts: RequiredContextsDefinition[],
+    entityParents: EntityParentDefinition[],
+    entityChildren: EntityParentDefinition[],
     caption: string
   ) {
     // get the required contexts and properties for any entity
@@ -213,9 +215,6 @@ export class DocusaurusWriter extends CodeWriter {
         }
         cap += ('"]');
       }
-      if (name == 'InteractiveEvent') {
-        debugger;
-      }
       return cap;
     }
 
@@ -247,14 +246,22 @@ export class DocusaurusWriter extends CodeWriter {
 
     // write this entity and its requirements & properties
     this.writeIndent();
-    // write relation with any previous parent first
-    if (entityParents.length > 0) {
+    // write relation with any previous parent first, if there's more than 1 parent
+    if (entityParents.length > 1) {
       this.write(entityParents[entityParents.length - 1].name + ' --> ');
     }
     let entityCap = getRequiredContextsAndProperties(entityName, requiredContexts, entityProperties);
     this.write(entityCap);
     this.write(';');
     this.writeEndOfLine();
+    
+    // show its children as well, just with their names
+    if (entityChildren && entityChildren.length > 0) {
+      for (let i = 0; i < entityChildren.length; i++) {
+        let child = entityChildren[i];
+        this.writeLine(entityName + ' --> ' + child + ';');
+      }
+    }
 
     this.decreaseIndent();
     this.writeLine('class ' + entityName + ' diagramActive');
@@ -264,28 +271,31 @@ export class DocusaurusWriter extends CodeWriter {
     this.writeLine('caption="' + caption + '"');
     this.writeLine('baseColor="blue"');
 
-    // write links to elements for all parents but the first one
-    if (parents.length > 1) {
+    // write links to elements for all parents
+    if (parents.length > 0) {
       this.writeLine('links={[');
     }
     this.increaseIndent();
-    for (let i = 1; i < parents.length; i++) {
+    for (let i = 0; i < parents.length; i++) {
       // write the links to parents
       const parent = parents[i];
       let path = '/taxonomy/reference/'
-      if (parent.subCategory == "Event") {
+      if (parent.subCategory == "Abstract") {
+        path += 'abstracts/';
+      }
+      else if (parent.subCategory == "Event") {
         path += 'events/';
       }
-      if (parent.subCategory == "GlobalContext") {
+      else if (parent.subCategory == "GlobalContext") {
         path += 'global-contexts/';
       }
-      if (parent.subCategory == "LocationContext") {
+      else if (parent.subCategory == "LocationContext") {
         path += 'location-contexts/';
       }
-      this.writeLine('{ name: \'' + parent.name + '\', to: \'' + path + parent.name + '\' }');
+      this.writeLine('{ name: \'' + parent.name + '\', to: \'' + path + parent.name + '\' },');
     }
     this.decreaseIndent();
-    if (parents.length > 1) {
+    if (parents.length > 0) {
       this.writeLine(']}');
     }
   

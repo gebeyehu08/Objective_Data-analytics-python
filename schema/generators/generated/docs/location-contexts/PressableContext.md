@@ -7,13 +7,15 @@ import Mermaid from '@theme/Mermaid'
 <Mermaid chart={`
     graph LR
       AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractLocationContext;
-      AbstractLocationContext --> PressableContext;
+      AbstractLocationContext --> PressableContext["PressableContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"];
+      PressableContext --> LinkContext;
     class PressableContext diagramActive
   `}
   caption="Diagram: PressableContext"
   baseColor="blue"
   links={[
-    { name: 'AbstractLocationContext', to: '/taxonomy/reference/AbstractLocationContext' }
+    { name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' },
+    { name: 'AbstractLocationContext', to: '/taxonomy/reference/abstracts/AbstractLocationContext' },
   ]}
 />
 

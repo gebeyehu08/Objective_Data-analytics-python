@@ -13,13 +13,14 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: InputChangeEvent"
   baseColor="blue"
   links={[
-    { name: 'InteractiveEvent', to: '/taxonomy/reference/events/InteractiveEvent' }
+    { name: 'AbstractEvent', to: '/taxonomy/reference/abstracts/AbstractEvent' },
+    { name: 'InteractiveEvent', to: '/taxonomy/reference/events/InteractiveEvent' },
   ]}
 />
 
 ### Requires
 
-* [InputContext](../location-contexts/InputContext.md).
+* [InputContext](../location-contexts/InputContext.md) (a LocationContext).
 
 ### Properties
 

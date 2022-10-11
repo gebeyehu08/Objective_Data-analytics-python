@@ -13,13 +13,14 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: PressEvent"
   baseColor="blue"
   links={[
-    { name: 'InteractiveEvent', to: '/taxonomy/reference/events/InteractiveEvent' }
+    { name: 'AbstractEvent', to: '/taxonomy/reference/abstracts/AbstractEvent' },
+    { name: 'InteractiveEvent', to: '/taxonomy/reference/events/InteractiveEvent' },
   ]}
 />
 
 ### Requires
 
-* [PressableContext](../location-contexts/PressableContext.md).
+* [PressableContext](../location-contexts/PressableContext.md) (a LocationContext).
 
 ### Properties
 

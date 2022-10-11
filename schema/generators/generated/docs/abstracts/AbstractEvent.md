@@ -7,6 +7,20 @@ import Mermaid from '@theme/Mermaid'
 <Mermaid chart={`
     graph LR
             AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"];
+      AbstractEvent --> ApplicationLoadedEvent;
+      AbstractEvent --> FailureEvent;
+      AbstractEvent --> HiddenEvent;
+      AbstractEvent --> InputChangeEvent;
+      AbstractEvent --> InteractiveEvent;
+      AbstractEvent --> MediaEvent;
+      AbstractEvent --> MediaLoadEvent;
+      AbstractEvent --> MediaPauseEvent;
+      AbstractEvent --> MediaStartEvent;
+      AbstractEvent --> MediaStopEvent;
+      AbstractEvent --> NonInteractiveEvent;
+      AbstractEvent --> PressEvent;
+      AbstractEvent --> SuccessEvent;
+      AbstractEvent --> VisibleEvent;
     class AbstractEvent diagramActive
   `}
   caption="Diagram: AbstractEvent"

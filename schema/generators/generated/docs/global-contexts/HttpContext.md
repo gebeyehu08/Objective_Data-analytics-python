@@ -7,13 +7,14 @@ import Mermaid from '@theme/Mermaid'
 <Mermaid chart={`
     graph LR
       AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
-      AbstractGlobalContext --> HttpContext["HttpContext<span class='properties'>referrer: string<br />user_agent: string<br />remote_address: string<br /></span>"];
+      AbstractGlobalContext --> HttpContext["HttpContext<span class='properties'>referrer: string<br />user_agent: string<br />remote_address: string<br />id: string<br />_type: discriminator<br /></span>"];
     class HttpContext diagramActive
   `}
   caption="Diagram: HttpContext"
   baseColor="blue"
   links={[
-    { name: 'AbstractGlobalContext', to: '/taxonomy/reference/AbstractGlobalContext' }
+    { name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' },
+    { name: 'AbstractGlobalContext', to: '/taxonomy/reference/abstracts/AbstractGlobalContext' },
   ]}
 />
 

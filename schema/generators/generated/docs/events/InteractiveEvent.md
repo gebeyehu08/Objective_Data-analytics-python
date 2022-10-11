@@ -6,17 +6,22 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] -->       AbstractEvent --> InteractiveEvent["InteractiveEvent<span class='requires_context'>requires:<br />RootLocationContext<br />PathContext<br /></span><span class='properties'></span>"];
+      AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] -->       InteractiveEvent["InteractiveEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />RootLocationContext<br />PathContext<br /></span><span class='properties'>location_stack: LocationStack<br />schema_version: string<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span></span"];
+      InteractiveEvent --> InputChangeEvent;
+      InteractiveEvent --> PressEvent;
     class InteractiveEvent diagramActive
   `}
   caption="Diagram: InteractiveEvent"
   baseColor="blue"
+  links={[
+    { name: 'AbstractEvent', to: '/taxonomy/reference/abstracts/AbstractEvent' },
+  ]}
 />
 
 ### Requires
 
-* [RootLocationContext](../location-contexts/RootLocationContext.md).
-* [PathContext](../global-contexts/PathContext.md).
+* [RootLocationContext](../location-contexts/RootLocationContext.md) (a LocationContext).
+* [PathContext](../global-contexts/PathContext.md) (a GlobalContext).
 
 ### Properties
 

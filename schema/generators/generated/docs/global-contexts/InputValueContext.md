@@ -7,13 +7,14 @@ import Mermaid from '@theme/Mermaid'
 <Mermaid chart={`
     graph LR
       AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
-      AbstractGlobalContext --> InputValueContext["InputValueContext<span class='properties'>value: string<br /></span>"];
+      AbstractGlobalContext --> InputValueContext["InputValueContext<span class='properties'>value: string<br />id: string<br />_type: discriminator<br /></span>"];
     class InputValueContext diagramActive
   `}
   caption="Diagram: InputValueContext"
   baseColor="blue"
   links={[
-    { name: 'AbstractGlobalContext', to: '/taxonomy/reference/AbstractGlobalContext' }
+    { name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' },
+    { name: 'AbstractGlobalContext', to: '/taxonomy/reference/abstracts/AbstractGlobalContext' },
   ]}
 />
 
