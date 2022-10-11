@@ -11,7 +11,7 @@ import pandas
 from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
-from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
+from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64, SeriesAbstractNumeric
 from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
@@ -921,11 +921,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         result = series.to_frame().quantile(q=q, partition=partition)[f'{series.name}_quantile']
         result = result.copy_override(name=self.name)
 
-        if not is_bigquery(self.engine):
-            return result.copy_override_type(SeriesTimedelta)
-
-        # result must be a timedelta
-        return self._convert_total_seconds_to_timedelta(result.copy_override_type(SeriesFloat64))
+        return result
 
     def mode(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesTimedelta':
         if not is_bigquery(self.engine):
@@ -934,31 +930,44 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         # APPROX_TOP_COUNT does not support INTERVALS. So, we should calculate the mode based
         # on the total seconds
         total_seconds_mode = self.dt.total_seconds.mode(partition, skipna)
-        return self._convert_total_seconds_to_timedelta(total_seconds_mode)
+        return self.from_total_seconds(total_seconds_mode)
 
-    def _convert_total_seconds_to_timedelta(
-        self, total_seconds_series: 'SeriesFloat64',
-    ) -> 'SeriesTimedelta':
+    @classmethod
+    def from_total_seconds(cls, total_seconds: SeriesAbstractNumeric) -> 'SeriesTimedelta':
         """
-        helper function for converting series representing total seconds (epoch) to timedelta series.
+        Converts a numerical series representing total seconds (epoch) to timedelta series.
 
         returns a SeriesTimedelta
         """
+        engine = total_seconds.engine
+        if is_athena(engine):
+            # no action is required for athena, as we represent timedelta with total seconds by default.
+            return total_seconds.copy_override_type(SeriesTimedelta)
 
-        # convert total seconds into microseconds
-        # since TIMESTAMP_SECONDS accepts only integers, therefore
-        # microseconds will be lost due to rounding
-        total_microseconds_series = (
-            total_seconds_series / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+        if is_postgres(engine):
+            expression = Expression.construct('to_timestamp({})', total_seconds)
+        elif is_bigquery(engine):
+            # convert total seconds into microseconds
+            # since TIMESTAMP_SECONDS accepts only integers, therefore
+            # microseconds will be lost due to rounding
+            total_microseconds_series = (
+                    total_seconds / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+            )
+            expression = Expression.construct(
+                'TIMESTAMP_MICROS({})', total_microseconds_series.astype('int64')
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
+        seconds_as_timestamp_series = (
+            total_seconds.copy_override(expression=expression).copy_override_type(SeriesTimestamp)
         )
-        result = total_microseconds_series.copy_override(
-            expression=Expression.construct(
-                f"TIMESTAMP_MICROS({{}}) - CAST('1970-01-01' AS TIMESTAMP)",
-                total_microseconds_series.astype('int64'),
-            ),
-            name=self.name,
+
+        start_time = SeriesTimestamp.from_value(
+            base=seconds_as_timestamp_series, value=datetime.datetime(1970, 1, 1)
         )
-        return result.copy_override_type(SeriesTimedelta)
+
+        return (seconds_as_timestamp_series - start_time).copy_override_type(SeriesTimedelta)
 
 
 def _convert_numpy_datetime_to_utc_datetime(value: numpy.datetime64) -> datetime.datetime:
