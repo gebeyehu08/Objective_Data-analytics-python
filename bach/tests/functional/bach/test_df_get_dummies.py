@@ -5,8 +5,6 @@ from bach import DataFrame
 from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
-
 
 def test_basic_get_dummies(engine) -> None:
     pdf = pd.DataFrame(
@@ -22,7 +20,7 @@ def test_basic_get_dummies(engine) -> None:
     assert set(expected_columns) == set(result.data_columns)
     result = result[expected_columns]
     assert_equals_data(
-        result[expected_columns],
+        result,
         use_to_pandas=True,
         expected_columns=['_index_0'] + expected_columns,
         expected_data=[

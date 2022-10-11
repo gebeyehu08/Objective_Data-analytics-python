@@ -2,13 +2,12 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
-from bach.series import Series
+from bach.series import Series, SeriesString, SeriesInt64
 from sql_models.constants import NotSet, not_set
 from typing import cast, List, Union, TYPE_CHECKING
 
-from sql_models.util import is_bigquery, is_postgres
-
 from modelhub.decorators import use_only_required_objectiv_series
+from modelhub.series import SeriesLocationStack
 from modelhub.util import check_groupby
 
 if TYPE_CHECKING:
@@ -16,6 +15,7 @@ if TYPE_CHECKING:
     from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, Series]], str, Series, NotSet]
+LocationStackType = Union[str, SeriesString, SeriesLocationStack, SeriesInt64]
 
 
 class Aggregate:
@@ -484,14 +484,16 @@ class Aggregate:
 
     @staticmethod
     def drop_off_locations(data: bach.DataFrame,
-                           location_stack: 'SeriesLocationStack' = None,
+                           location_stack: LocationStackType = None,
                            groupby: Union[List[Union[str, Series]], str, Series] = 'user_id',
                            percentage=False) -> bach.DataFrame:
         """
         Find the locations/features where users drop off, and their usage/share.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location_stack: the slice of the location stack to consider.
+        :param location_stack: the column of which to create the drop-off locations.
+            Can be a string of the name of the column in data, or a Series with the
+            same base node as `data`. If None the default location stack is taken.
 
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
             - if `None`, the whole location stack is taken.
@@ -503,19 +505,23 @@ class Aggregate:
 
         data = data.copy()
 
-        if location_stack is not None:
-            data['__feature_nice_name'] = location_stack.ls.nice_name
-        else:
-            data['__feature_nice_name'] = data.location_stack.ls.nice_name
+        column = location_stack or data['location_stack']
+        if type(column) == str:
+            column = data[column]
+
+        data['__location'] = column
+        if type(column) == SeriesLocationStack:
+            # extract the nice name per event
+            data['__location'] = column.ls.nice_name
 
         # need to drop missing values because we don't
         # want to get as a last step None value
-        data = data.dropna(subset='__feature_nice_name')
+        data = data.dropna(subset='__location')
 
         window = data.sort_values(by='moment', ascending=True).groupby(groupby).window(
             end_boundary=bach.partitioning.WindowFrameBoundary.FOLLOWING,
         )
-        drop_loc = window['__feature_nice_name'].window_last_value()
+        drop_loc = window['__location'].window_last_value()
         drop_loc = drop_loc.materialize(distinct=True)
 
         result = drop_loc.value_counts(normalize=percentage).to_frame()

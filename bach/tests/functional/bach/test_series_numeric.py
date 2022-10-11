@@ -121,7 +121,7 @@ def test_aggregations_sum_mincount(engine):
         assert (math.isnan(pd_agg) and bt_agg_value is None) or bt_agg_value == pd_agg
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_aggregations_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': [1, 3, 5, 7, 9]})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
@@ -139,7 +139,7 @@ def test_aggregations_quantile(engine):
         pd.testing.assert_series_equal(expected_all_quantiles, result_all_quantiles.to_pandas(), check_names=False)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_grouped_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': ['a', 'a', 'a', 'b', 'b']})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
@@ -234,7 +234,7 @@ def test_series_cut(engine) -> None:
             np.testing.assert_almost_equal(exp.right, float(res.right), decimal=2)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_qcut(engine) -> None:
     bounds = '(]'
     inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']

@@ -65,6 +65,21 @@ class SeriesLocationStack(SeriesJson):
             # type ignore, as mypy doesn't like a dict in a Slice
             return self[{'_type': 'NavigationContext'}: None]  # type: ignore
 
+        def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
+            """
+            Returns the value of `key` from the first context in an Objectiv stack
+            where `_type` matches `type`.
+            :param type: the _type to search for in the contexts of the stack.
+            :param key: the value of the key to return of the context with matching type.
+            :param dtype: the dtype of the series to return.
+            :returns: a series of type `dtype`
+            """
+            type_slice = slice({'_type': type}, None)
+            ctx_series = self._series_object.json[type_slice].json[0]
+            as_str = dtype == 'string'
+            value_series = ctx_series.json.get_value(key=key, as_str=as_str)
+            return value_series.copy_override_dtype(dtype)
+
         @property
         def feature_stack(self) -> 'SeriesLocationStack':
             """

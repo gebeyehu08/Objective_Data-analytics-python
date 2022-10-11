@@ -3,6 +3,7 @@
  */
 
 import { NonEmptyArray } from './helpers';
+import { TrackerInterface } from './Tracker';
 import { TrackerTransportInterface, TransportableEvent } from './TrackerTransportInterface';
 
 /**
@@ -50,6 +51,13 @@ export class TrackerTransportSwitch implements TrackerTransportInterface {
     }
 
     return this.firstUsableTransport.handle(...args);
+  }
+
+  /**
+   * Simply proxy the `handle` method to the usable TrackerTransport, if any
+   */
+  initialize(tracker: TrackerInterface): void {
+    this.firstUsableTransport && this.firstUsableTransport.initialize && this.firstUsableTransport.initialize(tracker);
   }
 
   /**

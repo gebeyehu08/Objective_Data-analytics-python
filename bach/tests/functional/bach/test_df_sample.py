@@ -126,6 +126,35 @@ def test_sample_operations_filter(engine, unique_table_test_name):
     )
 
 
+def test_sample_column_name_special_char(engine, unique_table_test_name):
+    bt = get_df_with_test_data(engine, True)
+    bt_sample = bt.get_sample(table_name=unique_table_test_name,
+                              filter=bt.skating_order % 2 == 0,
+                              overwrite=True)
+
+    bt_sample['City'] = bt_sample.city + '_better'
+    bt_sample['a#'] = bt_sample.city.str[:2] + bt_sample.municipality.str[:2]
+    bt_sample['A#'] = bt_sample.inhabitants + 10
+    bt_sample['b_b'] = bt_sample.inhabitants + bt_sample.founding
+
+    all_data_bt = bt_sample.get_unsampled()
+    all_data_bt['B_B'] = all_data_bt.inhabitants + 5
+
+    expected_columns = [
+        '_index_skating_order',  # index
+        'skating_order', 'city', 'municipality', 'inhabitants', 'founding',
+        'City', 'a#', 'A#', 'b_b', 'B_B'
+    ]
+
+    assert list(bt_sample.all_series.keys()) == expected_columns[:-1]
+    assert_equals_data(
+        all_data_bt,
+        use_to_pandas=True,
+        expected_columns=expected_columns,
+        expected_data=_EXPECTED_DATA_OPERATIONS
+    )
+
+
 def test_combine_unsampled_with_before_data(engine, unique_table_test_name):
     # Test that the get_unsampled() df has a base_node and state that is compatible with the base_node and
     # state of the original df

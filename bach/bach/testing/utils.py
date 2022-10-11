@@ -102,8 +102,8 @@ def assert_equals_data(
     else:
         column_names, db_values = _get_to_pandas_data(bt)
 
-    assert len(db_values) == len(expected_data)
-    assert column_names == expected_columns
+    assert len(db_values) == len(expected_data), f'{len(db_values)} != {len(expected_data)}'
+    assert column_names == expected_columns, f'{column_names} != {expected_columns}'
 
     _date_freq = 'ms' if is_athena(bt.engine) else 'us'
     for i, df_row in enumerate(db_values):
@@ -117,9 +117,11 @@ def assert_equals_data(
                 actual = round(Decimal(actual), decimal)
                 expected = round(Decimal(expected), decimal)
 
-            if isinstance(actual, pd.Timestamp):
+            if isinstance(actual, (datetime.date, pd.Timestamp)):
+                actual = pd.Timestamp(actual)
                 actual = actual.floor(freq=_date_freq)
-                if isinstance(expected, (pd.Timestamp, datetime.datetime)):
+
+                if isinstance(expected, (pd.Timestamp, datetime.datetime, datetime.date)):
                     pdt_expected = pd.Timestamp(expected)
                     expected = pdt_expected.floor(freq=_date_freq)
 

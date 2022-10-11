@@ -18,9 +18,9 @@ def test_drop_off_locations_basic(db_params):
 
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['__location'].astype(dtype=str).str[8:10]
     bts = bts.sort_values(by='sort_str')
-    columns = ['__feature_nice_name', 'value_counts', 'sort_str']
+    columns = ['__location', 'value_counts', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -58,9 +58,9 @@ def test_drop_off_locations_w_groupby(db_params):
 
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['__location'].astype(dtype=str).str[8:10]
     bts = bts.sort_values(by='sort_str')
-    columns = ['__feature_nice_name', 'value_counts', 'sort_str']
+    columns = ['__location', 'value_counts', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -102,9 +102,9 @@ def test_drop_off_locations_w_percentage(db_params):
     bts = modelhub.agg.drop_off_locations(df, percentage=True)
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['__location'].astype(dtype=str).str[8:10]
     bts = bts.sort_values(by='sort_str')
-    columns = ['__feature_nice_name', 'percentage', 'sort_str']
+    columns = ['__location', 'percentage', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -132,15 +132,15 @@ def test_drop_off_locations_w_percentage(db_params):
 def test_drop_off_locations_w_location_stack(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
 
-    # location_stack
+    # location_stack - SeriesLocationStack
     location_stack = df.location_stack.json[{'url': 'https://objectiv.io/'}:]
     bts = modelhub.agg.drop_off_locations(df, location_stack=location_stack)
 
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__feature_nice_name'].astype(dtype=str).str[-2]
+    bts['sort_str'] = bts['__location'].astype(dtype=str).str[-2]
 
-    columns = ['__feature_nice_name', 'value_counts', 'sort_str']
+    columns = ['__location', 'value_counts', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -160,4 +160,31 @@ def test_drop_off_locations_w_location_stack(db_params):
         ],
         use_to_pandas=True,
         order_by=['sort_str'],
+    )
+
+    # location_stack - some other column
+    df['link_id'] = df.location_stack.ls.get_from_context_with_type_series(
+        type='LinkContext', key='id').str.lower()
+
+    bts = modelhub.agg.drop_off_locations(df, location_stack='link_id')
+
+    assert_equals_data(
+        bts,
+        expected_columns=['__location', 'value_counts'],
+        expected_data=[
+            [
+                'about us', 1
+            ],
+            [
+                'contact us', 1
+            ],
+            [
+                'cta-repo-button', 1
+            ],
+            [
+                'docs', 1
+            ],
+        ],
+        use_to_pandas=True,
+        order_by=['__location'],
     )
