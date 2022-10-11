@@ -93,7 +93,13 @@ def ddl_quote_identifier(dialect: Dialect, name: str) -> str:
     in select queries.
     """
     if is_athena(dialect):
-        return f'`{name}`'
+        # Athena uses backticks for escaping in DDL statements, see
+        # https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
+        # We escape backtick and backslash characters in the name, even though those characters are not
+        # allowed in identifiers. This at least should stave off syntax errors in the generated sql.
+        replaced_chars = name.replace('\\', '\\\\')
+        replaced_chars = replaced_chars.replace('`', '\\`')
+        return f'`{replaced_chars}`'
     return quote_identifier(dialect, name)
 
 
