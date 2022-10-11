@@ -12,6 +12,10 @@ MediaEvent["MediaEvent<span class='requires_context'>requires:<br />MediaPlayerC
   `}
   caption="Diagram: MediaStopEvent"
   baseColor="blue"
+  links={[
+    { name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' }
+    { name: 'MediaEvent', to: '/taxonomy/reference/events/MediaEvent' }
+  ]}
 />
 
 ### Requires

@@ -7,11 +7,14 @@ import Mermaid from '@theme/Mermaid'
 <Mermaid chart={`
     graph LR
       AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] --> NonInteractiveEvent;
-      NonInteractiveEvent --> FailureEvent["FailureEvent<br /><span class='properties'>message: string<br /></span>"];
+      NonInteractiveEvent --> FailureEvent["FailureEvent<span class='properties'>message: string<br /></span>"];
     class FailureEvent diagramActive
   `}
   caption="Diagram: FailureEvent"
   baseColor="blue"
+  links={[
+    { name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' }
+  ]}
 />
 
 ### Requires

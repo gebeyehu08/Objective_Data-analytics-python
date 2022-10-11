@@ -12,6 +12,9 @@ import Mermaid from '@theme/Mermaid'
   `}
   caption="Diagram: InputContext"
   baseColor="blue"
+  links={[
+    { name: 'AbstractLocationContext', to: '/taxonomy/reference/AbstractLocationContext' }
+  ]}
 />
 
 ### Requires

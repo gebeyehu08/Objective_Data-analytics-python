@@ -37,6 +37,7 @@ getEntityNames().forEach((entityName) => {
   const isEvent = entityCategory == 'event';
 
   function getRequiredContextsFromValidationRules(validationRules) {
+    // TODO: (TBD) get requiredContexts from properties as well (e.g. GlobalContext types)
     let requiredContexts = [] as RequiredContextsDefinition[];
     if (isEvent && validationRules) {
       validationRules.forEach((validationRule) => {
@@ -50,6 +51,26 @@ getEntityNames().forEach((entityName) => {
       });
     }
     return requiredContexts;
+  }
+
+  /**
+   * 
+   * @param entity - The entity to get the (sub)category for.
+   * @returns 
+   */
+  function getSubCategoryFromEntity(entity) {
+    let subCategory = "";
+    let parents = getEntityParents(entity);
+    if (parents.includes('AbstractLocationContext')) {
+      subCategory = "LocationContext";
+    }
+    else if (parents.includes('AbstractGlobalContext')) {
+      subCategory = "GlobalContext";
+    }
+    else if (entityName.endsWith('Event')) {
+      subCategory = "Event";
+    }
+    return subCategory;
   }
   
   // for Events: create a list of required contexts
@@ -72,6 +93,12 @@ getEntityNames().forEach((entityName) => {
     parentEntity.requiredContexts = (parentEntity.validation && parentEntity.validation.rules)
       ? getRequiredContextsFromValidationRules(parentEntity.validation.rules) 
       : [] as RequiredContextsDefinition[];
+    
+    // add the (sub)category to each parent
+    parentEntity.subCategory = getSubCategoryFromEntity(parentEntity);
+    if (entityName == 'InputChangeEvent') {
+      debugger;
+    }
   });
 
   const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location-' : isGlobalContext ? 'global-' : '';

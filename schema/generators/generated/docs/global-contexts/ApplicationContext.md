@@ -12,6 +12,9 @@ import Mermaid from '@theme/Mermaid'
   `}
   caption="Diagram: ApplicationContext"
   baseColor="blue"
+  links={[
+    { name: 'AbstractGlobalContext', to: '/taxonomy/reference/AbstractGlobalContext' }
+  ]}
 />
 
 ### Requires

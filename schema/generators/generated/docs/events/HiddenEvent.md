@@ -12,6 +12,9 @@ import Mermaid from '@theme/Mermaid'
   `}
   caption="Diagram: HiddenEvent"
   baseColor="blue"
+  links={[
+    { name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' }
+  ]}
 />
 
 ### Requires
