@@ -1,6 +1,6 @@
-FROM node:16
+FROM node:16-alpine
 
-ARG PORT=8083
+ARG PORT=8082
 
 ARG SERVICES=/services
 RUN mkdir $SERVICES
@@ -10,8 +10,6 @@ WORKDIR $SERVICES/validator
 COPY validator $SERVICES/validator
 
 RUN cd  $SERVICES/validator && \
-    rm -rf node_modules docs/node_modules && \
-    rm -rf build docs/build && \
     yarn install
 
 

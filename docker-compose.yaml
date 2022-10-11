@@ -41,7 +41,7 @@ services:
     networks:
       - obj
     healthcheck:
-      test: [ "CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/80:82" ]
+      test: [ "CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8082" ]
       interval: 30s
       timeout: 2s
       retries: 3
