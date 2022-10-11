@@ -3,6 +3,7 @@
  */
 
 import { NonEmptyArray } from './helpers';
+import { TrackerInterface } from './Tracker';
 import { TrackerTransportInterface, TransportableEvent } from './TrackerTransportInterface';
 
 /**
@@ -49,6 +50,13 @@ export class TrackerTransportGroup implements TrackerTransportInterface {
     }
 
     return this.usableTransports.map((transport) => transport.handle(...args));
+  }
+
+  /**
+   * Simply proxy the `initialize` method to all the usable TrackerTransport instances we have.
+   */
+  initialize(tracker: TrackerInterface): void {
+    this.usableTransports.map((transport) => transport.initialize && transport.initialize(tracker));
   }
 
   /**

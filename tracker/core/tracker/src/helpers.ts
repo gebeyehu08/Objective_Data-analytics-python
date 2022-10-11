@@ -77,11 +77,6 @@ export const waitForPromise = async ({
 };
 
 /**
- * An index value validator. Accepts 0 and positive integers only.
- */
-export const isValidIndex = (index: number) => Number.isInteger(index) && Number.isFinite(index) && index >= 0;
-
-/**
  * Converts the given input to a standardized format to be used as identifier for Location Contexts.
  * This may be used, among others, to infer a valid identifier from the title / label of a Button.
  * If the given input is not a number or a string, or the normalization fails, it returns null.

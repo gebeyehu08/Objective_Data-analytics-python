@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/tracker-react",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Objectiv React application analytics tracker for the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -49,11 +49,12 @@
     "depcheck": "npx depcheck"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.25",
-    "@objectiv/plugin-identity-context": "^0.0.25",
-    "@objectiv/schema": "^0.0.25",
-    "@objectiv/testing-tools": "^0.0.25",
-    "@objectiv/transport-debug": "^0.0.25",
+    "@material-ui/core": "^4.12.4",
+    "@objectiv/developer-tools": "^0.0.26",
+    "@objectiv/plugin-identity-context": "^0.0.26",
+    "@objectiv/schema": "^0.0.26",
+    "@objectiv/testing-tools": "^0.0.26",
+    "@objectiv/transport-debug": "^0.0.26",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^14.4.3",
     "@types/react": "^17.0.48",
@@ -68,15 +69,15 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@objectiv/plugin-application-context": "^0.0.25",
-    "@objectiv/plugin-http-context": "^0.0.25",
-    "@objectiv/plugin-path-context-from-url": "^0.0.25",
-    "@objectiv/plugin-root-location-context-from-url": "^0.0.25",
-    "@objectiv/queue-local-storage": "^0.0.25",
-    "@objectiv/tracker-core": "~0.0.25",
-    "@objectiv/tracker-react-core": "~0.0.25",
-    "@objectiv/transport-fetch": "^0.0.25",
-    "@objectiv/transport-xhr": "^0.0.25"
+    "@objectiv/plugin-application-context": "^0.0.26",
+    "@objectiv/plugin-http-context": "^0.0.26",
+    "@objectiv/plugin-path-context-from-url": "^0.0.26",
+    "@objectiv/plugin-root-location-context-from-url": "^0.0.26",
+    "@objectiv/queue-local-storage": "^0.0.26",
+    "@objectiv/tracker-core": "~0.0.26",
+    "@objectiv/tracker-react-core": "~0.0.26",
+    "@objectiv/transport-fetch": "^0.0.26",
+    "@objectiv/transport-xhr": "^0.0.26"
   },
   "peerDependencies": {
     "react": ">=16.8",
