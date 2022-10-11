@@ -6,7 +6,7 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent --> InteractiveEvent["InteractiveEvent<br /><span class='properties'>requires:<br />RootLocationContextPathContext</span>"];
+      AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] -->       AbstractEvent --> InteractiveEvent["InteractiveEvent<span class='requires_context'>requires:<br />RootLocationContext<br />PathContext<br /></span>"];
     class InteractiveEvent diagramActive
   `}
   caption="Diagram: InteractiveEvent"

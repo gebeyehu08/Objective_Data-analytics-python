@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext --> AbstractLocationContext --> NavigationContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractLocationContext;
+      AbstractLocationContext --> NavigationContext;
     class NavigationContext diagramActive
   `}
   caption="Diagram: NavigationContext"

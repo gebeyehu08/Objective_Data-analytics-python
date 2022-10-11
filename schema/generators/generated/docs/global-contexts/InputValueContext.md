@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext --> AbstractGlobalContext --> InputValueContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractGlobalContext --> InputValueContext["InputValueContext<br /><span class='properties'>value: string<br /></span>"];
     class InputValueContext diagramActive
   `}
   caption="Diagram: InputValueContext"

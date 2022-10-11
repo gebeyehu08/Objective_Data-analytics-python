@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext --> AbstractGlobalContext --> IdentityContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractGlobalContext --> IdentityContext["IdentityContext<br /><span class='properties'>value: string<br /></span>"];
     class IdentityContext diagramActive
   `}
   caption="Diagram: IdentityContext"

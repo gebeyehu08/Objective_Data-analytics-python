@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent --> NonInteractiveEvent --> SuccessEvent;
+      AbstractEvent["AbstractEvent<span class='properties'>schema_version: string<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] --> NonInteractiveEvent;
+      NonInteractiveEvent --> SuccessEvent["SuccessEvent<br /><span class='properties'>message: string<br /></span>"];
     class SuccessEvent diagramActive
   `}
   caption="Diagram: SuccessEvent"

@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext --> AbstractGlobalContext --> CookieIdContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractGlobalContext --> CookieIdContext["CookieIdContext<br /><span class='properties'>cookie_id: string<br /></span>"];
     class CookieIdContext diagramActive
   `}
   caption="Diagram: CookieIdContext"

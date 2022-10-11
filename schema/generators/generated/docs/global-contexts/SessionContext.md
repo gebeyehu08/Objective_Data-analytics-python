@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext --> AbstractGlobalContext --> SessionContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractGlobalContext --> SessionContext["SessionContext<br /><span class='properties'>hit_number: integer<br /></span>"];
     class SessionContext diagramActive
   `}
   caption="Diagram: SessionContext"

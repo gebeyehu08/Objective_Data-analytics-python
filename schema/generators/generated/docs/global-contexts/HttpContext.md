@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext --> AbstractGlobalContext --> HttpContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractGlobalContext --> HttpContext["HttpContext<br /><span class='properties'>referrer: string<br />user_agent: string<br />remote_address: string<br /></span>"];
     class HttpContext diagramActive
   `}
   caption="Diagram: HttpContext"

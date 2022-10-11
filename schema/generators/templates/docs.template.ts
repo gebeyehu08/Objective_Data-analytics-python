@@ -18,8 +18,8 @@ import {
 const destination = '../generated/docs/';
 
 export type RequiredContextsDefinition = {
-  ruleType: string;
-  context: string;
+  contextClass: string;
+  contextName: string;
 };
 
 getEntityNames().forEach((entityName) => {
@@ -36,19 +36,24 @@ getEntityNames().forEach((entityName) => {
   const isGlobalContext = entityParents.includes('AbstractGlobalContext');
   const isEvent = entityCategory == 'event';
 
-  // for Events: create a list of required contexts
-  let requiredContexts = [] as RequiredContextsDefinition[];
-  if (isEvent && validationRules) {
-    validationRules.forEach((validationRule) => {
-      const ruleType = validationRule.type;
-      if (ruleType == 'RequiresLocationContext' || ruleType == 'RequiresGlobalContext') {
-          requiredContexts.push({
-            'ruleType': ruleType,
-            'context': validationRule.scope[0].context
-          });
-      }
-    });
+  function getRequiredContextsFromValidationRules(validationRules) {
+    let requiredContexts = [] as RequiredContextsDefinition[];
+    if (isEvent && validationRules) {
+      validationRules.forEach((validationRule) => {
+        const ruleType = validationRule.type;
+        if (ruleType == 'RequiresLocationContext' || ruleType == 'RequiresGlobalContext') {
+            requiredContexts.push({
+              'contextClass': (ruleType == 'RequiresLocationContext' ? 'location' : 'global'),
+              'contextName': validationRule.scope[0].context
+            });
+        }
+      });
+    }
+    return requiredContexts;
   }
+  
+  // for Events: create a list of required contexts
+  let requiredContexts = getRequiredContextsFromValidationRules(validationRules);
 
   // for this entity, get all properties for each of its parents, and just its own properties
   let entityParentsWithProperties = [] as object[];
@@ -62,11 +67,12 @@ getEntityNames().forEach((entityName) => {
         delete entityOwnProperties[key];
       };
     }
+    // add required contexts to each parent
     entityParentsWithProperties.push(parentEntity);
+    parentEntity.requiredContexts = (parentEntity.validation && parentEntity.validation.rules)
+      ? getRequiredContextsFromValidationRules(parentEntity.validation.rules) 
+      : [] as RequiredContextsDefinition[];
   });
-  // if (entityName == 'FailureEvent') {
-  //   debugger;
-  // }
 
   const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location-' : isGlobalContext ? 'global-' : '';
   const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
@@ -84,7 +90,7 @@ getEntityNames().forEach((entityName) => {
     docsWriter.writeLine();
     
     // Mermaid chart
-    docsWriter.writeMermaidChart(entityName, entityOwnProperties, entityParentsWithProperties, 
+    docsWriter.writeMermaidChartForEntity(entityName, entityOwnProperties, entityParentsWithProperties, 
       requiredContexts, "Diagram: " + entityName);
     docsWriter.writeLine();
 
@@ -96,13 +102,10 @@ getEntityNames().forEach((entityName) => {
       if (requiredContexts.length > 0) {
         for (let i = 0; i < requiredContexts.length; i++) {
           let requiredContext = requiredContexts[i];
-          let ruleType = requiredContext.ruleType.toString();
-          let context = requiredContext.context.toString();
-          if (ruleType == 'RequiresLocationContext' || ruleType == 'RequiresGlobalContext') {
-            const url = (ruleType == 'RequiresLocationContext' ? '../location' : '../global') + 
-              '-contexts/' + context + '.md';
-            docsWriter.writeRequiredContext(context, url);
-          }
+          let contextClass = requiredContext.contextClass;
+          let contextName = requiredContext.contextName;
+          const url = '../' + contextClass + '-contexts/' + contextName + '.md';
+          docsWriter.writeRequiredContext(contextName, url);
         }
       } else {
         docsWriter.writeLine('None.');

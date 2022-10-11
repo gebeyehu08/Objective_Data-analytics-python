@@ -1,16 +1,16 @@
-# OverlayContext
+# InputChangeEvent
 
-A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a section of the UI that represents an overlay, i.e. a Modal.
+A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that uniquely represents the top-level UI location of the user.
 
 import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractLocationContext;
-      AbstractLocationContext --> OverlayContext;
-    class OverlayContext diagramActive
+      AbstractContext --> AbstractLocationContext;
+      AbstractLocationContext --> InputChangeEvent;
+    class InputChangeEvent diagramActive
   `}
-  caption="Diagram: OverlayContext"
+  caption="Diagram: InputChangeEvent"
   baseColor="blue"
 />
 
@@ -27,5 +27,9 @@ for Context instance uniqueness. |          |
 | **_type** | discriminator | A string literal used during serialization. Should always match the Context interface name.                 |          |
 
 :::info setting of the id & type
-The tracker will automatically set the id and _type based on the overlay element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.
+The tracker will automatically set the id and _type based on the top-level UI location of the user. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.
+:::
+ype` to be set.
+:::
+utomatically set the id and _type based on the link element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.
 :::

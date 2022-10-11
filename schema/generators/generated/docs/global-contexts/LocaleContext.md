@@ -6,7 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext --> AbstractGlobalContext --> LocaleContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractGlobalContext --> LocaleContext["LocaleContext<br /><span class='properties'>language_code: string<br />country_code: string<br /></span>"];
     class LocaleContext diagramActive
   `}
   caption="Diagram: LocaleContext"
