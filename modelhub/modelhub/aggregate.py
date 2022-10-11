@@ -530,3 +530,21 @@ class Aggregate:
             result['percentage'] *= 100
             result = result.sort_values(by='percentage', ascending=False)
         return result
+
+    def get_top_root_locations(self, data, location_stack: Union[str, 'SeriesLocationStack'] = None):
+        """
+        A simple helper function to calculate the top root locations by unique users. This can be used to
+        get a quick overview of what locations are interesting for visualization with
+        :py:meth:`ModelHub.visualize_location_stack`. 
+        """
+
+        s = self._mh.visualize_location_stack(
+                                 data=data,
+                                 location_stack=location_stack,
+                                 return_top_root_locations_only=True)
+        sdf = s.reset_index()
+        sdf['_type'] = sdf['__type'].str[1:-1]
+        sdf['id'] = sdf['__id'].str[1:-1]
+        sdf['users'] = sdf.user_id
+
+        return sdf[['_type', 'id', 'users']]

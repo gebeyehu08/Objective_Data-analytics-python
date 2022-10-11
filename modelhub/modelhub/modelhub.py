@@ -303,7 +303,8 @@ class ModelHub:
                                  root_location: str = None,
                                  location_stack: Union[str, 'SeriesLocationStack'] = None,
                                  n_top_examples=40,
-                                 return_df: bool = False):
+                                 return_df: bool = False,
+                                 return_top_root_locations_only=False):
         """
         Shows the location stack as a sankey chart per element for the selected root location. It shows the
         different elements by type and id as nodes from left to right. The size of the nodes and links
@@ -332,8 +333,10 @@ class ModelHub:
 
         if type(location_stack) == str:
             location_stack_series = data[location_stack]
-        if type(location_stack) == SeriesLocationStack:
+        elif type(location_stack) == SeriesLocationStack:
             location_stack_series = location_stack
+        else:
+            raise TypeError(f"unsupported type `location_stack`: {type(location_stack)}")
 
         column = cast(SeriesLocationStack, location_stack_series)  # help mypy
 
@@ -359,9 +362,13 @@ class ModelHub:
 
         root_location_type = "RootLocationContext"
         if root_location is None:
-            root_location_data = data_merged[data_merged['__result_offset'] == 0].groupby(
+            root_location_data_df = data_merged[data_merged['__result_offset'] == 0].groupby(
                 ['__type', '__id']).user_id.count().sort_values(
-                ascending=False).head()
+                ascending=False)
+            if return_top_root_locations_only is True:
+                return root_location_data_df
+
+            root_location_data = root_location_data_df.head()
             root_location_type = root_location_data.index[0][0].strip('"')
             root_location = root_location_data.index[0][1].strip('"')
 
