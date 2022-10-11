@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
+from bach.utils import merge_sql_statements
 from sql_models.constants import DBDialect
 from sql_models.model import CustomSqlModelBuilder, SqlModel, Materialization
 from sql_models.sql_generator import to_sql
@@ -76,11 +77,7 @@ def _create_test_table(engine: Engine, table_name: str, add_data: bool):
     if not add_data:  # Only keep the 'drop table' and 'create table' statements. This saves a query.
         sql_statements = sql_statements[:2]
 
-    if not is_athena(engine):
-        # Athena does not support combining multiple statements in one call to conn.execute(). Other
-        # databases do support that.
-        combined = '; '.join(sql_statements)
-        sql_statements = [combined]
+    sql_statements = merge_sql_statements(dialect=engine.dialect, sql_statements=sql_statements)
 
     with engine.connect() as conn:
         for sql_statement in sql_statements:
