@@ -2,7 +2,7 @@ from typing import Union, List
 
 import pandas
 
-from bach import DataFrame
+from bach import DataFrame, SeriesFloat64
 from bach.partitioning import WindowFrameBoundary, Window, GroupBy
 from bach.series import SeriesAbstractNumeric, SeriesTimedelta
 from bach.expression import Expression, AggregateFunctionExpression
@@ -83,6 +83,9 @@ def _calculate_quantiles_with_percentile_cont(
                 if window is None or not isinstance(window, Window):
                     raise Exception('Invalid window object.')
 
+                if isinstance(series_to_agg, SeriesTimedelta):
+                    series_to_agg = series_to_agg.dt.total_seconds
+
                 agg_expr = window.get_window_expression(
                     AggregateFunctionExpression.construct(
                         f'percentile_cont({{}}, {qt})', series_to_agg,
@@ -106,7 +109,16 @@ def _calculate_quantiles_with_percentile_cont(
         for qt in quantiles:
             curr_q_series_name = f'__{series_name}_{qt}_quantile'
             mask = quantiles_df[_QUANTILES_SERIES_NAME] == qt
-            quantiles_df.loc[mask, q_series_name] = quantiles_df[curr_q_series_name]
+
+            current_q_series = quantiles_df[curr_q_series_name]
+
+            if is_bigquery(df.engine) and isinstance(df[series_name], SeriesTimedelta):
+                # cast back to SeriesTimeDelta
+                current_q_series = SeriesTimedelta.from_total_seconds(
+                    total_seconds=current_q_series.copy_override_type(SeriesFloat64)
+                )
+
+            quantiles_df.loc[mask, q_series_name] = current_q_series
 
         final_series.append(q_series_name)
 

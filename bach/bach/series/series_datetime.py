@@ -4,14 +4,14 @@ Copyright 2021 Objectiv B.V.
 import datetime
 from abc import ABC
 from enum import Enum
-from typing import Union, cast, List, Tuple, Optional, Any
+from typing import Union, cast, List, Tuple, Optional, Any, Type
 
 import numpy
 import pandas
 from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
-from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
+from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64, SeriesAbstractNumeric
 from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
@@ -348,8 +348,16 @@ class SeriesAbstractDateTime(Series, ABC):
         if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to {cls.dtype}')
 
-        if expression.is_constant and source_dtype == 'string':
-            return cls._constant_expression_to_dtype_expression(dialect, expression)
+        if source_dtype == 'string':
+            if expression.is_constant:
+                return cls._constant_expression_to_dtype_expression(dialect, expression)
+            if is_athena(dialect) and cls.dtype == 'time':
+                expression = SeriesTimestamp.dtype_to_expression(
+                    dialect,
+                    source_dtype,
+                    expression=Expression.construct('cast({} as time)', expression),
+                )
+                expression = Expression.construct('to_unixtime({})', expression)
 
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
@@ -446,6 +454,12 @@ class SeriesAbstractDateTime(Series, ABC):
 
         str_value = dt_value.strftime(cls._FINAL_DATE_TIME_FORMAT)
         return Expression.string_value(str_value)
+
+    def astype(self, dtype: Union[str, Type]) -> Series:
+        if not self._FINAL_DATE_TIME_FORMAT or (dtype != SeriesString.dtype and dtype != Type):
+            return super().astype(dtype=dtype)
+
+        return self.dt.strftime(self._FINAL_DATE_TIME_FORMAT)
 
 
 def dt_strip_timezone(value: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
@@ -624,9 +638,20 @@ class SeriesTime(SeriesAbstractDateTime):
     _FINAL_DATE_TIME_FORMAT = '%H:%M:%S.%f'
 
     @classmethod
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
+        if is_athena(dialect) and source_dtype == 'string' and not expression.is_constant:
+            # in order to use to_unixtime, it is required a timestamp value, therefore we need to perform
+            # the following casts:
+            #   string -> time -> timestamp -> double
+            expression = Expression.construct('cast({} as time)', expression)
+            expression = SeriesTimestamp.dtype_to_expression(dialect, source_dtype, expression)
+            expression = Expression.construct('to_unixtime({})', expression)
+        return super().dtype_to_expression(dialect, source_dtype, expression)
+
+
+    @classmethod
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
         if is_athena(dialect):
-            from bach.series import SeriesString
             return SeriesFloat64.get_db_dtype(dialect)
         return super().get_db_dtype(dialect)
 
@@ -921,11 +946,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         result = series.to_frame().quantile(q=q, partition=partition)[f'{series.name}_quantile']
         result = result.copy_override(name=self.name)
 
-        if not is_bigquery(self.engine):
-            return result.copy_override_type(SeriesTimedelta)
-
-        # result must be a timedelta
-        return self._convert_total_seconds_to_timedelta(result.copy_override_type(SeriesFloat64))
+        return result
 
     def mode(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesTimedelta':
         if not is_bigquery(self.engine):
@@ -934,31 +955,43 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         # APPROX_TOP_COUNT does not support INTERVALS. So, we should calculate the mode based
         # on the total seconds
         total_seconds_mode = self.dt.total_seconds.mode(partition, skipna)
-        return self._convert_total_seconds_to_timedelta(total_seconds_mode)
+        return self.from_total_seconds(total_seconds_mode)
 
-    def _convert_total_seconds_to_timedelta(
-        self, total_seconds_series: 'SeriesFloat64',
-    ) -> 'SeriesTimedelta':
+    @classmethod
+    def from_total_seconds(cls, total_seconds: SeriesAbstractNumeric) -> 'SeriesTimedelta':
         """
         helper function for converting series representing total seconds (epoch) to timedelta series.
 
         returns a SeriesTimedelta
         """
+        engine = total_seconds.engine
+        if is_athena(engine):
+            return total_seconds.copy_override_type(SeriesTimedelta)
 
-        # convert total seconds into microseconds
-        # since TIMESTAMP_SECONDS accepts only integers, therefore
-        # microseconds will be lost due to rounding
-        total_microseconds_series = (
-            total_seconds_series / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+        if is_postgres(engine):
+            expression = Expression.construct('to_timestamp({})', total_seconds.astype('int64'))
+        elif is_bigquery(engine):
+            # convert total seconds into microseconds
+            # since TIMESTAMP_SECONDS accepts only integers, therefore
+            # microseconds will be lost due to rounding
+            total_microseconds_series = (
+                    total_seconds / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+            )
+            expression = Expression.construct(
+                'TIMESTAMP_MICROS({})', total_microseconds_series.astype('int64')
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
+        seconds_as_timestamp_series = (
+            total_seconds.copy_override(expression=expression).copy_override_type(SeriesTimestamp)
         )
-        result = total_microseconds_series.copy_override(
-            expression=Expression.construct(
-                f"TIMESTAMP_MICROS({{}}) - CAST('1970-01-01' AS TIMESTAMP)",
-                total_microseconds_series.astype('int64'),
-            ),
-            name=self.name,
+
+        start_time = SeriesTimestamp.from_value(
+            base=seconds_as_timestamp_series, value=datetime.datetime(1970, 1, 1)
         )
-        return result.copy_override_type(SeriesTimedelta)
+
+        return (seconds_as_timestamp_series - start_time).copy_override_type(SeriesTimedelta)
 
 
 def _convert_numpy_datetime_to_utc_datetime(value: numpy.datetime64) -> datetime.datetime:

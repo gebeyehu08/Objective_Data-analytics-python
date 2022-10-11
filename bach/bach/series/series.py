@@ -26,7 +26,7 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena, is_postgres
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
@@ -1600,12 +1600,26 @@ class Series(ABC):
             For more information:
             https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_top_count
         """
-        agg_expr = f'mode() within group (order by {{}})'
-        if is_bigquery(self.engine):
+        if is_postgres(self.engine):
+            agg_expr = f'mode() within group (order by {{}})'
+        elif is_athena(self.engine):
+            agg_expr = f"""
+                reduce(
+                    map_entries(histogram({{}})),
+                    CAST(ROW(NULL, 0) AS ROW(field0 {self.get_db_dtype(self.engine.dialect)}, field1 BIGINT)),
+                    (prev, curr) -> IF(prev.field0 IS NULL, curr, IF(prev.field1 < curr.field1, curr, prev)),
+                    val -> val
+                ).field0
+            """
+
+        elif is_bigquery(self.engine):
             # BigQuery has no aggregate function for mode, therefore we use
             # APPROX_TOP_COUNT which return an approximation of the exact result
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions
             agg_expr = f'approx_top_count({{}}, 1)[offset(0)].value'
+
+        else:
+            raise DatabaseNotSupportedException(self.engine)
 
         result = self._derived_agg_func(
             partition=partition,

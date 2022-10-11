@@ -8,11 +8,9 @@ import pandas as pd
 import pytest
 
 from bach import DataFrame
-from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from unittest.mock import ANY
-
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
+from bach.testing import assert_equals_data
 
 
 def test_df_categorical_describe(engine) -> None:
@@ -122,14 +120,13 @@ def test_describe_datetime(engine) -> None:
 
     result = df.describe()
     result = result.reset_index(drop=False)
-    tz = '+00' if is_bigquery(engine) else ''
     expected_df = pd.DataFrame(
         data=[
             ['count', '3'],
-            ['min', f'2000-01-01 00:00:00{tz}'],
-            ['max', f'2010-01-01 00:00:00{tz}'],
+            ['min', '2000-01-01 00:00:00.000000'],
+            ['max', '2010-01-01 00:00:00.000000'],
             ['nunique', '2'],
-            ['mode', f'2010-01-01 00:00:00{tz}'],
+            ['mode', '2010-01-01 00:00:00.000000'],
         ],
         columns=['__stat', 'column'],
     )
@@ -178,10 +175,10 @@ def test_describe_time(engine) -> None:
     expected_df = pd.DataFrame(
         data=[
             ['count', '3'],
-            ['min', '11:00:01'],
-            ['max', '13:37:00'],
+            ['min', '11:00:01.000000'],
+            ['max', '13:37:00.000000'],
             ['nunique', '2'],
-            ['mode', '11:00:01'],
+            ['mode', '11:00:01.000000'],
         ],
         columns=['__stat', 'column'],
     )

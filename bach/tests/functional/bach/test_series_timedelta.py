@@ -93,10 +93,6 @@ def test_timedelta(engine):
         use_to_pandas=True,
     )
 
-    if is_athena(engine):
-        # TODO: Support mode aggregation for athena
-        return None
-
     r4 = gb[['delta']].groupby().mode()
     assert_equals_data(
         r4,
