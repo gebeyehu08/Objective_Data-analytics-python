@@ -26,7 +26,7 @@ To run the generators, from either the [/validator](validator) or [/generators](
 yarn generate
 ```  
 
-If the schema was changed, a new validator version will be generated alongside all necessary updates the SDKs and the Collector to support it.
+If the schema was changed, a new validator version will be generated alongside all necessary updates to the SDKs and the Collector to support it.
 
 > NOTE: Services need to be restarted, after the generation process has completed, to be aware and support a new version.
 
@@ -48,7 +48,7 @@ yarn cli <event json as string>
 ## Generators
 We use [Yellicode](https://www.yellicode.com/introduction) for code generation.  
 
-Here is a list of the generators we currently have:
+Here is a list of the generators we plan to support, some are not yet finished at this point:
 - Validator module
 - TypeScript Schema for the SDKs
 - Core Tracker SDK factories
@@ -58,7 +58,7 @@ Here is a list of the generators we currently have:
 
 >NOTE: some of the aforementioned templates are not complete
 
-In a nutshell, the base_schema is our source of truth and all generators parse it to produce new factories, validation code, types, definitions, etc. 
+In a nutshell, the base_schema is our source of truth and all generators parse it to produce new factories, validation code, types, definitions, etc.
 
 ## Validation
 
