@@ -60,8 +60,9 @@ def check_set_const(
         expected_db_type = expected_db_type_override[db_dialect]
     else:
         expected_db_type = expected_series.get_db_dtype(engine.dialect)
-    db_types = {column_name: expected_db_type for column_name in column_names}
-    assert_db_types(bt, db_types)
+    series_to_db_types = {column_name: expected_db_type for column_name in column_names}
+    expected_db_types = {db_dialect: series_to_db_types}
+    assert_db_types(bt, expected_db_types)
 
 
 

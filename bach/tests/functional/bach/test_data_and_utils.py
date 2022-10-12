@@ -7,7 +7,7 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
-from typing import Type, Dict, List, Any
+from typing import Type, Dict, List, Any, Mapping
 
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy, Engine, Dialect
@@ -208,36 +208,40 @@ def assert_postgres_type(
 
 def assert_db_types(
         df: DataFrame,
-        series_expected_db_type: Dict[str, str],
+        expected_db_types: Mapping[DBDialect, Mapping[str, str]]
 ):
     """
     Check that the given series in the DataFrame have the expected data types in the database.
 
     :param df: DataFrame object for which to check the database types
-    :param series_expected_db_type: mapping of series-names, to database types.
+    :param expected_db_types: Per database dialect a mapping of series-names to database types.
+        Must at least contain a mapping from series-name to expected database types for the db-dialect of
+        df.engine
     """
     engine = df.engine
-    if is_postgres(engine):
-        typeof_function_name = 'pg_typeof'
-    elif is_athena(engine):
-        typeof_function_name = 'typeof'
-    elif is_bigquery(engine):
+    db_dialect = DBDialect.from_engine(engine)
+    if db_dialect not in expected_db_types:
+        raise Exception(f'db dialect "{db_dialect.name}" not in expected_db_types.')
+    db_expected_db_types = expected_db_types[db_dialect]
+
+    typeof_function_name = {
+        DBDialect.POSTGRES: 'pg_typeof',
+        DBDialect.ATHENA: 'typeof',
         # `bqutil.fn.typeof` is not a default BQ function, but a community function that's available to all.
         # https://github.com/GoogleCloudPlatform/bigquery-utils/tree/master/udfs/community#typeofinput-any-type
-        typeof_function_name = 'bqutil.fn.typeof'
-    else:
-        raise Exception(f'Not supported: {engine.name}')
+        DBDialect.BIGQUERY: 'bqutil.fn.typeof',
+    }[db_dialect]
 
     df_sql = df.view_sql()
     types_sql = ', '.join(
         f'{typeof_function_name}({quote_identifier(dialect=engine.dialect, name=series_name)})'
-        for series_name in series_expected_db_type.keys()
+        for series_name in db_expected_db_types.keys()
     )
     sql = f'with check_type as ({df_sql}) select {types_sql} from check_type limit 1'
     db_rows = run_query(engine=engine, sql=sql)
     db_values = [list(row) for row in db_rows]
-    for i, series_name in enumerate(series_expected_db_type.keys()):
-        expected_db_type = series_expected_db_type[series_name]
+    for i, series_name in enumerate(db_expected_db_types.keys()):
+        expected_db_type = db_expected_db_types[series_name]
         db_type = db_values[0][i]
         msg = f"expected type {expected_db_type} for {series_name}, found {db_type}"
         assert db_type == expected_db_type, msg
