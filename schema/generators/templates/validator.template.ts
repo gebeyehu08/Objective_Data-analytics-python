@@ -205,8 +205,13 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.t
 });
 
 // Validator package.json
-Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/package.json` }, (writer: TextWriter) => {
+const packageJsonPath = `${validatorFolder}${schemaVersion}/package.json`;
+Generator.generate({ outputFile: packageJsonPath }, (writer: TextWriter) => {
   writer.writeFile('validator-package_json.template.json');
+
+  fs.readFile(packageJsonPath, 'utf8', function (err, data) {
+    fs.writeFileSync(packageJsonPath, data.replace(/{{schemaVersion}}/g, schemaVersion));
+  });
 });
 
 // Bundle schema

@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/validator",
-  "version": "0.0.1",
+  "version": "{{schemaVersion}}",
   "description": "Objectiv Validator module for the Open Analytics Taxonomy",
   "scripts": {
     "test": "jest"
