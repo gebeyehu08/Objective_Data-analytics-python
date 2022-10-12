@@ -40,6 +40,10 @@ app.get('/status', (req, res) => {
   });
 });
 
+app.get('/schema', (req, res) => {
+  res.send(`Please specify a Schema version, e.g. /schema/latest or /schema/1.0.0`);
+});
+
 app.get('/schema/:version', (req, res) => {
   const { schemaPath } = getValidatorForSchemaVersion(req.params.version);
 
