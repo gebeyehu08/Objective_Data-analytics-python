@@ -17,10 +17,8 @@ from objectiv_backend.end_points.common import get_json_response, get_cookie_id_
 from objectiv_backend.end_points.extra_output import events_to_json, write_data_to_fs_if_configured, \
     write_data_to_s3_if_configured, write_data_to_snowplow_if_configured
 from objectiv_backend.schema.validate_events import validate_structure_event_list, EventError
-from objectiv_backend.workers.pg_queues import PostgresQueues, ProcessingStage
-from objectiv_backend.workers.pg_storage import insert_events_into_nok_data
+from objectiv_backend.workers.pg_storage import insert_events_into_nok_data, insert_events_into_data
 from objectiv_backend.workers.worker_entry import process_events_entry
-from objectiv_backend.workers.worker_finalize import insert_events_into_data
 
 from objectiv_backend.schema.schema import HttpContext, MarketingContext
 
@@ -69,16 +67,11 @@ def collect(anonymous_mode: bool = False) -> Response:
         # in anonymous mode we hash certain properties, as defined in config.anonymous_mode.to_hash
         anonymize_events(events, config.anonymous_mode)
 
-    if not get_collector_config().async_mode:
-        ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
-        print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
-        write_sync_events(ok_events=ok_events, nok_events=nok_events, event_errors=event_errors)
-        return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors,
-                                       anonymous_mode=anonymous_mode, client_session_id=client_session_id)
-    else:
-        write_async_events(events=events)
-        return _get_collector_response(error_count=0, event_count=len(events),
-                                       client_session_id=client_session_id)
+    ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
+    print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
+    write_sync_events(ok_events=ok_events, nok_events=nok_events, event_errors=event_errors)
+    return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors,
+                                   anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
 
 def hash_property(property_to_hash: str) -> str:
@@ -373,32 +366,3 @@ def write_sync_events(ok_events: EventDataList, nok_events: EventDataList, event
             moment = datetime.utcnow()
             write_data_to_fs_if_configured(data=data, prefix=prefix, moment=moment)
             write_data_to_s3_if_configured(data=data, prefix=prefix, moment=moment)
-
-
-def write_async_events(events: EventDataList):
-    """
-    Write the events to the following sinks, if configured:
-        * postgres - To the entry queue
-        * aws - to the 'RAW' prefix
-        * file system - to the 'RAW' directory
-    """
-    output_config = get_collector_config().output
-    # todo: add exception handling. if one output fails, continue to next if configured.
-    if output_config.postgres:
-        connection = get_db_connection(output_config.postgres)
-        try:
-            with connection:
-                pg_queue = PostgresQueues(connection=connection)
-                pg_queue.put_events(queue=ProcessingStage.ENTRY, events=events)
-        finally:
-            connection.close()
-
-    if not output_config.file_system and not output_config.aws:
-        return
-    prefix = 'RAW'
-    if events:
-        data = events_to_json(events)
-        moment = datetime.utcnow()
-        write_data_to_fs_if_configured(data=data, prefix=prefix, moment=moment)
-        write_data_to_s3_if_configured(data=data, prefix=prefix, moment=moment)
-
