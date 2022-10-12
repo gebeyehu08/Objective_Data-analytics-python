@@ -13,12 +13,16 @@ DATA = {
 def test_dropna_w_nan(engine) -> None:
     pdf = pd.DataFrame(
         {
-            'a': ['a', 'b', None, 'a', 'b', None],
-            'b': [np.nan, np.nan, np.nan, 1, 2, 3],
+            'a': [   'a',    'b',   None, 'a', 'b', None],
+            'b': [np.nan, np.nan, np.nan,  1,    2,    3],
+            'c': [    1,      2,      3,   4,    5,    6],
         },
     )
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
+    pdf.loc[pdf['a'] == 'b', 'c'] = float('nan')
+    df.loc[df['a'] == 'b', 'c'] = float('nan')
+    df = df.materialize()
     expected = pdf.dropna()
     result = df.dropna()
     pd.testing.assert_frame_equal(

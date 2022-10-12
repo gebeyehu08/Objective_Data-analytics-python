@@ -6,20 +6,23 @@ import pytest
 
 from bach import DataFrame
 
-from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline, _get_taxonomy_column_definition
-from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
+from modelhub.pipelines.extracted_contexts import get_extracted_context_pipeline
+from tests_modelhub.data_and_utils.data_parsers import get_extracted_contexts_data_from_parsed_objectiv_data
+from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, \
     DBParams
 
 
 @pytest.fixture(autouse=True)
 def patch_extracted_contexts_validations(monkeypatch, db_params):
-    engine = create_engine_from_db_params(db_params)
-
     if db_params.format == DBParams.Format.OBJECTIV:
-        patch_db_dtypes ={
-            _get_taxonomy_column_definition(engine).name: _get_taxonomy_column_definition(engine).dtype
+        patch_db_dtypes = {
+            'value': 'json'
         }
     elif db_params.format == DBParams.Format.SNOWPLOW:
+        patch_db_dtypes = {
+            'contexts': 'string'
+        }
+    elif db_params.format == DBParams.Format.FLATTENED_SNOWPLOW:
         patch_db_dtypes = {
             'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}]
         }
@@ -30,13 +33,15 @@ def patch_extracted_contexts_validations(monkeypatch, db_params):
     )
 
     monkeypatch.setattr(
-        'modelhub.pipelines.extracted_contexts.ExtractedContextsPipeline._validate_data_dtypes',
+        'modelhub.pipelines.extracted_contexts.BaseExtractedContextsPipeline._validate_data_dtypes',
         lambda *args, **kwargs: None,
     )
 
 
 def test_get_base_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
+    pipeline = get_extracted_context_pipeline(engine, db_params.table_name, global_contexts=[])
+    result = pipeline._base_dtypes
 
     if db_params.format == DBParams.Format.OBJECTIV:
         expected = {
@@ -46,10 +51,21 @@ def test_get_base_dtypes(db_params) -> None:
             'moment': 'timestamp',
             'cookie_id': 'uuid'
         }
-    elif db_params.format == DBParams.Format.SNOWPLOW:
+        assert expected == result
+        return
+
+    if db_params.format in (DBParams.Format.FLATTENED_SNOWPLOW, DBParams.Format.SNOWPLOW):
+        if db_params.format == DBParams.Format.FLATTENED_SNOWPLOW:
+            extra_dtypes = {
+                'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}]
+            }
+        else:
+            extra_dtypes = {'contexts': 'string'}
+
         expected = {
             'collector_tstamp': 'timestamp',
-            'contexts_io_objectiv_location_stack_1_0_0': [{'location_stack': 'string'}],
+            **extra_dtypes,
+            'domain_sessionid': 'string',
             'event_id': 'string',
             'network_userid': 'string',
             'se_action': 'string',
@@ -59,25 +75,22 @@ def test_get_base_dtypes(db_params) -> None:
     else:
         raise Exception()
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
-    result = pipeline._base_dtypes
-
     assert expected == result
 
 
 def test_convert_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = ExtractedContextsPipeline(engine, db_params.table_name, global_contexts=[])
+    pipeline = get_extracted_context_pipeline(engine, db_params.table_name, global_contexts=[])
 
-    event = get_parsed_objectiv_data(engine)[0]
+    event = get_extracted_contexts_data_from_parsed_objectiv_data(db_params.format)[0]
     pdf = pd.DataFrame(
         [
             {
                 'event_id': str(event['event_id']),
                 'day': str(event['day']),
                 'moment': str(event['moment']),
-                'user_id': str(event['cookie_id']),
+                'user_id': str(event['user_id']),
             }
         ]
     )

@@ -4,160 +4,18 @@ Copyright 2021 Objectiv B.V.
 import json
 import os
 
-from typing import List, Generic, TypeVar
+from typing import List, TypeVar, Generic
 # added for metabase export
 import requests
 
 from bach import DataFrame, Series, SeriesString, SeriesJson
-from bach.expression import Expression, quote_string, quote_identifier, join_expressions
+from bach.expression import Expression, quote_string, join_expressions
 from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
-from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
+from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery, is_athena
 
 
 TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
-
-
-class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
-    """
-    Specialized JsonAccessor that has functions to work on SeriesJsons whose data consists of an array
-    of objects.
-    """
-
-    def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
-        """
-        .. _get_from_context_with_type_series:
-
-        Returns the value of `key` from the first context in an Objectiv stack where `_type` matches `type`.
-
-        :param type: the _type to search for in the contexts of the stack.
-        :param key: the value of the key to return of the context with matching type.
-        :param dtype: the dtype of the series to return.
-        :returns: a series of type `dtype`
-        """
-        dialect = self._series_object.engine.dialect
-        if is_postgres(dialect):
-            return self._postgres_get_from_context_with_type_series(type, key, dtype)
-        if is_bigquery(dialect):
-            return self._bigquery_get_from_context_with_type_series(type, key, dtype)
-        raise DatabaseNotSupportedException(dialect)
-
-    def _postgres_get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
-        dialect = self._series_object.engine.dialect
-        expression_str = f'''
-        jsonb_path_query_first({{}},
-        \'$[*] ? (@._type == $type)\',
-        \'{{"type":{quote_identifier(dialect, type)}}}\') ->> {{}}'''
-        expression = Expression.construct(
-            expression_str,
-            self._series_object,
-            Expression.string_value(key)
-        )
-        return self._series_object.copy_override_dtype(dtype).copy_override(expression=expression)
-
-    def _bigquery_get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
-        select_ctx_expression = Expression.construct(
-            '''(
-              select first_value(ctx) over (order by pos)
-              from unnest(json_query_array({}, '$')) as ctx with offset as pos
-              where json_value(ctx, '$."_type"') = {} limit 1
-            )''',
-            self._series_object,
-            Expression.string_value(type)
-        )
-        ctx_series = self._series_object.copy_override(expression=select_ctx_expression)
-        as_str = dtype == 'string'
-        value_series = ctx_series.json.get_value(key=key, as_str=as_str)
-        return value_series.copy_override_dtype(dtype)
-
-    def get_contexts(self, name: str) -> 'SeriesGlobalContext':
-        """
-        Returns an array of contexts from an Objectiv stack where `_type` matches the
-        UpperCamelCase context created from `name` e.g. if `name` is 'input_value', then this returns all
-        contexts where the `_type` field has value 'InputValueContext'.
-
-        :param name: The name of the context-array to retrieve, in snake_case
-        """
-        upper_camel_name = "".join([c.capitalize() for c in name.split('_')]) + 'Context'
-
-        return self.get_contexts_with_type(upper_camel_name).astype('objectiv_global_context')
-
-    def get_contexts_with_type(self, type: str):
-        """
-        Returns an array of contexts from an Objectiv stack where `_type` matches `type`.
-
-        :param type: the _type to search for in the contexts of the stack.
-        :returns: a seriesjson, containing a possibly empty array of the specified types
-        """
-        dialect = self._series_object.engine.dialect
-        if is_postgres(dialect):
-            return self._postgres_get_contexts_with_type(type)
-        if is_bigquery(dialect):
-            return self._bigquery_get_contexts_with_type(type)
-        raise DatabaseNotSupportedException(dialect)
-
-    def _postgres_get_contexts_with_type(self, type: str):
-        dialect = self._series_object.engine.dialect
-        expression_str = f'''
-        jsonb_path_query_array({{}},
-        \'$[*] ? (@._type == $type)\',
-        \'{{"type":{quote_identifier(dialect, type)}}}\')'''
-        expression = Expression.construct(
-            expression_str,
-            self._series_object
-        )
-        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
-
-    def _bigquery_get_contexts_with_type(self, type: str):
-        # This is quite ugly, but we need to convert to JSON (pre GA), and back to string because
-        # there is no nicer way to otherwise generate the JSON array that we need (as a string for now)
-        # This should be revisited when we implement BQ JSON through that datatype.
-        expression = Expression.construct(
-            '''
-            to_json_string(array(
-                select ctx
-                from unnest(json_query_array(parse_json({}), '$')) as ctx with offset as pos
-                where json_value(ctx, '$."_type"') = {}
-            ))''',
-            self._series_object,
-            Expression.string_value(type)
-        )
-        return self._series_object.copy_override_dtype('json').copy_override(expression=expression)
-
-
-@register_dtype(value_types=[], override_registered_types=True)
-class SeriesGlobalContexts(SeriesJson):
-    """
-    Objectiv Global Contexts series. This series type contains functionality specific to the Objectiv Global
-    Contexts.
-    """
-    dtype = 'objectiv_global_contexts'
-
-    @property
-    def objectiv(self) -> 'ObjectivStack':
-        """
-        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
-        accessor. Same as :py:attr:`obj`
-
-        .. autoclass:: modelhub.series.ObjectivStack
-            :members:
-            :noindex:
-
-        """
-        return ObjectivStack(self)
-
-    @property
-    def obj(self) -> 'ObjectivStack':
-        """
-        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
-        accessor. Same as :py:attr:`objectiv`
-
-        .. autoclass:: modelhub.series.ObjectivStack
-            :members:
-            :noindex:
-
-        """
-        return ObjectivStack(self)
 
 
 @register_dtype(value_types=[], override_registered_types=True)
@@ -196,7 +54,7 @@ class SeriesLocationStack(SeriesJson):
     """
     dtype = 'objectiv_location_stack'
 
-    class LocationStack(ObjectivStack):
+    class LocationStack(JsonAccessor, Generic[TSeriesJson]):
         @property
         def navigation_features(self):
             """
@@ -206,6 +64,21 @@ class SeriesLocationStack(SeriesJson):
             """
             # type ignore, as mypy doesn't like a dict in a Slice
             return self[{'_type': 'NavigationContext'}: None]  # type: ignore
+
+        def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
+            """
+            Returns the value of `key` from the first context in an Objectiv stack
+            where `_type` matches `type`.
+            :param type: the _type to search for in the contexts of the stack.
+            :param key: the value of the key to return of the context with matching type.
+            :param dtype: the dtype of the series to return.
+            :returns: a series of type `dtype`
+            """
+            type_slice = slice({'_type': type}, None)
+            ctx_series = self._series_object.json[type_slice].json[0]
+            as_str = dtype == 'string'
+            value_series = ctx_series.json.get_value(key=key, as_str=as_str)
+            return value_series.copy_override_dtype(dtype)
 
         @property
         def feature_stack(self) -> 'SeriesLocationStack':
@@ -217,13 +90,43 @@ class SeriesLocationStack(SeriesJson):
             """
             keys = ['_type', 'id']
             engine = self._series_object.engine
+            if is_athena(engine):
+                return self._athena_filter_keys_of_dicts(keys)
             if is_postgres(engine):
                 return self._postgres_filter_keys_of_dicts(keys)
             if is_bigquery(engine):
                 return self._bigquery_filter_keys_of_dicts(keys)
             raise DatabaseNotSupportedException(engine)
 
-        def _postgres_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
+        def _athena_filter_keys_of_dicts(self, keys: List[str]) -> 'SeriesLocationStack':
+            """
+              Return a new Series, that consists of the same top level array, but with all
+              the sub-dictionaries having only their original fields if that field
+              is listed in the keys parameter.
+              If the field didn't previously exist then it will have the value NULL.
+
+              Athena only.
+              """
+            key_to_extract = [
+                Expression.construct(
+                    '({}, __x[{}])',
+                    Expression.string_value(key),
+                    Expression.string_value(key),
+                )
+                for key in keys
+            ]
+            array_map_expr = Expression.construct(
+                'try(cast({} as array(map(varchar, json))))',
+                self._series_object
+            )
+            expression = Expression.construct(
+                'cast(transform({}, __x -> cast(map_from_entries(array[{}]) as json)) as json)',
+                array_map_expr,
+                join_expressions(key_to_extract),
+            )
+            return self._series_object.copy_override(expression=expression)
+
+        def _postgres_filter_keys_of_dicts(self, keys: List[str]) -> 'SeriesLocationStack':
             """
             Return a new Series, that consists of the same top level array, but with all the sub-dictionaries
             having only their original fields if that field is listed in the keys parameter.
@@ -244,7 +147,7 @@ class SeriesLocationStack(SeriesJson):
             )
             return self._series_object.copy_override(expression=expression)
 
-        def _bigquery_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
+        def _bigquery_filter_keys_of_dicts(self, keys: List[str]) -> 'SeriesLocationStack':
             """
             Return a new Series, that consists of the same top level array, but with all the sub-dictionaries
             having only the fields that are listed in the keys parameter. If the field didn't previously
@@ -290,9 +193,46 @@ class SeriesLocationStack(SeriesJson):
                 expression = self._postgres_nice_name()
             elif is_bigquery(engine):
                 expression = self._bigquery_nice_name()
+            elif is_athena(engine):
+                expression = self._athena_nice_name()
             else:
                 raise DatabaseNotSupportedException(engine)
             return self._series_object.copy_override_type(SeriesString).copy_override(expression=expression)
+
+        def _athena_nice_name(self) -> Expression:
+            location_formatting_str = '''
+                transform(
+                    cast({} as array(json)),
+                    x-> replace(
+                        regexp_replace(
+                            cast(json_extract(x, '$["_type"]') as varchar),
+                            '([a-z])([A-Z])', x -> x[1] || ' ' || x[2]
+                        ),
+                        ' Context', ''
+                    )
+                    || ': ' || cast(json_extract(x, '$["id"]') as varchar)
+                )
+            '''
+
+            _last_element_in_stack = self._series_object.json[-1:]
+            _prev_elements_in_stack = self._series_object.json[:-1]
+
+            formatted_last_location = Expression.construct(
+                'element_at({}, 1)', Expression.construct(location_formatting_str, _last_element_in_stack)
+            )
+            formatted_prev_locations = Expression.construct(
+                "array_join({}, ' => ')",
+                Expression.construct(location_formatting_str, _prev_elements_in_stack),
+            )
+
+            return Expression.construct(
+                "{} || CASE WHEN cardinality(cast({} as array(json))) > 1 THEN {} || {} ELSE {} END",
+                formatted_last_location,
+                self._series_object,
+                Expression.string_value(' located at '),
+                formatted_prev_locations,
+                Expression.string_value('')
+            )
 
         def _bigquery_nice_name(self) -> Expression:
             # last_element_nice_expr turns something with _type='SectionContext' and id='section_id'
@@ -376,32 +316,6 @@ class SeriesLocationStack(SeriesJson):
                 self._series_object
             )
             return expression
-
-    @property
-    def objectiv(self):
-        """
-        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
-        accessor. Same as :py:attr:`obj`
-
-        .. autoclass:: modelhub.series.ObjectivStack
-            :members:
-            :noindex:
-
-        """
-        return ObjectivStack(self)
-
-    @property
-    def obj(self):
-        """
-        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
-        accessor. Same as :py:attr:`objectiv`
-
-        .. autoclass:: modelhub.series.ObjectivStack
-            :members:
-            :noindex:
-
-        """
-        return ObjectivStack(self)
 
     @property
     def location_stack(self):

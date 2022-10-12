@@ -64,7 +64,6 @@ def test_sort_values_expression(engine):
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_sort_values_non_existing_column(engine):
     # Sort by an expression that is not in the DataFrame anymore
     bt = get_df_with_test_data(engine)[['city', 'inhabitants']]
@@ -104,7 +103,6 @@ def test_sort_values_parameters(engine):
     "ascending",  # generate all eight possible combinations of True/False for three parameters
     [list(asc) for asc in itertools.product((True, False), (True, False), (True, False))]
 )
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_sorting_df_against_pandas(dataframes_sort, ascending) -> None:
     pdf, df = dataframes_sort
     sort_by = ['A', 'B', 'C']

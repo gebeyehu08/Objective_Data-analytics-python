@@ -1,5 +1,5 @@
 # MediaStartEvent
-A MediaEvent that's emitted after a media item starts playback.
+A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item starts playback.
 
 ### Properties
 `string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.
@@ -8,3 +8,7 @@ A MediaEvent that's emitted after a media item starts playback.
 `discriminator` _type: A string literal used during serialization. Should always match the Event interface name.
 `uuid` id: Unique identifier for a specific instance of an event.
 `integer` time: Timestamp indicating when the event was generated.
+
+:::info setting of properties
+The tracker will automatically set all the properties.
+:::

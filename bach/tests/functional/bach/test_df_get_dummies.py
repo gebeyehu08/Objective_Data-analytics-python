@@ -2,9 +2,8 @@ import pandas as pd
 import pytest
 
 from bach import DataFrame
+from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data
-
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 
 def test_basic_get_dummies(engine) -> None:
@@ -21,7 +20,8 @@ def test_basic_get_dummies(engine) -> None:
     assert set(expected_columns) == set(result.data_columns)
     result = result[expected_columns]
     assert_equals_data(
-        result[expected_columns],
+        result,
+        use_to_pandas=True,
         expected_columns=['_index_0'] + expected_columns,
         expected_data=[
             [0, 1, 1, 0, 0, 1, 0],
@@ -29,10 +29,15 @@ def test_basic_get_dummies(engine) -> None:
             [2, 3, 1, 0, 0, 0, 1]
         ],
     )
-    pd.testing.assert_frame_equal(
-        expected,
-        result.to_pandas(),
-    )
+
+    if is_postgres(engine):
+        # Additional check: query the result again, and check against the pandas implementation.
+        # We only run this on Postgres for performance reasons. The assert_equals_data() above runs for all
+        # databases, which already assures that the result is the same across databases.
+        pd.testing.assert_frame_equal(
+            expected,
+            result.to_pandas(),
+        )
 
 
 def test_get_dummies_dtype(engine) -> None:
@@ -49,6 +54,7 @@ def test_get_dummies_dtype(engine) -> None:
     result = result[expected_columns]
     assert_equals_data(
         result[expected_columns],
+        use_to_pandas=True,
         expected_columns=['_index_0'] + expected_columns,
         expected_data=[
             [0, 1, '1', '0', '0', '1', '0'],
@@ -76,6 +82,7 @@ def test_get_dummies_prefix(engine) -> None:
     result = result[expected_columns]
     assert_equals_data(
         result,
+        use_to_pandas=True,
         expected_columns=['_index_0'] + expected_columns,
         expected_data=[
             [0, 1, 1, 0, 0, 1, 0],
@@ -84,10 +91,14 @@ def test_get_dummies_prefix(engine) -> None:
         ],
     )
 
-    pd.testing.assert_frame_equal(
-        expected,
-        result.to_pandas(),
-    )
+    if is_postgres(engine):
+        # Additional check: query the result again, and check against the pandas implementation.
+        # We only run this on Postgres for performance reasons. The assert_equals_data() above runs for all
+        # databases, which already assures that the result is the same across databases.
+        pd.testing.assert_frame_equal(
+            expected,
+            result.to_pandas(),
+        )
 
 
 def test_get_dummies_w_na(engine) -> None:
@@ -107,6 +118,7 @@ def test_get_dummies_w_na(engine) -> None:
     result = result[expected_columns]
     assert_equals_data(
         result,
+        use_to_pandas=True,
         expected_columns=['_index_0'] + expected_columns,
         expected_data=[
             [0, 1, 1, 1, 0],
@@ -115,10 +127,14 @@ def test_get_dummies_w_na(engine) -> None:
             [3, 4, 0, 0, 0],
         ],
     )
-    pd.testing.assert_frame_equal(
-        expected,
-        result.to_pandas(),
-    )
+    if is_postgres(engine):
+        # Additional check: query the result again, and check against the pandas implementation.
+        # We only run this on Postgres for performance reasons. The assert_equals_data() above runs for all
+        # databases, which already assures that the result is the same across databases.
+        pd.testing.assert_frame_equal(
+            expected,
+            result.to_pandas(),
+        )
 
 
 def test_get_dummies_include_na(engine) -> None:
@@ -138,6 +154,7 @@ def test_get_dummies_include_na(engine) -> None:
     result = result[expected_columns]
     assert_equals_data(
         result,
+        use_to_pandas=True,
         expected_columns=['_index_0'] + expected_columns,
         expected_data=[
             [0, 1, 1, 0, 1, 0, 0],
@@ -145,10 +162,14 @@ def test_get_dummies_include_na(engine) -> None:
             [2, 3, 1, 0, 0, 0, 1],
         ],
     )
-    pd.testing.assert_frame_equal(
-        expected,
-        result.to_pandas(),
-    )
+    if is_postgres(engine):
+        # Additional check: query the result again, and check against the pandas implementation.
+        # We only run this on Postgres for performance reasons. The assert_equals_data() above runs for all
+        # databases, which already assures that the result is the same across databases.
+        pd.testing.assert_frame_equal(
+            expected,
+            result.to_pandas(),
+        )
 
 
 def test_get_dummies_errors(engine) -> None:

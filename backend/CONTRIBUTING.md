@@ -20,11 +20,14 @@ pip install -r requirements-dev.txt
 cd ..; docker-compose up --detach objectiv_postgres
 cd backend; python objectiv_backend/tools/db_init/db_init.py
 ```
-SECURITY WARNING: The above docker-compose command starts a postgres container that allows connections
+
+
+**SECURITY WARNING:** The above docker-compose command starts a postgres container that allows connections
 without verifying passwords. Do not use this in production or on a shared system!
 
 ## Start validation service
-Using stablle docker image:
+Using stable docker image:
+
 ```bash
 docker run -d -p 8082:8082 --rm  --name objectiv_validator objectiv/validator
 ```
@@ -38,12 +41,9 @@ docker run  -d --rm --name objectiv_validator -p 8082:8082 -v $PWD/../schema/val
 ## Run Collector
 After setting up the python env, simply run:
 ```bash
-flask run
+flask run -p 8081
 ```
-Start worker that will process events that flask will add to the queue:
-```bash
-python objectiv_backend/workers/worker.py all --loop
-```
+
 
 ## Run Tests and Checks
 ```bash

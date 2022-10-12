@@ -246,14 +246,16 @@ def test_json_getitem_slice(engine, dtype):
 
 def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
     # Slices only work on columns with only lists
-    # But behaviour of Postgres and Athena is different from BigQuery. For now we just accept that's the
-    # way it is.
+    # But behaviour of Postgres is different from Athena and BigQuery.
+    # For Athena, slicing is wrapped by try function for avoiding exceptions,
+    # while BigQuery will not raise an exception by default.
+    # For now we just accept that's the way it is.
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[1:-1]
-    if is_postgres(engine) or is_athena(engine):
+    if is_postgres(engine):
         with pytest.raises(Exception):
             bts.to_pandas()
-    elif is_bigquery(engine):
+    elif is_athena(engine) or is_bigquery(engine):
         assert_equals_data(
             bts,
             use_to_pandas=True,
@@ -356,6 +358,36 @@ def test_json_flatten_array(engine, dtype):
         ],
         use_to_pandas=True,
     )
+
+
+def test_json_flatten_array_column_name_special_chars(engine, dtype):
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    df = df.sort_index()[:2]  # two rows should be enough, and keeps the expected data shorter
+
+    df = df.reset_index(drop=False)
+    df = df.rename(columns={'_index_row': '_Index_Row#!', 'list_column': 'List!_COLUMN'})
+    df = df.set_index('_Index_Row#!')
+
+    list_column = df['List!_COLUMN']
+
+    result_item, result_offset = list_column.json.flatten_array()
+    result_item = result_item.sort_by_series(
+        by=[result_item.index['_Index_Row#!'], result_offset]
+    )
+    assert_equals_data(
+        result_item,
+        expected_columns=['_Index_Row#!', 'List!_COLUMN'],
+        expected_data=[
+            [0, {'a': 'b'}],
+            [0, {'c': 'd'}],
+            [1, 'a'],
+            [1, 'b'],
+            [1, 'c'],
+            [1, 'd'],
+        ],
+        use_to_pandas=True,
+    )
+
 
 def test_complex_types_astype_json(engine, dtype):
 

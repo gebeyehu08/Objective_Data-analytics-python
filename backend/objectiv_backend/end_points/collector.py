@@ -17,9 +17,8 @@ from objectiv_backend.end_points.common import get_json_response, get_cookie_id_
 from objectiv_backend.end_points.extra_output import events_to_json, write_data_to_fs_if_configured, \
     write_data_to_s3_if_configured, write_data_to_snowplow_if_configured
 from objectiv_backend.schema.validate_events import EventError
-from objectiv_backend.workers.pg_storage import insert_events_into_nok_data
+from objectiv_backend.workers.pg_storage import insert_events_into_data, insert_events_into_nok_data
 from objectiv_backend.workers.worker_entry import process_events_entry
-from objectiv_backend.workers.worker_finalize import insert_events_into_data
 
 from objectiv_backend.schema.schema import HttpContext, MarketingContext
 

@@ -8,13 +8,14 @@ from sqlalchemy.engine import Dialect
 from bach.dataframe import DataFrameOrSeries
 import itertools
 from collections import defaultdict
-from typing import Tuple, Dict, Hashable, List, Set, Sequence, TypeVar, Generic
+from typing import Dict, Hashable, List, Set, Sequence, TypeVar, Generic
 
 from bach.dataframe import DtypeNamePair
-from bach import DataFrame, get_series_type_from_dtype, SeriesAbstractNumeric, Series
+from bach import DataFrame, get_series_type_from_dtype, Series
 from bach.expression import Expression, join_expressions
 from bach.sql_model import BachSqlModel, construct_references
-from bach.utils import ResultSeries, get_result_series_dtype_mapping, get_merged_series_dtype
+from bach.utils import ResultSeries, get_result_series_dtype_mapping, get_merged_series_dtype, \
+    get_sql_column_name, get_name_to_column_mapping
 from sql_models.model import CustomSqlModelBuilder, Materialization
 
 TDataFrameOrSeries = TypeVar('TDataFrameOrSeries', bound='DataFrameOrSeries')
@@ -119,14 +120,14 @@ class ConcatOperation(Generic[TDataFrameOrSeries]):
         new_indexes = self._get_indexes()
         new_data_series = self._get_series()
 
-        new_index_names = [rs.name for rs in new_indexes.values()]
-        new_data_series_names = [rs.name for rs in new_data_series.values()]
-
         series_expressions = [self._join_series_expressions(df) for df in objects]
+
+        new_columns_rs = list(new_indexes.values()) + list(new_data_series.values())
+        column_expressions = {rs.name: rs.expression for rs in new_columns_rs}
 
         return ConcatSqlModel.get_instance(
             dialect=self.dialect,
-            columns=tuple(new_index_names + new_data_series_names),
+            column_expressions=column_expressions,
             all_series_expressions=series_expressions,
             all_nodes=[df.base_node for df in objects],
             variables=variables,
@@ -205,13 +206,20 @@ class DataFrameConcatOperation(ConcatOperation[DataFrame]):
         all_result_series: Dict[str, ResultSeries] = {**new_indexes, **new_data_series}
         for idx, rc in all_result_series.items():
             if idx not in obj.all_series:
-                expressions.append(Expression.construct('NULL as {}', Expression.identifier(rc.name)))
+                null_expr = Expression.raw('NULL')
+                expressions.append(
+                    Expression.construct_expr_as_sql_name(dialect=self.dialect, expr=null_expr, name=rc.name)
+                )
                 continue
 
             has_diff_dtype = rc.dtype != obj.all_series[idx].dtype
             curr_series = obj.all_series[idx] if not has_diff_dtype else obj.all_series[idx].astype(rc.dtype)
             expressions.append(
-                Expression.construct_expr_as_name(expr=curr_series.expression, name=rc.name)
+                Expression.construct_expr_as_sql_name(
+                    dialect=self.dialect,
+                    expr=curr_series.expression,
+                    name=rc.name
+                )
             )
 
         return join_expressions(expressions)
@@ -250,12 +258,15 @@ class DataFrameConcatOperation(ConcatOperation[DataFrame]):
             variables.update(df.variables)
             savepoints.merge(df.savepoints)
 
+        new_columns_rs = list(new_indexes.values()) + list(new_data_series.values())
+        name_to_column_mapping = get_name_to_column_mapping(self.dialect, [rs.name for rs in new_columns_rs])
         return main_df.copy_override(
             base_node=self._get_model(objects, variables),
             index_dtypes=get_result_series_dtype_mapping(list(new_indexes.values())),
             series_dtypes=get_result_series_dtype_mapping(list(new_data_series.values())),
             savepoints=savepoints,
             variables=variables,
+            name_to_column_mapping=name_to_column_mapping
         )
 
 
@@ -301,7 +312,8 @@ class SeriesConcatOperation(ConcatOperation[Series]):
         """
         result_series = list(self._get_series().values())[0]
 
-        series_expression = Expression.construct_expr_as_name(
+        series_expression = Expression.construct_expr_as_sql_name(
+            dialect=self.dialect,
             expr=obj.astype(result_series.dtype).expression,
             name=result_series.name,
         )
@@ -326,11 +338,12 @@ class SeriesConcatOperation(ConcatOperation[Series]):
             idx_name: idx.copy_override(base_node=node)
             for idx_name, idx in main_series.index.items()
         }
+        sql_column_name = get_sql_column_name(dialect=self.dialect, name=final_result_series.name)
         return series_cls(
             engine=main_series.engine,
             base_node=node,
             name=final_result_series.name,
-            expression=Expression.column_reference(final_result_series.name),
+            expression=Expression.column_reference(sql_column_name),
             index={} if self.ignore_index else index,
             group_by=None,
             order_by=[],
@@ -344,7 +357,7 @@ class ConcatSqlModel(BachSqlModel):
         cls,
         *,
         dialect: Dialect,
-        columns: Tuple[str, ...],
+        column_expressions: Dict[str, Expression],
         all_series_expressions: List[Expression],
         all_nodes: List[BachSqlModel],
         variables: Dict['DtypeNamePair', Hashable],
@@ -367,5 +380,5 @@ class ConcatSqlModel(BachSqlModel):
             references=references,
             materialization=Materialization.CTE,
             materialization_name=None,
-            column_expressions={c: Expression.column_reference(c) for c in columns},
+            column_expressions=column_expressions,
         )

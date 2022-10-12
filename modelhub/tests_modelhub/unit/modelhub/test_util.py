@@ -18,7 +18,6 @@ def test_get_supported_types_per_objectiv_column() -> None:
         'day': 'date',
         'moment': 'timestamp',
         'user_id': 'uuid',
-        'global_contexts': 'json',
         'location_stack': 'json',
         'event_type': 'string',
         'stack_event_types': 'json',
@@ -30,7 +29,6 @@ def test_get_supported_types_per_objectiv_column() -> None:
     assert expected == result
 
     result = get_supported_dtypes_per_objectiv_column(with_md_dtypes=True)
-    assert result['global_contexts'] == 'objectiv_global_contexts'
     assert result['location_stack'] == 'objectiv_location_stack'
 
     result = get_supported_dtypes_per_objectiv_column(with_identity_resolution=True)
@@ -83,18 +81,3 @@ def test_check_objectiv_dataframe(db_params) -> None:
     )
     with pytest.raises(ValueError, match=r'must be int64 dtype'):
         check_objectiv_dataframe(columns_to_check=['session_id'], df=fake_objectiv_df, check_dtypes=True)
-
-    gc_series = fake_objectiv_df['global_contexts'].copy_override_dtype('json')
-    check_objectiv_dataframe(
-        columns_to_check=['global_contexts'],
-        df=gc_series.to_frame(),
-        check_dtypes=True,
-    )
-
-    with pytest.raises(ValueError, match=r'must be objectiv_global_context'):
-        check_objectiv_dataframe(
-            columns_to_check=['global_contexts'],
-            df=gc_series.to_frame(),
-            check_dtypes=True,
-            with_md_dtypes=True,
-        )

@@ -186,6 +186,22 @@ const ApplicationContext = z.object({
 }).strict();
 
 /**
+ * A Location Context that describes a logical section of the UI that contains other Location Contexts.
+ * Enabling Data Science to analyze this section specifically.
+ */
+const ContentContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.ContentContext),
+}).strict();
+
+/**
  * Global context with information needed to reconstruct a user session.
  */
 const CookieIdContext = z.object({
@@ -202,6 +218,21 @@ const CookieIdContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.CookieIdContext),
+}).strict();
+
+/**
+ * A Location Context that describes a section of the UI that can expand & collapse.
+ */
+const ExpandableContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.ExpandableContext),
 }).strict();
 
 /**
@@ -232,6 +263,42 @@ const HttpContext = z.object({
 }).strict();
 
 /**
+ * A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+ * The `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.
+ * The `value` field should contain the unique identifier within that scope.
+ */
+const IdentityContext = z.object({
+  /**
+   * The unique identifier for this user/group/entity within the scope defined by `id`.
+   */
+  value: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.IdentityContext),
+}).strict();
+
+/**
+ * A Location Context that describes an element that accepts user input, i.e. a form field.
+ */
+const InputContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.InputContext),
+}).strict();
+
+/**
  * A GlobalContext containing the value of a single input element. Multiple can be present.
  */
 const InputValueContext = z.object({
@@ -248,6 +315,25 @@ const InputValueContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.InputValueContext),
+}).strict();
+
+/**
+ * A PressableContext that contains a destination (href).
+ */
+const LinkContext = z.object({
+  /**
+   * URL (href) the link points to.
+   */
+  href: z.string(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.LinkContext),
 }).strict();
 
 /**
@@ -271,40 +357,6 @@ const LocaleContext = z.object({
    * A string literal used during serialization. Should always match the Context interface name.
    */
   _type: z.literal(ContextTypes.enum.LocaleContext),
-}).strict();
-
-/**
- * A GlobalContext describing the path where the user is when an event is sent.
- */
-const PathContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.PathContext),
-}).strict();
-
-/**
- * A GlobalContext describing meta information about the current session.
- */
-const SessionContext = z.object({
-  /**
-   * Hit counter relative to the current session, this event originated in.
-   */
-  hit_number: z.number(),
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.SessionContext),
 }).strict();
 
 /**
@@ -356,91 +408,6 @@ const MarketingContext = z.object({
 }).strict();
 
 /**
- * A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
- * The `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.
- * The `value` field should contain the unique identifier within that scope.
- */
-const IdentityContext = z.object({
-  /**
-   * The unique identifier for this user/group/entity within the scope defined by `id`.
-   */
-  value: z.string(),
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.IdentityContext),
-}).strict();
-
-/**
- * A Location Context that describes an element that accepts user input, i.e. a form field.
- */
-const InputContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.InputContext),
-}).strict();
-
-/**
- * A PressableContext that contains a destination (href).
- */
-const LinkContext = z.object({
-  /**
-   * URL (href) the link points to.
-   */
-  href: z.string(),
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.LinkContext),
-}).strict();
-
-/**
- * A Location Context that uniquely represents the top-level UI location of the user.
- */
-const RootLocationContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.RootLocationContext),
-}).strict();
-
-/**
- * A Location Context that describes a section of the UI that can expand & collapse.
- */
-const ExpandableContext = z.object({
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   * for Context instance uniqueness.
-   */
-  id: z.string(),
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: z.literal(ContextTypes.enum.ExpandableContext),
-}).strict();
-
-/**
  * A Location Context that describes a section of the UI containing a media player.
  */
 const MediaPlayerContext = z.object({
@@ -486,10 +453,9 @@ const OverlayContext = z.object({
 }).strict();
 
 /**
- * A Location Context that describes a logical section of the UI that contains other Location Contexts.
- * Enabling Data Science to analyze this section specifically.
+ * A GlobalContext describing the path where the user is when an event is sent.
  */
-const ContentContext = z.object({
+const PathContext = z.object({
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -498,7 +464,41 @@ const ContentContext = z.object({
   /**
    * A string literal used during serialization. Should always match the Context interface name.
    */
-  _type: z.literal(ContextTypes.enum.ContentContext),
+  _type: z.literal(ContextTypes.enum.PathContext),
+}).strict();
+
+/**
+ * A Location Context that uniquely represents the top-level UI location of the user.
+ */
+const RootLocationContext = z.object({
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.RootLocationContext),
+}).strict();
+
+/**
+ * A GlobalContext describing meta information about the current session.
+ */
+const SessionContext = z.object({
+  /**
+   * Hit counter relative to the current session, this event originated in.
+   */
+  hit_number: z.number(),
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: z.string(),
+  /**
+   * A string literal used during serialization. Should always match the Context interface name.
+   */
+  _type: z.literal(ContextTypes.enum.SessionContext),
 }).strict();
 
 /**
@@ -608,91 +608,6 @@ const GlobalContexts = z
   );
 
 /**
- * The parent of Events that are the direct result of a user interaction, e.g. a button click.
- */
-const InteractiveEvent = z.object({
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.InteractiveEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict()
-  .superRefine(
-    requiresContext({
-      scope: [
-        {
-          context: ContextTypes.enum.RootLocationContext,
-          position: 0,
-        },
-      ],
-    })
-  )
-  .superRefine(
-    requiresContext({
-      scope: [
-        {
-          context: ContextTypes.enum.PathContext,
-        },
-      ],
-    })
-  );
-
-/**
- * The parent of Events that are not directly triggered by a user action.
- */
-const NonInteractiveEvent = z.object({
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.NonInteractiveEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
-
-/**
  * A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
  */
 const ApplicationLoadedEvent = z.object({
@@ -764,6 +679,39 @@ const FailureEvent = z.object({
 }).strict();
 
 /**
+ * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
+ */
+const HiddenEvent = z.object({
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.HiddenEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
  * Event triggered when user input is modified.
  */
 const InputChangeEvent = z.object({
@@ -817,10 +765,9 @@ const InputChangeEvent = z.object({
   );
 
 /**
- * An InteractiveEvent that is sent when a user presses on a pressable element
- * (like a link, button, icon).
+ * The parent of Events that are the direct result of a user interaction, e.g. a button click.
  */
-const PressEvent = z.object({
+const InteractiveEvent = z.object({
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -839,7 +786,7 @@ const PressEvent = z.object({
   /**
    * A string literal used during serialization. Should always match the Event interface name.
    */
-  _type: z.literal(EventTypes.enum.PressEvent),
+  _type: z.literal(EventTypes.enum.InteractiveEvent),
   /**
    * Unique identifier for a specific instance of an event.
    */
@@ -853,115 +800,21 @@ const PressEvent = z.object({
     requiresContext({
       scope: [
         {
-          context: ContextTypes.enum.PressableContext,
+          context: ContextTypes.enum.RootLocationContext,
+          position: 0,
+        },
+      ],
+    })
+  )
+  .superRefine(
+    requiresContext({
+      scope: [
+        {
+          context: ContextTypes.enum.PathContext,
         },
       ],
     })
   );
-
-/**
- * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
- */
-const HiddenEvent = z.object({
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.HiddenEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
-
-/**
- * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
- */
-const VisibleEvent = z.object({
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.VisibleEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
-
-/**
- * A NonInteractiveEvent that is sent when a user action is successfully completed,
- * like sending an email form.
- */
-const SuccessEvent = z.object({
-  /**
-   * Success message.
-   */
-  message: z.string(),
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
-   */
-  global_contexts: GlobalContexts,
-  /**
-   * A string literal used during serialization. Should always match the Event interface name.
-   */
-  _type: z.literal(EventTypes.enum.SuccessEvent),
-  /**
-   * Unique identifier for a specific instance of an event.
-   */
-  id: z.string().uuid(),
-  /**
-   * Timestamp indicating when the event was generated.
-   */
-  time: z.number(),
-}).strict();
 
 /**
  * The parent of non-interactive events that are triggered by a media player.
@@ -1139,27 +992,174 @@ const MediaStopEvent = z.object({
 }).strict();
 
 /**
+ * The parent of Events that are not directly triggered by a user action.
+ */
+const NonInteractiveEvent = z.object({
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.NonInteractiveEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
+ * An InteractiveEvent that is sent when a user presses on a pressable element
+ * (like a link, button, icon).
+ */
+const PressEvent = z.object({
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.PressEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict()
+  .superRefine(
+    requiresContext({
+      scope: [
+        {
+          context: ContextTypes.enum.PressableContext,
+        },
+      ],
+    })
+  );
+
+/**
+ * A NonInteractiveEvent that is sent when a user action is successfully completed,
+ * like sending an email form.
+ */
+const SuccessEvent = z.object({
+  /**
+   * Success message.
+   */
+  message: z.string(),
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.SuccessEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
+ * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
+ */
+const VisibleEvent = z.object({
+  /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
+   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+   * deterministically describes where an event took place from global to specific.
+   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   */
+  location_stack: LocationStack,
+  /**
+   * Global contexts add global / general information about the event. They carry information that is not
+   * related to where the Event originated (location), such as device, platform or business data.
+   */
+  global_contexts: GlobalContexts,
+  /**
+   * A string literal used during serialization. Should always match the Event interface name.
+   */
+  _type: z.literal(EventTypes.enum.VisibleEvent),
+  /**
+   * Unique identifier for a specific instance of an event.
+   */
+  id: z.string().uuid(),
+  /**
+   * Timestamp indicating when the event was generated.
+   */
+  time: z.number(),
+}).strict();
+
+/**
  * Set validators in validatorMap for the refinements.
  */
 entityMap = {
   'ApplicationContext': ApplicationContext,
+  'ContentContext': ContentContext,
   'CookieIdContext': CookieIdContext,
+  'ExpandableContext': ExpandableContext,
   'HttpContext': HttpContext,
-  'InputValueContext': InputValueContext,
-  'LocaleContext': LocaleContext,
-  'PathContext': PathContext,
-  'SessionContext': SessionContext,
-  'MarketingContext': MarketingContext,
   'IdentityContext': IdentityContext,
   'InputContext': InputContext,
-  'PressableContext': PressableContext,
+  'InputValueContext': InputValueContext,
   'LinkContext': LinkContext,
-  'RootLocationContext': RootLocationContext,
-  'ExpandableContext': ExpandableContext,
+  'LocaleContext': LocaleContext,
+  'MarketingContext': MarketingContext,
   'MediaPlayerContext': MediaPlayerContext,
   'NavigationContext': NavigationContext,
   'OverlayContext': OverlayContext,
-  'ContentContext': ContentContext,
+  'PathContext': PathContext,
+  'PressableContext': PressableContext,
+  'RootLocationContext': RootLocationContext,
+  'SessionContext': SessionContext,
 };
 
 /**
@@ -1169,58 +1169,58 @@ entityMap = {
  * - Invalid event: { success: false, error: <error collection> }.
  */
 const validate = z.union([
-  InteractiveEvent,
-  NonInteractiveEvent,
   ApplicationLoadedEvent,
   FailureEvent,
-  InputChangeEvent,
-  PressEvent,
   HiddenEvent,
-  VisibleEvent,
-  SuccessEvent,
+  InputChangeEvent,
+  InteractiveEvent,
   MediaEvent,
   MediaLoadEvent,
   MediaPauseEvent,
   MediaStartEvent,
   MediaStopEvent,
+  NonInteractiveEvent,
+  PressEvent,
+  SuccessEvent,
+  VisibleEvent,
 ]).safeParse;
 
 exports.ContextTypes = ContextTypes;
 exports.EventTypes = EventTypes;
 exports.ApplicationContext = ApplicationContext;
+exports.ContentContext = ContentContext;
 exports.CookieIdContext = CookieIdContext;
+exports.ExpandableContext = ExpandableContext;
 exports.HttpContext = HttpContext;
-exports.InputValueContext = InputValueContext;
-exports.LocaleContext = LocaleContext;
-exports.PathContext = PathContext;
-exports.SessionContext = SessionContext;
-exports.MarketingContext = MarketingContext;
 exports.IdentityContext = IdentityContext;
 exports.InputContext = InputContext;
+exports.InputValueContext = InputValueContext;
 exports.LinkContext = LinkContext;
-exports.RootLocationContext = RootLocationContext;
-exports.ExpandableContext = ExpandableContext;
+exports.LocaleContext = LocaleContext;
+exports.MarketingContext = MarketingContext;
 exports.MediaPlayerContext = MediaPlayerContext;
 exports.NavigationContext = NavigationContext;
 exports.OverlayContext = OverlayContext;
-exports.ContentContext = ContentContext;
+exports.PathContext = PathContext;
+exports.RootLocationContext = RootLocationContext;
+exports.SessionContext = SessionContext;
 exports.PressableContextEntity = PressableContextEntity;
 exports.PressableContext = PressableContext;
 exports.LocationStack = LocationStack;
 exports.GlobalContexts = GlobalContexts;
-exports.InteractiveEvent = InteractiveEvent;
-exports.NonInteractiveEvent = NonInteractiveEvent;
 exports.ApplicationLoadedEvent = ApplicationLoadedEvent;
 exports.FailureEvent = FailureEvent;
-exports.InputChangeEvent = InputChangeEvent;
-exports.PressEvent = PressEvent;
 exports.HiddenEvent = HiddenEvent;
-exports.VisibleEvent = VisibleEvent;
-exports.SuccessEvent = SuccessEvent;
+exports.InputChangeEvent = InputChangeEvent;
+exports.InteractiveEvent = InteractiveEvent;
 exports.MediaEvent = MediaEvent;
 exports.MediaLoadEvent = MediaLoadEvent;
 exports.MediaPauseEvent = MediaPauseEvent;
 exports.MediaStartEvent = MediaStartEvent;
 exports.MediaStopEvent = MediaStopEvent;
+exports.NonInteractiveEvent = NonInteractiveEvent;
+exports.PressEvent = PressEvent;
+exports.SuccessEvent = SuccessEvent;
+exports.VisibleEvent = VisibleEvent;
 exports.entityMap = entityMap;
 exports.validate = validate;

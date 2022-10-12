@@ -3,6 +3,11 @@
  */
 
 const crypto = require('crypto');
+
+const { getValidatorForSchemaVersion } = require('./common');
+const { validatorPath } = getValidatorForSchemaVersion();
+const validator = require(`${__dirname}/${validatorPath}`);
+
 const {
   ApplicationLoadedEvent,
   InputChangeEvent,
@@ -12,7 +17,7 @@ const {
   PressEvent,
   RootLocationContext,
   validate,
-} = require('./validator.js');
+} = validator;
 
 console.assert(
   RootLocationContext.safeParse({

@@ -50,6 +50,8 @@ from dotenv import dotenv_values
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
+from sql_models.util import is_athena
+
 # Load settings from .test_env file, but allow overrides from Environment variables
 _DOT_ENV_FILE = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/.secrets/.test_env'
 _ENV = {
@@ -67,8 +69,11 @@ _DB_ATHENA_TEST_URL = _ENV.get('OBJ_DB_ATHENA_TEST_URL')
 _DB_ATHENA_AWS_ACCESS_KEY_ID = _ENV.get('OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID')
 _DB_ATHENA_AWS_SECRET_ACCESS_KEY = _ENV.get('OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY')
 _DB_ATHENA_REGION_NAME = _ENV.get('OBJ_DB_ATHENA_REGION_NAME', 'eu-west-1')
-_DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'automated_tests.bach_test')
+_DB_ATHENA_CATALOG_NAME = _ENV.get('OBJ_DB_ATHENA_CATALOG_NAME', 'automated_tests')
+_DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'bach_test')
 _DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/bach_test/staging/')
+DB_ATHENA_LOCATION = _ENV.get('OBJ_DB_ATHENA_LOCATION', 's3://obj-automated-tests/bach_test/test_data/')
+# DB_ATHENA_LOCATION is the location that functional tests can use to write tables with test data.
 _DB_ATHENA_WORK_GROUP = _ENV.get('OBJ_DB_ATHENA_WORK_GROUP', 'automated_tests_work_group')
 
 
@@ -168,11 +173,18 @@ def pytest_sessionfinish() -> None:
     # This way we clean the testing database
     for engine, tables_to_drop in _RECORDED_TEST_TABLES_PER_ENGINE.items():
         with engine.connect() as conn:
-            drop_tables_sql = '\n'.join(
-                f'DROP TABLE IF EXISTS {table_name};'
-                for table_name in tables_to_drop
+            if is_athena(engine):
+                # athena engine does not support executing multiple statements
+                for table_name in tables_to_drop:
+                    conn.execute(f'DROP TABLE IF EXISTS {table_name};')
+                continue
+
+            conn.execute(
+                '\n'.join(
+                    f'DROP TABLE IF EXISTS {table_name};'
+                    for table_name in tables_to_drop
+                )
             )
-            conn.execute(drop_tables_sql)
 
 
 def pytest_generate_tests(metafunc: Metafunc):
@@ -253,10 +265,13 @@ def _get_athena_engine() -> Engine:
     schema_name = quote_plus(_DB_ATHENA_SCHEMA_NAME)
     s3_staging_dir = quote_plus(_DB_ATHENA_S3_STAGING_DIR)
     athena_work_group = quote_plus(_DB_ATHENA_WORK_GROUP)
+    catalog_name = quote_plus(_DB_ATHENA_CATALOG_NAME)
 
     url = (
         f'awsathena+rest://'
         f'{aws_access_key_id}:{aws_secret_access_key}'
         f'@athena.{region_name}.amazonaws.com:443/'
-        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}')
+        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
+        f'&catalog_name={catalog_name}'
+    )
     return create_engine(url)

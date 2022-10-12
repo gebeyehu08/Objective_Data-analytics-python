@@ -1,16 +1,15 @@
 {
   "name": "@objectiv/validation",
   "version": "0.0.1",
-  "description": "Objectiv Validation for the Open Analytics Taxonomy",
-  "main": "validator.js",
-  "repository": "https://github.com/objectiv/objectiv-analytics/schema",
+  "description": "Service and cli built on top of the Objectiv Validator module",
   "scripts": {
+    "prettier": "prettier --write .",
     "serve": "node validator-service.js",
-    "validate": "node validator-cli.js",
-    "test": "jest",
-    "prettier": "prettier --write validator*.js",
+    "cli": "node validator-cli.js",
     "generate": "(cd ../generators && yarn generate)"
   },
+  "main": "validator.js",
+  "repository": "https://github.com/objectiv/objectiv-analytics/schema",
   "author": {
     "name": "Surai Di Rosa",
     "email": "surai.dirosa@gmail.com",
@@ -24,9 +23,7 @@
   },
   "devDependencies": {
     "@swc/core": "^1.3.2",
-    "@types/jest": "^29.1.1",
     "prettier": "^2.7.1",
-    "typescript": "^4.8.3",
     "yargs": "^17.5.1"
   }
 }
