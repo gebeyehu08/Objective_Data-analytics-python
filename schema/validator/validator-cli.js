@@ -4,15 +4,16 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-const { getValidatorForSchemaVersion} = require('./common');
+const { getValidatorForSchemaVersion } = require('./common');
 const yargs = require('yargs/yargs');
 
 const [eventJson] = yargs(process.argv.slice(2)).usage('Usage: $0 <event JSON string>').demandCommand(1).argv._;
 const event = JSON.parse(eventJson);
 
-const { validator, validatorVersion } = getValidatorForSchemaVersion(event['schema_version']);
+const { validatorPath, validatorVersion } = getValidatorForSchemaVersion(event['schema_version']);
+const { validate } = require(`${__dirname}/${validatorPath}`);
 
-const { success, error } = validator.validate(event);
+const { success, error } = validate(event);
 
 if (!success) {
   console.log(error);

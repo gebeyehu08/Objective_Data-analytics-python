@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Service and cli built on top of the Objectiv Validator module",
   "scripts": {
+    "prettier": "prettier --write .",
     "serve": "node validator-service.js",
     "cli": "node validator-cli.js",
     "generate": "(cd ../generators && yarn generate)"

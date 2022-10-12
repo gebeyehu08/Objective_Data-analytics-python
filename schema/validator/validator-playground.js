@@ -4,8 +4,9 @@
 
 const crypto = require('crypto');
 
-const {getLatestValidatorVersion} = require("./common");
-const { validator } = getLatestValidatorVersion();
+const { getValidatorForSchemaVersion } = require('./common');
+const { validatorPath } = getValidatorForSchemaVersion();
+const validator = require(`${__dirname}/${validatorPath}`);
 
 const {
   ApplicationLoadedEvent,

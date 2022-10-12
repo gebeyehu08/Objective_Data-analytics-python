@@ -40,10 +40,17 @@ app.get('/status', (req, res) => {
   });
 });
 
-const validate = (event) => {
-  const { validator, validatorVersion } = getValidatorForSchemaVersion(event['schema_version']);
+app.get('/schema/:version', (req, res) => {
+  const { schemaPath } = getValidatorForSchemaVersion(req.params.version);
 
-  const result = validator.validate(event);
+  res.sendFile(`${__dirname}/${schemaPath}`);
+});
+
+const validate = (event) => {
+  const { validatorPath, validatorVersion } = getValidatorForSchemaVersion(event['schema_version']);
+  const { validate } = require(`${__dirname}/${validatorPath}`);
+
+  const result = validate(event);
 
   total[validatorVersion] === undefined && (total[validatorVersion] = 0);
   valid[validatorVersion] === undefined && (valid[validatorVersion] = 0);

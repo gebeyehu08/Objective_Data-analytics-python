@@ -4,9 +4,9 @@
 
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
-import * as fs from "fs";
+import * as fs from 'fs';
 import Objectiv from '../../base_schema.json';
-import { JavaScriptWriter } from "../writers/JavaScriptWriter";
+import { JavaScriptWriter } from '../writers/JavaScriptWriter';
 import { ZodWriter } from '../writers/ZodWriter';
 import glob from 'glob';
 import {
@@ -188,20 +188,12 @@ Generator.generate({ outputFile: `${validatorFolder}common.js` }, (writer: TextW
   jsWriter.writeFile('validator-common.template.ts');
 
   jsWriter.writeEndOfLine();
-  jsWriter.writeEndOfLine();
 
   const validatorFiles = glob.sync(`${validatorFolder}/*/`, { ignore: '../../validator/**/node_modules' });
   validatorFiles.forEach((validator) => {
     const validatorVersion = validator.replace(`${validatorFolder}`, '').replace('/', '');
     jsWriter.writeLine(`versions.push('${validatorVersion}');`);
   });
-});
-
-// Validator service
-Generator.generate({ outputFile: `${validatorFolder}validator-service.js` }, (writer: TextWriter) => {
-  const jsWriter = new JavaScriptWriter(writer);
-
-  jsWriter.writeFile('validator-service.template.ts');
 });
 
 // Validator tests
@@ -218,4 +210,4 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/package.jso
 });
 
 // Bundle schema
-fs.copyFileSync('../../base_schema.json', `${validatorFolder}${schemaVersion}/base_schema.json`)
+fs.copyFileSync('../../base_schema.json', `${validatorFolder}${schemaVersion}/base_schema.json`);
