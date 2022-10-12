@@ -10,7 +10,7 @@ const getValidatorForSchemaVersion = (schemaVersion) => {
   const requestedVersion = schemaVersion ?? '1.0.0';
   const validatorVersion = versions.find((version) => version === requestedVersion) ?? getLatestValidatorVersion();
   const validatorPath = `./${validatorVersion}/validator.js`;
-  const schemaPath = `./${validatorVersion}/base_Schema.json`;
+  const schemaPath = `./${validatorVersion}/base_schema.json`;
 
   return {
     validatorPath,
