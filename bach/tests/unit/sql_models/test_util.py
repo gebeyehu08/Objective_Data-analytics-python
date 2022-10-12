@@ -54,9 +54,17 @@ def test_ddl_quote_identifier(dialect):
         assert ddl_quote_identifier(dialect, '"te""st"') == '"""te""""st"""'
         assert ddl_quote_identifier(dialect, '`te`st`') == '"`te`st`"'
         assert ddl_quote_identifier(dialect, 'te%st') == '"te%st"'
-    elif is_bigquery(dialect) or is_athena(dialect):
+    elif is_athena(dialect):
+        # Athena spec:
+        # https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
+        # https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#:~:text=double%20backticks%20(%60%60)%20to%20represent%20a%20backtick
+        assert ddl_quote_identifier(dialect, 'test') == '`test`'
+        assert ddl_quote_identifier(dialect, 'te"st') == '`te"st`'
+        assert ddl_quote_identifier(dialect, '"te""st"') == r'`"te""st"`'
+        assert ddl_quote_identifier(dialect, '`te`st`') == r'```te``st```'
+        assert ddl_quote_identifier(dialect, 'te%st') == '`te%st`'
+    elif is_bigquery(dialect):
         # BigQuery: https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#identifiers
-        # Athena spec: https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
         assert ddl_quote_identifier(dialect, 'test') == '`test`'
         assert ddl_quote_identifier(dialect, 'te"st') == '`te"st`'
         assert ddl_quote_identifier(dialect, '"te""st"') == r'`"te""st"`'
