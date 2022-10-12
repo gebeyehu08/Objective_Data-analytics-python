@@ -5,7 +5,9 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
+import { JavaScriptWriter } from "../writers/JavaScriptWriter";
 import { ZodWriter } from '../writers/ZodWriter';
+import glob from 'glob';
 import {
   filterAbstractNames,
   getChildren,
@@ -18,11 +20,13 @@ import {
   sortArrayByName,
 } from './common';
 
+const validatorFolder = '../../validator/';
 const schemaVersion = Objectiv.version.base_schema;
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
 
-const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
+// Validator module
+Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.js` }, (writer: TextWriter) => {
   const zodWriter = new ZodWriter(writer);
 
   // ContextTypes enum
@@ -43,7 +47,7 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
   const allContexts = filterAbstractNames(getContextNames());
   const childContexts = allContexts.filter((context) => getChildren(context).length === 0);
   childContexts.forEach((contextName) => {
-    const context = model.contexts[contextName];
+    const context = Objectiv.contexts[contextName];
     const properties = getEntityProperties(context);
 
     zodWriter.writeObject({
@@ -62,7 +66,7 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
   });
   const parentContexts = allContexts.filter((context) => getChildren(context).length > 0);
   parentContexts.forEach((contextName) => {
-    const context = model.contexts[contextName];
+    const context = Objectiv.contexts[contextName];
     const properties = getEntityProperties(context);
     const childrenNames = getChildren(contextName);
 
@@ -100,32 +104,32 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
   });
 
   // LocationStack array definition
-  const allLocationContexts = getChildren(model.LocationStack.items.type).sort();
+  const allLocationContexts = getChildren(Objectiv.LocationStack.items.type).sort();
   const ChildLocationContexts = allLocationContexts.filter((context) => getChildren(context).length === 0);
   const ParentLocationContexts = allLocationContexts.filter((context) => getChildren(context).length > 0);
   zodWriter.writeArray({
     name: 'LocationStack',
     items: [...ChildLocationContexts, ...ParentLocationContexts.map((contextName) => `${contextName}Entity`)],
-    discriminator: model.LocationStack.items.discriminator,
-    description: getEntityDescription(model.LocationStack, descriptionsType, descriptionsTarget),
-    rules: model.LocationStack.validation.rules,
+    discriminator: Objectiv.LocationStack.items.discriminator,
+    description: getEntityDescription(Objectiv.LocationStack, descriptionsType, descriptionsTarget),
+    rules: Objectiv.LocationStack.validation.rules,
   });
 
   // GlobalContexts array definition
-  const allGlobalContexts = getChildren(model.GlobalContexts.items.type).sort();
+  const allGlobalContexts = getChildren(Objectiv.GlobalContexts.items.type).sort();
   const ChildGlobalContexts = allGlobalContexts.filter((context) => getChildren(context).length === 0);
   const ParentGlobalContexts = allGlobalContexts.filter((context) => getChildren(context).length > 0);
   zodWriter.writeArray({
     name: 'GlobalContexts',
     items: [...ChildGlobalContexts, ...ParentGlobalContexts.map((contextName) => `${contextName}Entity`)],
-    discriminator: model.GlobalContexts.items.discriminator,
-    description: getEntityDescription(model.GlobalContexts, descriptionsType, descriptionsTarget),
-    rules: model.GlobalContexts.validation.rules,
+    discriminator: Objectiv.GlobalContexts.items.discriminator,
+    description: getEntityDescription(Objectiv.GlobalContexts, descriptionsType, descriptionsTarget),
+    rules: Objectiv.GlobalContexts.validation.rules,
   });
 
   // Events
   filterAbstractNames(getEventNames()).forEach((eventName) => {
-    const event = model.events[eventName];
+    const event = Objectiv.events[eventName];
     const properties = getEntityProperties(event);
 
     zodWriter.writeObject({
@@ -174,7 +178,40 @@ const validatorGenerator = (writer: TextWriter, model: typeof Objectiv) => {
   zodWriter.exportList.forEach((name) => {
     zodWriter.writeLine(`exports.${name} = ${name};`);
   });
-};
+});
 
-Generator.generateFromModel({ outputFile: `../../validator/validator-v${schemaVersion}.js` }, validatorGenerator);
-Generator.generateFromModel({ outputFile: `../../validator/validator.js` }, validatorGenerator);
+// Validator common
+Generator.generate({ outputFile: `${validatorFolder}common.js` }, (writer: TextWriter) => {
+  const jsWriter = new JavaScriptWriter(writer);
+
+  jsWriter.writeFile('validator-common.template.ts');
+
+  jsWriter.writeEndOfLine();
+  jsWriter.writeEndOfLine();
+
+  const validatorFiles = glob.sync(`${validatorFolder}/*/`, { ignore: '../../validator/**/node_modules' });
+  validatorFiles.forEach((validator) => {
+    const validatorVersion = validator.replace(`${validatorFolder}`, '').replace('/', '');
+    jsWriter.writeLine(`versions.push('${validatorVersion}');`);
+  });
+});
+
+// Validator service
+Generator.generate({ outputFile: `${validatorFolder}validator-service.js` }, (writer: TextWriter) => {
+  const jsWriter = new JavaScriptWriter(writer);
+
+  jsWriter.writeFile('validator-service.template.ts');
+});
+
+// Validator tests
+Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.test.js` }, (writer: TextWriter) => {
+  const jsWriter = new JavaScriptWriter(writer);
+
+  // TODO actually generate tests
+  jsWriter.writeFile('validator-test.template.js');
+});
+
+// Validator package.json
+Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/package.json` }, (writer: TextWriter) => {
+  writer.writeFile('validator-package_json.template.json');
+});

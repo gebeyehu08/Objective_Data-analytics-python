@@ -7,7 +7,7 @@ import { Generator } from '@yellicode/templating';
 import { MarkdownWriter } from '../writers/MarkdownWriter';
 import {
   getEntityByName,
-  getEntityDescriptionFromDocumentation, getEntityMarkdownDescription,
+  getEntityMarkdownDescription,
   getEntityNames,
   getEntityParents,
   getEntityProperties,

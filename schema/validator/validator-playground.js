@@ -3,6 +3,10 @@
  */
 
 const crypto = require('crypto');
+
+const {getLatestValidatorVersion} = require("./common");
+const { validator } = getLatestValidatorVersion();
+
 const {
   ApplicationLoadedEvent,
   InputChangeEvent,
@@ -12,7 +16,7 @@ const {
   PressEvent,
   RootLocationContext,
   validate,
-} = require('./validator.js');
+} = validator;
 
 console.assert(
   RootLocationContext.safeParse({

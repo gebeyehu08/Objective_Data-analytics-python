@@ -3,18 +3,12 @@
  */
 
 const express = require('express');
+const { getLatestValidatorVersion, getValidatorForSchemaVersion } = require('./common');
 
 let port = '8082';
 let valid = {};
 let invalid = {};
 let total = {};
-const versions = [];
-
-const getLatestValidatorVersion = () => {
-  const [latestVersion] = versions.sort().reverse();
-
-  return latestVersion;
-};
 
 var app = express();
 app.use(express.json());
@@ -47,9 +41,7 @@ app.get('/status', (req, res) => {
 });
 
 const validate = (event) => {
-  const eventSchemaVersion = event['schema_version'] ?? '1.0.0';
-  const validatorVersion = versions.find((version) => version === eventSchemaVersion) ?? getLatestValidatorVersion();
-  const validator = require(`./validator-v${validatorVersion}.js`);
+  const { validator, validatorVersion } = getValidatorForSchemaVersion(event['schema_version']);
 
   const result = validator.validate(event);
 
@@ -65,5 +57,3 @@ const validate = (event) => {
     validator_version: validatorVersion,
   };
 };
-
-versions.push('1.0.0');

@@ -1,24 +1,55 @@
-/*
- * Copyright 2022 Objectiv B.V.
- */
+const express = require('express');
+const { getLatestValidatorVersion, getValidatorForSchemaVersion } = require('./common');
 
-import { TextWriter } from '@yellicode/core';
-import { Generator } from '@yellicode/templating';
-import { JavaScriptWriter } from '../writers/JavaScriptWriter';
-import glob from 'glob';
+let port = '8082';
+let valid = {};
+let invalid = {};
+let total = {};
 
-const validatorFolder = '../../validator/';
+var app = express();
+app.use(express.json());
 
-Generator.generateFromModel({ outputFile: `${validatorFolder}/validator-service.js` }, (writer: TextWriter) => {
-  const jsWriter = new JavaScriptWriter(writer);
+if (process.env.PORT) {
+  port = process.env.PORT;
+}
+app.listen(port, () => {
+  console.log(`Objectiv Validation Service v${getLatestValidatorVersion()} ready on port ${port}`);
+});
 
-  jsWriter.writeFile('validator-service.template.static.ts');
+app.post('/', (req, res) => {
+  if (!req.body) {
+    res.json({
+      success: false,
+      error: 'Please provide the Event to validate as JSON',
+    });
+  } else {
+    res.json(validate(req.body));
+  }
+});
 
-  jsWriter.writeEndOfLine();
-
-  const validatorFiles = glob.sync(`${validatorFolder}/validator-v*.js`);
-  validatorFiles.forEach((validator) => {
-    const validatorVersion = validator.replace(`${validatorFolder}validator-v`, '').replace('.js', '');
-    jsWriter.writeLine(`versions.push('${validatorVersion.toString()}');`);
+app.get('/status', (req, res) => {
+  res.json({
+    total,
+    valid,
+    invalid,
+    version: getLatestValidatorVersion(),
   });
 });
+
+const validate = (event) => {
+  const { validator, validatorVersion } = getValidatorForSchemaVersion(event['schema_version']);
+
+  const result = validator.validate(event);
+
+  total[validatorVersion] === undefined && (total[validatorVersion] = 0);
+  valid[validatorVersion] === undefined && (valid[validatorVersion] = 0);
+  invalid[validatorVersion] === undefined && (invalid[validatorVersion] = 0);
+
+  total[validatorVersion]++;
+  result.success ? valid[validatorVersion]++ : invalid[validatorVersion]++;
+
+  return {
+    ...result,
+    validator_version: validatorVersion,
+  };
+};

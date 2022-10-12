@@ -104,7 +104,7 @@ export const getEntityProperties = (entity) => {
  * Gets the descriptions from an Entity documentation array matching the given type and target
  */
 export const getEntityDescriptionsFromDocumentation = (entity, type, target) => {
-  if(!entity.documentation) {
+  if (!entity.documentation) {
     return [];
   }
 
@@ -129,14 +129,14 @@ export const getEntityDescriptionsFromDocumentation = (entity, type, target) => 
  */
 export const getEntityDescriptionFromDocumentation = (entity, type, target) => {
   return getEntityDescriptionsFromDocumentation(entity, type, target)[0];
-}
+};
 
 /**
  * Gets the first markdown description from an Entity documentation array matching the target
  */
 export const getEntityMarkdownDescription = (entity, target) => {
   return getEntityDescriptionsFromDocumentation(entity, 'markdown', target)[0];
-}
+};
 
 /**
  * Gets the description of the given entity, recursively falling back to its parent's description if not set
@@ -163,7 +163,7 @@ export const getPropertyDescription = (entity, propertyName, type, target) => {
   const properties = getEntityProperties(entity);
   const property = properties[propertyName];
 
-  if(property.description) {
+  if (property.description) {
     return property.description;
   }
 
