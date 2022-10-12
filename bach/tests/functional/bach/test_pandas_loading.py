@@ -52,16 +52,16 @@ def test_string_as_index(dialect):
     ]
 
     engine = FakeEngine(dialect=dialect)
-    bt = DataFrame.from_pandas(
+    df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['string', 'float', 'int', 'timestamp', 'bool']),
         convert_objects=True,
     )
-    assert isinstance(bt['float'], SeriesFloat64)
-    assert isinstance(bt['int'], SeriesInt64)
-    assert isinstance(bt['timestamp'], SeriesTimestamp)
-    assert isinstance(bt['string'], SeriesString)
-    assert isinstance(bt['bool'], SeriesBoolean)
+    assert isinstance(df['float'], SeriesFloat64)
+    assert isinstance(df['int'], SeriesInt64)
+    assert isinstance(df['timestamp'], SeriesTimestamp)
+    assert isinstance(df['string'], SeriesString)
+    assert isinstance(df['bool'], SeriesBoolean)
 
 
 def test_load_df_without_conversion(dialect):
@@ -70,12 +70,12 @@ def test_load_df_without_conversion(dialect):
     ]
 
     engine = FakeEngine(dialect=dialect)
-    bt = DataFrame.from_pandas(
+    df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['float', 'int', 'timestamp', 'bool']),
         convert_objects=True,
     )
-    assert isinstance(bt['float'], SeriesFloat64)
-    assert isinstance(bt['int'], SeriesInt64)
-    assert isinstance(bt['timestamp'], SeriesTimestamp)
-    assert isinstance(bt['bool'], SeriesBoolean)
+    assert isinstance(df['float'], SeriesFloat64)
+    assert isinstance(df['int'], SeriesInt64)
+    assert isinstance(df['timestamp'], SeriesTimestamp)
+    assert isinstance(df['bool'], SeriesBoolean)
