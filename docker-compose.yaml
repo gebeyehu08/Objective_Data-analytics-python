@@ -40,7 +40,7 @@ services:
     networks:
       - obj
     healthcheck:
-      test: [ "CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8082" ]
+      test: [ "CMD", "printf",  "\"GET /schema/latest HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8082" ]
       interval: 30s
       timeout: 2s
       retries: 3
@@ -58,17 +58,14 @@ services:
     networks:
       - obj
     restart: unless-stopped
-    volumes:
-      - ${SCHEMA_EXTENSION_DIRECTORY-./backend/tests/test_data/schemas1}/:/schema-extensions/
     environment:
       <<: *db_env_variables
-      SCHEMA_EXTENSION_DIRECTORY: /schema-extensions/
       COOKIE_SECURE: "True"
       COOKIE_SAMESITE: None
       PORT: 8081
       SCHEMA_VALIDATION_SERVICE_URL: http://objectiv_validator:8082
     healthcheck:
-      test: ["CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8081"]
+      test: ["CMD", "printf",  "\"GET /schema HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8081"]
       interval: 30s
       timeout: 2s
       retries: 3
