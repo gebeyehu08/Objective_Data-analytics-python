@@ -4,6 +4,7 @@
 
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
+import * as fs from "fs";
 import Objectiv from '../../base_schema.json';
 import { JavaScriptWriter } from "../writers/JavaScriptWriter";
 import { ZodWriter } from '../writers/ZodWriter';
@@ -215,3 +216,6 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.t
 Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/package.json` }, (writer: TextWriter) => {
   writer.writeFile('validator-package_json.template.json');
 });
+
+// Bundle schema
+fs.copyFileSync('../../base_schema.json', `${validatorFolder}${schemaVersion}/base_schema.json`)
