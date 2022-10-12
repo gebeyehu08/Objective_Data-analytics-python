@@ -1,17 +1,14 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-import argparse
-import json
-import sys
-from typing import List, Any, Dict, NamedTuple, Set
+from typing import List, Any, Dict, NamedTuple
 import uuid
 import requests
 
 from objectiv_backend.common.config import \
     get_config_timestamp_validation, get_collector_config
 
-from objectiv_backend.common.types import EventData, EventDataList
+from objectiv_backend.common.types import EventData
 
 
 class ErrorInfo(NamedTuple):
@@ -35,6 +32,11 @@ class EventError(Dict):
 
 
 def validate_event_adheres_to_schema(event: EventData) -> List[ErrorInfo]:
+    """
+    Validate objectiv event EventData against validation service
+    :param event: EventData
+    :return: list with errors, empty if event validates
+    """
     errors = []
     ignore_keys = ['_types', 'corrected_time', 'transport_time', 'collector_time']
     event_copy = {k: v for k, v in event.items() if k not in ignore_keys}
@@ -50,9 +52,13 @@ def validate_event_adheres_to_schema(event: EventData) -> List[ErrorInfo]:
             if not result['success']:
                 for e in result['error']['issues']:
                     errors.append(ErrorInfo(data=event, info=e))
-
-    except requests.exceptions.ConnectionError as e:
+        else:
+            info = f'Validation service returned invalid status: {response.status_code}'
+            errors.append(ErrorInfo(data=event, info=info))
+    except requests.exceptions.RequestException as e:
         errors.append(ErrorInfo(data=event, info=f'calling validation service failed: {e}'))
+    except Exception as e:
+        errors.append(ErrorInfo(data=event, info=f'Error in validation: {e}'))
 
     return errors
 
