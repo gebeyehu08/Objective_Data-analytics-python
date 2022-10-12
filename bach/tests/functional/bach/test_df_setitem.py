@@ -12,7 +12,6 @@ from pandas.core.indexes.numeric import Int64Index
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesTimedelta, Series, SeriesJson, SeriesBoolean
 from sql_models.constants import DBDialect
-from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_postgres_type, assert_equals_data, \
     CITIES_INDEX_AND_COLUMNS, get_df_with_test_data, get_df_with_railway_data, assert_db_types
 
@@ -55,17 +54,14 @@ def check_set_const(
     for column_name in column_names:
         assert isinstance(bt[column_name], expected_series)
 
-    if not is_bigquery(engine):
-        # For BigQuery we cannot check the data type of an expression, as it doesn't offer a function for
-        # that. For all other databases, we check that the actual type in the database matches the type
-        # we expect
-        db_dialect = DBDialect.from_engine(engine)
-        if expected_db_type_override and db_dialect in expected_db_type_override:
-            expected_db_type = expected_db_type_override[db_dialect]
-        else:
-            expected_db_type = expected_series.get_db_dtype(engine.dialect)
-        db_types = {column_name: expected_db_type for column_name in column_names}
-        assert_db_types(bt, db_types)
+    # Check that the actual type in the database matches the type we expect
+    db_dialect = DBDialect.from_engine(engine)
+    if expected_db_type_override and db_dialect in expected_db_type_override:
+        expected_db_type = expected_db_type_override[db_dialect]
+    else:
+        expected_db_type = expected_series.get_db_dtype(engine.dialect)
+    db_types = {column_name: expected_db_type for column_name in column_names}
+    assert_db_types(bt, db_types)
 
 
 
@@ -144,7 +140,9 @@ def test_set_const_json(engine):
         ['a', 'b', 'c'],
         {'a': 'b', 'c': 'd'},
     ]
-    check_set_const(engine, constants, SeriesJson)
+    # There is a bug in bqutil.fn.typeof() that causes it to not recognize the string as a string.
+    expected_db_type_override = {DBDialect.BIGQUERY: 'UNKNOWN'}
+    check_set_const(engine, constants, SeriesJson, expected_db_type_override=expected_db_type_override)
 
 
 def test_set_const_int_from_series(engine):

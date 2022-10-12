@@ -15,7 +15,7 @@ from sqlalchemy.engine import ResultProxy, Engine, Dialect
 from bach import DataFrame, Series
 from bach.types import get_series_type_from_db_dtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_bigquery, is_postgres, is_athena
+from sql_models.util import is_bigquery, is_postgres, is_athena, quote_identifier
 from tests.unit.bach.util import get_pandas_df
 from bach.testing import assert_equals_data
 
@@ -213,8 +213,6 @@ def assert_db_types(
     """
     Check that the given series in the DataFrame have the expected data types in the database.
 
-    ONLY supported for Postgres and Athena. Other database engines will raise an exception.
-
     :param df: DataFrame object for which to check the database types
     :param series_expected_db_type: mapping of series-names, to database types.
     """
@@ -223,12 +221,17 @@ def assert_db_types(
         typeof_function_name = 'pg_typeof'
     elif is_athena(engine):
         typeof_function_name = 'typeof'
+    elif is_bigquery(engine):
+        # `bqutil.fn.typeof` is not a default BQ function, but a community function that's available to all.
+        # https://github.com/GoogleCloudPlatform/bigquery-utils/tree/master/udfs/community#typeofinput-any-type
+        typeof_function_name = 'bqutil.fn.typeof'
     else:
         raise Exception(f'Not supported: {engine.name}')
 
     df_sql = df.view_sql()
     types_sql = ', '.join(
-        f'{typeof_function_name}("{series_name}")'for series_name in series_expected_db_type.keys()
+        f'{typeof_function_name}({quote_identifier(dialect=engine.dialect, name=series_name)})'
+        for series_name in series_expected_db_type.keys()
     )
     sql = f'with check_type as ({df_sql}) select {types_sql} from check_type limit 1'
     db_rows = run_query(engine=engine, sql=sql)
