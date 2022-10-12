@@ -25,6 +25,8 @@ Category 4, 5 and 6 are for functionality that we explicitly not support on some
 Category 4, 5 and 6 are the exception, these need to be marked with the `skip_postgres`,
 `skip_bigquery` or `skip_athena` marks.
 
+Temporarily, for Category 6 `skip_athena_todo` mark is also considered for skipping test run for Athena engine.
+This mark helps highlighting that the test MUST be supported by the engine and in a future we should work on it.
 """
 import os
 from urllib.parse import quote_plus
@@ -62,6 +64,8 @@ MARK_SKIP_POSTGRES = 'skip_postgres'
 MARK_SKIP_ATHENA = 'skip_athena'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
 
+# temporary mark, remove when all MH functionalities are supported for Athena
+MARK_SKIP_ATHENA_TODO = 'skip_athena_todo'
 
 def pytest_addoption(parser: Parser):
     # Add options for parameterizing multi-database tests for testing either Postgres, Bigquery, or both.
@@ -86,7 +90,7 @@ def pytest_generate_tests(metafunc: Metafunc):
     markers = list(metafunc.definition.iter_markers())
     skip_postgres = any(mark.name == MARK_SKIP_POSTGRES for mark in markers)
     skip_bigquery = any(mark.name == MARK_SKIP_BIGQUERY for mark in markers)
-    skip_athena = any(mark.name == MARK_SKIP_ATHENA for mark in markers)
+    skip_athena = any(mark.name in (MARK_SKIP_ATHENA, MARK_SKIP_ATHENA_TODO) for mark in markers)
     db_params = []
 
     testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("big_query")
