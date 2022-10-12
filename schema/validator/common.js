@@ -27,3 +27,4 @@ exports.getLatestValidatorVersion = getLatestValidatorVersion;
 exports.getValidatorForSchemaVersion = getValidatorForSchemaVersion;
 
 versions.push('1.0.0');
+versions.push('1.0.1');
