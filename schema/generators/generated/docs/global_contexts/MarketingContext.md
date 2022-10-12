@@ -1,6 +1,5 @@
 # MarketingContext
-a context that captures marketing channel info, so users can do attribution, campaign 
-effectiveness and other models.
+A [GlobalContext](/taxonomy/global-contexts) describing the marketing channel & campaign from where the user came.
 
 ### Properties
 `string` source: Identifies the advertiser, site, publication, etc.
@@ -14,3 +13,7 @@ effectiveness and other models.
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 `discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
+
+:::info setting of the properties
+The backend will automatically set all the properties based on the UTM parameters in the PathContext.
+:::

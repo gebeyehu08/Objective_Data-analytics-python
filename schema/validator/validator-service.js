@@ -3,18 +3,13 @@
  */
 
 const express = require('express');
+const { getLatestValidatorVersion, getValidatorForSchemaVersion } = require('./common');
 
 let port = '8082';
 let valid = {};
 let invalid = {};
 let total = {};
-const versions = [];
 
-const getLatestValidatorVersion = () => {
-  const [latestVersion] = versions.sort().reverse();
-
-  return latestVersion;
-}
 var app = express();
 app.use(express.json());
 
@@ -41,16 +36,25 @@ app.get('/status', (req, res) => {
     total,
     valid,
     invalid,
-    version: getLatestValidatorVersion()
+    version: getLatestValidatorVersion(),
   });
 });
 
-const validate = (event) => {
-  const eventSchemaVersion = event['schema_version'] ?? '1.0.0';
-  const validatorVersion = versions.find(version => version === eventSchemaVersion) ?? getLatestValidatorVersion();
-  const validator = require(`./validator-v${validatorVersion}.js`);
+app.get('/schema', (req, res) => {
+  res.send(`Please specify a Schema version, e.g. /schema/latest or /schema/1.0.0`);
+});
 
-  const result = validator.validate(event);
+app.get('/schema/:version', (req, res) => {
+  const { schemaPath } = getValidatorForSchemaVersion(req.params.version);
+
+  res.sendFile(`${__dirname}/${schemaPath}`);
+});
+
+const validate = (event) => {
+  const { validatorPath, validatorVersion } = getValidatorForSchemaVersion(event['schema_version']);
+  const { validate } = require(`${__dirname}/${validatorPath}`);
+
+  const result = validate(event);
 
   total[validatorVersion] === undefined && (total[validatorVersion] = 0);
   valid[validatorVersion] === undefined && (valid[validatorVersion] = 0);
@@ -61,8 +65,6 @@ const validate = (event) => {
 
   return {
     ...result,
-    validator_version: validatorVersion
+    validator_version: validatorVersion,
   };
-}
-
-versions.push('1.0.0');
+};

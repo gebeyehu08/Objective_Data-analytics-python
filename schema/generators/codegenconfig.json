@@ -21,10 +21,6 @@
     {
       "modelFile": "../base_schema.json",
       "templateFile": "templates/validator.template.ts"
-    },
-    {
-      "modelFile": "../base_schema.json",
-      "templateFile": "templates/validator-service.template.ts"
     }
   ]
 }
