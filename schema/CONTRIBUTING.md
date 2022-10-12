@@ -56,8 +56,6 @@ Here is a list of the generators we plan to support, some are not yet finished a
 - Iglu schema for Snowplow
 - Taxonomy documentation 
 
->NOTE: some of the aforementioned templates are not complete
-
 In a nutshell, the base_schema is our source of truth and all generators parse it to produce new factories, validation code, types, definitions, etc.
 
 ## Validation
