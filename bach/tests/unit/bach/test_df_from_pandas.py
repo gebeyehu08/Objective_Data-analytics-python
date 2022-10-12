@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from datetime import datetime
+import datetime
 
 import pytest
 
