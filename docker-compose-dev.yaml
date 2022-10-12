@@ -24,7 +24,7 @@ services:
     networks:
       - obj
     healthcheck:
-      test: [ "CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8082" ]
+      test: [ "CMD", "printf",  "\"GET /schema/latest HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8082" ]
       interval: 30s
       timeout: 2s
       retries: 3
@@ -44,7 +44,7 @@ services:
       <<: *db_env_variables
       PORT: 8081
     healthcheck:
-      test: ["CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8081"]
+      test: ["CMD", "printf",  "\"GET /schema HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8081"]
       interval: 30s
       timeout: 2s
       retries: 3
