@@ -73,13 +73,13 @@ The [/validator](validator) folder contains:
 Has three endpoints:
 
 - POST /, validates the given event (posted as JSON body), can return two different objects:
-  - On success: `{ success: true, data: <original event>, validator_version }`
-  - On failure: `{ success: false, error: <zod error>, validator_version }`
+  - On success: `{ success: true, data: <original event>, validator_version }`.
+  - On failure: `{ success: false, error: <zod error>, validator_version }`.
   
 - GET /status, returns some info on the service:
-  - the validation version (which matches with the support schema version)
-  - a `total` object containing a per-version total of events processed
-  - a `valid` object containing a per-version total of valid events processed
-  - a `invalid` object containing a per-version total of invalid events processed
+  - the validation version (which matches with the supported schema version).
+  - a `total` object containing a per-version total of events processed.
+  - a `valid` object containing a per-version total of valid events processed.
+  - a `invalid` object containing a per-version total of invalid events processed.
 
 - GET /schema/<version>, returns the base schema for the given version
