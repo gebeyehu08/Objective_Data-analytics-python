@@ -62,6 +62,7 @@ def test_string_as_index(dialect):
     assert isinstance(df['timestamp'], SeriesTimestamp)
     assert isinstance(df['string'], SeriesString)
     assert isinstance(df['bool'], SeriesBoolean)
+    assert df.index_dtypes == {'_index_string': 'string'}
 
 
 def test_load_df_without_conversion(dialect):
@@ -73,7 +74,7 @@ def test_load_df_without_conversion(dialect):
     df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['float', 'int', 'timestamp', 'bool']),
-        convert_objects=True,
+        convert_objects=False,
     )
     assert isinstance(df['float'], SeriesFloat64)
     assert isinstance(df['int'], SeriesInt64)
