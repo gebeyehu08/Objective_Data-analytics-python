@@ -13,10 +13,12 @@ def schema() -> Response:
     """ Endpoint that returns the event schema in our own notation. """
     config = get_collector_config()
     url = f'{config.schema_validation_service_url}/schema/latest'
-    response = requests.post(url)
+    response = requests.get(url)
+
+    print(response)
 
     if response.status_code == 200:
-        msg = response.json()
+        msg = response.text
     else:
         msg = 'schema not available'
 
