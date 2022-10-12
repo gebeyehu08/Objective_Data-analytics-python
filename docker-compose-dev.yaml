@@ -16,10 +16,23 @@ x-db_env_variables: &db_env_variables
 
 version: "3.4"
 services:
+  objectiv_validator:
+    container_name: objectiv_validator
+    image: ${OBJECTIV_CONTAINER_URL-objectiv}/validator:${OBJECTIV_CONTAINER_TAG-latest}
+    ports:
+      - 127.0.0.1:8082:8082
+    networks:
+      - obj
+    healthcheck:
+      test: [ "CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8082" ]
+      interval: 30s
+      timeout: 2s
+      retries: 3
   objectiv_collector:
     container_name: objectiv_collector
     depends_on:
       - objectiv_postgres
+      - objectiv_validator
     image: ${OBJECTIV_CONTAINER_URL-objectiv/backend}:${OBJECTIV_CONTAINER_TAG-latest}
     working_dir: /services
     entrypoint: bash -c "objectiv-db-init; ./entry_point.sh"
@@ -27,11 +40,8 @@ services:
       - 127.0.0.1:8081:8081
     networks:
       - obj
-    volumes:
-      - ${SCHEMA_EXTENSION_DIRECTORY-./backend/tests/test_data/schemas1}/:/schema-extensions/
     environment:
       <<: *db_env_variables
-      SCHEMA_EXTENSION_DIRECTORY: /schema-extensions/
       PORT: 8081
     healthcheck:
       test: ["CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8081"]
