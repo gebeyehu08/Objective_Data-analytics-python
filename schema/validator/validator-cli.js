@@ -16,9 +16,9 @@ const { success, error } = validator.validate(event);
 
 if (!success) {
   console.log(error);
-  console.log('\nNOPE: The given event is not valid\n');
+  console.log(`\nNOPE: The given event is not valid (validator v${validatorVersion})\n`);
   process.exit(1);
 }
 
-console.log('\nOK: The given event is valid\n');
+console.log(`\nOK: The given event is valid (validator v${validatorVersion})\n`);
 process.exit(0);
