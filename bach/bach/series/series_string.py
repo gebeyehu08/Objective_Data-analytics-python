@@ -250,6 +250,13 @@ class SeriesString(Series):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'string':
             return expression
+
+        if is_athena(dialect) and source_dtype == 'json':
+            # casting directly to varchar will "deserialize" the json text, meaning that the string value
+            # will be extracted as scalar. For example: "a string" will result into: a string
+            # which yields different results compare to Postgres and BigQuery
+            # Using json_format will avoid this and double quotes will be kept
+            return Expression.construct('json_format({})', expression)
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def get_dummies(

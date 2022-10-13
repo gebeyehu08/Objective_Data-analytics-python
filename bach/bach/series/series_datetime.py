@@ -16,7 +16,7 @@ from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code, parse_c_code_to_athena_code, warn_non_supported_format_codes
-from bach.types import DtypeOrAlias, StructuredDtype
+from bach.types import DtypeOrAlias, StructuredDtype, value_to_series_type
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
@@ -99,6 +99,10 @@ class DateTimeOperation:
             )
         elif is_athena(engine):
             parsed_format_str = parse_c_code_to_athena_code(format_str)
+            if isinstance(series, SeriesTime):
+                # convert the float values into a timestamp, otherwise date_format won't work
+                series = SeriesTimestamp.from_total_seconds(series.copy_override_type(SeriesFloat64))
+
             expression = Expression.construct(
                 'date_format({}, {})', series, Expression.string_value(parsed_format_str)
             )
@@ -106,11 +110,15 @@ class DateTimeOperation:
             # BigQuery will ignore some formatting codes when applied to a date.
             # For example, rather than returning '00' as value for '%H' (hour) it will return '%H'.
             # To avoid this problem, we convert to timestamp.
-            series = cast(SeriesTimestamp, series.astype('timestamp'))
+            if isinstance(series, SeriesTime):
+                fmt_str = 'format_time({}, {})'
+            else:
+                series = cast(SeriesTimestamp, series.astype('timestamp'))
+                fmt_str = 'format_date({}, {})'
 
             parsed_format_str = parse_c_code_to_bigquery_code(format_str)
             expression = Expression.construct(
-                'format_date({}, {})', Expression.string_value(parsed_format_str), series
+                fmt_str, Expression.string_value(parsed_format_str), series
             )
         else:
             raise DatabaseNotSupportedException(engine)
@@ -351,13 +359,6 @@ class SeriesAbstractDateTime(Series, ABC):
         if source_dtype == 'string':
             if expression.is_constant:
                 return cls._constant_expression_to_dtype_expression(dialect, expression)
-            if is_athena(dialect) and cls.dtype == 'time':
-                expression = SeriesTimestamp.dtype_to_expression(
-                    dialect,
-                    source_dtype,
-                    expression=Expression.construct('cast({} as time)', expression),
-                )
-                expression = Expression.construct('to_unixtime({})', expression)
 
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
@@ -533,14 +534,12 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         fmt_str = '({}) - ({})'
         if is_athena(self.engine):
             # since we represent intervals with float values, we should consider unix time values instead
-            if not isinstance(other, Series) or other.dtype == 'timestamp':
-                fmt_str = 'to_unixtime({}) - to_unixtime({})'
-
-            if isinstance(other, SeriesTimedelta):
+            other_series_type = value_to_series_type(other)
+            if other_series_type.dtype == SeriesTimestamp.dtype:
+                fmt_str = 'round(to_unixtime({}) - to_unixtime({}), 3)'
+            else:
                 # need to cast back to timestamp if we are subtracting by a timedelta
-                fmt_str = f'to_unixtime({{}}) - from_unixtime({fmt_str})'
-
-            fmt_str = f'round({fmt_str}, 3)'
+                fmt_str = 'from_unixtime(to_unixtime({}) - {})'
 
         return _self._arithmetic_operation(
             _other,
@@ -612,7 +611,6 @@ class SeriesDate(SeriesAbstractDateTime):
     def __sub__(self, other) -> 'Series':
         # python will raise a TypeError when trying arithmetic operations
         # that are not date or timedelta type
-
         if other.dtype not in ('date', 'timedelta'):
             raise TypeError(f'arithmetic operation sub not supported for '
                             f'{self.__class__} and {other.__class__}')
@@ -670,6 +668,12 @@ class SeriesTime(SeriesAbstractDateTime):
             expression = SeriesTimestamp.dtype_to_expression(dialect, source_dtype, expression)
             expression = Expression.construct('to_unixtime({})', expression)
         return super().dtype_to_expression(dialect, source_dtype, expression)
+
+    def astype(self, dtype: Union[str, Type]) -> Series:
+        if dtype != SeriesString.dtype and dtype != str:
+            return super().astype(dtype=dtype)
+
+        return self.dt.strftime(self._FINAL_DATE_TIME_FORMAT)
 
     @classmethod
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:

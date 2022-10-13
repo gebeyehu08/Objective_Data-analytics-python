@@ -9,6 +9,7 @@ import pandas as pd
 from bach import DataFrame
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from unittest.mock import ANY
+
 from bach.testing import assert_equals_data
 
 

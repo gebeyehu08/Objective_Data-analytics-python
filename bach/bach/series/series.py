@@ -1612,6 +1612,9 @@ class Series(ABC):
         if is_postgres(self.engine):
             agg_expr = f'mode() within group (order by {{}})'
         elif is_athena(self.engine):
+            # PrestoDB currently does not support mode or any approximation to it
+            # Therefore we should calculate manually by building a map with the occurrences
+            # per value (histogram) and get the key with the highest value
             agg_expr = f"""
                 reduce(
                     map_entries(histogram({{}})),
