@@ -248,7 +248,7 @@ def _calculate_quantiles_with_linear_interpolation(
         ).fillna(0.)
 
         # final result
-        # X_i + gamma * (X_j - X_i)
+        # X_j + gamma * (X_j_next - X_j)
         result_series = X_j_series + gamma_series * (X_j_next_series - X_j_series)
 
         q_series_name = f'{series_name}_quantile'
