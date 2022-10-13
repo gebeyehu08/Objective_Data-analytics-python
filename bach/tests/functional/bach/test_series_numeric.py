@@ -121,7 +121,6 @@ def test_aggregations_sum_mincount(engine):
         assert (math.isnan(pd_agg) and bt_agg_value is None) or bt_agg_value == pd_agg
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_aggregations_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': [1, 3, 5, 7, 9]})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
@@ -131,7 +130,7 @@ def test_aggregations_quantile(engine):
     for column, quantile in zip(pdf.columns, quantiles):
         expected = pdf[column].quantile(q=quantile)
         result = bt[column].quantile(q=quantile).to_numpy()[0]
-        assert expected == result
+        assert round(expected, 10) == round(result, 10)
 
     for column in pdf.columns:
         expected_all_quantiles = pdf[column].quantile(q=quantiles)
@@ -139,7 +138,6 @@ def test_aggregations_quantile(engine):
         pd.testing.assert_series_equal(expected_all_quantiles, result_all_quantiles.to_pandas(), check_names=False)
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_grouped_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': ['a', 'a', 'a', 'b', 'b']})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
