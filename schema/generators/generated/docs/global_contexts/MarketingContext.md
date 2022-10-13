@@ -10,6 +10,7 @@ A [GlobalContext](/taxonomy/global-contexts) describing the marketing channel & 
 `string` source_platform: [Optional] To differentiate similar content, or links within the same ad.
 `string` creative_format: [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
 `string` marketing_tactic: [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
+`array` _types: An ordered list of the parents of this Context, itself included as the last element.
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 `discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
