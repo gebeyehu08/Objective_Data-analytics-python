@@ -7,15 +7,14 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
-from typing import Type, Dict, List, Any, Mapping
+from typing import Type, List, Any, Mapping
 
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy, Engine, Dialect
 
 from bach import DataFrame, Series
-from bach.types import get_series_type_from_db_dtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_bigquery, is_postgres, is_athena, quote_identifier
+from sql_models.util import is_bigquery, quote_identifier
 from tests.unit.bach.util import get_pandas_df
 from bach.testing import assert_equals_data
 

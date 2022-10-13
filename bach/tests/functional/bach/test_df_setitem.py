@@ -52,28 +52,16 @@ def check_set_const(
         ]
     )
 
-    # Check:
-    # 1) that the Series type matches the expected series type
-    # 2)  that the actual type in the database matches the type we expect
-    expected_series = {s_name: expected_series for s_name in series_names}
+    # Convert expected_series and expected_db_type_override to format that assert_series_db_types() requires.
+    series = {s_name: expected_series for s_name in series_names}
+    db_type_overrides = {}
     if expected_db_type_override and db_dialect in expected_db_type_override:
         type_override = expected_db_type_override[db_dialect]
-        expected_db_type_overrides = {db_dialect: {s_name: type_override for s_name in series_names}}
-    else:
-        expected_db_type_overrides = {}
-    assert_series_db_types(
-        df=bt,
-        expected_series=expected_series,
-        expected_db_type_overrides=expected_db_type_overrides
-    )
-    # db_dialect = DBDialect.from_engine(engine)
-    # if expected_db_type_override and db_dialect in expected_db_type_override:
-    #     expected_db_type = expected_db_type_override[db_dialect]
-    # else:
-    #     expected_db_type = expected_series.get_db_dtype(engine.dialect)
-    # series_to_db_types = {column_name: expected_db_type for column_name in series_names}
-    # expected_db_types = {db_dialect: series_to_db_types}
-    # assert_db_types(bt, expected_db_types)
+        db_type_overrides = {db_dialect: {s_name: type_override for s_name in series_names}}
+    # Check:
+    # 1) that the Series type matches the expected series type
+    # 2) that the actual type in the database matches the type we expect
+    assert_series_db_types(df=bt, expected_series=series, expected_db_type_overrides=db_type_overrides)
 
 
 def test_set_const_int(engine):
