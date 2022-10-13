@@ -11,9 +11,7 @@ from objectiv_backend.common.types import EventDataList
 def process_events_entry(events: EventDataList, current_millis: int = 0) -> \
         Tuple[EventDataList, EventDataList, List[EventError]]:
     """
-    Two step processing of events:
-    1) Modify events: hydrate all parent types of both the event and contexts into the event
-    2) Split event list on events that pass validation and those that don't
+    Split event list on events that pass validation and those that don't
 
     :param events: List of events. validate_structure_event_list() must pass on this list.
     :param current_millis: (current) timestamp to compare events with
@@ -40,8 +38,6 @@ def process_events_entry(events: EventDataList, current_millis: int = 0) -> \
             nok_events.append(event)
             event_errors.append(EventError(event_id=event['id'], error_info=error_info))
         else:
-            # TODO: fix this
-            # event = hydrate_types_into_event(event=event)
             ok_events.append(event)
     return ok_events, nok_events, event_errors
 

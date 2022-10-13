@@ -44,7 +44,7 @@ def validate_event_adheres_to_schema(event: EventData) -> List[ErrorInfo]:
     headers = {'Content-type': 'Application/json'}
 
     try:
-        response = requests.post(config.schema_validation_service_url, json=event_copy, headers=headers)
+        response = requests.post(config.schema_config.validation_service_url, json=event_copy, headers=headers)
 
         if response.status_code == 200:
             # we have a valid response, let's check the validation result

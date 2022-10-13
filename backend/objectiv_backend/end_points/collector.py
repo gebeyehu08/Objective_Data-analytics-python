@@ -58,7 +58,7 @@ def collect(anonymous_mode: bool = False) -> Response:
         client_session_id = None
 
     # Do all the enrichment steps that can only be done in this phase
-    add_enriched_contexts(events, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
+    enrich_events(events, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
     set_time_in_events(events, current_millis, transport_time)
 
@@ -156,7 +156,7 @@ def _get_collector_response(error_count: int,
     return get_json_response(status=200, msg=msg, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
 
-def add_enriched_contexts(events: EventDataList, anonymous_mode: bool, client_session_id: str):
+def enrich_events(events: EventDataList, anonymous_mode: bool, client_session_id: str):
     """
     Enrich the list of events
     """
@@ -165,6 +165,7 @@ def add_enriched_contexts(events: EventDataList, anonymous_mode: bool, client_se
     for event in events:
         add_http_context_to_event(event=event, request=flask.request)
         add_marketing_context_to_event(event=event)
+        add_types_to_event(event=event)
 
 
 def add_cookie_id_context(events: EventDataList, anonymous_mode: bool, client_session_id: str) -> None:
@@ -180,6 +181,27 @@ def add_cookie_id_context(events: EventDataList, anonymous_mode: bool, client_se
 
     for event in events:
         add_global_context_to_event(event, cookie_id_context)
+
+
+def add_types_to_event(event: EventData) -> None:
+    """
+    Simple enrichment, to encode hierarchy of events and contexts based on the schema into the event. This should only
+    be done in the case it's not already set by the frontend. If event['_types'] exists, we assume it exists for
+    all contexts as well. Furthermore, as the event is valid, we assume all events and contexts exist in the map.
+
+    :param event: EventData
+    :return:
+    """
+
+    if '_types' not in event:
+        types_map = get_collector_config().schema_config.types_map
+
+        event['_types'] = types_map[event['_type']]
+
+        for lc in event['location_stack']:
+            lc['_types'] = types_map[lc['_type']]
+        for gc in event['global_contexts']:
+            gc['_types'] = types_map[gc['_type']]
 
 
 def set_time_in_events(events: EventDataList, current_millis: int, client_millis: int):

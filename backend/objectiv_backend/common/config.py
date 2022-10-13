@@ -3,6 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 
 import os
+import json
+import pkgutil
 from typing import NamedTuple, Optional
 
 # All settings that are controlled through environment variables are listed at the top here, for a
@@ -11,6 +13,9 @@ from typing import NamedTuple, Optional
 # below (e.g. get_config_output())
 SCHEMA_VALIDATION_SERVICE_URL = os.environ.get('SCHEMA_VALIDATION_SERVICE_URL', 'http://localhost:8082')
 SCHEMA_VALIDATION_ERROR_REPORTING = os.environ.get('SCHEMA_VALIDATION_ERROR_REPORTING', 'false') == 'true'
+
+# file containing mapping from _type -> _types
+SCHEMA_TYPES_MAP_FILE = '../schema/types_map.json'
 
 # Number of ms before an event is considered too old. set to 0 to disable
 MAX_DELAYED_EVENTS_MILLIS = 1000 * 3600
@@ -136,12 +141,17 @@ class TimestampValidationConfig(NamedTuple):
     max_delay: int
 
 
+class SchemaConfig(NamedTuple):
+    validation_service_url: str
+    types_map: dict
+
+
 class CollectorConfig(NamedTuple):
     anonymous_mode: AnonymousModeConfig
     cookie: Optional[CookieConfig]
     error_reporting: bool
     output: OutputConfig
-    schema_validation_service_url: str
+    schema_config: SchemaConfig
 
 
 def get_config_anonymous_mode() -> AnonymousModeConfig:
@@ -282,6 +292,18 @@ def get_config_timestamp_validation() -> TimestampValidationConfig:
     return TimestampValidationConfig(max_delay=MAX_DELAYED_EVENTS_MILLIS)
 
 
+def get_schema_config() -> SchemaConfig:
+    data = pkgutil.get_data(__name__, SCHEMA_TYPES_MAP_FILE)
+    if data:
+        types_map = json.loads(data)
+    else:
+        raise Exception(f'Could not load types map from {SCHEMA_TYPES_MAP_FILE}')
+    return SchemaConfig(
+        validation_service_url=SCHEMA_VALIDATION_SERVICE_URL,
+        types_map=types_map
+    )
+
+
 # creating these configuration structures is not heavy, but it's pointless to do it for each request.
 # so we have some super simple caching here
 _CACHED_COLLECTOR_CONFIG: Optional[CollectorConfig] = None
@@ -295,7 +317,7 @@ def init_collector_config():
         cookie=get_config_cookie(),
         error_reporting=SCHEMA_VALIDATION_ERROR_REPORTING,
         output=get_config_output(),
-        schema_validation_service_url=SCHEMA_VALIDATION_SERVICE_URL
+        schema_config=get_schema_config()
     )
 
 

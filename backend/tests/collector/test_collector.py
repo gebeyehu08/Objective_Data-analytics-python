@@ -1,11 +1,12 @@
 import json
 
+from copy import deepcopy
 import pytest
 import flask
 from objectiv_backend.app import create_app
 
 from objectiv_backend.end_points.collector import add_http_context_to_event, add_marketing_context_to_event, \
-    get_cookie_id_context, anonymize_events, hash_property
+    get_cookie_id_context, anonymize_events, hash_property, add_types_to_event
 from objectiv_backend.end_points.common import get_json_response
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
 from objectiv_backend.common.config import AnonymousModeConfig
@@ -275,3 +276,18 @@ def test_anonymous_mode_anonymization():
     # check if we have indeed properly hashed the vars
     assert http_context['user_agent'] == '49901a043486b776d3e9e0aa2b6bf1c1'
     assert hash_property(context_vars['user_agent']) == '49901a043486b776d3e9e0aa2b6bf1c1'
+
+
+def test_enrich_types_map():
+    event_list = json.loads(CLICK_EVENT_JSON)
+    event = event_list['events'][0]
+
+    # remove types from test data to force enrichment
+    del event['_types']
+    assert '_types' not in event
+
+    # as _types is already there, this shouldn't change any thing
+    add_types_to_event(event)
+    assert '_types' in event
+
+    assert event['_types'] == ["AbstractEvent", "InteractiveEvent", "PressEvent"]

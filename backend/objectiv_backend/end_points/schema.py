@@ -12,7 +12,7 @@ from objectiv_backend.end_points.common import get_json_response
 def schema() -> Response:
     """ Endpoint that returns the event schema in our own notation. """
     config = get_collector_config()
-    url = f'{config.schema_validation_service_url}/schema/latest'
+    url = f'{config.schema_config.validation_service_url}/schema/latest'
     response = requests.get(url)
 
     print(response)
