@@ -6,8 +6,9 @@ from bach.expression import Expression
 from bach.sql_model import BachSqlModel
 from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, \
     validate_node_column_references_in_sorting_expressions, get_name_from_sql_column_name, \
-    get_sql_column_name
+    get_sql_column_name, merge_sql_statements
 from sql_models.model import Materialization, CustomSqlModelBuilder
+from sql_models.util import is_athena
 
 
 @pytest.mark.db_independent
@@ -214,3 +215,13 @@ def test_validate_sorting_expressions(dialect) -> None:
             )
         ]
     )
+
+
+def test_merge_sql_statements(dialect):
+    assert merge_sql_statements(dialect, []) == []
+    assert merge_sql_statements(dialect, ['select test']) == ['select test']
+
+    expected = ['select test; select x; drop table y']
+    if is_athena(dialect):
+        expected = ['select test', 'select x', 'drop table y']
+    assert merge_sql_statements(dialect, ['select test', 'select x', 'drop table y']) == expected
