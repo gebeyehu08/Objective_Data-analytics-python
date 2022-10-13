@@ -5,69 +5,78 @@ import pytest
 
 from bach import SeriesBoolean, SeriesInt64, SeriesString, \
     SeriesFloat64, SeriesTimestamp, DataFrame
-from tests.functional.bach.test_data_and_utils import assert_postgres_type
+from sql_models.constants import DBDialect
+from tests.functional.bach.test_data_and_utils import assert_db_types
 
 import datetime
 
-from tests.unit.bach.util import get_pandas_df
+from tests.unit.bach.util import get_pandas_df, FakeEngine
 
 
-@pytest.mark.skip_athena_todo()
 @pytest.mark.skip_bigquery_todo()
-def test_all_supported_types(engine):
+def test_all_supported_types_db_dtypes(engine):
+    # TODO: move this function to test_df_from_pandas
     TEST_DATA_SUPPORTED_TYPES = [
         [1.32, 4, datetime.datetime(2015, 12, 13, 9, 54, 45, 543), 'fierljeppen', True]
     ]
-    bt = DataFrame.from_pandas(
+    df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['float', 'int', 'timestamp', 'string', 'bool']),
         convert_objects=True,
     )
 
-    # TODO: don't use assert_postgres_type here
-    assert_postgres_type(bt['float'], 'double precision', SeriesFloat64)
-    assert_postgres_type(bt['int'], 'bigint', SeriesInt64)
-    assert_postgres_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
-    assert_postgres_type(bt['string'], 'text', SeriesString)
-    assert_postgres_type(bt['bool'], 'boolean', SeriesBoolean)
+    all_expected_db_dtypes = {
+        DBDialect.POSTGRES: {
+            'float': 'double precision',
+            'int': 'bigint',
+            'timestamp': 'timestamp without time zone',
+            'string': 'text',
+            'bool': 'boolean'
+        },
+        DBDialect.ATHENA: {
+            'float': 'double',
+            'int': 'bigint',
+            'timestamp': 'timestamp',
+            'string': 'varchar(11)',
+            'bool': 'boolean'
+        }
+    }
+    expected_db_dtypes = all_expected_db_dtypes[DBDialect.from_engine(engine)]
+    assert_db_types(df=df, series_expected_db_type=expected_db_dtypes)
 
 
-
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
-def test_string_as_index(engine):
+# TODO: move below functions to unit test directory
+def test_string_as_index(dialect):
     TEST_DATA_SUPPORTED_TYPES = [
         ['fierljeppen', 1.32, 4, datetime.datetime(2015, 12, 13, 9, 54, 45, 543), True]
     ]
 
-    bt = DataFrame.from_pandas(
+    engine = FakeEngine(dialect=dialect)
+    df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['string', 'float', 'int', 'timestamp', 'bool']),
         convert_objects=True,
     )
+    assert isinstance(df['float'], SeriesFloat64)
+    assert isinstance(df['int'], SeriesInt64)
+    assert isinstance(df['timestamp'], SeriesTimestamp)
+    assert isinstance(df['string'], SeriesString)
+    assert isinstance(df['bool'], SeriesBoolean)
+    assert df.index_dtypes == {'_index_string': 'string'}
 
-    # TODO: don't use assert_postgres_type here
-    assert_postgres_type(bt['float'], 'double precision', SeriesFloat64)
-    assert_postgres_type(bt['int'], 'bigint', SeriesInt64)
-    assert_postgres_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
-    assert_postgres_type(bt['string'], 'text', SeriesString)
-    assert_postgres_type(bt['bool'], 'boolean', SeriesBoolean)
 
-
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
-def test_load_df_without_conversion(engine):
+def test_load_df_without_conversion(dialect):
     TEST_DATA_SUPPORTED_TYPES = [
         [1.32, 4, datetime.datetime(2015, 12, 13, 9, 54, 45, 543), True]
     ]
-    bt = DataFrame.from_pandas(
+
+    engine = FakeEngine(dialect=dialect)
+    df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['float', 'int', 'timestamp', 'bool']),
-        convert_objects=True,
+        convert_objects=False,
     )
-
-    # TODO: don't use assert_postgres_type here
-    assert_postgres_type(bt['float'], 'double precision', SeriesFloat64)
-    assert_postgres_type(bt['int'], 'bigint', SeriesInt64)
-    assert_postgres_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
-    assert_postgres_type(bt['bool'], 'boolean', SeriesBoolean)
+    assert isinstance(df['float'], SeriesFloat64)
+    assert isinstance(df['int'], SeriesInt64)
+    assert isinstance(df['timestamp'], SeriesTimestamp)
+    assert isinstance(df['bool'], SeriesBoolean)
