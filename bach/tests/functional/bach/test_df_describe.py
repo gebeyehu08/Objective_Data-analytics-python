@@ -9,8 +9,10 @@ import pytest
 
 from bach import DataFrame
 from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from unittest.mock import ANY
+
+from bach.testing import assert_equals_data
 
 
 def test_df_categorical_describe(engine) -> None:
