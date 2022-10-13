@@ -36,7 +36,6 @@ def test_df_categorical_describe(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo()
 def test_df_numerical_describe(engine) -> None:
     df = get_df_with_test_data(engine)[['city', 'skating_order', 'inhabitants']]
     result = df.describe(percentiles=[0.5])
