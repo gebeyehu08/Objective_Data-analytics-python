@@ -124,7 +124,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             # then levels MUST be in the base node.
             missing_references = [
                 f'_{name}_{level_name}' for level_name in default_level_dtypes.keys()
-                if f'_{name}_{level_name}' not in base_node.columns
+                if f'_{name}_{level_name}' not in base_node.series_names
             ]
             if missing_references:
                 raise ValueError(

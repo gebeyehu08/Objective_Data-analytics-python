@@ -5,10 +5,9 @@ from bach.testing import assert_equals_data
 
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1264')  # TODO: Athena
 
 def _add_root_offset_sorting(df: bach.DataFrame, asc: bool = True) -> bach.DataFrame:
-    if '__root_step_offset' in df.base_node.columns:
+    if '__root_step_offset' in df.base_node.series_names:
         df._order_by.append(
             SortColumn(
                 expression=bach.expression.Expression.identifier('__root_step_offset'),
@@ -21,7 +20,6 @@ def _add_root_offset_sorting(df: bach.DataFrame, asc: bool = True) -> bach.DataF
 def test_get_navigation_paths(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
     funnel = modelhub.get_funnel_discovery()
-
     df = df.sort_values(by='moment')
 
     # this is the order of all nice names when aggregated
@@ -126,6 +124,53 @@ def test_get_navigation_paths(db_params):
         use_to_pandas=True,
     )
 
+    # test different location stack column by name and different type
+    bts = funnel.get_navigation_paths(data=df, steps=2, location_stack='session_hit_number')
+    bts = _add_root_offset_sorting(bts)
+    assert_equals_data(
+        bts,
+        expected_columns=[
+            'session_hit_number_step_1', 'session_hit_number_step_2'
+        ],
+        expected_data=[
+            [1, 2],
+            [2, 1],
+            [1, 1],
+            [1, 2],
+            [2, 3],
+            [3, 1],
+            [1, 2],
+            [2, 1],
+            [1, 2],
+            [2, 1],
+            [1, 1]
+        ],
+        use_to_pandas=True,
+    )
+
+    # test none-default sort_by
+    bts = funnel.get_navigation_paths(data=df.reset_index(), steps=2, sort_by='event_id')
+    bts = _add_root_offset_sorting(bts)
+    assert_equals_data(
+        bts,
+        expected_columns=[
+            'location_stack_step_1', 'location_stack_step_2'
+        ],
+        expected_data=[
+            ['Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu', 'Link: cta-docs-location-stack located at Web Document: #document => Section: main => Section: location-stack'],
+            ['Link: cta-docs-location-stack located at Web Document: #document => Section: main => Section: location-stack', 'Link: cta-repo-button located at Web Document: #document => Section: header'],
+            ['Link: cta-repo-button located at Web Document: #document => Section: header', 'Link: notebook-product-analytics located at Web Document: #document'],
+            ['Link: notebook-product-analytics located at Web Document: #document', 'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'],
+            ['Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu', 'Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'],
+            ['Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu', 'Link: Cookies located at Web Document: #document => Section: footer'],
+            ['Link: Cookies located at Web Document: #document => Section: footer', 'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'],
+            ['Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu', 'Link: About Us located at Web Document: #document => Section: navbar-top'],
+            ['Link: About Us located at Web Document: #document => Section: navbar-top', 'Link: Docs located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu'],
+            ['Link: Docs located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu', 'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy'],
+            ['Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy', 'Link: logo located at Web Document: #document => Section: navbar-top']
+        ],
+        use_to_pandas=True,
+    )
 
 def test_get_navigation_paths_grouped(db_params) -> None:
     df, modelhub = get_objectiv_dataframe_test(db_params)

@@ -5,7 +5,6 @@
 import {
   BrowserTrackerConfig,
   ContextsConfig,
-  isPluginsArray,
   makeBrowserTrackerDefaultPluginsList,
   makeBrowserTrackerDefaultQueue,
   makeBrowserTrackerDefaultTransport,
@@ -41,18 +40,13 @@ export class AngularTracker extends Tracker {
     if (trackerConfig.endpoint) {
       config = {
         ...config,
-        transport: makeBrowserTrackerDefaultTransport(config),
+        transport: makeBrowserTrackerDefaultTransport(),
         queue: config.queue ?? makeBrowserTrackerDefaultQueue(config),
       };
     }
 
-    // Configure to use provided `plugins` or automatically create a Plugins instance with some sensible web defaults
-    if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
-      const customPlugins = isPluginsArray(trackerConfig.plugins) ? trackerConfig.plugins : [];
-      config.plugins = [...makeBrowserTrackerDefaultPluginsList(trackerConfig), ...customPlugins];
-    } else {
-      config.plugins = trackerConfig.plugins;
-    }
+    // Add default plugins for Angular
+    config.plugins = [...makeBrowserTrackerDefaultPluginsList(trackerConfig), ...(config.plugins ?? [])];
 
     // Initialize core Tracker
     super(config, ...contextConfigs);

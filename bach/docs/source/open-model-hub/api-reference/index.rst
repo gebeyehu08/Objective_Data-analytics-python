@@ -14,7 +14,7 @@ This is the complete API reference of the open model hub.
 .. autosummary::
 
     ModelHub
-    SeriesGlobalContexts
+    SeriesGlobalContext
     SeriesLocationStack
 
 .. toctree::
@@ -22,6 +22,6 @@ This is the complete API reference of the open model hub.
     :maxdepth: 7
 
     ModelHub/index
-    SeriesGlobalContexts/index
+    SeriesGlobalContext/index
     SeriesLocationStack/index
 

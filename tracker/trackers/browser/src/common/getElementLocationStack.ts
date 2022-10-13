@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationStack } from '@objectiv/tracker-core';
+import { LocationStack, TrackerPlugins } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { TaggingAttribute } from '../definitions/TaggingAttribute';
 import { TrackedElement } from '../definitions/TrackedElement';
@@ -44,7 +44,7 @@ export const getElementLocationStack = (parameters: { element: TrackedElement; t
 
     // Add Plugins mutations to the locationStack - global_contexts are not a concern, so we pass an empty array
     if (tracker) {
-      tracker.plugins.enrich({ location_stack: locationStack, global_contexts: [] });
+      new TrackerPlugins(tracker.plugins).enrich({ location_stack: locationStack, global_contexts: [] });
     }
   } catch (error) {
     trackerErrorHandler(error, parameters);

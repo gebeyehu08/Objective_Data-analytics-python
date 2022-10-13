@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ContextsConfig, isPluginsArray, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
+import { ContextsConfig, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
 import { makeReactNativeTrackerDefaultPluginsList } from './common/factories/makeReactNativeTrackerDefaultPluginsList';
 import { makeReactNativeTrackerDefaultQueue } from './common/factories/makeReactNativeTrackerDefaultQueue';
 import { makeReactNativeTrackerDefaultTransport } from './common/factories/makeReactNativeTrackerDefaultTransport';
@@ -12,11 +12,6 @@ import { makeReactNativeTrackerDefaultTransport } from './common/factories/makeR
  * The minimum required parameters are the `applicationId` and either an `endpoint` or a `transport` object.
  */
 export type ReactNativeTrackerConfig = Omit<TrackerConfig, 'platform'> & {
-  /**
-   * The collector endpoint URL.
-   */
-  endpoint?: string;
-
   /**
    * Optional. Whether to track ApplicationContext automatically. Enabled by default.
    */
@@ -72,17 +67,13 @@ export class ReactNativeTracker extends Tracker {
     if (trackerConfig.endpoint) {
       config = {
         ...config,
-        transport: makeReactNativeTrackerDefaultTransport(config),
+        transport: makeReactNativeTrackerDefaultTransport(),
         queue: config.queue ?? makeReactNativeTrackerDefaultQueue(),
       };
     }
 
-    // Configure to use provided `plugins` or automatically create a Plugins instance with some sensible web defaults
-    if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
-      config.plugins = [...makeReactNativeTrackerDefaultPluginsList(trackerConfig), ...(trackerConfig.plugins ?? [])];
-    } else {
-      config.plugins = trackerConfig.plugins;
-    }
+    // Add default plugins for React Native
+    config.plugins = [...makeReactNativeTrackerDefaultPluginsList(trackerConfig), ...(config.plugins ?? [])];
 
     // Initialize Core Tracker
     super(config, ...contextConfigs);
