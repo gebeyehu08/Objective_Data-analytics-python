@@ -2,7 +2,6 @@
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become visible.
 
 ### Properties
-`string` schema_version: The version of the Objectiv Taxonomy Schema used to generate this event.
 `LocationStack` location_stack: undefined
 `GlobalContexts` global_contexts: undefined
 `discriminator` _type: A string literal used during serialization. Should always match the Event interface name.

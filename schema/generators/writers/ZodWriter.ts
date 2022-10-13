@@ -40,6 +40,9 @@ export type PropertyDefinition = {
   isOptional?: boolean;
   value?: string;
   description?: string;
+  items?: {
+    type: string;
+  };
 };
 
 export type ParameterDefinition = {
@@ -80,6 +83,7 @@ const SchemaToZodPropertyTypeMap = {
   string: 'string',
   discriminator: 'literal',
   uuid: 'string().uuid',
+  array: 'array',
 };
 
 export class ZodWriter extends JavaScriptWriter {
@@ -121,7 +125,11 @@ export class ZodWriter extends JavaScriptWriter {
     this.writeIndent();
 
     const mappedType = SchemaToZodPropertyTypeMap[property.typeName];
-    this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${property.value ?? ''})` : property.typeName}`);
+    let propertyValue = property.value ?? '';
+    if (property.typeName === 'array') {
+      propertyValue = `z.${SchemaToZodPropertyTypeMap[propertyValue]}()`;
+    }
+    this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${propertyValue})` : property.typeName}`);
 
     if (property.isOptional) {
       this.write('.optional()');

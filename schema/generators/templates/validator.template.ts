@@ -18,6 +18,7 @@ import {
   getEventNames,
   getObjectKeys,
   getPropertyDescription,
+  getPropertyValue,
   sortArrayByName,
 } from './common';
 
@@ -59,7 +60,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
         isOptional: properties[propertyName].optional,
-        value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+        value: getPropertyValue(contextName, properties[propertyName]),
       })),
     });
     zodWriter.writeLine(';');
@@ -79,7 +80,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
         isOptional: properties[propertyName].optional,
-        value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+        value: getPropertyValue(contextName, properties[propertyName]),
       })),
     });
     zodWriter.writeLine(';');
@@ -96,7 +97,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
             description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
             typeName: properties[propertyName].type,
             isOptional: properties[propertyName].optional,
-            value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+            value: getPropertyValue(contextName, properties[propertyName]),
           })),
         },
         ...childrenNames,
@@ -141,7 +142,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         description: getPropertyDescription(event, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
         isOptional: properties[propertyName].optional,
-        value: properties[propertyName].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,
+        value: getPropertyValue(eventName, properties[propertyName]),
       })),
       rules: event.validation?.rules,
     });
