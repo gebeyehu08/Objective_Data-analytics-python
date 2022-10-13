@@ -76,5 +76,24 @@ def test_describe_timedelta(engine) -> None:
     )
     df = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True)
     df['dt'] = df['dt'] - np.datetime64("2022-01-01")
-    result = df.dt.describe().to_pandas()
-    print('hola')
+    result = df.dt.describe()
+
+    expected = pd.Series(
+        index=pd.Index(
+            ['count', 'mean', 'min', 'max', 'nunique', 'mode', '0.25', '0.5', '0.75'],
+            name='__stat'
+        ),
+        data=[
+            '3',
+            '-5601 days, 08:00:00.000000',
+            '-8036 days, 00:00:00.000000',
+            '-4383 days, 00:00:00.000000',
+            '2',
+            '-4383 days, 00:00:00.000000',
+            '-6210 days, 12:00:00.000000',
+            '-4383 days, 00:00:00.000000',
+            '-4383 days, 00:00:00.000000',
+        ],
+        name='dt',
+    )
+    pd.testing.assert_series_equal(expected, result.to_pandas())

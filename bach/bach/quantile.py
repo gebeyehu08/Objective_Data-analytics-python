@@ -251,6 +251,10 @@ def _calculate_quantiles_with_linear_interpolation(
 
         q_series_name = f'{series_name}_quantile'
         calculated_quantiles[q_series_name] = result_series.copy_override(name=f'{series_name}_quantile')
+        if isinstance(df[series_name], SeriesTimedelta):
+            calculated_quantiles[q_series_name] = SeriesTimedelta.from_total_seconds(
+                calculated_quantiles[q_series_name].copy_override_type(SeriesFloat64)
+            )
 
     quantiles_df = quantiles_df.copy_override(series=calculated_quantiles)
     return quantiles_df.materialize(node_name='quantile_calculation')

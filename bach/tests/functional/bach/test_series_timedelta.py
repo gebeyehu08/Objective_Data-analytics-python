@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bach import DataFrame
+from bach import DataFrame, SeriesTimedelta
 from sql_models.util import is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, \
     get_df_with_test_data, get_df_with_food_data
@@ -265,3 +265,31 @@ def test_mean_bigquery_remove_nano_precision(engine) -> None:
         use_to_pandas=True,
     )
 
+
+def test_from_total_seconds(engine) -> None:
+    pdf = pd.DataFrame(
+        data={
+            'total_seconds': [
+                127503.22,
+                81374.33,
+                0.64654,
+                -694742400,
+                -127503.22
+            ]
+        }
+    )
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    result = SeriesTimedelta.from_total_seconds(df['total_seconds'])
+
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'total_seconds'],
+        expected_data=[
+            [0, datetime.timedelta(seconds=127503.22)],
+            [1, datetime.timedelta(seconds=81374.33)],
+            [2, datetime.timedelta(seconds=0.64654)],
+            [3, datetime.timedelta(seconds=-694742400)],
+            [4, datetime.timedelta(seconds=-127503.22)],
+        ],
+        use_to_pandas=True,
+    )
