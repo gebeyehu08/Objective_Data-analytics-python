@@ -1,9 +1,6 @@
 import pandas as pd
-import pytest
 
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
-
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena (fix problem with upper case in column names)
 
 
 def test_stack(engine) -> None:

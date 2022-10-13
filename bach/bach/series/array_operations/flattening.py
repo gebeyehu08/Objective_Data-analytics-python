@@ -6,6 +6,7 @@ from bach.sql_model import BachSqlModel, construct_references
 from sql_models.model import CustomSqlModelBuilder, Materialization
 
 from bach.series import SeriesJson, SeriesInt64
+from bach.utils import get_name_to_column_mapping
 
 TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
 
@@ -38,11 +39,15 @@ class ArrayFlattening(ABC):
     def __call__(self, *args, **kwargs) -> Tuple['TSeriesJson', 'SeriesInt64']:
         from bach import DataFrame, SeriesInt64
 
+        dialect = self._series_object.engine.dialect
+        name_to_column_mapping = get_name_to_column_mapping(dialect=dialect, names=self.all_dtypes.keys())
+
         unnested_array_df = DataFrame.from_model(
             engine=self._series_object.engine,
             model=self._get_unnest_model(),
             index=list(self._series_object.index.keys()),
             all_dtypes=self.all_dtypes,
+            name_to_column_mapping=name_to_column_mapping
         )
         item_series = unnested_array_df[self.item_series_name]
         offset_series = unnested_array_df[self.item_offset_series_name]
@@ -102,15 +107,16 @@ class ArrayFlattening(ABC):
         """
         Final column expressions for the generated model
         """
+        dialect = self._series_object.engine.dialect
         return {
             **{
                 idx.name: idx.expression for idx in self._series_object.index.values()
             },
-            self.item_series_name: Expression.construct_expr_as_name(
-                expr=_ITEM_IDENTIFIER_EXPR, name=self.item_series_name
+            self.item_series_name: Expression.construct_expr_as_sql_name(
+                dialect=dialect, expr=_ITEM_IDENTIFIER_EXPR, name=self.item_series_name
             ),
-            self.item_offset_series_name: Expression.construct_expr_as_name(
-                expr=_OFFSET_IDENTIFIER_EXPR, name=self.item_offset_series_name,
+            self.item_offset_series_name: Expression.construct_expr_as_sql_name(
+                dialect=dialect, expr=_OFFSET_IDENTIFIER_EXPR, name=self.item_offset_series_name,
             ),
         }
 

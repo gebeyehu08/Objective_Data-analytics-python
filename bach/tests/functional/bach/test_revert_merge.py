@@ -67,7 +67,6 @@ def test_revert_merge_basic_on_indexes(engine):
         _compare_source_with_replicate(expected, result)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_revert_merge_suffixes(engine):
     bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
     mt = get_df_with_food_data(engine)[['skating_order', 'food']]

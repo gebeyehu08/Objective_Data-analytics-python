@@ -41,8 +41,12 @@ class BachSqlModel(SqlModel[T]):
     ) -> None:
         """
         Similar to :py:meth:`SqlModel.__init__()`. With one additional parameter: column_expressions,
-        a mapping between the names of the columns and expressions
-        that this model's query will return in the correct order.
+        a mapping between the names of the Bach Series and expressions that this model's query will return in
+        the correct order.
+
+        Note that they keys in column_expressions are the names as used in Bach, not the names as they appear
+        in the sql query. If a column name contains special characters, then the sql might use an escaped
+        name. See :meth:`columns` for more information.
         """
         self._column_expressions = column_expressions
         super().__init__(
@@ -54,13 +58,28 @@ class BachSqlModel(SqlModel[T]):
         )
 
     @property
-    def columns(self) -> Tuple[str, ...]:
-        """ Columns returned by the query of this model, in order."""
+    def series_names(self) -> Tuple[str, ...]:
+        # TODO: rename this, series_names? columns is confusing
+        """
+        Names of the Series that the query of this model returns, in order.
+
+        Note: These are the names as they would appear in a Bach DataFrame. Columns might have a different
+        name in the sql query of this model than they have in a Bach DataFrame, depending on what characters
+        the database supports in column names. Example: `df['X!@'] = 1` might lead to sql of the form:
+        'select 1 as escaped_column_name from ...' instead of 'select 1 as X!@'. This function will return
+        the name used in the Bach DataFrame, so in the case of the example 'X!@'.
+        """
         return tuple(self._column_expressions.keys())
 
     @property
     def column_expressions(self) -> Dict[str, Expression]:
-        """ Mapping containing the expression used per column."""
+        """
+        Mapping containing the expression used per Bach series-name.
+
+        Note: The series names are as they would appear in a bach DataFrame. Within the sql query of this
+        model the columns might be called differently. See the description of :meth:`columns` for more
+        information.
+        """
         return self._column_expressions
 
     def copy_override(

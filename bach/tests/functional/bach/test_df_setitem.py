@@ -68,7 +68,6 @@ def check_set_const(
         assert_db_types(bt, db_types)
 
 
-
 def test_set_const_int(engine):
     constants = [
         np.int64(4),
@@ -77,7 +76,6 @@ def test_set_const_int(engine):
         2147483648
     ]
     check_set_const(engine, constants, SeriesInt64)
-
 
 
 def test_set_const_float(engine):
@@ -129,14 +127,12 @@ def test_set_const_time(engine):
     check_set_const(engine, constants, SeriesTime)
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_set_const_timedelta(engine):
     constants = [
         np.datetime64('2005-02-25T03:30') - np.datetime64('2005-01-25T03:30'),
         datetime.datetime.now() - datetime.datetime(2015, 4, 6),
     ]
     check_set_const(engine, constants, SeriesTimedelta)
-
 
 
 def test_set_const_json(engine):
@@ -202,8 +198,6 @@ def test_set_series_column(engine):
     assert filtered_bt.town == filtered_bt['town']
 
 
-@pytest.mark.skip_bigquery_todo('#1209 We do not yet support spaces in column names on BigQuery')
-@pytest.mark.skip_athena_todo('#1209 We do not yet support spaces in column names on Athena')
 def test_set_series_column_name_with_spaces(engine):
     bt = get_df_with_test_data(engine)
     bt['spaces in column'] = bt['founding']

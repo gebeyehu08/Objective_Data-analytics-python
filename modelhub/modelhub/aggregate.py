@@ -509,19 +509,19 @@ class Aggregate:
         if type(column) == str:
             column = data[column]
 
-        data['__feature_nice_name'] = column
+        data['__location'] = column
         if type(column) == SeriesLocationStack:
             # extract the nice name per event
-            data['__feature_nice_name'] = column.ls.nice_name
+            data['__location'] = column.ls.nice_name
 
         # need to drop missing values because we don't
         # want to get as a last step None value
-        data = data.dropna(subset='__feature_nice_name')
+        data = data.dropna(subset='__location')
 
         window = data.sort_values(by='moment', ascending=True).groupby(groupby).window(
             end_boundary=bach.partitioning.WindowFrameBoundary.FOLLOWING,
         )
-        drop_loc = window['__feature_nice_name'].window_last_value()
+        drop_loc = window['__location'].window_last_value()
         drop_loc = drop_loc.materialize(distinct=True)
 
         result = drop_loc.value_counts(normalize=percentage).to_frame()

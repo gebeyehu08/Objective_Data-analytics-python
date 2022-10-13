@@ -5,32 +5,12 @@ import sys
 import time
 from typing import List, Tuple
 
-from objectiv_backend.common.config import WORKER_BATCH_SIZE, get_collector_config
+from objectiv_backend.common.config import get_collector_config
 from objectiv_backend.schema.hydrate_events import hydrate_types_into_event
 from objectiv_backend.schema.validate_events import validate_event_adheres_to_schema, validate_event_time, EventError
-from objectiv_backend.workers.pg_queues import PostgresQueues, ProcessingStage
 from objectiv_backend.workers.pg_storage import insert_events_into_nok_data
 from objectiv_backend.workers.util import worker_main
 from objectiv_backend.common.types import EventDataList
-
-
-def main_entry(connection) -> int:
-    """
-    Pick events from the entry queue and insert them into the finalize queue.
-    :return number of processed events
-    """
-    with connection:
-        pg_queues = PostgresQueues(connection=connection)
-        events: EventDataList = pg_queues.get_events(queue=ProcessingStage.ENTRY,
-                                                     max_items=WORKER_BATCH_SIZE)
-        print(f'event-ids: {sorted(event["id"] for event in events)}')
-
-        ok_events, nok_events, event_errors = process_events_entry(events)
-        # ok_events continue on the happy path
-        # nok_events failed to validate and are written to the nok_data table
-        pg_queues.put_events(queue=ProcessingStage.FINALIZE, events=ok_events)
-        insert_events_into_nok_data(connection=connection, events=nok_events)
-    return len(events)
 
 
 def process_events_entry(events: EventDataList, current_millis: int = 0) -> \
@@ -71,6 +51,3 @@ def process_events_entry(events: EventDataList, current_millis: int = 0) -> \
     return ok_events, nok_events, event_errors
 
 
-if __name__ == '__main__':
-    _loop = sys.argv[1:2] == ['--loop']
-    worker_main(function=main_entry, loop=_loop)
