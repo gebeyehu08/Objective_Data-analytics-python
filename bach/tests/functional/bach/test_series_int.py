@@ -2,7 +2,8 @@
 Copyright 2021 Objectiv B.V.
 """
 from bach import Series, SeriesInt64
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data, \
+    assert_series_db_types
 from tests.functional.bach.test_series_numeric import helper_test_simple_arithmetic
 
 
