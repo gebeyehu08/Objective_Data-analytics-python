@@ -4,8 +4,10 @@
 # TODO test aggregation functions
 import math
 from unittest.mock import ANY
+
 from bach import SeriesFloat64
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from tests.functional.bach.test_series_numeric import helper_test_simple_arithmetic
 
 

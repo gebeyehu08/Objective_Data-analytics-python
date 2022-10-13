@@ -17,7 +17,6 @@ class ObjectivSupportedColumns(Enum):
     DAY = 'day'
     MOMENT = 'moment'
     USER_ID = 'user_id'
-    GLOBAL_CONTEXTS = 'global_contexts'
     LOCATION_STACK = 'location_stack'
     EVENT_TYPE = 'event_type'
     STACK_EVENT_TYPES = 'stack_event_types'
@@ -27,7 +26,7 @@ class ObjectivSupportedColumns(Enum):
     IDENTITY_USER_ID = 'identity_user_id'
 
     _DATA_SERIES = (
-        DAY, MOMENT, USER_ID, GLOBAL_CONTEXTS, LOCATION_STACK, EVENT_TYPE,
+        DAY, MOMENT, USER_ID, LOCATION_STACK, EVENT_TYPE,
         STACK_EVENT_TYPES, SESSION_ID, SESSION_HIT_NUMBER,
     )
 
@@ -70,7 +69,6 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
     ObjectivSupportedColumns.DAY: bach.SeriesDate.dtype,
     ObjectivSupportedColumns.MOMENT: bach.SeriesTimestamp.dtype,
     ObjectivSupportedColumns.USER_ID: bach.SeriesUuid.dtype,
-    ObjectivSupportedColumns.GLOBAL_CONTEXTS: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.LOCATION_STACK: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.EVENT_TYPE: bach.SeriesString.dtype,
     ObjectivSupportedColumns.STACK_EVENT_TYPES: bach.SeriesJson.dtype,
@@ -82,7 +80,6 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
 
 # mapping for series names and modelhub series dtypes
 _OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE = {
-    ObjectivSupportedColumns.GLOBAL_CONTEXTS: series_objectiv.SeriesGlobalContexts.dtype,
     ObjectivSupportedColumns.LOCATION_STACK: series_objectiv.SeriesLocationStack.dtype,
 }
 

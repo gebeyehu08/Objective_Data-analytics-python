@@ -26,7 +26,7 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
@@ -732,7 +732,7 @@ class Series(ABC):
         }
         if (
             other.base_node == left.base_node
-            and not set(self.base_node.columns) >= {other.name, f'{other.name}__other'}
+            and not set(self.base_node.series_names) >= {other.name, f'{other.name}__other'}
             and f'{other.name}__other' in df.all_series
         ):
             # column was referenced before from right node

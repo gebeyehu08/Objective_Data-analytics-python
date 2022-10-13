@@ -87,7 +87,7 @@ python checklock-holmes.py -e bigquery -e postgres
 3. Running checks for bigquery and specific notebooks
 
 ```bash
-python checklock-holmes.py -e bigquery --nb ../notebooks/basic-user-intent.ipynb --nb ../notebooks/basic-product-analytics.ipynb
+python checklock-holmes.py -e bigquery --nb ../notebooks/basic-user-intent.ipynb --nb ../notebooks/product-analytics.ipynb
 ```
 
 4. Running checks and storing notebook scripts

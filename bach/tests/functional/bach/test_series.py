@@ -693,7 +693,7 @@ def test__set_item_with_merge_w_conflict_names(engine) -> None:
     else:
         raise Exception()
 
-    assert {'a', 'b', 'a__data_column', 'c'} == set(result.base_node.columns)
+    assert {'a', 'b', 'a__data_column', 'c'} == set(result.base_node.series_names)
     assert Expression.table_column_reference('r', 'a') == result.base_node.column_expressions['a__data_column']
 
     # data column is already referenced on previous node
@@ -709,7 +709,7 @@ def test__set_item_with_merge_w_conflict_names(engine) -> None:
     else:
         raise Exception()
 
-    assert {'a', 'b', 'a__data_column', 'c', 'c__other'} == set(result2.base_node.columns)
+    assert {'a', 'b', 'a__data_column', 'c', 'c__other'} == set(result2.base_node.series_names)
 
     assert Expression.table_column_reference('l', 'c') == result2.base_node.column_expressions['c']
     assert Expression.table_column_reference('r', 'c') == result2.base_node.column_expressions['c__other']

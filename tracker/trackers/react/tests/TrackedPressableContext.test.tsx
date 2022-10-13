@@ -2,10 +2,11 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { Button } from '@material-ui/core';
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, waitFor } from '@testing-library/react';
-import React, { createRef } from 'react';
+import React, { ComponentProps, createRef } from 'react';
 import {
   ObjectivProvider,
   ReactTracker,
@@ -37,6 +38,86 @@ describe('TrackedPressableContext', () => {
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
         <TrackedPressableContext objectiv={{ Component: 'button', id: 'pressable-id' }}>
+          Trigger Event
+        </TrackedPressableContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event/i));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.PressableContext,
+            id: 'pressable-id',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should wrap around custom Components', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const CustomButton = (props: ComponentProps<'button'> & { label: string }) => <button {...props} />;
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedPressableContext<ComponentProps<typeof CustomButton>>
+          label={'test label'}
+          objectiv={{ Component: CustomButton, id: 'pressable-id' }}
+        >
+          Trigger Event
+        </TrackedPressableContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event/i));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.PressableContext,
+            id: 'pressable-id',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should wrap around third-party Components', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedPressableContext<ComponentProps<typeof Button>>
+          variant="contained"
+          objectiv={{ Component: Button, id: 'pressable-id' }}
+        >
           Trigger Event
         </TrackedPressableContext>
       </ObjectivProvider>

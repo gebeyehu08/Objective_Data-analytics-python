@@ -71,8 +71,9 @@ _DB_ATHENA_AWS_SECRET_ACCESS_KEY = _ENV.get('OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY
 _DB_ATHENA_REGION_NAME = _ENV.get('OBJ_DB_ATHENA_REGION_NAME', 'eu-west-1')
 _DB_ATHENA_CATALOG_NAME = _ENV.get('OBJ_DB_ATHENA_CATALOG_NAME', 'automated_tests')
 _DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'bach_test')
-_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/athena_query_results/')
-DB_ATHENA_LOCATION = _ENV.get('OBJ_DB_ATHENA_LOCATION', 's3://obj-automated-tests/bach_test/')
+_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/bach_test/staging/')
+DB_ATHENA_LOCATION = _ENV.get('OBJ_DB_ATHENA_LOCATION', 's3://obj-automated-tests/bach_test/test_data/')
+# DB_ATHENA_LOCATION is the location that functional tests can use to write tables with test data.
 _DB_ATHENA_WORK_GROUP = _ENV.get('OBJ_DB_ATHENA_WORK_GROUP', 'automated_tests_work_group')
 
 

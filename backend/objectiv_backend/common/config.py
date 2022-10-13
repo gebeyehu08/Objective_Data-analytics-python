@@ -21,9 +21,6 @@ SCHEMA_VALIDATION_ERROR_REPORTING = os.environ.get('SCHEMA_VALIDATION_ERROR_REPO
 # Number of ms before an event is considered too old. set to 0 to disable
 MAX_DELAYED_EVENTS_MILLIS = 1000 * 3600
 
-# Whether to run in sync mode (default) or async-mode.
-_ASYNC_MODE = os.environ.get('ASYNC_MODE', '') == 'true'
-
 # ### Postgres values.
 # We define some default values here. DO NOT put actual passwords in here
 _OUTPUT_ENABLE_PG = os.environ.get('OUTPUT_ENABLE_PG', 'true') == 'true'
@@ -76,11 +73,6 @@ _OBJ_COOKIE_DURATION = int(os.environ.get('COOKIE_DURATION', 60 * 60 * 24 * 365 
 _OBJ_COOKIE_SAMESITE = str(os.environ.get('COOKIE_SAMESITE', 'None'))
 # default cookie secure is False, can be overridden by setting `COOKIE_SECURE`
 _OBJ_COOKIE_SECURE = bool(os.environ.get('COOKIE_SECURE', True))
-
-# Maximum number of events that a worker will process in a single batch. Only relevant in async mode
-WORKER_BATCH_SIZE = 200
-# Time to sleep, if there is no work to do for the workers. Only relevant in async mode
-WORKER_SLEEP_SECONDS = 5
 
 
 class AnonymousModeConfig(NamedTuple):
@@ -151,7 +143,6 @@ class TimestampValidationConfig(NamedTuple):
 
 
 class CollectorConfig(NamedTuple):
-    async_mode: bool
     anonymous_mode: AnonymousModeConfig
     cookie: Optional[CookieConfig]
     error_reporting: bool
@@ -315,7 +306,6 @@ def init_collector_config():
     """ Load collector config into cache. """
     global _CACHED_COLLECTOR_CONFIG
     _CACHED_COLLECTOR_CONFIG = CollectorConfig(
-        async_mode=_ASYNC_MODE,
         anonymous_mode=get_config_anonymous_mode(),
         cookie=get_config_cookie(),
         error_reporting=SCHEMA_VALIDATION_ERROR_REPORTING,
