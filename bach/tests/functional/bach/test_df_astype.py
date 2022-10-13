@@ -5,9 +5,11 @@ from datetime import date, datetime, time
 
 import pytest
 
+from bach import SeriesFloat64, SeriesString
+from sql_models.constants import DBDialect
 from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_json_data, \
-    CITIES_INDEX_AND_COLUMNS, get_df_with_test_data
+    CITIES_INDEX_AND_COLUMNS, get_df_with_test_data, assert_series_db_types
 
 
 def test_astype_dtypes(engine):
@@ -61,6 +63,22 @@ def test_astype_dtypes(engine):
     assert bt.data['inhabitants'] is not bt_astype2.data['inhabitants']
     assert bt.data['municipality'] is bt_astype2.data['municipality']
     assert bt.data['skating_order'] is not bt_astype2.data['skating_order']
+    # Query the database to ensure the types are as we expect
+    assert_series_db_types(
+        df=bt_astype2,
+        expected_series={
+                'founding': SeriesFloat64,
+                'inhabitants': SeriesString,
+                'city': SeriesString,
+                'skating_order': SeriesString
+            },
+        expected_db_type_overrides={
+            # this series was unchanged; Athena knows the max length is 8
+            DBDialect.ATHENA: {'city': 'varchar(8)'}
+        }
+    )
+
+    # Verify that the resulting DataFrame is as we expect
     assert_equals_data(
         bt_astype2,
         expected_columns=CITIES_INDEX_AND_COLUMNS,

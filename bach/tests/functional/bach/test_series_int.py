@@ -2,8 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from bach import Series, SeriesInt64
-from tests.functional.bach.test_data_and_utils import assert_equals_data, assert_postgres_type,\
-    get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 from tests.functional.bach.test_series_numeric import helper_test_simple_arithmetic
 
 
@@ -11,7 +10,6 @@ def test_add_int_constant(engine):
     bt = get_df_with_test_data(engine)
     bts = bt['founding'] + 200
     assert isinstance(bts, Series)
-    assert_postgres_type(bt['founding'], 'bigint', SeriesInt64)
     assert_equals_data(
         bts,
         expected_columns=['_index_skating_order', 'founding'],
@@ -34,7 +32,9 @@ def test_create_big_int_constant(engine):
     bt['calc'] = bt['new'] + 100
     # Add something to new_big, the number still fits into 8 bytes.
     bt['calc_big'] = bt['new_big'] + 100000
-    assert_postgres_type(bt['calc_big'], 'bigint', SeriesInt64)
+    new_columns = ['new', 'new_big', 'calc', 'calc_big']
+    expected_series = {col: SeriesInt64 for col in new_columns}
+    assert_series_db_types(bt, expected_series)
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'new', 'new_big', 'calc', 'calc_big'],

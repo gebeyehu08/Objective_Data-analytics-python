@@ -12,8 +12,8 @@ from pandas.core.indexes.numeric import Int64Index
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesTimedelta, Series, SeriesJson, SeriesBoolean
 from sql_models.constants import DBDialect
-from tests.functional.bach.test_data_and_utils import assert_postgres_type, assert_equals_data, \
-    CITIES_INDEX_AND_COLUMNS, get_df_with_test_data, get_df_with_railway_data, assert_db_types
+from tests.functional.bach.test_data_and_utils import assert_equals_data, CITIES_INDEX_AND_COLUMNS,\
+    get_df_with_test_data, get_df_with_railway_data, assert_series_db_types
 
 
 def check_set_const(
@@ -31,11 +31,12 @@ def check_set_const(
         if that is set.
     """
     bt = get_df_with_test_data(engine)
-    column_names = []
+    db_dialect = DBDialect.from_engine(engine)
+    series_names = []
     for i, constant in enumerate(constants):
-        column_name = f'new_columns_{i}'
-        column_names.append(column_name)
-        bt[column_name] = constant
+        series_name = f'new_columns_{i}'
+        series_names.append(series_name)
+        bt[series_name] = constant
 
     assert_equals_data(
         bt,
@@ -43,7 +44,7 @@ def check_set_const(
         expected_columns=[
             '_index_skating_order',  # index
             'skating_order', 'city', 'municipality', 'inhabitants', 'founding',  # original columns
-        ] + column_names,
+        ] + series_names,
         expected_data=[
             [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285] + constants,
             [2, 2, 'Snits', 'Súdwest-Fryslân', 33520, 1456] + constants,
@@ -51,18 +52,28 @@ def check_set_const(
         ]
     )
 
-    for column_name in column_names:
-        assert isinstance(bt[column_name], expected_series)
-
-    # Check that the actual type in the database matches the type we expect
-    db_dialect = DBDialect.from_engine(engine)
+    # Check:
+    # 1) that the Series type matches the expected series type
+    # 2)  that the actual type in the database matches the type we expect
+    expected_series = {s_name: expected_series for s_name in series_names}
     if expected_db_type_override and db_dialect in expected_db_type_override:
-        expected_db_type = expected_db_type_override[db_dialect]
+        type_override = expected_db_type_override[db_dialect]
+        expected_db_type_overrides = {db_dialect: {s_name: type_override for s_name in series_names}}
     else:
-        expected_db_type = expected_series.get_db_dtype(engine.dialect)
-    series_to_db_types = {column_name: expected_db_type for column_name in column_names}
-    expected_db_types = {db_dialect: series_to_db_types}
-    assert_db_types(bt, expected_db_types)
+        expected_db_type_overrides = {}
+    assert_series_db_types(
+        df=bt,
+        expected_series=expected_series,
+        expected_db_type_overrides=expected_db_type_overrides
+    )
+    # db_dialect = DBDialect.from_engine(engine)
+    # if expected_db_type_override and db_dialect in expected_db_type_override:
+    #     expected_db_type = expected_db_type_override[db_dialect]
+    # else:
+    #     expected_db_type = expected_series.get_db_dtype(engine.dialect)
+    # series_to_db_types = {column_name: expected_db_type for column_name in series_names}
+    # expected_db_types = {db_dialect: series_to_db_types}
+    # assert_db_types(bt, expected_db_types)
 
 
 
@@ -151,8 +162,9 @@ def test_set_const_int_from_series(engine):
     max_df = bt.groupby()[['founding']].sum()
     max_series = max_df['founding_sum']
     max_value = max_series.value
+    assert isinstance(max_value, np.int64)
     bt['max_founding'] = max_value
-    assert_postgres_type(bt['max_founding'], 'bigint', SeriesInt64, )
+    assert_series_db_types(bt, {'max_founding': SeriesInt64})
 
     assert_equals_data(
         bt,
@@ -171,7 +183,6 @@ def test_set_const_int_from_series(engine):
 def test_set_series_column(engine):
     bt = get_df_with_test_data(engine)
     bt['duplicated_column'] = bt['founding']
-    assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
     assert_equals_data(
         bt,
         expected_columns=[
@@ -241,7 +252,7 @@ def test_set_multiple(engine):
 def test_set_existing(engine):
     bt = get_df_with_test_data(engine)
     bt['city'] = bt['founding']
-    assert_postgres_type(bt['city'], 'bigint', SeriesInt64)
+    assert_series_db_types(bt, {'city': SeriesInt64})
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -277,7 +288,11 @@ def test_set_different_base_node(engine):
     bt = get_df_with_test_data(engine)
     mt = get_df_with_railway_data(engine)
     bt['skating_order'] = mt['station']
-    assert_postgres_type(bt['skating_order'], 'text', SeriesString)
+    assert_series_db_types(
+        bt,
+        expected_series={'skating_order': SeriesString},
+        expected_db_type_overrides={DBDialect.ATHENA: {'skating_order': 'varchar(21)'}}
+    )
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -339,7 +354,7 @@ def test_set_different_group_by(engine):
 def test_set_existing_referencing_other_column_experience(engine):
     bt = get_df_with_test_data(engine)
     bt['city'] = bt['city'] + ' test'
-    assert_postgres_type(bt['city'], 'text', SeriesString)
+    assert_series_db_types(bt, {'city': SeriesString})
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -368,8 +383,7 @@ def test_set_existing_referencing_other_column_experience(engine):
     )
     bt['skating_order'] = c
     bt['city'] = a + ' - ' + b
-    assert_postgres_type(bt['skating_order'], 'bigint', SeriesInt64)
-    assert_postgres_type(bt['city'], 'text', SeriesString)
+    assert_series_db_types(bt, {'skating_order': SeriesInt64, 'city': SeriesString})
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -386,7 +400,6 @@ def test_set_existing_referencing_other_column_experience(engine):
 def test_set_series_expression(engine):
     bt = get_df_with_test_data(engine)
     bt['time_travel'] = bt['founding'] + 1000
-    assert_postgres_type(bt['time_travel'], 'bigint', SeriesInt64, )
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS + ['time_travel'],
@@ -451,7 +464,7 @@ def test_set_pandas_series(engine):
     bt = get_df_with_test_data(engine)
     pandas_series = bt['founding'].to_pandas()
     bt['duplicated_column'] = pandas_series
-    assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
+    assert_series_db_types(bt, {'duplicated_column': SeriesInt64})
     assert_equals_data(
         bt,
         expected_columns=[
@@ -470,7 +483,6 @@ def test_set_pandas_series_different_shape(engine):
     bt = get_df_with_test_data(engine)
     pandas_series = bt['founding'].to_pandas()[1:]
     bt['duplicated_column'] = pandas_series
-    assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
     assert_equals_data(
         bt,
         expected_columns=[
@@ -493,7 +505,11 @@ def test_set_pandas_series_different_shape_and_name(engine):
         index=Int64Index([1, 2, 3, 4, 5, 6, 7], dtype='int64', name='_index_station_id')
     )
     bt['the_town'] = pandas_series
-    assert_postgres_type(bt['the_town'], 'text', SeriesString)
+    assert_series_db_types(
+        bt,
+        expected_series={'the_town': SeriesString},
+        expected_db_type_overrides={DBDialect.ATHENA: {'the_town': 'varchar(14)'}}
+    )
     assert_equals_data(
         bt,
         expected_columns=[

@@ -206,6 +206,40 @@ def assert_postgres_type(
     assert series_type == expected_series_type
 
 
+def assert_series_db_types(
+        df: DataFrame,
+        expected_series: Mapping[str, Type[Series]],
+        expected_db_type_overrides: Mapping[DBDialect, Mapping[str, str]] = None
+):
+    """
+    Check that in the given DataFrame, all of the expected_series:
+     1) have the expected Series subtype in the DataFrame.
+     2) have the expected data type in the database.
+
+    If the expected data-type in the database is non-standard for that Series subtype (e.g. 'varchar(4)'
+    instead of just 'varchar'), then that can be overriden with the expected_db_type_override.
+
+    :param df: DataFrame object for which to check the database types
+    :param expected_series: Per series-name, the expected Series subtype
+    :param expected_db_type_overrides: Per database dialect a mapping of series-names to database types. That
+        override the default expected database type.
+    """
+    expected_db_type_overrides = {} if expected_db_type_overrides is None else expected_db_type_overrides
+
+    db_dialect = DBDialect.from_engine(df.engine)
+    expected_db_types_dialect = {}
+    for series_name, series_type in expected_series.items():
+        assert isinstance(df[series_name], series_type)
+
+        type_override = expected_db_type_overrides.get(db_dialect, {}).get(series_name, None)
+        if type_override is not None:
+            expected_db_types_dialect[series_name] = type_override
+        else:
+            expected_db_types_dialect[series_name] = series_type.get_db_dtype(dialect=df.engine.dialect)
+    expected_db_types = {db_dialect: expected_db_types_dialect}
+    assert_db_types(df=df, expected_db_types=expected_db_types)
+
+
 def assert_db_types(
         df: DataFrame,
         expected_db_types: Mapping[DBDialect, Mapping[str, str]]
