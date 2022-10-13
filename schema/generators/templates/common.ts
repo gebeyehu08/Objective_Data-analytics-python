@@ -182,4 +182,4 @@ export const getPropertyValue = (entityName, property) => {
   if (property.type === 'array') {
     return property.items.type;
   }
-}
+};

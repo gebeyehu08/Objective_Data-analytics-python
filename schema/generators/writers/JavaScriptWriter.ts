@@ -3,15 +3,15 @@
  */
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
-import { getObjectKeys } from "../templates/common";
+import { getObjectKeys } from '../templates/common';
 
 export class JavaScriptWriter extends CodeWriter {
   documentationLineLength = 120;
 
-  constructor(writer: TextWriter, { writeCopyright } = { writeCopyright: true } ) {
+  constructor(writer: TextWriter, { writeCopyright } = { writeCopyright: true }) {
     super(writer);
     this.indentString = '  ';
-    if(writeCopyright) {
+    if (writeCopyright) {
       writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
     }
   }
@@ -38,14 +38,14 @@ export class JavaScriptWriter extends CodeWriter {
       const value = object[key];
       this.writeIndent();
       this.write(`"${key}": `);
-      if(typeof value === 'string') {
+      if (typeof value === 'string') {
         this.write(`"${value}"`);
-      } else if(Array.isArray(value)) {
+      } else if (Array.isArray(value)) {
         this.write(`["${(value as Array<unknown>).join('", "')}"]`);
       } else {
         this.write(value);
       }
-      this.write(index < objectKeys.length -1 ? ',' : '');
+      this.write(index < objectKeys.length - 1 ? ',' : '');
       this.writeEndOfLine();
     });
 

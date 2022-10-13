@@ -17,7 +17,8 @@ import {
   getEntityProperties,
   getEventNames,
   getObjectKeys,
-  getPropertyDescription, getPropertyValue,
+  getPropertyDescription,
+  getPropertyValue,
   sortArrayByName,
 } from './common';
 
