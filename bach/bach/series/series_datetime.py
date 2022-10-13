@@ -540,6 +540,34 @@ class SeriesTimestamp(SeriesAbstractDateTime):
             dtype=type_mapping,
         )
 
+    @classmethod
+    def from_total_seconds(cls, total_seconds: SeriesAbstractNumeric) -> 'SeriesTimestamp':
+        """
+        Converts a numerical series representing total seconds (epoch) to timedelta series.
+
+        returns a SeriesTimedelta
+        """
+        engine = total_seconds.engine
+        if is_athena(engine):
+            expression = Expression.construct('from_unixtime({})', total_seconds)
+
+        elif is_postgres(engine):
+            expression = Expression.construct('to_timestamp({})', total_seconds)
+        elif is_bigquery(engine):
+            # convert total seconds into microseconds
+            # since TIMESTAMP_SECONDS accepts only integers, therefore
+            # microseconds will be lost due to rounding
+            total_microseconds_series = (
+                    total_seconds / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+            )
+            expression = Expression.construct(
+                'TIMESTAMP_MICROS({})', total_microseconds_series.astype('int64')
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
+        return total_seconds.copy_override(expression=expression).copy_override_type(SeriesTimestamp)
+
 
 class SeriesDate(SeriesAbstractDateTime):
     """
@@ -917,8 +945,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         In case multiple quantiles are calculated, the resultant series index will have all calculated
         quantiles as index values.
         """
-        series = self.copy() if not is_bigquery(self.engine) else self.dt.total_seconds
-        result = series.to_frame().quantile(q=q, partition=partition)[f'{series.name}_quantile']
+        result = self.to_frame().quantile(q=q, partition=partition)[f'{self.name}_quantile']
         result = result.copy_override(name=self.name)
 
         return result
@@ -944,24 +971,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             # no action is required for athena, as we represent timedelta with total seconds by default.
             return total_seconds.copy_override_type(SeriesTimedelta)
 
-        if is_postgres(engine):
-            expression = Expression.construct('to_timestamp({})', total_seconds)
-        elif is_bigquery(engine):
-            # convert total seconds into microseconds
-            # since TIMESTAMP_SECONDS accepts only integers, therefore
-            # microseconds will be lost due to rounding
-            total_microseconds_series = (
-                    total_seconds / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
-            )
-            expression = Expression.construct(
-                'TIMESTAMP_MICROS({})', total_microseconds_series.astype('int64')
-            )
-        else:
-            raise DatabaseNotSupportedException(engine)
-
-        seconds_as_timestamp_series = (
-            total_seconds.copy_override(expression=expression).copy_override_type(SeriesTimestamp)
-        )
+        seconds_as_timestamp_series = SeriesTimestamp.from_total_seconds(total_seconds)
 
         start_time = SeriesTimestamp.from_value(
             base=seconds_as_timestamp_series, value=datetime.datetime(1970, 1, 1)

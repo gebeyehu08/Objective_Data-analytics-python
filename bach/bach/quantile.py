@@ -80,6 +80,7 @@ def _calculate_quantiles_with_percentile_cont(
                 series_to_agg,
             )
             if is_bigquery(df.engine):
+                # mypy: help
                 if window is None or not isinstance(window, Window):
                     raise Exception('Invalid window object.')
 
@@ -195,6 +196,7 @@ def _calculate_quantiles_with_linear_interpolation(
             .window(end_boundary=WindowFrameBoundary.FOLLOWING).group_by
         )
 
+        # mypy: help
         if not isinstance(current_window, Window):
             raise Exception('Invalid window object.')
 
@@ -231,15 +233,15 @@ def _calculate_quantiles_with_linear_interpolation(
         # gamma is the fractional part of the virtual_index (virtual_index % 1)
         gamma_series = virtual_index % 1
 
-        # X_i: element located at floor(virtual_index) in the agg array
-        X_i_series = gamma_series.copy_override(
+        # X_j: element located at floor(virtual_index) in the agg array
+        X_j_series = gamma_series.copy_override(
             expression=Expression.construct(
                 "try({}[cast({} as bigint)])", array_series, virtual_index // 1,
             )
         ).fillna(0.)
 
-        # X_j: element after X_i
-        X_j_series = gamma_series.copy_override(
+        # X_j_next: element after X_j
+        X_j_next_series = gamma_series.copy_override(
             expression=Expression.construct(
                 "try({}[cast({} as bigint) + 1])", array_series, virtual_index // 1,
             )
@@ -247,10 +249,14 @@ def _calculate_quantiles_with_linear_interpolation(
 
         # final result
         # X_i + gamma * (X_j - X_i)
-        result_series = X_i_series + gamma_series * (X_j_series - X_i_series)
+        result_series = X_j_series + gamma_series * (X_j_next_series - X_j_series)
 
         q_series_name = f'{series_name}_quantile'
         calculated_quantiles[q_series_name] = result_series.copy_override(name=f'{series_name}_quantile')
+        if isinstance(df[series_name], SeriesTimedelta):
+            calculated_quantiles[q_series_name] = SeriesTimedelta.from_total_seconds(
+                calculated_quantiles[q_series_name].copy_override_type(SeriesFloat64)
+            )
 
     quantiles_df = quantiles_df.copy_override(series=calculated_quantiles)
     return quantiles_df.materialize(node_name='quantile_calculation')
