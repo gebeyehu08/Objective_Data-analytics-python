@@ -41,7 +41,7 @@ export class JavaScriptWriter extends CodeWriter {
       if(typeof value === 'string') {
         this.write(`"${value}"`);
       } else if(Array.isArray(value)) {
-        this.write(`["${value.join('", "')}"]`);
+        this.write(`["${(value as Array<unknown>).join('", "')}"]`);
       } else {
         this.write(value);
       }
