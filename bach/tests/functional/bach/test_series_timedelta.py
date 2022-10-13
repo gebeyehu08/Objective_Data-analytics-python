@@ -9,9 +9,10 @@ import pytest
 
 from bach import DataFrame, SeriesTimedelta
 from sql_models.util import is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-    get_df_with_test_data, get_df_with_food_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
+
+from bach.testing import assert_equals_data
 
 
 def test_timedelta_arithmetic(engine):
@@ -92,10 +93,6 @@ def test_timedelta(engine):
         ],
         use_to_pandas=True,
     )
-
-    if is_athena(engine):
-        # TODO: Support mode aggregation for athena
-        return None
 
     r4 = gb[['delta']].groupby().mode()
     assert_equals_data(
