@@ -75,10 +75,10 @@ def test_ddl_quote_identifier(dialect):
         raise Exception()
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena research about syntax constants
 def test_quote_string(dialect):
-    if is_postgres(dialect):
-        # https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
+    if is_postgres(dialect) or is_athena(dialect):
+        # Postgres: https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
+        # Athena: https://docs.aws.amazon.com/athena/latest/ug/select.html#select-escaping
         assert quote_string(dialect, "test") == "'test'"
         assert quote_string(dialect, "te'st") == "'te''st'"
         assert quote_string(dialect, "'te''st'") == "'''te''''st'''"
