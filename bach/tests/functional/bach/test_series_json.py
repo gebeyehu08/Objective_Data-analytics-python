@@ -1,7 +1,10 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import json
+
 import pandas
+import pandas as pd
 
 from bach import DataFrame
 from bach.series import SeriesString, SeriesDict, SeriesList
@@ -419,4 +422,22 @@ def test_complex_types_astype_json(engine, dtype):
         expected_data=[[1, 1,
                         {'a': 123, 'b': 'test', 'c': 123.456}, ['a', 'b', 'c'],
                         '{"a":123,"b":"test","c":123.456}', '["a","b","c"]']]
+    )
+
+
+def test_json_str_as_str(engine, dtype) -> None:
+    pdf = pd.DataFrame({'json_strs': ['"hi"', '"ola"', '"hallo"', '"hola"']})
+    df = DataFrame.from_pandas(engine, df=pdf, convert_objects=True)
+    df['json_strs'] = df['json_strs'].astype(dtype)
+
+    result = df['json_strs'].astype('string')
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'json_strs'],
+        expected_data=[
+            [0, '"hi"'],
+            [1, '"ola"'],
+            [2, '"hallo"'],
+            [3, '"hola"'],
+        ],
     )
