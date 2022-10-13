@@ -543,9 +543,9 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     @classmethod
     def from_total_seconds(cls, total_seconds: SeriesAbstractNumeric) -> 'SeriesTimestamp':
         """
-        Converts a numerical series representing total seconds (epoch) to timedelta series.
+        Converts a numerical series representing total seconds (epoch) to timestamp series.
 
-        returns a SeriesTimedelta
+        returns a SeriesTimestamp
         """
         engine = total_seconds.engine
         if is_athena(engine):
