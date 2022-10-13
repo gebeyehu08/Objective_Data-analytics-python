@@ -2592,65 +2592,8 @@ class DataFrame:
         :param axis: only ``axis=1`` is supported. This means columns are aggregated.
         :returns: a new DataFrame with the aggregation applied to all selected columns.
         """
-        valid_index = (
-            {s.name: s for s in self._index.values() if hasattr(s, 'quantile')}
-            if self.group_by is None else {}
-        )
-        valid_series = {
-            s.name: s.copy_override(index=valid_index) for s in self._data.values() if hasattr(s, 'quantile')
-        }
-        if not valid_series and not valid_index:
-            raise ValueError('DataFrame has no series supporting "quantile" operation.')
-
-        df = self.copy_override(series=valid_series, index=valid_index)
-        if df.group_by is None:
-            df = df.groupby()
-
-        quantiles = [q] if isinstance(q, float) else q
-
-        all_quantile_dfs = []
-        for qt in quantiles:
-            new_series = df._apply_func_to_series(
-                func='quantile',
-                axis=axis,
-                numeric_only=False,
-                exclude_non_applied=True,
-                partition=df.group_by,
-                q=qt,
-                **kwargs,
-            )
-            initial_series = new_series[0]
-            quantile_df = df.copy_override(
-                base_node=initial_series.base_node,
-                series={s.name: s for s in new_series},
-                index={},
-                group_by=initial_series.group_by,
-            )
-
-            if quantile_df.group_by:
-                # materialize the dataframe since we need to add the label for the quantile
-                quantile_df = quantile_df.materialize()
-
-            quantile_df['quantile'] = qt
-            all_quantile_dfs.append(quantile_df)
-
-        final_index = 'quantile'
-
-        if len(quantiles) == 1:
-            # if only one quantile was calculated, then we don't need to add the label on the index
-            result = all_quantile_dfs[0]
-            result = result[[col for col in result.data_columns if col != final_index]]
-        else:
-            from bach.operations.concat import DataFrameConcatOperation
-            result = DataFrameConcatOperation(objects=all_quantile_dfs, ignore_index=True)()
-            # q column should be in the index when calculating multiple quantiles
-            result = result.set_index('quantile')
-
-        if is_bigquery(result.engine):
-            # BigQuery returns quantile per row, need to apply distinct
-            result = result.materialize(node_name='bq_quantile', distinct=True)
-
-        return result
+        from bach.quantile import calculate_quantiles_df
+        return calculate_quantiles_df(df=self.copy(), q=q, partition=self.group_by)
 
     def nunique(self, axis=1, skipna=True, **kwargs):
         """
