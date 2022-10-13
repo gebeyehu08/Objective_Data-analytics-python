@@ -361,11 +361,13 @@ class SeriesAbstractDateTime(Series, ABC):
             if expression.is_constant:
                 return cls._constant_expression_to_dtype_expression(dialect, expression)
             if is_athena(dialect) and cls.dtype == 'time':
-                # in order to use to_unixtime, it is required a timestamp value, therefore we need to perform
-                # the following casts:
-                #   string -> time -> timestamp
-                expression = Expression.construct('cast({} as time)', expression)
-                expression = SeriesTimestamp.dtype_to_expression(dialect, source_dtype, expression)
+                # casting varchar to time is a bit tricky, since the string value might not contain
+                # fractional part of the seconds, this breaks date_parse function
+                expression = Expression.construct(
+                    "COALESCE(try(date_parse({}, '%H:%i:%S.%f')), try(date_parse({}, '%H:%i:%S')))",
+                    expression,
+                    expression,
+                )
                 expression = Expression.construct('to_unixtime({})', expression)
 
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
@@ -684,7 +686,6 @@ class SeriesTime(SeriesAbstractDateTime):
         if is_postgres(dialect) or is_bigquery(dialect):
             return super().supported_literal_to_expression(dialect=dialect, literal=literal)
         if is_athena(dialect):
-            from bach import SeriesString
             return SeriesFloat64.supported_literal_to_expression(dialect=dialect, literal=literal)
         raise DatabaseNotSupportedException(dialect)
 
