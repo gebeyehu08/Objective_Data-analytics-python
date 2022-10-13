@@ -175,37 +175,6 @@ def df_to_list(df):
     return(data_list)
 
 
-def assert_postgres_type(
-        series: Series,
-        expected_db_type: str,
-        expected_series_type: Type[Series]
-):
-    """
-    Check that the given Series has the expected data type in the Postgres database, and that it has the
-    expected Series type after being read back from the database.
-
-    This uses series.engine as the connection.
-    NOTE: If series.engine is not a Postgres engine, then this function simply returns without doing any
-    asserts!
-
-    :param series: Series object to check the type of
-    :param expected_db_type: one of the types listed on https://www.postgresql.org/docs/current/datatype.html
-    :param expected_series_type: Subclass of Series
-    """
-    engine = series.engine
-    if not is_postgres(engine):
-        return
-    sql = series.to_frame().view_sql()
-    sql = f'with check_type as ({sql}) select pg_typeof("{series.name}") from check_type limit 1'
-    db_rows = run_query(engine=engine, sql=sql)
-    db_values = [list(row) for row in db_rows]
-    db_type = db_values[0][0]
-    if expected_db_type:
-        assert db_type == expected_db_type
-    series_type = get_series_type_from_db_dtype(DBDialect.POSTGRES, db_type)
-    assert series_type == expected_series_type
-
-
 def assert_series_db_types(
         df: DataFrame,
         expected_series: Mapping[str, Type[Series]],
@@ -217,7 +186,7 @@ def assert_series_db_types(
      2) have the expected data type in the database.
 
     If the expected data-type in the database is non-standard for that Series subtype (e.g. 'varchar(4)'
-    instead of just 'varchar'), then that can be overriden with the expected_db_type_override.
+    instead of just 'varchar'), then that can be overriden with the expected_db_type_overrides.
 
     :param df: DataFrame object for which to check the database types
     :param expected_series: Per series-name, the expected Series subtype
