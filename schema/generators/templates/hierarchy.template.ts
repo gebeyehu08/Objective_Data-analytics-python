@@ -24,9 +24,7 @@ Generator.generate({ outputFile }, (writer: TextWriter) => {
     .sort()
     .forEach((entityName) => {
       const entityParents = getEntityParents(getEntityByName(entityName));
-      if (entityParents.length) {
-        hierarchy[entityName] = [...entityParents, entityName];
-      }
+      hierarchy[entityName] = [...entityParents, entityName];
     });
 
   jsWriter.writeJSONObject(hierarchy);

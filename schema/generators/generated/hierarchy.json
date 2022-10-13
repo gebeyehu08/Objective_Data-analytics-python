@@ -1,4 +1,6 @@
 {
+  "AbstractContext": ["AbstractContext"],
+  "AbstractEvent": ["AbstractEvent"],
   "AbstractGlobalContext": ["AbstractContext", "AbstractGlobalContext"],
   "AbstractLocationContext": ["AbstractContext", "AbstractLocationContext"],
   "ApplicationContext": ["AbstractContext", "AbstractGlobalContext", "ApplicationContext"],
