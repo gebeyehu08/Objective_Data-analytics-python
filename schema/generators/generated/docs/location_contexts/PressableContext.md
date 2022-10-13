@@ -2,7 +2,6 @@
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes an interactive element (like a link, button, icon), that the user can press.
 
 ### Properties
-`array` _types: An ordered list of the parents of this Context, itself included as the last element.
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 `discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
