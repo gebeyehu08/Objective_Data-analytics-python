@@ -3,14 +3,17 @@
  */
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
+import { getObjectKeys } from "../templates/common";
 
 export class JavaScriptWriter extends CodeWriter {
   documentationLineLength = 120;
 
-  constructor(writer: TextWriter) {
+  constructor(writer: TextWriter, { writeCopyright } = { writeCopyright: true } ) {
     super(writer);
     this.indentString = '  ';
-    writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
+    if(writeCopyright) {
+      writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
+    }
   }
 
   public writeJsDocLines(lines: string[]) {
@@ -24,5 +27,29 @@ export class JavaScriptWriter extends CodeWriter {
     });
 
     this.writeLine(' */');
+  }
+
+  public writeJSONObject(object: object) {
+    this.writeLine('{');
+    this.increaseIndent();
+
+    const objectKeys = getObjectKeys(object);
+    objectKeys.forEach((key, index) => {
+      const value = object[key];
+      this.writeIndent();
+      this.write(`"${key}": `);
+      if(typeof value === 'string') {
+        this.write(`"${value}"`);
+      } else if(Array.isArray(value)) {
+        this.write(`["${value.join('", "')}"]`);
+      } else {
+        this.write(value);
+      }
+      this.write(index < objectKeys.length -1 ? ',' : '');
+      this.writeEndOfLine();
+    });
+
+    this.decreaseIndent();
+    this.writeLine('}');
   }
 }

@@ -51,7 +51,7 @@ export const getEntityParents = (entity, parents = []) => {
     return parents;
   }
 
-  parents.push(parentEntityName);
+  parents.unshift(parentEntityName);
 
   return getEntityParents(getEntityByName(parentEntityName), parents);
 };

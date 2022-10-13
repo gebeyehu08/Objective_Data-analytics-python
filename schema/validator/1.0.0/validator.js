@@ -716,15 +716,15 @@ const HiddenEvent = z.object({
  */
 const InputChangeEvent = z.object({
   /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
   location_stack: LocationStack,
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -1030,15 +1030,15 @@ const NonInteractiveEvent = z.object({
  */
 const PressEvent = z.object({
   /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  schema_version: z.string().optional(),
+  /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
   location_stack: LocationStack,
-  /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
