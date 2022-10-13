@@ -553,9 +553,9 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     @classmethod
     def from_total_seconds(cls, total_seconds: SeriesAbstractNumeric) -> 'SeriesTimestamp':
         """
-        Converts a numerical series representing total seconds (epoch) to SeriesTimedelta series.
+        Converts a numerical series representing total seconds (epoch) to timestamp series.
 
-        returns a SeriesTimedelta
+        returns a SeriesTimestamp
         """
         engine = total_seconds.engine
         if is_athena(engine):
@@ -964,8 +964,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         In case multiple quantiles are calculated, the resultant series index will have all calculated
         quantiles as index values.
         """
-        series = self.copy() if not is_bigquery(self.engine) else self.dt.total_seconds
-        result = series.to_frame().quantile(q=q, partition=partition)[f'{series.name}_quantile']
+        result = self.to_frame().quantile(q=q, partition=partition)[f'{self.name}_quantile']
         result = result.copy_override(name=self.name)
 
         return result
@@ -990,6 +989,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             return total_seconds.copy_override_type(SeriesTimedelta)
 
         seconds_as_timestamp_series = SeriesTimestamp.from_total_seconds(total_seconds)
+
         start_time = SeriesTimestamp.from_value(
             base=seconds_as_timestamp_series, value=datetime.datetime(1970, 1, 1)
         )

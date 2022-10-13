@@ -126,7 +126,7 @@ def test_aggregations_quantile(engine):
     for column, quantile in zip(pdf.columns, quantiles):
         expected = pdf[column].quantile(q=quantile)
         result = bt[column].quantile(q=quantile).to_numpy()[0]
-        assert round(expected, 4) == round(result, 4)
+        assert round(expected, 10) == round(result, 10)
 
     for column in pdf.columns:
         expected_all_quantiles = pdf[column].quantile(q=quantiles)
