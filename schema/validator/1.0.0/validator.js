@@ -417,23 +417,23 @@ const MarketingContext = z.object({
    */
   campaign: z.string(),
   /**
-   * [Optional] Search keywords.
+   * Search keywords.
    */
   term: z.string().optional(),
   /**
-   * [Optional] Used to differentiate similar content, or links within the same ad.
+   * Used to differentiate similar content, or links within the same ad.
    */
   content: z.string().optional(),
   /**
-   * [Optional] To differentiate similar content, or links within the same ad.
+   * To differentiate similar content, or links within the same ad.
    */
   source_platform: z.string().optional(),
   /**
-   * [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
+   * Identifies the creative used (e.g., skyscraper, banner, etc).
    */
   creative_format: z.string().optional(),
   /**
-   * [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
+   * Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
    */
   marketing_tactic: z.string().optional(),
   /**

@@ -6,7 +6,8 @@
     "prettier": "prettier --write .",
     "serve": "node validator-service.js",
     "cli": "node validator-cli.js",
-    "generate": "(cd ../generators && yarn generate)"
+    "generate": "(cd ../generators && yarn generate)",
+    "test": "jest"
   },
   "main": "validator.js",
   "repository": "https://github.com/objectiv/objectiv-analytics/schema",

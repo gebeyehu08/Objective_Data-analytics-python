@@ -4,10 +4,18 @@
 
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
+import fs from "fs";
 import { JavaScriptWriter } from "../writers/JavaScriptWriter";
 import { getEntityByName, getEntityNames, getEntityParents } from "./common";
 
-Generator.generate({ outputFile: '../generated/hierarchy.json' }, (writer: TextWriter) => {
+const fileName = 'hierarchy.json';
+const outputFile = `../generated/${fileName}`;
+const copyDestinations = [
+  `../../../backend/objectiv_backend/schema/${fileName}`,
+  `../../../tracker/core/schema/src/generated/${fileName}`
+]
+
+Generator.generate({ outputFile }, (writer: TextWriter) => {
   const jsWriter = new JavaScriptWriter(writer, { writeCopyright: false });
 
   const hierarchy = {};
@@ -21,3 +29,9 @@ Generator.generate({ outputFile: '../generated/hierarchy.json' }, (writer: TextW
 
   jsWriter.writeJSONObject(hierarchy);
 });
+
+// Copy generated hierarchy.json
+copyDestinations.forEach(destination => {
+  fs.copyFileSync(outputFile, destination);
+})
+

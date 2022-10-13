@@ -37,7 +37,7 @@
             "type": "AbstractLocationContext"
           },
           "position": {
-            "description": "[Optional] The position the given `context` should be at. Zero-based.",
+            "description": "The position the given `context` should be at. Zero-based.",
             "type": "integer",
             "optional": true
           }
@@ -70,7 +70,7 @@
     ],
     "properties": {
       "scope": {
-        "description": "[Optional] Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
+        "description": "Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
         "type": "array",
         "items": {
           "includeContext": {
@@ -632,27 +632,27 @@
           "type": "string"
         },
         "term": {
-          "description": "[Optional] Search keywords.",
+          "description": "Search keywords.",
           "type": "string",
           "optional": true
         },
         "content": {
-          "description": "[Optional] Used to differentiate similar content, or links within the same ad.",
+          "description": "Used to differentiate similar content, or links within the same ad.",
           "type": "string",
           "optional": true
         },
         "source_platform": {
-          "description": "[Optional] To differentiate similar content, or links within the same ad.",
+          "description": "To differentiate similar content, or links within the same ad.",
           "type": "string",
           "optional": true
         },
         "creative_format": {
-          "description": "[Optional] Identifies the creative used (e.g., skyscraper, banner, etc).",
+          "description": "Identifies the creative used (e.g., skyscraper, banner, etc).",
           "type": "string",
           "optional": true
         },
         "marketing_tactic": {
-          "description": "[Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).",
+          "description": "Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).",
           "type": "string",
           "optional": true
         }
