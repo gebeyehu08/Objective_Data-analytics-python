@@ -241,8 +241,8 @@ def test_remove_table_column_references() -> None:
 
     expr2 = Expression.column_reference('city')
     result_table_name, result_column_name, result_expr = expr2.remove_table_column_references()
-    assert result_table_name == ''
-    assert result_column_name == ''
+    assert result_table_name is None
+    assert result_column_name is None
     assert result_expr == Expression.column_reference('city')
 
 

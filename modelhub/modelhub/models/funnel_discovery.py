@@ -230,18 +230,20 @@ class FunnelDiscovery:
         elif type(location_stack) in ['SeriesString', 'SeriesLocationStack', 'SeriesInt64']:
             column = cast(bach.Series, location_stack)  # help mypy
 
-        data[self.FEATURE_NICE_NAME_SERIES] = column
+        data_cp = data.copy()
+
+        data_cp[self.FEATURE_NICE_NAME_SERIES] = column
         if type(column) == SeriesLocationStack:
             # extract the nice name per event
-            data[self.FEATURE_NICE_NAME_SERIES] = column.ls.nice_name
+            data_cp[self.FEATURE_NICE_NAME_SERIES] = column.ls.nice_name
 
         gb_series_names = []
         if by is not None and by is not not_set:
-            valid_gb = check_groupby(data=data, groupby=by, not_allowed_in_groupby=column.name)
+            valid_gb = check_groupby(data=data_cp, groupby=by, not_allowed_in_groupby=column.name)
             gb_series_names = valid_gb.index_columns
 
         result = self._generate_navigation_steps(
-            data=data,
+            data=data_cp,
             steps=steps,
             by=gb_series_names,
             location_stack=column,

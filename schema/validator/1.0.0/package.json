@@ -1,0 +1,24 @@
+{
+  "name": "@objectiv/validator",
+  "version": "1.0.0",
+  "description": "Objectiv Validator module for the Open Analytics Taxonomy",
+  "scripts": {
+    "test": "jest"
+  },
+  "main": "validator.js",
+  "repository": "https://github.com/objectiv/objectiv-analytics/schema",
+  "author": {
+    "name": "Surai Di Rosa",
+    "email": "surai.dirosa@gmail.com",
+    "url": "https://github.com/sdirosa"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "jest": "^29.1.2",
+    "zod": "^3.19.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.1.1",
+    "typescript": "^4.8.3"
+  }
+}

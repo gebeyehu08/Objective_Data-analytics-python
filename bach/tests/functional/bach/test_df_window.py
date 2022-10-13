@@ -594,7 +594,6 @@ def test_window_functions_not_in_where_having_groupby(engine):
         x = bt[bt.founding_min == 4]
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_window_nav_functions_with_nulls(engine):
     pdf = pd.DataFrame(
         data={

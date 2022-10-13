@@ -30,7 +30,7 @@ RUN . /services/venv/bin/activate && \
 COPY docker/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
-COPY basic-product-analytics.ipynb $APP
+COPY product-analytics.ipynb $APP
 COPY marketing-analytics.ipynb $APP
 
 USER notebook

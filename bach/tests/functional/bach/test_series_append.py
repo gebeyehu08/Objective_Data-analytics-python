@@ -25,8 +25,6 @@ def test_series_append_same_dtype(engine) -> None:
     )
 
 
-@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_series_append_column_name_special_chars(engine) -> None:
     df = get_df_with_test_data(engine, full_data_set=False)[['city', 'skating_order']]
     df.skating_order = df.skating_order.astype(str)

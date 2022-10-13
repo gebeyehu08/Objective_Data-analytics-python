@@ -5,8 +5,6 @@ from bach import DataFrame
 from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
-
 
 def test_basic_get_dummies(engine) -> None:
     pdf = pd.DataFrame(
