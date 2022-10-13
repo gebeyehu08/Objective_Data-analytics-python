@@ -12,8 +12,6 @@ from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 from unittest.mock import ANY
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
-
 
 def test_df_categorical_describe(engine) -> None:
     df = get_df_with_test_data(engine)[['city', 'municipality']]
@@ -36,6 +34,7 @@ def test_df_categorical_describe(engine) -> None:
     )
 
 
+@pytest.mark.skip_athena_todo()
 def test_df_numerical_describe(engine) -> None:
     df = get_df_with_test_data(engine)[['city', 'skating_order', 'inhabitants']]
     result = df.describe(percentiles=[0.5])
@@ -80,6 +79,7 @@ def test_df_numerical_describe(engine) -> None:
     )
 
 
+@pytest.mark.skip_athena_todo()
 @pytest.mark.skip_bigquery_todo()
 def test_include_mixed(engine) -> None:
     df = get_df_with_test_data(engine=engine)
@@ -111,6 +111,7 @@ def test_include_mixed(engine) -> None:
     pd.testing.assert_frame_equal(result.to_pandas(), expected_df)
 
 
+@pytest.mark.skip_athena_todo()
 def test_describe_datetime(engine) -> None:
     pdf = pd.DataFrame(
         data=[
@@ -162,6 +163,7 @@ def test_describe_date(engine) -> None:
     pd.testing.assert_frame_equal(expected_df, result.to_pandas())
 
 
+@pytest.mark.skip_athena_todo()
 def test_describe_time(engine) -> None:
     pdf = pd.DataFrame(
         data=[
