@@ -153,7 +153,6 @@ def test_astype_to_timestamp(engine):
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_astype_to_time(engine):
     bt = get_df_with_test_data(engine)
     bt = bt[[]]
@@ -162,6 +161,7 @@ def test_astype_to_time(engine):
     bt = bt.astype('time')
     assert_equals_data(
         bt,
+        use_to_pandas=True,
         expected_columns=['_index_skating_order', 'a', 'b'],
         expected_data=[
             [1, time(3, 4, 0), time(23, 25, 59)],
