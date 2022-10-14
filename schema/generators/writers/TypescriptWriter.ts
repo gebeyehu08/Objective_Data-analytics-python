@@ -5,7 +5,8 @@
 import { TextWriter } from '@yellicode/core';
 import { FunctionDefinition, TypeScriptWriter, VariableDefinition } from '@yellicode/typescript';
 
-type ES6FunctionDefinition = FunctionDefinition & {
+type ES6FunctionDefinition = Omit<FunctionDefinition, 'description'> & {
+  description?: string,
   export?: boolean
 }
 
@@ -38,7 +39,9 @@ export class TypescriptWriter extends TypeScriptWriter {
   }
 
   public writeES6FunctionBlock(func: ES6FunctionDefinition, contents?: (writer: TypeScriptWriter) => void): this {
-    if (!func) return this;
+    if(func.description) {
+      this.writeJsDocLines(func.description.split('\n'));
+    }
 
     this.writeES6ConstDeclaration( {
       name: func.name,

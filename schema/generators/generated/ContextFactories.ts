@@ -39,8 +39,7 @@ export const makeApplicationContext = (props: {
 
 /**
 * A Location Context that describes a logical section of the UI that contains other Location Contexts.
-* 
-Enabling Data Science to analyze this section specifically.
+* Enabling Data Science to analyze this section specifically.
 */
 export const makeContentContext = (props: {
   id: string,
@@ -104,7 +103,7 @@ export const makeHttpContext = (props: {
 * present.
 * The `id` field is used to specify the scope of identification e.g. backend, md5(email),
 * supplier_cookie, etc.
-The `value` field should contain the unique identifier within that scope.
+* The `value` field should contain the unique identifier within that scope.
 */
 export const makeIdentityContext = (props: {
   value: string,

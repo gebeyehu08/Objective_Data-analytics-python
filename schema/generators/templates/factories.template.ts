@@ -62,10 +62,10 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
     const isGlobalContext = parents.includes('AbstractGlobalContext') || contextName === 'AbstractGlobalContext';
 
     if(!isAbstract) {
-      tsWriter.writeJsDocDescription(getEntityDescription(context, descriptionsType, descriptionsTarget));
-      tsWriter.write('export ');
       tsWriter.writeES6FunctionBlock(
         {
+          export: true,
+          description: getEntityDescription(context, descriptionsType, descriptionsTarget),
           name: `make${contextName}`,
           returnTypeName: contextName,
           multiLineSignature: true,
