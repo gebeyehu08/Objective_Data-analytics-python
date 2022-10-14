@@ -537,26 +537,33 @@ class Aggregate:
                           location_stack: LocationStackType = None,
                           steps_list: List = None) -> bach.DataFrame:
         """
-        Calculates for each funnel step number of unique users,
-        conversion rate (n_users_completed_step / n_users),
-        full conversion rate (n_users_completed_step / n_users_at_the_beginning_of_funnel)
-        and drop off percentage.
+        For each step in a funnel, calculates the number of unique users who started it,
+        the conversion rate to completing the step, the conversion rate to completing the step 
+        when looking at all users who started the funnel (= the 'full' conversion rate), 
+        and the percentage of users in the entire funnel who dropped off in that step.
 
-        :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param completion_column: the column name which shows if the step was completed.
-        :param location_stack: the column where steps info can be found.
-            Can be a string of the name of the column in data, or a Series with the
-            same base node as `data`. If None the default location stack is taken.
+        :param data: The :py:class:`bach.DataFrame` to apply the operation on.
+        :param completion_column: The column name that holds whether the funnel was completed 
+            (i.e. conversion on your goal).
+        :param location_stack: The column that holds the steps in the funnel. Can be:
+            
+            - A string of the name of the column in `data`.
+            - Any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
+            - A Series with the same base node as `data`.
+            
+            If its value is `None`, the whole location stack is taken.
 
-            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
-            - if `None`, the whole location stack is taken.
+        :param steps_list: A list of funnel steps.
 
-        :param steps_list: list of funnel steps.
-            - only values for provided steps are taken.
-            - if `None`, the whole location stack is taken.
+            - If provided, only values for the listed steps are taken.
+            - If `None`, the whole location stack is taken.
 
-        :returns: :py:class:`bach.DataFrame` with the following columns: step, n_users,
-            step_conversion_rate, full_conversion_rate and dropoff_percentage.
+        :returns: :py:class:`bach.DataFrame` with the following columns: `step` (the location considered as a 
+            step, e.g. a feature or root_location), `n_users` (number of unique users starting the step), 
+            `step_conversion_rate` (number of users completing the step / `n_users`), `full_conversion_rate` 
+            (number of users completing the step / number of users starting the funnel), and 
+            `dropoff_percentage` (percentage of users in the entire funnel dropping off in that step).
+
         """
         data = data.copy()
 
