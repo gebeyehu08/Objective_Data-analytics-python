@@ -299,6 +299,27 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
   ]);
 });
 
+Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer: TextWriter) => {
+  const tsWriter = new TypescriptWriter(writer);
+  const events = eventNames.filter(eventName => {
+    return !eventName.startsWith('Abstract');
+  });
+
+  // EventName enum
+  tsWriter.writeEnumeration({
+    export: true,
+    name: 'EventName',
+    members: sortArrayByName(events.map((_type) => ({ name: _type, value: _type }))),
+  });
+
+  tsWriter.writeEndOfLine();
+
+  // AnyEventName type
+  tsWriter.writeLine('export type AnyEventName =')
+  events.forEach((eventName, index) => {
+    tsWriter.writeLine(`${tsWriter.indentString}| '${eventName}'${index === events.length - 1 ? ';' : ''}`);
+  });
+});
 
 const getTypeForProperty = (property) => {
   const mappedType = SchemaToTypeScriptPropertyTypeMap[property.type];
