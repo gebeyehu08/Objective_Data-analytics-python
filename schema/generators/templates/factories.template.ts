@@ -53,7 +53,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
   tsWriter.writeMultiLineImports('@objectiv/schema', contextNames.filter(contextName => {
     return !contextName.startsWith('Abstract');
   }));
-  tsWriter.writeImports('./ContextNames', ['GlobalContextName', 'LocationContextName']);
+  tsWriter.writeImports('./ContextNames', ['AbstractContextName', 'GlobalContextName', 'LocationContextName']);
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
@@ -162,7 +162,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
       'GlobalContexts'
     ].sort()
   ]);
-  tsWriter.writeImports('./EventNames', ['EventName']);
+  tsWriter.writeImports('./EventNames', ['AbstractEventName', 'EventName']);
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
@@ -248,12 +248,41 @@ const getTypeForProperty = (property) => {
   return `${mappedType ?? property.type}${mappedSubType ? `<${mappedSubType}>` : ''}`
 }
 
+const mapInternalTypeToEnum = (entityName) => {
+  const entity = getEntityByName(entityName);
+  const entityParents = getEntityParents(entity);
+  const isLocationContext = entityParents.includes('AbstractLocationContext');
+  const isGlobalContext = entityParents.includes('AbstractGlobalContext');
+  const isAbstract = entityName.startsWith('Abstract');
+  const isContext = entityParents.includes('AbstractContext') || entityName === 'AbstractContext';
+  const isEvent = entityParents.includes('AbstractEvent') || entityName === 'AbstractEvent';
+
+  if(isAbstract) {
+    if(isContext) {
+      return `AbstractContextName.${entityName}`;
+    }
+
+    if(isEvent) {
+      return `AbstractEventName.${entityName}`;
+    }
+  }
+
+  if(isLocationContext) {
+      return `LocationContextName.${entityName}`;
+  }
+
+  if(isGlobalContext) {
+      return `GlobalContextName.${entityName}`;
+  }
+
+  if(isEvent) {
+      return `EventName.${entityName}`;
+  }
+}
+
 const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: PropertyDefinition) => {
   const entity = getEntityByName(entityName);
-  const parents = getEntityParents(entity);
-  const isLocation = parents.includes('AbstractLocationContext');
-  const isGlobal = parents.includes('AbstractGlobalContext');
-  const isEvent = parents.includes('AbstractEvent');
+  const entityParents = getEntityParents(entity);
 
   tsWriter.increaseIndent();
 
@@ -265,17 +294,13 @@ const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: P
 
   switch(property.name) {
     case '_type':
-      propertyValue = ``;
-      propertyValue += `${isLocation ? 'LocationContext' : ''}`;
-      propertyValue += `${isGlobal ? 'GlobalContext' : ''}`;
-      propertyValue += `${isEvent ? 'Event' : ''}`;
-      propertyValue += `Name.${entityName}`;
+      propertyValue = mapInternalTypeToEnum(entityName);
       break;
     case '_types':
-      const entityParents = getEntityParents(getEntityByName(entityName));
       const indent = tsWriter.indentString;
       const doubleIndent = indent.repeat(2);
-      propertyValue = `[\n${doubleIndent}'${[...entityParents, entityName].join(`',\n${doubleIndent}'`)}'\n${indent}]`;
+      const _types = [...entityParents, entityName].map(mapInternalTypeToEnum);
+      propertyValue = `[\n${doubleIndent}${_types.join(`,\n${doubleIndent}`)}\n${indent}]`;
       break;
     case '_schema_version':
       propertyValue = `'${schemaVersion}'`;

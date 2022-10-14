@@ -2,6 +2,13 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+export enum AbstractEventName {
+  AbstractEvent = 'AbstractEvent'
+}
+
+export type AnyAbstractEventName =
+  | 'AbstractEvent';
+
 export enum EventName {
   ApplicationLoadedEvent = 'ApplicationLoadedEvent',
   FailureEvent = 'FailureEvent',

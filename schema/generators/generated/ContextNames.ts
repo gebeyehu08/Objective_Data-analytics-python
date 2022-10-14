@@ -2,6 +2,17 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+export enum AbstractContextName {
+  AbstractContext = 'AbstractContext',
+  AbstractGlobalContext = 'AbstractGlobalContext',
+  AbstractLocationContext = 'AbstractLocationContext'
+}
+
+export type AnyAbstractContextName =
+  | 'AbstractContext'
+  | 'AbstractGlobalContext'
+  | 'AbstractLocationContext';
+
 export enum GlobalContextName {
   ApplicationContext = 'ApplicationContext',
   CookieIdContext = 'CookieIdContext',

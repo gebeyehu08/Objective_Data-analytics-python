@@ -16,23 +16,43 @@ const eventNames = getEventNames();
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypescriptWriter(writer);
-  const globalContexts = contextNames.filter(contextName => {
+  const globalContexts = [];
+  const locationContexts = [];
+  const abstractContexts = [];
+
+  contextNames.forEach(contextName => {
     const context = getEntityByName(contextName);
     const parents = getEntityParents(context);
-    const isAbstract = contextName.startsWith('Abstract');
-    const isGlobalContext = parents.includes('AbstractGlobalContext');
 
-    return !isAbstract && isGlobalContext;
+    if(contextName.startsWith('Abstract')) {
+      abstractContexts.push(contextName);
+    }
+
+    if(parents.includes('AbstractGlobalContext')) {
+      globalContexts.push(contextName)
+    }
+
+    if(parents.includes('AbstractLocationContext')) {
+      locationContexts.push(contextName)
+    }
+  })
+
+ // AbstractContextName enum
+  tsWriter.writeEnumeration({
+    export: true,
+    name: 'AbstractContextName',
+    members: sortArrayByName(abstractContexts.map((_type) => ({ name: _type, value: _type }))),
   });
 
-  const locationContexts = contextNames.filter(contextName => {
-    const context = getEntityByName(contextName);
-    const parents = getEntityParents(context);
-    const isAbstract = contextName.startsWith('Abstract');
-    const isLocationContext = parents.includes('AbstractLocationContext');
+  tsWriter.writeEndOfLine();
 
-    return !isAbstract && isLocationContext;
-  })
+  // AnyAbstractContextName type
+  tsWriter.writeLine('export type AnyAbstractContextName =')
+  abstractContexts.forEach((contextName, index) => {
+    tsWriter.writeLine(`${tsWriter.indentString}| '${contextName}'${index === abstractContexts.length - 1 ? ';' : ''}`);
+  });
+
+  tsWriter.writeEndOfLine();
 
   // GlobalContextName enum
   tsWriter.writeEnumeration({
@@ -75,9 +95,33 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypescriptWriter(writer);
-  const events = eventNames.filter(eventName => {
-    return !eventName.startsWith('Abstract');
+  const events = [];
+  const abstractEvents = [];
+
+  eventNames.forEach(eventName => {
+    if(eventName.startsWith('Abstract')) {
+      abstractEvents.push(eventName);
+    } else {
+      events.push(eventName)
+    }
   });
+
+  // AbstractEventName enum
+  tsWriter.writeEnumeration({
+    export: true,
+    name: 'AbstractEventName',
+    members: sortArrayByName(abstractEvents.map((_type) => ({ name: _type, value: _type }))),
+  });
+
+  tsWriter.writeEndOfLine();
+
+  // AnyAbstractEventName type
+  tsWriter.writeLine('export type AnyAbstractEventName =')
+  abstractEvents.forEach((eventName, index) => {
+    tsWriter.writeLine(`${tsWriter.indentString}| '${eventName}'${index === abstractEvents.length - 1 ? ';' : ''}`);
+  });
+
+  tsWriter.writeEndOfLine();
 
   // EventName enum
   tsWriter.writeEnumeration({
