@@ -142,9 +142,10 @@ class ValuePropagation:
 
         gb: List[Union[str, Series]] = []
         if window_group:
-            gb = window_group
             if isinstance(window_group, str):
                 gb = [window_group]
+            elif isinstance(window_group, list):
+                gb = window_group
 
         initial_columns = self._df.data_columns
         fill_columns = [x for x in initial_columns if x not in gb]
