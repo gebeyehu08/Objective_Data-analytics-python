@@ -93,8 +93,6 @@ export class ZodWriter extends JavaScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
-    this.writeFile('./validator.template.static.ts');
-    this.writeLine();
   }
 
   public writeEnumeration(enumeration: Enumeration): void {
