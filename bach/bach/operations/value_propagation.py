@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 from enum import Enum
 from typing import Optional, Union, Sequence, List, Dict
-from bach import DataFrame
+from bach import DataFrame, Series
 
 
 class ValuePropagationMethod(Enum):
@@ -139,7 +139,8 @@ class ValuePropagation:
         """
         # fill gaps with the first_value per partition
         df_cp = df.copy()
-        gb = []
+
+        gb: List[Union[str, Series]] = []
         if window_group:
             gb = window_group
             if isinstance(window_group, str):
