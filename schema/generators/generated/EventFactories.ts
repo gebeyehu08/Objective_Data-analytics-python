@@ -5,9 +5,11 @@
 import {
   ApplicationLoadedEvent,
   FailureEvent,
+  GlobalContexts,
   HiddenEvent,
   InputChangeEvent,
   InteractiveEvent,
+  LocationStack,
   MediaEvent,
   MediaLoadEvent,
   MediaPauseEvent,
@@ -24,8 +26,8 @@ import { generateGUID } from '../helpers';
 * A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
 */
 export const makeApplicationLoadedEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): ApplicationLoadedEvent => ({
@@ -46,8 +48,8 @@ export const makeApplicationLoadedEvent = (props: {
 */
 export const makeFailureEvent = (props: {
   message: string,
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): FailureEvent => ({
@@ -67,8 +69,8 @@ export const makeFailureEvent = (props: {
 * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
 */
 export const makeHiddenEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): HiddenEvent => ({
@@ -87,8 +89,8 @@ export const makeHiddenEvent = (props: {
 * Event triggered when user input is modified.
 */
 export const makeInputChangeEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): InputChangeEvent => ({
@@ -107,8 +109,8 @@ export const makeInputChangeEvent = (props: {
 * The parent of Events that are the direct result of a user interaction, e.g. a button click.
 */
 export const makeInteractiveEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): InteractiveEvent => ({
@@ -128,8 +130,8 @@ export const makeInteractiveEvent = (props: {
 * It requires a MediaPlayerContext to detail the origin of the event.
 */
 export const makeMediaEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): MediaEvent => ({
@@ -149,8 +151,8 @@ export const makeMediaEvent = (props: {
 * A MediaEvent that's emitted after a media item completes loading.
 */
 export const makeMediaLoadEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): MediaLoadEvent => ({
@@ -170,8 +172,8 @@ export const makeMediaLoadEvent = (props: {
 * A MediaEvent that's emitted after a media item pauses playback.
 */
 export const makeMediaPauseEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): MediaPauseEvent => ({
@@ -191,8 +193,8 @@ export const makeMediaPauseEvent = (props: {
 * A MediaEvent that's emitted after a media item starts playback.
 */
 export const makeMediaStartEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): MediaStartEvent => ({
@@ -212,8 +214,8 @@ export const makeMediaStartEvent = (props: {
 * A MediaEvent that's emitted after a media item stops playback.
 */
 export const makeMediaStopEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): MediaStopEvent => ({
@@ -233,8 +235,8 @@ export const makeMediaStopEvent = (props: {
 * The parent of Events that are not directly triggered by a user action.
 */
 export const makeNonInteractiveEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): NonInteractiveEvent => ({
@@ -254,8 +256,8 @@ export const makeNonInteractiveEvent = (props: {
 * (like a link, button, icon).
 */
 export const makePressEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): PressEvent => ({
@@ -276,8 +278,8 @@ export const makePressEvent = (props: {
 */
 export const makeSuccessEvent = (props: {
   message: string,
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): SuccessEvent => ({
@@ -297,8 +299,8 @@ export const makeSuccessEvent = (props: {
 * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
 */
 export const makeVisibleEvent = (props: {
-  location_stack: undefined,
-  global_contexts: undefined,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
   id: string,
   time: number,
 }): VisibleEvent => ({

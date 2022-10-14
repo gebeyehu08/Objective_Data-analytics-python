@@ -151,9 +151,16 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
 Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypescriptWriter(writer);
 
-  tsWriter.writeMultiLineImports('@objectiv/schema', eventNames.filter(eventName => {
-    return !eventName.startsWith('Abstract');
-  }));
+  tsWriter.writeMultiLineImports('@objectiv/schema', [
+    ...[
+      ...eventNames.filter(eventName => {
+        return !eventName.startsWith('Abstract');
+      }),
+      // TODO not so nice, we could automate this, but these two entities are a bit of a special case
+      'LocationStack',
+      'GlobalContexts'
+    ].sort()
+  ]);
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
@@ -236,8 +243,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
 const getTypeForProperty = (property) => {
   const mappedType = SchemaToTypeScriptPropertyTypeMap[property.type];
   const mappedSubType = property.type === 'array' ? SchemaToTypeScriptPropertyTypeMap[property.items.type] : undefined;
-
-  return `${mappedType}${mappedSubType ? `<${mappedSubType}>` : ''}`
+  return `${mappedType ?? property.type}${mappedSubType ? `<${mappedSubType}>` : ''}`
 }
 
 const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: PropertyDefinition) => {
