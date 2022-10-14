@@ -202,11 +202,10 @@
         { "description": "This is the abstract parent of all Events.", "type": "text", "target": "primary" }
       ],
       "properties":{
-        "schema_version": {
+        "_schema_version": {
           "description": "The version of the Objectiv Taxonomy Schema used to generate this event.",
           "type": "string",
-          "optional": "true",
-          "internal": "true"
+          "internal": true
         },
         "_types": {
           "description": "An ordered list of the parents of this Event, itself included as the last element.",
@@ -214,8 +213,7 @@
           "items": {
             "type": "string"
           },
-          "optional": "true",
-          "internal": "true"
+          "internal": true
         },
         "location_stack": {
           "type": "LocationStack"
@@ -455,8 +453,7 @@
           "items": {
             "type": "string"
           },
-          "optional": "true",
-          "internal": "true"
+          "internal": true
         },
         "id": {
           "description":"A unique string identifier to be combined with the Context Type (`_type`) \nfor Context instance uniqueness.",

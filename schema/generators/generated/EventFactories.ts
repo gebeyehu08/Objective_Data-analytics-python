@@ -1,0 +1,315 @@
+/*
+ * Copyright 2022 Objectiv B.V.
+ */
+
+import {
+  ApplicationLoadedEvent,
+  FailureEvent,
+  HiddenEvent,
+  InputChangeEvent,
+  InteractiveEvent,
+  MediaEvent,
+  MediaLoadEvent,
+  MediaPauseEvent,
+  MediaStartEvent,
+  MediaStopEvent,
+  NonInteractiveEvent,
+  PressEvent,
+  SuccessEvent,
+  VisibleEvent
+} from '@objectiv/schema';
+import { generateGUID } from '../helpers';
+
+/**
+* A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
+*/
+export const makeApplicationLoadedEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): ApplicationLoadedEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'ApplicationLoadedEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'ApplicationLoadedEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A NonInteractiveEvent that is sent when a user action results in an error, 
+* like an invalid email when sending a form.
+*/
+export const makeFailureEvent = (props: {
+  message: string,
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): FailureEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  message: props.message,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'FailureEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'FailureEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
+*/
+export const makeHiddenEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): HiddenEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'HiddenEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'HiddenEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* Event triggered when user input is modified.
+*/
+export const makeInputChangeEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): InputChangeEvent => ({
+  __instance_id: generateGUID(),
+  __interactive_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'InteractiveEvent', 'InputChangeEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'InputChangeEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* The parent of Events that are the direct result of a user interaction, e.g. a button click.
+*/
+export const makeInteractiveEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): InteractiveEvent => ({
+  __instance_id: generateGUID(),
+  __interactive_event: true,
+  location_stack: props.location_stack,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'InteractiveEvent'],
+  global_contexts: props.global_contexts,
+  _type: 'InteractiveEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* The parent of non-interactive events that are triggered by a media player. 
+* It requires a MediaPlayerContext to detail the origin of the event.
+*/
+export const makeMediaEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): MediaEvent => ({
+  __instance_id: generateGUID(),
+  __media_event: true,
+  __non_interactive_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'MediaEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A MediaEvent that's emitted after a media item completes loading.
+*/
+export const makeMediaLoadEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): MediaLoadEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  __media_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaLoadEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'MediaLoadEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A MediaEvent that's emitted after a media item pauses playback.
+*/
+export const makeMediaPauseEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): MediaPauseEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  __media_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaPauseEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'MediaPauseEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A MediaEvent that's emitted after a media item starts playback.
+*/
+export const makeMediaStartEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): MediaStartEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  __media_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaStartEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'MediaStartEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A MediaEvent that's emitted after a media item stops playback.
+*/
+export const makeMediaStopEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): MediaStopEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  __media_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaStopEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'MediaStopEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* The parent of Events that are not directly triggered by a user action.
+*/
+export const makeNonInteractiveEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): NonInteractiveEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'NonInteractiveEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* An InteractiveEvent that is sent when a user presses on a pressable element 
+* (like a link, button, icon).
+*/
+export const makePressEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): PressEvent => ({
+  __instance_id: generateGUID(),
+  __interactive_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'InteractiveEvent', 'PressEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'PressEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A NonInteractiveEvent that is sent when a user action is successfully completed, 
+* like sending an email form.
+*/
+export const makeSuccessEvent = (props: {
+  message: string,
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): SuccessEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  message: props.message,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'SuccessEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'SuccessEvent',
+  id: props.id,
+  time: props.time,
+});
+
+/**
+* A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
+*/
+export const makeVisibleEvent = (props: {
+  location_stack: undefined,
+  global_contexts: undefined,
+  id: string,
+  time: number,
+}): VisibleEvent => ({
+  __instance_id: generateGUID(),
+  __non_interactive_event: true,
+  _schema_version: '1.0.0',
+  _types: ['AbstractEvent', 'NonInteractiveEvent', 'VisibleEvent'],
+  location_stack: props.location_stack,
+  global_contexts: props.global_contexts,
+  _type: 'VisibleEvent',
+  id: props.id,
+  time: props.time,
+});
+

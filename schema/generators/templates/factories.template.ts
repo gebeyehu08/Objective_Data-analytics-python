@@ -14,6 +14,7 @@ import {
   getEntityDescription,
   getEntityParents,
   getEntityProperties,
+  getEventNames,
   getObjectKeys,
   getPropertyDescription,
   getPropertyValue
@@ -27,6 +28,9 @@ const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
 
 const contextNames = getContextNames();
+const eventNames = getEventNames();
+
+const schemaVersion = Objectiv.version.base_schema;
 
 const SchemaToTypeScriptPropertyTypeMap = {
   integer: 'number',
@@ -144,6 +148,91 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
 
 });
 
+Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.ts` }, (writer: TextWriter) => {
+  const tsWriter = new TypescriptWriter(writer);
+
+  tsWriter.writeMultiLineImports('@objectiv/schema', eventNames.filter(eventName => {
+    return !eventName.startsWith('Abstract');
+  }));
+  tsWriter.writeImports('../helpers', ['generateGUID']);
+  tsWriter.writeEndOfLine();
+
+  eventNames.forEach((eventName) => {
+    const event = Objectiv.events[eventName];
+    const properties = getEntityProperties(event);
+    const parents = getEntityParents(event);
+    const isAbstract = eventName.startsWith('Abstract');
+    const hasChildren = getChildren(eventName).length;
+
+    if(!isAbstract) {
+      tsWriter.writeES6FunctionBlock(
+        {
+          export: true,
+          description: getEntityDescription(event, descriptionsType, descriptionsTarget),
+          name: `make${eventName}`,
+          returnTypeName: eventName,
+          multiLineSignature: true,
+          parameters: getObjectKeys(properties).reduce((parameters, propertyName) => {
+            const property = properties[propertyName];
+
+            if(property?.internal) {
+              return parameters;
+            }
+
+            parameters.push({
+              name: String(propertyName),
+              description: getPropertyDescription(event, propertyName, descriptionsType, descriptionsTarget),
+              typeName: getTypeForProperty(property),
+              isOptional: property.optional,
+              value: getPropertyValue(eventName, property),
+            })
+
+            return parameters;
+          }, []),
+        },
+        (tsWriter: TypescriptWriter) => {
+          tsWriter.writeLine('({');
+
+          writeObjectProperty(tsWriter, eventName, {
+            name: '__instance_id',
+            value: 'generateGUID()'
+          })
+
+          if(hasChildren) {
+            writeObjectProperty(tsWriter, eventName, {
+              name: `__${NameUtility.camelToKebabCase(eventName).replace(/-/g, '_')}`,
+              value: 'true'
+            })
+          }
+
+          parents.forEach(parentName => {
+            const isAbstract = parentName.startsWith('Abstract');
+            if(!isAbstract) {
+              writeObjectProperty(tsWriter, eventName, {
+                name: `__${NameUtility.camelToKebabCase(parentName).replace(/-/g, '_')}`,
+                value: 'true'
+              })
+            }
+          })
+
+          getObjectKeys(properties).map((propertyName) => ({
+            name: String(propertyName),
+            isOptional: properties[propertyName].optional,
+            value: getPropertyValue(eventName, properties[propertyName]),
+          })).forEach(
+            property => writeObjectProperty(tsWriter, eventName, property)
+          )
+
+          tsWriter.writeLine('});');
+        }
+      )
+
+      tsWriter.writeLine();
+    }
+  });
+
+});
+
 const getTypeForProperty = (property) => {
   const mappedType = SchemaToTypeScriptPropertyTypeMap[property.type];
   const mappedSubType = property.type === 'array' ? SchemaToTypeScriptPropertyTypeMap[property.items.type] : undefined;
@@ -168,13 +257,16 @@ const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: P
       const entityParents = getEntityParents(getEntityByName(entityName));
       propertyValue = `['${[...entityParents, entityName].join("', '")}']`;
       break;
+    case '_schema_version':
+      propertyValue = `'${schemaVersion}'`;
+      break;
     default:
       propertyValue = property.value ?? `props.${property.name}`;
   }
 
   tsWriter.write(`: ${propertyValue}`);
 
-  if (property.isOptional && property.name !== '_types') {
+  if (property.isOptional) {
     tsWriter.write(' ?? null');
   }
 

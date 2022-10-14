@@ -177,7 +177,7 @@ const ApplicationContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -197,7 +197,7 @@ const ContentContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -220,7 +220,7 @@ const CookieIdContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -239,7 +239,7 @@ const ExpandableContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -270,7 +270,7 @@ const HttpContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -295,7 +295,7 @@ const IdentityContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -314,7 +314,7 @@ const InputContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -337,7 +337,7 @@ const InputValueContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -360,7 +360,7 @@ const LinkContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -387,7 +387,7 @@ const LocaleContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -439,7 +439,7 @@ const MarketingContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -458,7 +458,7 @@ const MediaPlayerContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -477,7 +477,7 @@ const NavigationContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -496,7 +496,7 @@ const OverlayContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -515,7 +515,7 @@ const PathContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -534,7 +534,7 @@ const RootLocationContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -557,7 +557,7 @@ const SessionContext = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -577,7 +577,7 @@ const PressableContextEntity = z.object({
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
@@ -598,7 +598,7 @@ const PressableContext = z.discriminatedUnion('_type', [
     /**
      * An ordered list of the parents of this Context, itself included as the last element.
      */
-    _types: z.array(z.string()).optional(),
+    _types: z.array(z.string()),
     /**
      * A unique string identifier to be combined with the Context Type (`_type`)
      * for Context instance uniqueness.
@@ -690,11 +690,11 @@ const ApplicationLoadedEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -732,11 +732,11 @@ const FailureEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -769,11 +769,11 @@ const HiddenEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -806,11 +806,11 @@ const InputChangeEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -869,11 +869,11 @@ const InteractiveEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
@@ -920,11 +920,11 @@ const MediaEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -966,11 +966,11 @@ const MediaLoadEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1003,11 +1003,11 @@ const MediaPauseEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1040,11 +1040,11 @@ const MediaStartEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1077,11 +1077,11 @@ const MediaStopEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1114,11 +1114,11 @@ const NonInteractiveEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1152,11 +1152,11 @@ const PressEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1203,11 +1203,11 @@ const SuccessEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1240,11 +1240,11 @@ const VisibleEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _types: z.array(z.string()).optional(),
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
