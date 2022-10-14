@@ -33,7 +33,11 @@ export const makeApplicationContext = (props: {
 }): ApplicationContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'ApplicationContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'ApplicationContext'
+  ],
   id: props.id,
   _type: GlobalContextName.ApplicationContext,
 });
@@ -47,7 +51,11 @@ export const makeContentContext = (props: {
 }): ContentContext => ({
   __instance_id: generateGUID(),
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'ContentContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'ContentContext'
+  ],
   id: props.id,
   _type: LocationContextName.ContentContext,
 });
@@ -62,7 +70,11 @@ export const makeCookieIdContext = (props: {
   __instance_id: generateGUID(),
   __global_context: true,
   cookie_id: props.cookie_id,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'CookieIdContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'CookieIdContext'
+  ],
   id: props.id,
   _type: GlobalContextName.CookieIdContext,
 });
@@ -75,7 +87,11 @@ export const makeExpandableContext = (props: {
 }): ExpandableContext => ({
   __instance_id: generateGUID(),
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'ExpandableContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'ExpandableContext'
+  ],
   id: props.id,
   _type: LocationContextName.ExpandableContext,
 });
@@ -94,7 +110,11 @@ export const makeHttpContext = (props: {
   referrer: props.referrer,
   user_agent: props.user_agent,
   remote_address: props.remote_address ?? null,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'HttpContext'
+  ],
   id: props.id,
   _type: GlobalContextName.HttpContext,
 });
@@ -113,7 +133,11 @@ export const makeIdentityContext = (props: {
   __instance_id: generateGUID(),
   __global_context: true,
   value: props.value,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'IdentityContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'IdentityContext'
+  ],
   id: props.id,
   _type: GlobalContextName.IdentityContext,
 });
@@ -126,7 +150,11 @@ export const makeInputContext = (props: {
 }): InputContext => ({
   __instance_id: generateGUID(),
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'InputContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'InputContext'
+  ],
   id: props.id,
   _type: LocationContextName.InputContext,
 });
@@ -141,7 +169,11 @@ export const makeInputValueContext = (props: {
   __instance_id: generateGUID(),
   __global_context: true,
   value: props.value,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'InputValueContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'InputValueContext'
+  ],
   id: props.id,
   _type: GlobalContextName.InputValueContext,
 });
@@ -157,7 +189,12 @@ export const makeLinkContext = (props: {
   __pressable_context: true,
   __location_context: true,
   href: props.href,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'PressableContext', 'LinkContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'PressableContext',
+    'LinkContext'
+  ],
   id: props.id,
   _type: LocationContextName.LinkContext,
 });
@@ -174,7 +211,11 @@ export const makeLocaleContext = (props: {
   __global_context: true,
   language_code: props.language_code ?? null,
   country_code: props.country_code ?? null,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'LocaleContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'LocaleContext'
+  ],
   id: props.id,
   _type: GlobalContextName.LocaleContext,
 });
@@ -204,7 +245,11 @@ export const makeMarketingContext = (props: {
   source_platform: props.source_platform ?? null,
   creative_format: props.creative_format ?? null,
   marketing_tactic: props.marketing_tactic ?? null,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'MarketingContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'MarketingContext'
+  ],
   id: props.id,
   _type: GlobalContextName.MarketingContext,
 });
@@ -217,7 +262,11 @@ export const makeMediaPlayerContext = (props: {
 }): MediaPlayerContext => ({
   __instance_id: generateGUID(),
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'MediaPlayerContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'MediaPlayerContext'
+  ],
   id: props.id,
   _type: LocationContextName.MediaPlayerContext,
 });
@@ -231,7 +280,11 @@ export const makeNavigationContext = (props: {
 }): NavigationContext => ({
   __instance_id: generateGUID(),
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'NavigationContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'NavigationContext'
+  ],
   id: props.id,
   _type: LocationContextName.NavigationContext,
 });
@@ -244,7 +297,11 @@ export const makeOverlayContext = (props: {
 }): OverlayContext => ({
   __instance_id: generateGUID(),
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'OverlayContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'OverlayContext'
+  ],
   id: props.id,
   _type: LocationContextName.OverlayContext,
 });
@@ -257,7 +314,11 @@ export const makePathContext = (props: {
 }): PathContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'PathContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'PathContext'
+  ],
   id: props.id,
   _type: GlobalContextName.PathContext,
 });
@@ -272,7 +333,11 @@ export const makePressableContext = (props: {
   __instance_id: generateGUID(),
   __pressable_context: true,
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'PressableContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'PressableContext'
+  ],
   id: props.id,
   _type: LocationContextName.PressableContext,
 });
@@ -285,7 +350,11 @@ export const makeRootLocationContext = (props: {
 }): RootLocationContext => ({
   __instance_id: generateGUID(),
   __location_context: true,
-  _types: ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractLocationContext',
+    'RootLocationContext'
+  ],
   id: props.id,
   _type: LocationContextName.RootLocationContext,
 });
@@ -300,7 +369,11 @@ export const makeSessionContext = (props: {
   __instance_id: generateGUID(),
   __global_context: true,
   hit_number: props.hit_number,
-  _types: ['AbstractContext', 'AbstractGlobalContext', 'SessionContext'],
+  _types: [
+    'AbstractContext',
+    'AbstractGlobalContext',
+    'SessionContext'
+  ],
   id: props.id,
   _type: GlobalContextName.SessionContext,
 });

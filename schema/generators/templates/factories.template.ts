@@ -273,7 +273,9 @@ const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: P
       break;
     case '_types':
       const entityParents = getEntityParents(getEntityByName(entityName));
-      propertyValue = `['${[...entityParents, entityName].join("', '")}']`;
+      const indent = tsWriter.indentString;
+      const doubleIndent = indent.repeat(2);
+      propertyValue = `[\n${doubleIndent}'${[...entityParents, entityName].join(`',\n${doubleIndent}'`)}'\n${indent}]`;
       break;
     case '_schema_version':
       propertyValue = `'${schemaVersion}'`;

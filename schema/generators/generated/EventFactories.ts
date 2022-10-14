@@ -35,7 +35,11 @@ export const makeApplicationLoadedEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'ApplicationLoadedEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'ApplicationLoadedEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.ApplicationLoadedEvent,
@@ -58,7 +62,11 @@ export const makeFailureEvent = (props: {
   __non_interactive_event: true,
   message: props.message,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'FailureEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'FailureEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.FailureEvent,
@@ -78,7 +86,11 @@ export const makeHiddenEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'HiddenEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'HiddenEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.HiddenEvent,
@@ -98,7 +110,11 @@ export const makeInputChangeEvent = (props: {
   __instance_id: generateGUID(),
   __interactive_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'InteractiveEvent', 'InputChangeEvent'],
+  _types: [
+    'AbstractEvent',
+    'InteractiveEvent',
+    'InputChangeEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.InputChangeEvent,
@@ -119,7 +135,10 @@ export const makeInteractiveEvent = (props: {
   __interactive_event: true,
   location_stack: props.location_stack,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'InteractiveEvent'],
+  _types: [
+    'AbstractEvent',
+    'InteractiveEvent'
+  ],
   global_contexts: props.global_contexts,
   _type: EventName.InteractiveEvent,
   id: props.id,
@@ -140,7 +159,11 @@ export const makeMediaEvent = (props: {
   __media_event: true,
   __non_interactive_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'MediaEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.MediaEvent,
@@ -161,7 +184,12 @@ export const makeMediaLoadEvent = (props: {
   __non_interactive_event: true,
   __media_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaLoadEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'MediaEvent',
+    'MediaLoadEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.MediaLoadEvent,
@@ -182,7 +210,12 @@ export const makeMediaPauseEvent = (props: {
   __non_interactive_event: true,
   __media_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaPauseEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'MediaEvent',
+    'MediaPauseEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.MediaPauseEvent,
@@ -203,7 +236,12 @@ export const makeMediaStartEvent = (props: {
   __non_interactive_event: true,
   __media_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaStartEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'MediaEvent',
+    'MediaStartEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.MediaStartEvent,
@@ -224,7 +262,12 @@ export const makeMediaStopEvent = (props: {
   __non_interactive_event: true,
   __media_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'MediaEvent', 'MediaStopEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'MediaEvent',
+    'MediaStopEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.MediaStopEvent,
@@ -244,7 +287,10 @@ export const makeNonInteractiveEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.NonInteractiveEvent,
@@ -265,7 +311,11 @@ export const makePressEvent = (props: {
   __instance_id: generateGUID(),
   __interactive_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'InteractiveEvent', 'PressEvent'],
+  _types: [
+    'AbstractEvent',
+    'InteractiveEvent',
+    'PressEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.PressEvent,
@@ -288,7 +338,11 @@ export const makeSuccessEvent = (props: {
   __non_interactive_event: true,
   message: props.message,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'SuccessEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'SuccessEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.SuccessEvent,
@@ -308,7 +362,11 @@ export const makeVisibleEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   _schema_version: '1.0.0',
-  _types: ['AbstractEvent', 'NonInteractiveEvent', 'VisibleEvent'],
+  _types: [
+    'AbstractEvent',
+    'NonInteractiveEvent',
+    'VisibleEvent'
+  ],
   location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.VisibleEvent,
