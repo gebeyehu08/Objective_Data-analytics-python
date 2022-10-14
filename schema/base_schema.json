@@ -224,8 +224,9 @@
           "type": "GlobalContexts"
         },
         "_type": {
-          "description": "A string literal used during serialization. Should always match the Event interface name.",
-          "type": "discriminator"
+          "description": "A string literal used during serialization. Hardcoded to the Event name.",
+          "type": "discriminator",
+          "internal": true
         },
         "id": {
           "description": "Unique identifier for a specific instance of an event.",
@@ -462,8 +463,9 @@
           "type": "string"
         },
         "_type": {
-          "description": "A string literal used during serialization. Should always match the Context interface name.",
-          "type": "discriminator"
+          "description": "A string literal used during serialization. Hardcoded to the Context name.",
+          "type": "discriminator",
+          "internal": true
         }
       }
     },

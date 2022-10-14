@@ -3,13 +3,62 @@
  */
 
 import { TextWriter } from '@yellicode/core';
-import { TypeScriptWriter } from '@yellicode/typescript';
+import { FunctionDefinition, TypeScriptWriter, VariableDefinition } from '@yellicode/typescript';
+
+type ES6FunctionDefinition = FunctionDefinition & {
+  export?: boolean
+}
 
 export class TypescriptWriter extends TypeScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
     writer.writeLine(`/*\n * Copyright ${new Date().getFullYear()} Objectiv B.V.\n */\n`);
+  }
+
+  writeMultiLineImports(moduleName: string, x: string[]) {
+    this.writeLine(`import {\n${this.indentString}${x.join(`,\n${this.indentString}`)}\n} from '${moduleName}';`);
+  }
+
+  public writeES6ConstDeclaration(definition: VariableDefinition, kind: 'const' | 'let' = 'const'): this {
+      if (definition.description) {
+        this.writeJsDocLines(definition.description);
+      }
+      if (definition.export) {
+          this.write(`export `);
+      }
+      if (definition.declare) {
+          this.write('declare ');
+      }
+      this.write(`${kind} ${definition.name}`);
+      if (definition.typeName) {
+          this.write(`: ${definition.typeName}`);
+      }
+      return this;
+  }
+
+  public writeES6FunctionBlock(func: ES6FunctionDefinition, contents?: (writer: TypeScriptWriter) => void): this {
+    if (!func) return this;
+
+    this.writeES6ConstDeclaration( {
+      name: func.name,
+      typeName: null,
+      export: func.export,
+    });
+
+    this.writeLine(` = (props: {`);
+    this.increaseIndent();
+
+    func.parameters.forEach(parameter => {
+      this.writeLine(`${parameter.name}${parameter.isOptional ? '?:' : ':'} ${parameter.typeName},`)
+    });
+
+    this.decreaseIndent();
+    this.write(`}): ${func.returnTypeName} => `);
+
+    contents(this);
+
+    return this;
   }
 }
 

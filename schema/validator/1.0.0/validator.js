@@ -184,7 +184,7 @@ const ApplicationContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.ApplicationContext),
 }).strict();
@@ -204,7 +204,7 @@ const ContentContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.ContentContext),
 }).strict();
@@ -227,7 +227,7 @@ const CookieIdContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.CookieIdContext),
 }).strict();
@@ -246,7 +246,7 @@ const ExpandableContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.ExpandableContext),
 }).strict();
@@ -277,7 +277,7 @@ const HttpContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.HttpContext),
 }).strict();
@@ -302,7 +302,7 @@ const IdentityContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.IdentityContext),
 }).strict();
@@ -321,7 +321,7 @@ const InputContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.InputContext),
 }).strict();
@@ -344,7 +344,7 @@ const InputValueContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.InputValueContext),
 }).strict();
@@ -367,7 +367,7 @@ const LinkContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.LinkContext),
 }).strict();
@@ -394,7 +394,7 @@ const LocaleContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.LocaleContext),
 }).strict();
@@ -446,7 +446,7 @@ const MarketingContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.MarketingContext),
 }).strict();
@@ -465,7 +465,7 @@ const MediaPlayerContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.MediaPlayerContext),
 }).strict();
@@ -484,7 +484,7 @@ const NavigationContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.NavigationContext),
 }).strict();
@@ -503,7 +503,7 @@ const OverlayContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.OverlayContext),
 }).strict();
@@ -522,7 +522,7 @@ const PathContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.PathContext),
 }).strict();
@@ -541,7 +541,7 @@ const RootLocationContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.RootLocationContext),
 }).strict();
@@ -564,7 +564,7 @@ const SessionContext = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.SessionContext),
 }).strict();
@@ -584,7 +584,7 @@ const PressableContextEntity = z.object({
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.PressableContext),
 }).strict();
@@ -605,7 +605,7 @@ const PressableContext = z.discriminatedUnion('_type', [
      */
     id: z.string(),
     /**
-     * A string literal used during serialization. Should always match the Context interface name.
+     * A string literal used during serialization. Hardcoded to the Context name.
      */
     _type: z.literal(ContextTypes.enum.PressableContext),
   }).strict(),
@@ -707,7 +707,7 @@ const ApplicationLoadedEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.ApplicationLoadedEvent),
   /**
@@ -749,7 +749,7 @@ const FailureEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.FailureEvent),
   /**
@@ -786,7 +786,7 @@ const HiddenEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.HiddenEvent),
   /**
@@ -823,7 +823,7 @@ const InputChangeEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.InputChangeEvent),
   /**
@@ -880,7 +880,7 @@ const InteractiveEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.InteractiveEvent),
   /**
@@ -937,7 +937,7 @@ const MediaEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaEvent),
   /**
@@ -983,7 +983,7 @@ const MediaLoadEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaLoadEvent),
   /**
@@ -1020,7 +1020,7 @@ const MediaPauseEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaPauseEvent),
   /**
@@ -1057,7 +1057,7 @@ const MediaStartEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaStartEvent),
   /**
@@ -1094,7 +1094,7 @@ const MediaStopEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaStopEvent),
   /**
@@ -1131,7 +1131,7 @@ const NonInteractiveEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.NonInteractiveEvent),
   /**
@@ -1169,7 +1169,7 @@ const PressEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.PressEvent),
   /**
@@ -1220,7 +1220,7 @@ const SuccessEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.SuccessEvent),
   /**
@@ -1257,7 +1257,7 @@ const VisibleEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.VisibleEvent),
   /**

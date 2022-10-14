@@ -6,7 +6,6 @@ A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing th
 `string` country_code: Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
-`discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
 
 :::info setting of properties
 The tracker can automatically set the `id` when using the official Plugin. On manual creation, `id` must be provided. 
