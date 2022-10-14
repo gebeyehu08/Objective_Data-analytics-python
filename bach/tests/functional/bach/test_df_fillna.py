@@ -103,7 +103,7 @@ def test_ffill_propagation(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
     pdf['groups'] = pdf.B>0
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
-    pdf = pdf.reset_index(names='_index_0').sort_values('_index_0')
+    pdf = pdf.reset_index().rename(columns={'index': '_index_0'})
 
     pd.testing.assert_frame_equal(
         pdf, df.to_pandas(), check_index_type=False, check_names=False,
