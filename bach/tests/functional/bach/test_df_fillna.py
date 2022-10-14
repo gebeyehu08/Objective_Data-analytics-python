@@ -81,6 +81,14 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
         check_names=False,
     )
 
+    # test selecting from ffilled df
+    pd.testing.assert_frame_equal(
+        fillna_check_ffill_expected[fillna_check_ffill_expected.F=='f'],
+        fillna_check_ffill_result[fillna_check_ffill_result.F=='f'].to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
     fillna_check_bfill_expected = check_sort_expected.fillna(method='bfill')
     fillna_check_bfill_result = check_sort_result.fillna(method='bfill')
     pd.testing.assert_frame_equal(
@@ -90,6 +98,29 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
         check_names=False,
     )
 
+
+def test_ffill_propagation(engine) -> None:
+    pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
+    pdf['groups'] = pdf.B>0
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
+    pdf = pdf.reset_index(names='_index_0').sort_values('_index_0')
+
+    pd.testing.assert_frame_equal(
+        pdf, df.to_pandas(), check_index_type=False, check_names=False,
+    )
+
+    from bach.operations.value_propagation import ValuePropagation
+    vp = ValuePropagation(df, method='ffill')
+    df_ffill = vp.propagate(window_group='groups')
+
+    pdf_ffill = pdf.groupby('groups').fillna(method='ffill')
+    pdf_ffill['groups'] = pdf.groups
+
+    pd.testing.assert_frame_equal(
+        pdf_ffill,
+        df_ffill.to_pandas(),
+        check_index_type=False,
+        check_names=False)
 
 def test_fillna_w_methods(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))

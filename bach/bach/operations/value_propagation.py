@@ -53,7 +53,10 @@ class ValuePropagation:
         }
 
     def propagate(
-        self, sort_by: Optional[Union[str, Sequence[str]]] = None, ascending: Union[bool, List[bool]] = True,
+        self,
+        sort_by: Optional[Union[str, Sequence[str]]] = None,
+        ascending: Union[bool, List[bool]] = True,
+        window_group: Optional[Union[str, Sequence[str]]] = None
     ):
         df = self._df.copy()
 
@@ -73,17 +76,21 @@ class ValuePropagation:
 
         # sort values by row number
         df = df.sort_values(**self._row_sorting)
-        df = self._add_partition_per_data_columns(df)
+        df = self._add_partition_per_data_columns(df, window_group=window_group)
 
         # sorting is lost due to materialization, still requires it
         df = df.sort_values(**self._row_sorting)
-        df = self._propagate_first_value_per_partition(df)
+        df = self._propagate_first_value_per_partition(df, window_group=window_group)
 
         # sort values, this way we respect the provided order by
         df = df.sort_values(by=self.ROW_NUMBER_SERIES_NAME)
-        return df[self._df.data_columns]
+        return df[self._df.data_columns].materialize(node_name='nafilled')
 
-    def _add_partition_per_data_columns(self, df: DataFrame) -> DataFrame:
+    def _add_partition_per_data_columns(
+        self,
+        df: DataFrame,
+        window_group: Optional[Union[str, Sequence[str]]] = None
+    ) -> DataFrame:
         """
         Helper function that creates a partition column for each series to be filled
         this column contains the cumulative sum of the total amount of observed non-nullable values
@@ -102,7 +109,7 @@ class ValuePropagation:
         """
         from bach.partitioning import WindowFrameMode
         df_cp = df.copy()
-        partition_window = df_cp.groupby().window(mode=WindowFrameMode.ROWS)
+        partition_window = df_cp.groupby(window_group).window(mode=WindowFrameMode.ROWS)
         for series_name, series in self._df.data.items():
             partition_name = f'__partition_{series.name}'
             df_cp[partition_name] = 1
@@ -111,7 +118,9 @@ class ValuePropagation:
 
         return df_cp.materialize(node_name='fillna_partitioning')
 
-    def _propagate_first_value_per_partition(self, df: DataFrame):
+    def _propagate_first_value_per_partition(self,
+                                             df: DataFrame,
+                                             window_group: Optional[Union[str, Sequence[str]]] = None):
         """
         Helper function that fills null values based on partitions
         NULL records are grouped by the partition and filled with the non-nullable value
@@ -130,9 +139,19 @@ class ValuePropagation:
         """
         # fill gaps with the first_value per partition
         df_cp = df.copy()
-        for series_name in self._df.data_columns:
-            partition_series = df_cp[f'__partition_{series_name}']
-            window_first_value = df_cp.groupby(partition_series).window()
+        gb = []
+        if window_group:
+            gb = window_group
+            if isinstance(window_group, str):
+                gb = [window_group]
+
+        initial_columns = self._df.data_columns
+        fill_columns = [x for x in initial_columns if x not in gb]
+
+        for series_name in fill_columns:
+            partition_series = [df_cp[f'__partition_{series_name}']]
+            gb_final = gb + partition_series
+            window_first_value = df_cp.groupby(gb_final).window()
             df_cp[series_name] = df_cp[series_name].window_first_value(window_first_value)
 
         return df_cp.materialize(node_name='fillna_propagated_values')
