@@ -265,7 +265,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	:language_output: jupyter-notebook-out
 
 	# --- hide: start ---
-	import os, pandas as pd
+	import os
 	from modelhub import ModelHub
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'path'])
 	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
@@ -274,6 +274,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	product_feature_data = modelhub.agg.unique_users(df, groupby=['feature_nice_name', 'event_type'])
 	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
 	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
 	display_sql_as_markdown(product_feature_data)
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.

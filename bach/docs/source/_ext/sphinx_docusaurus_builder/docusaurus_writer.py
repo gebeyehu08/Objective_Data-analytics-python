@@ -562,10 +562,13 @@ class DocusaurusTranslator(Translator):
 
             if node['language'] != 'jupyter-notebook-out':
                 for i, line in enumerate(node_lines):
-                    if(line[0:3] == ">>>"):
+                    if((line[0:3] == ">>>") or (node['language'] == 'jupyter-notebook')):
                         if (i != 0): 
                             node_input += "\n"
-                        node_input += line[3:]
+                        if (node['language'] == 'jupyter-notebook'):
+                            node_input += line
+                        else:
+                            node_input += line[3:]
                         output_index = i+1
                     else:
                         break
