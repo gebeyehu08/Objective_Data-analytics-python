@@ -2,37 +2,42 @@ import pytest
 from bach.testing import assert_equals_data
 
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
+from sql_models.util import is_athena
 
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1264')  # TODO: Athena
 
 def test_visualize_location_stack(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
 
     results = modelhub.visualize_location_stack(df, return_df=True)
 
+    quotes = ''
+    if not is_athena(df.engine):
+        # selections from json objects are not quoted in Athena
+        quotes = '"'
+
     assert_equals_data(
         results,
         expected_columns=['source', 'target', 'value'],
         expected_data=[
-            ['"OverlayContext": "hamburger-menu"', '"ExpandableSectionContext": "The Project"', 1],
-            ['"OverlayContext": "hamburger-menu"', '"LinkContext": "About Us"', 1],
-            ['"OverlayContext": "hamburger-menu"', '"LinkContext": "Contact Us"', 1],
-            ['"OverlayContext": "hamburger-menu"', '"LinkContext": "Docs"', 1],
-            ['"OverlayContext": "hamburger-menu"', '"LinkContext": "GitHub"', 1],
-            ['"SectionContext": "footer"', '"LinkContext": "Cookies"', 1],
-            ['"SectionContext": "header"', '"LinkContext": "cta-repo-button"', 1],
-            ['"SectionContext": "location-stack"', '"LinkContext": "cta-docs-location-stack"', 1],
-            ['"SectionContext": "main"', '"SectionContext": "location-stack"', 1],
-            ['"SectionContext": "main"', '"SectionContext": "taxonomy"', 1],
-            ['"SectionContext": "navbar-top"', '"LinkContext": "About Us"', 1],
-            ['"SectionContext": "navbar-top"', '"LinkContext": "logo"', 1],
-            ['"SectionContext": "navbar-top"', '"OverlayContext": "hamburger-menu"', 5],
-            ['"SectionContext": "taxonomy"', '"LinkContext": "cta-docs-taxonomy"', 1],
-            ['"WebDocumentContext": "#document"', '"LinkContext": "notebook-product-analytics"', 1],
-            ['"WebDocumentContext": "#document"', '"SectionContext": "footer"', 1],
-            ['"WebDocumentContext": "#document"', '"SectionContext": "header"', 1],
-            ['"WebDocumentContext": "#document"', '"SectionContext": "main"', 2],
-            ['"WebDocumentContext": "#document"', '"SectionContext": "navbar-top"', 7]
+            [f'{quotes}OverlayContext{quotes}: {quotes}hamburger-menu{quotes}', f'{quotes}ExpandableSectionContext{quotes}: {quotes}The Project{quotes}', 1],
+            [f'{quotes}OverlayContext{quotes}: {quotes}hamburger-menu{quotes}', f'{quotes}LinkContext{quotes}: {quotes}About Us{quotes}', 1],
+            [f'{quotes}OverlayContext{quotes}: {quotes}hamburger-menu{quotes}', f'{quotes}LinkContext{quotes}: {quotes}Contact Us{quotes}', 1],
+            [f'{quotes}OverlayContext{quotes}: {quotes}hamburger-menu{quotes}', f'{quotes}LinkContext{quotes}: {quotes}Docs{quotes}', 1],
+            [f'{quotes}OverlayContext{quotes}: {quotes}hamburger-menu{quotes}', f'{quotes}LinkContext{quotes}: {quotes}GitHub{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}footer{quotes}', f'{quotes}LinkContext{quotes}: {quotes}Cookies{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}header{quotes}', f'{quotes}LinkContext{quotes}: {quotes}cta-repo-button{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}location-stack{quotes}', f'{quotes}LinkContext{quotes}: {quotes}cta-docs-location-stack{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}main{quotes}', f'{quotes}SectionContext{quotes}: {quotes}location-stack{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}main{quotes}', f'{quotes}SectionContext{quotes}: {quotes}taxonomy{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', f'{quotes}LinkContext{quotes}: {quotes}About Us{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', f'{quotes}LinkContext{quotes}: {quotes}logo{quotes}', 1],
+            [f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', f'{quotes}OverlayContext{quotes}: {quotes}hamburger-menu{quotes}', 5],
+            [f'{quotes}SectionContext{quotes}: {quotes}taxonomy{quotes}', f'{quotes}LinkContext{quotes}: {quotes}cta-docs-taxonomy{quotes}', 1],
+            [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}LinkContext{quotes}: {quotes}notebook-product-analytics{quotes}', 1],
+            [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}footer{quotes}', 1],
+            [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}header{quotes}', 1],
+            [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}main{quotes}', 2],
+            [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', 7]
         ],
         order_by=['source', 'target'],
         use_to_pandas=True,
@@ -48,18 +53,18 @@ def test_visualize_location_stack(db_params):
             results,
             expected_columns=['source', 'target', 'value'],
             expected_data=[
-                ['"SectionContext": "footer"', '"LinkContext": "Cookies"', 1],
-                ['"SectionContext": "header"', '"LinkContext": "cta-repo-button"', 1],
-                ['"SectionContext": "main"', '"SectionContext": "location-stack"', 1],
-                ['"SectionContext": "main"', '"SectionContext": "taxonomy"', 1],
-                ['"SectionContext": "navbar-top"', '"LinkContext": "About Us"', 1],
-                ['"SectionContext": "navbar-top"', '"LinkContext": "logo"', 1],
-                ['"SectionContext": "navbar-top"', '"OverlayContext": "hamburger-menu"', 5],
-                ['"WebDocumentContext": "#document"', '"LinkContext": "notebook-product-analytics"', 1],
-                ['"WebDocumentContext": "#document"', '"SectionContext": "footer"', 1],
-                ['"WebDocumentContext": "#document"', '"SectionContext": "header"', 1],
-                ['"WebDocumentContext": "#document"', '"SectionContext": "main"', 2],
-                ['"WebDocumentContext": "#document"', '"SectionContext": "navbar-top"', 7]
+                [f'{quotes}SectionContext{quotes}: {quotes}footer{quotes}', f'{quotes}LinkContext{quotes}: {quotes}Cookies{quotes}', 1],
+                [f'{quotes}SectionContext{quotes}: {quotes}header{quotes}', f'{quotes}LinkContext{quotes}: {quotes}cta-repo-button{quotes}', 1],
+                [f'{quotes}SectionContext{quotes}: {quotes}main{quotes}', f'{quotes}SectionContext{quotes}: {quotes}location-stack{quotes}', 1],
+                [f'{quotes}SectionContext{quotes}: {quotes}main{quotes}', f'{quotes}SectionContext{quotes}: {quotes}taxonomy{quotes}', 1],
+                [f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', f'{quotes}LinkContext{quotes}: {quotes}About Us{quotes}', 1],
+                [f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', f'{quotes}LinkContext{quotes}: {quotes}logo{quotes}', 1],
+                [f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', f'{quotes}OverlayContext{quotes}: {quotes}hamburger-menu{quotes}', 5],
+                [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}LinkContext{quotes}: {quotes}notebook-product-analytics{quotes}', 1],
+                [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}footer{quotes}', 1],
+                [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}header{quotes}', 1],
+                [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}main{quotes}', 2],
+                [f'{quotes}WebDocumentContext{quotes}: {quotes}#document{quotes}', f'{quotes}SectionContext{quotes}: {quotes}navbar-top{quotes}', 7]
             ],
             order_by=['source', 'target'],
             use_to_pandas=True,
