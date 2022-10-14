@@ -129,6 +129,7 @@ export class ZodWriter extends JavaScriptWriter {
     }
     this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${propertyValue})` : property.typeName}`);
 
+    // FIXME this is not what we want, instead we should unionize the type with null, e.g. z.union([<type>, null])
     if (property.isOptional) {
       this.write('.optional()');
     }
