@@ -2125,6 +2125,13 @@ class DataFrame:
         exprs = []
         fmtstr = []
 
+        # flag indicating that an alias from the select clause can be used
+        # directly in the order by clause. Meaning that we should avoid using the series'
+        # expression as it will be evaluated to the actual output column
+        # BigQuery: https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#order_by_clause
+        # PrestoDB: https://prestodb.io/docs/current/sql/select.html#order-by-clause
+        alias_allowed_in_order_by = is_bigquery(self.engine) or is_athena(self.engine)
+
         for sc in self.order_by:
             # pandas sorts by default all nulls last
             fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
@@ -2137,8 +2144,16 @@ class DataFrame:
                 continue
 
             expr = sc.expression
-            if self.group_by and is_bigquery(self.engine):
-                expr = Expression.column_reference(all_series_expr[expr.to_sql(dialect)])
+            sql_expr = expr.to_sql(dialect)
+
+            if sql_expr in all_series_expr:
+                if (
+                    alias_allowed_in_order_by or (self.group_by and is_bigquery(self.engine))
+                ):
+                    expr = Expression.column_reference(
+                        get_sql_column_name(dialect, all_series_expr[sql_expr])
+                    )
+
             exprs.append(expr)
             fmtstr.append(fmt)
 
