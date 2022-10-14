@@ -53,6 +53,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
   tsWriter.writeMultiLineImports('@objectiv/schema', contextNames.filter(contextName => {
     return !contextName.startsWith('Abstract');
   }));
+  tsWriter.writeImports('./ContextNames', ['GlobalContextName', 'LocationContextName']);
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
@@ -161,6 +162,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
       'GlobalContexts'
     ].sort()
   ]);
+  tsWriter.writeImports('./EventNames', ['EventName']);
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
@@ -247,6 +249,12 @@ const getTypeForProperty = (property) => {
 }
 
 const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: PropertyDefinition) => {
+  const entity = getEntityByName(entityName);
+  const parents = getEntityParents(entity);
+  const isLocation = parents.includes('AbstractLocationContext');
+  const isGlobal = parents.includes('AbstractGlobalContext');
+  const isEvent = parents.includes('AbstractEvent');
+
   tsWriter.increaseIndent();
 
   tsWriter.writeIndent();
@@ -257,7 +265,11 @@ const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: P
 
   switch(property.name) {
     case '_type':
-      propertyValue = `'${entityName}'`;
+      propertyValue = ``;
+      propertyValue += `${isLocation ? 'LocationContext' : ''}`;
+      propertyValue += `${isGlobal ? 'GlobalContext' : ''}`;
+      propertyValue += `${isEvent ? 'Event' : ''}`;
+      propertyValue += `Name.${entityName}`;
       break;
     case '_types':
       const entityParents = getEntityParents(getEntityByName(entityName));

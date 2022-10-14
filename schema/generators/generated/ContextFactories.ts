@@ -22,6 +22,7 @@ import {
   RootLocationContext,
   SessionContext
 } from '@objectiv/schema';
+import { GlobalContextName, LocationContextName } from './ContextNames';
 import { generateGUID } from '../helpers';
 
 /**
@@ -34,7 +35,7 @@ export const makeApplicationContext = (props: {
   __global_context: true,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'ApplicationContext'],
   id: props.id,
-  _type: 'ApplicationContext',
+  _type: GlobalContextName.ApplicationContext,
 });
 
 /**
@@ -48,7 +49,7 @@ export const makeContentContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'ContentContext'],
   id: props.id,
-  _type: 'ContentContext',
+  _type: LocationContextName.ContentContext,
 });
 
 /**
@@ -63,7 +64,7 @@ export const makeCookieIdContext = (props: {
   cookie_id: props.cookie_id,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'CookieIdContext'],
   id: props.id,
-  _type: 'CookieIdContext',
+  _type: GlobalContextName.CookieIdContext,
 });
 
 /**
@@ -76,7 +77,7 @@ export const makeExpandableContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'ExpandableContext'],
   id: props.id,
-  _type: 'ExpandableContext',
+  _type: LocationContextName.ExpandableContext,
 });
 
 /**
@@ -95,7 +96,7 @@ export const makeHttpContext = (props: {
   remote_address: props.remote_address ?? null,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
   id: props.id,
-  _type: 'HttpContext',
+  _type: GlobalContextName.HttpContext,
 });
 
 /**
@@ -114,7 +115,7 @@ export const makeIdentityContext = (props: {
   value: props.value,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'IdentityContext'],
   id: props.id,
-  _type: 'IdentityContext',
+  _type: GlobalContextName.IdentityContext,
 });
 
 /**
@@ -127,7 +128,7 @@ export const makeInputContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'InputContext'],
   id: props.id,
-  _type: 'InputContext',
+  _type: LocationContextName.InputContext,
 });
 
 /**
@@ -142,7 +143,7 @@ export const makeInputValueContext = (props: {
   value: props.value,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'InputValueContext'],
   id: props.id,
-  _type: 'InputValueContext',
+  _type: GlobalContextName.InputValueContext,
 });
 
 /**
@@ -158,7 +159,7 @@ export const makeLinkContext = (props: {
   href: props.href,
   _types: ['AbstractContext', 'AbstractLocationContext', 'PressableContext', 'LinkContext'],
   id: props.id,
-  _type: 'LinkContext',
+  _type: LocationContextName.LinkContext,
 });
 
 /**
@@ -175,7 +176,7 @@ export const makeLocaleContext = (props: {
   country_code: props.country_code ?? null,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'LocaleContext'],
   id: props.id,
-  _type: 'LocaleContext',
+  _type: GlobalContextName.LocaleContext,
 });
 
 /**
@@ -205,7 +206,7 @@ export const makeMarketingContext = (props: {
   marketing_tactic: props.marketing_tactic ?? null,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'MarketingContext'],
   id: props.id,
-  _type: 'MarketingContext',
+  _type: GlobalContextName.MarketingContext,
 });
 
 /**
@@ -218,7 +219,7 @@ export const makeMediaPlayerContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'MediaPlayerContext'],
   id: props.id,
-  _type: 'MediaPlayerContext',
+  _type: LocationContextName.MediaPlayerContext,
 });
 
 /**
@@ -232,7 +233,7 @@ export const makeNavigationContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'NavigationContext'],
   id: props.id,
-  _type: 'NavigationContext',
+  _type: LocationContextName.NavigationContext,
 });
 
 /**
@@ -245,7 +246,7 @@ export const makeOverlayContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'OverlayContext'],
   id: props.id,
-  _type: 'OverlayContext',
+  _type: LocationContextName.OverlayContext,
 });
 
 /**
@@ -258,7 +259,7 @@ export const makePathContext = (props: {
   __global_context: true,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'PathContext'],
   id: props.id,
-  _type: 'PathContext',
+  _type: GlobalContextName.PathContext,
 });
 
 /**
@@ -273,7 +274,7 @@ export const makePressableContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'PressableContext'],
   id: props.id,
-  _type: 'PressableContext',
+  _type: LocationContextName.PressableContext,
 });
 
 /**
@@ -286,7 +287,7 @@ export const makeRootLocationContext = (props: {
   __location_context: true,
   _types: ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext'],
   id: props.id,
-  _type: 'RootLocationContext',
+  _type: LocationContextName.RootLocationContext,
 });
 
 /**
@@ -301,6 +302,6 @@ export const makeSessionContext = (props: {
   hit_number: props.hit_number,
   _types: ['AbstractContext', 'AbstractGlobalContext', 'SessionContext'],
   id: props.id,
-  _type: 'SessionContext',
+  _type: GlobalContextName.SessionContext,
 });
 
