@@ -117,7 +117,7 @@ class ZodWriter extends JavaScriptWriter_1.JavaScriptWriter {
         }
         this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${propertyValue})` : property.typeName}`);
         if (property.isOptional) {
-            this.write('.optional()');
+            this.write('.nullable()');
         }
         this.writeEndOfLine(',');
         this.decreaseIndent();

@@ -266,7 +266,7 @@ const HttpContext = z.object({
   /**
    * (public) IP address of the agent that sent the event.
    */
-  remote_address: z.string().optional(),
+  remote_address: z.string().nullable(),
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
@@ -379,11 +379,11 @@ const LocaleContext = z.object({
   /**
    * Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.
    */
-  language_code: z.string().optional(),
+  language_code: z.string().nullable(),
   /**
    * Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.
    */
-  country_code: z.string().optional(),
+  country_code: z.string().nullable(),
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
@@ -419,23 +419,23 @@ const MarketingContext = z.object({
   /**
    * Search keywords.
    */
-  term: z.string().optional(),
+  term: z.string().nullable(),
   /**
    * Used to differentiate similar content, or links within the same ad.
    */
-  content: z.string().optional(),
+  content: z.string().nullable(),
   /**
    * To differentiate similar content, or links within the same ad.
    */
-  source_platform: z.string().optional(),
+  source_platform: z.string().nullable(),
   /**
    * Identifies the creative used (e.g., skyscraper, banner, etc).
    */
-  creative_format: z.string().optional(),
+  creative_format: z.string().nullable(),
   /**
    * Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
    */
-  marketing_tactic: z.string().optional(),
+  marketing_tactic: z.string().nullable(),
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
