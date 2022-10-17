@@ -7,15 +7,14 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
-from typing import Type, Dict, List, Any
+from typing import Type, List, Any, Mapping
 
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy, Engine, Dialect
 
 from bach import DataFrame, Series
-from bach.types import get_series_type_from_db_dtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_bigquery, is_postgres, is_athena
+from sql_models.util import is_bigquery, quote_identifier
 from tests.unit.bach.util import get_pandas_df
 from bach.testing import assert_equals_data
 
@@ -175,66 +174,76 @@ def df_to_list(df):
     return(data_list)
 
 
-def assert_postgres_type(
-        series: Series,
-        expected_db_type: str,
-        expected_series_type: Type[Series]
+def assert_series_db_types(
+        df: DataFrame,
+        expected_series: Mapping[str, Type[Series]],
+        expected_db_type_overrides: Mapping[DBDialect, Mapping[str, str]] = None
 ):
     """
-    Check that the given Series has the expected data type in the Postgres database, and that it has the
-    expected Series type after being read back from the database.
+    Check that in the given DataFrame, all of the expected_series:
+     1) have the expected Series subtype in the DataFrame.
+     2) have the expected data type in the database.
 
-    This uses series.engine as the connection.
-    NOTE: If series.engine is not a Postgres engine, then this function simply returns without doing any
-    asserts!
+    If the expected data-type in the database is non-standard for that Series subtype (e.g. 'varchar(4)'
+    instead of just 'varchar'), then that can be overriden with the expected_db_type_overrides.
 
-    :param series: Series object to check the type of
-    :param expected_db_type: one of the types listed on https://www.postgresql.org/docs/current/datatype.html
-    :param expected_series_type: Subclass of Series
+    :param df: DataFrame object for which to check the database types
+    :param expected_series: Per series-name, the expected Series subtype
+    :param expected_db_type_overrides: Per database dialect a mapping of series-names to database types. That
+        override the default expected database type.
     """
-    engine = series.engine
-    if not is_postgres(engine):
-        return
-    sql = series.to_frame().view_sql()
-    sql = f'with check_type as ({sql}) select pg_typeof("{series.name}") from check_type limit 1'
-    db_rows = run_query(engine=engine, sql=sql)
-    db_values = [list(row) for row in db_rows]
-    db_type = db_values[0][0]
-    if expected_db_type:
-        assert db_type == expected_db_type
-    series_type = get_series_type_from_db_dtype(DBDialect.POSTGRES, db_type)
-    assert series_type == expected_series_type
+    expected_db_type_overrides = {} if expected_db_type_overrides is None else expected_db_type_overrides
+
+    db_dialect = DBDialect.from_engine(df.engine)
+    expected_db_types_dialect = {}
+    for series_name, series_type in expected_series.items():
+        assert isinstance(df[series_name], series_type)
+
+        type_override = expected_db_type_overrides.get(db_dialect, {}).get(series_name)
+        if type_override is not None:
+            expected_db_types_dialect[series_name] = type_override
+        else:
+            expected_db_types_dialect[series_name] = series_type.get_db_dtype(dialect=df.engine.dialect)
+    expected_db_types = {db_dialect: expected_db_types_dialect}
+    assert_db_types(df=df, expected_db_types=expected_db_types)
 
 
 def assert_db_types(
         df: DataFrame,
-        series_expected_db_type: Dict[str, str],
+        expected_db_types: Mapping[DBDialect, Mapping[str, str]]
 ):
     """
     Check that the given series in the DataFrame have the expected data types in the database.
 
-    ONLY supported for Postgres and Athena. Other database engines will raise an exception.
-
     :param df: DataFrame object for which to check the database types
-    :param series_expected_db_type: mapping of series-names, to database types.
+    :param expected_db_types: Per database dialect a mapping of series-names to database types.
+        Must at least contain a mapping from series-name to expected database types for the db-dialect of
+        df.engine
     """
     engine = df.engine
-    if is_postgres(engine):
-        typeof_function_name = 'pg_typeof'
-    elif is_athena(engine):
-        typeof_function_name = 'typeof'
-    else:
-        raise Exception(f'Not supported: {engine.name}')
+    db_dialect = DBDialect.from_engine(engine)
+    if db_dialect not in expected_db_types:
+        raise Exception(f'db dialect "{db_dialect.name}" not in expected_db_types.')
+    db_expected_db_types = expected_db_types[db_dialect]
+
+    typeof_function_name = {
+        DBDialect.POSTGRES: 'pg_typeof',
+        DBDialect.ATHENA: 'typeof',
+        # `bqutil.fn.typeof` is not a default BQ function, but a community function that's available to all.
+        # https://github.com/GoogleCloudPlatform/bigquery-utils/tree/master/udfs/community#typeofinput-any-type
+        DBDialect.BIGQUERY: 'bqutil.fn.typeof',
+    }[db_dialect]
 
     df_sql = df.view_sql()
     types_sql = ', '.join(
-        f'{typeof_function_name}("{series_name}")'for series_name in series_expected_db_type.keys()
+        f'{typeof_function_name}({quote_identifier(dialect=engine.dialect, name=series_name)})'
+        for series_name in db_expected_db_types.keys()
     )
     sql = f'with check_type as ({df_sql}) select {types_sql} from check_type limit 1'
     db_rows = run_query(engine=engine, sql=sql)
     db_values = [list(row) for row in db_rows]
-    for i, series_name in enumerate(series_expected_db_type.keys()):
-        expected_db_type = series_expected_db_type[series_name]
+    for i, series_name in enumerate(db_expected_db_types.keys()):
+        expected_db_type = db_expected_db_types[series_name]
         db_type = db_values[0][i]
         msg = f"expected type {expected_db_type} for {series_name}, found {db_type}"
         assert db_type == expected_db_type, msg
