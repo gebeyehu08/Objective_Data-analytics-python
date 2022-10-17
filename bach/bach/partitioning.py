@@ -6,7 +6,7 @@ from sqlalchemy.engine import Dialect
 
 from bach import SortColumn
 from bach.series import Series
-from bach.expression import Expression, WindowFunctionExpression, join_expressions
+from bach.expression import Expression, WindowFunctionExpression, join_expressions, ConstValueExpression
 from bach.sql_model import BachSqlModel
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
@@ -142,7 +142,7 @@ class GroupBy:
     def get_index_expressions(self) -> List[Expression]:
         from bach.series import SeriesAbstractMultiLevel
         exprs = []
-        for idx in self.index.values():
+        for pos, idx in enumerate(self.index.values()):
             if isinstance(idx, SeriesAbstractMultiLevel):
                 exprs += idx.level_expressions
                 continue
@@ -154,9 +154,20 @@ class GroupBy:
             # b) SELECT `x` + 1 as `x`, sum(y) from table GROUP BY `x` + 1
             # GROUP BY expression from b) actually is (`x` + 1) + 1
             # meanwhile GROUP BY expression from a) is (`x` + 1)
-            # this logic does not applies in Postgres
             if is_bigquery(idx.engine):
                 exprs.append(Expression.column_reference(idx.name))
+
+            # Athena allows grouping by expressions, column names and ordinals. A problem arises
+            # when the series' expression is way too complex to handle (expression dependency)
+            # In order to avoid this type of situations, is best to use ordinals, as we can make reference
+            # to complex expressions by just using there ordinal position in the SELECT clause.
+            # By default, index columns are the first in the SELECT clause. So, we can trust the order of
+            # the GroupBy.index.
+            # https://prestodb.io/docs/current/sql/select.html#group-by-clause
+            elif is_athena(idx.engine) and idx.expression != Expression.column_reference(idx.name):
+                exprs.append(ConstValueExpression.construct(f'{pos + 1}'))
+
+            # this logic does not applies in Postgres
             else:
                 exprs.append(idx.expression)
 
