@@ -10,7 +10,7 @@ from bach.partitioning import get_order_by_expression
 from bach.series import Series
 from bach.expression import Expression, AggregateFunctionExpression, get_variable_tokens, ConstValueExpression
 from bach.series.series import WrappedPartition
-from bach.types import StructuredDtype
+from bach.types import StructuredDtype, get_series_type_from_dtype
 from sql_models.constants import DBDialect
 from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres, is_athena
 
@@ -250,6 +250,15 @@ class SeriesString(Series):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'string':
             return expression
+
+        series_type = get_series_type_from_dtype(source_dtype)
+        from bach.series import SeriesJson
+        if is_athena(dialect) and issubclass(series_type, SeriesJson):
+            # casting directly to varchar will "deserialize" the json text, meaning that the string value
+            # will be extracted as scalar. For example: "a string" will result into: a string
+            # which yields different results compare to Postgres and BigQuery
+            # Using json_format will avoid this and double quotes will be kept
+            return Expression.construct('json_format({})', expression)
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def get_dummies(

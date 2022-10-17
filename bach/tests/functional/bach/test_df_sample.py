@@ -6,10 +6,9 @@ from typing import Optional
 import pytest
 
 from sql_models.graph_operations import get_graph_nodes_info
-from sql_models.util import is_bigquery, is_postgres
+from sql_models.util import is_bigquery, is_postgres, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def test_get_sample(engine, unique_table_test_name):
     # For reliable asserts (see below) we need more rows than the standard dataset of 11 rows has.
@@ -35,6 +34,7 @@ def test_get_sample(engine, unique_table_test_name):
                                   sample_percentage=50)
 
 
+@pytest.mark.skip_athena('We do not support the seed parameter for athena')
 @pytest.mark.skip_bigquery('We do not support the seed parameter for bigquery')
 def test_get_sample_seed(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
@@ -213,6 +213,7 @@ def test_get_unsampled_multiple_nodes(engine, unique_table_test_name):
     )
 
 
+@pytest.mark.skip_athena_todo('TODO: final decision on supporting temporary table or not')
 def test_sample_w_temp_tables(engine, unique_table_test_name):
     # Test to prevent regression: get_sample() should work after materialize(materialization='temp_table')
     df = get_df_with_test_data(engine, True)
@@ -333,7 +334,7 @@ def test_sample_operations_variable(engine, unique_table_test_name):
 
 def _get_seed(engine) -> Optional[int]:
     """ Return 200 if the database supports seeding. """
-    if is_bigquery(engine):
+    if is_bigquery(engine) or is_athena(engine):
         return None
     if is_postgres(engine):
         return 200

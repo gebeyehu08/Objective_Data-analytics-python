@@ -42,6 +42,10 @@ def quote_identifier(dialect: Dialect, name: str) -> str:
     """
     Add quotes around an identifier (e.g. a table or column name), and escape special characters in the name.
 
+    This is very similar to :meth:`ddl_quote_identifier()`, but meant for usage in Data Manipulation
+    Language (DML) queries (e.g. select/update/delete). See :meth:`ddl_quote_identifier()` for more
+    information on the difference.
+
     Note that the result of this function is not always a valid column name and/or table name. e.g. The
     following string can be quoted by this function to give a valid BigQuery identifier: '`te`st`'. However,
     that name is only valid as a table name, not as a column name as there are additional rules on what
@@ -76,6 +80,27 @@ def quote_identifier(dialect: Dialect, name: str) -> str:
         replaced_chars = replaced_chars.replace('`', '\\`')
         return f'`{replaced_chars}`'
     raise DatabaseNotSupportedException(dialect)
+
+
+def ddl_quote_identifier(dialect: Dialect, name: str) -> str:
+    """
+    Add quotes around an identifier (e.g. a table or column name), and escape special characters in the name.
+
+    This is very similar to :meth:`quote_identifier()`, but meant for usage in Data Definition Language (DDL)
+    statements (e.g. create/drop/alter), whereas `quote_identifier()` is meant for Data Manipulation
+    Language (DML) queries (e.g. select/update/delete). For most database systems there is no difference.
+    But for example, Athena uses backticks as quotes in create-table statements, while using double quotes
+    in select queries.
+    """
+    if is_athena(dialect):
+        # Athena uses backticks for escaping in DDL statements, see
+        # https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
+        # https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#:~:text=double%20backticks%20(%60%60)%20to%20represent%20a%20backtick
+        # We escape backtick characters in the name, so we get syntactically correct sql. Having said that,
+        # backticks are not allowed in identifier names.
+        replaced_chars = name.replace('`', '``')
+        return f'`{replaced_chars}`'
+    return quote_identifier(dialect, name)
 
 
 def quote_string(dialect_engine: Union[Dialect, Engine], value: str) -> str:

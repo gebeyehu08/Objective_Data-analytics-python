@@ -4,10 +4,10 @@ import pytest
 
 from bach import Series, DataFrame
 
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
+from bach.testing import assert_equals_data
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_categorical_describe(engine) -> None:
     series = get_df_with_test_data(engine, full_data_set=True)['municipality']
     result = series.describe()
@@ -28,7 +28,6 @@ def test_categorical_describe(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena  (does not support float as column name)
 def test_numerical_describe(engine) -> None:
     p_series = pd.Series(data=[1, 2, 3, 4, 5, 6, 7, 8, 1], name='numbers')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).numbers
