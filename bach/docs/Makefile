@@ -38,9 +38,6 @@ docusaurus:
 	@$(SPHINXBUILD) -M docusaurus "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@$(SPHINXBUILD) -M doctest "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-docusaurus-only:
-	@$(SPHINXBUILD) -M docusaurus "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-
 copy-target:
 	cp -a $(BUILDDIR)/$(DOCUSAURUSDIR)/* $(DOCSTARGETDIR)modeling/
 	cp -a $(IMGDIR)/* $(IMGTARGETDIR)
