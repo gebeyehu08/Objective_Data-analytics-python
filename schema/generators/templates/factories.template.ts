@@ -75,23 +75,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
         name: `make${contextName}`,
         returnTypeName: contextName,
         multiLineSignature: true,
-        parameters: getObjectKeys(properties).reduce((parameters, propertyName) => {
-          const property = properties[propertyName];
-
-          if(property?.internal) {
-            return parameters;
-          }
-
-          parameters.push({
-            name: String(propertyName),
-            description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
-            typeName: getTypeForProperty(property),
-            isOptional: property.optional,
-            value: getPropertyValue(contextName, property),
-          })
-
-          return parameters;
-        }, []),
+        parameters: getParametersFromProperties(contextName, context, properties),
       },
       (tsWriter: TypeScriptWriter) => {
         tsWriter.writeLine('({');
@@ -167,93 +151,114 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
-  eventNames.forEach((eventName) => {
+  const nonAbstractEvents = eventNames.filter(
+    eventName => !eventName.startsWith('Abstract')
+  );
+
+  nonAbstractEvents.forEach((eventName) => {
     const event = Objectiv.events[eventName];
     const properties = getEntityProperties(event);
     const parents = getEntityParents(event);
-    const isAbstract = eventName.startsWith('Abstract');
     const hasChildren = getChildren(eventName).length;
 
-    if(!isAbstract) {
-      tsWriter.writeES6FunctionBlock(
-        {
-          export: true,
-          description: getEntityDescription(event, descriptionsType, descriptionsTarget),
-          name: `make${eventName}`,
-          returnTypeName: eventName,
-          multiLineSignature: true,
-          parameters: getObjectKeys(properties).reduce((parameters, propertyName) => {
-            const property = properties[propertyName];
+    tsWriter.writeES6FunctionBlock(
+      {
+        export: true,
+        description: getEntityDescription(event, descriptionsType, descriptionsTarget),
+        name: `make${eventName}`,
+        returnTypeName: eventName,
+        multiLineSignature: true,
+        parameters: getParametersFromProperties(eventName, event, properties),
+      },
+      (tsWriter: TypeScriptWriter) => {
+        tsWriter.writeLine('({');
 
-            if(property?.internal) {
-              return parameters;
-            }
+        writeObjectProperty(tsWriter, eventName, {
+          name: '__instance_id',
+          value: 'generateGUID()'
+        })
 
-            parameters.push({
-              name: String(propertyName),
-              description: getPropertyDescription(event, propertyName, descriptionsType, descriptionsTarget),
-              typeName: getTypeForProperty(property),
-              isOptional: property.optional,
-              value: getPropertyValue(eventName, property),
-            })
-
-            return parameters;
-          }, []),
-        },
-        (tsWriter: TypeScriptWriter) => {
-          tsWriter.writeLine('({');
-
+        if(hasChildren) {
           writeObjectProperty(tsWriter, eventName, {
-            name: '__instance_id',
-            value: 'generateGUID()'
+            name: `__${NameUtility.camelToKebabCase(eventName).replace(/-/g, '_')}`,
+            value: 'true'
           })
+        }
 
-          if(hasChildren) {
+        parents.forEach(parentName => {
+          const isAbstract = parentName.startsWith('Abstract');
+          if(!isAbstract) {
             writeObjectProperty(tsWriter, eventName, {
-              name: `__${NameUtility.camelToKebabCase(eventName).replace(/-/g, '_')}`,
+              name: `__${NameUtility.camelToKebabCase(parentName).replace(/-/g, '_')}`,
               value: 'true'
             })
           }
+        })
 
-          parents.forEach(parentName => {
-            const isAbstract = parentName.startsWith('Abstract');
-            if(!isAbstract) {
-              writeObjectProperty(tsWriter, eventName, {
-                name: `__${NameUtility.camelToKebabCase(parentName).replace(/-/g, '_')}`,
-                value: 'true'
-              })
-            }
-          })
+        getObjectKeys(properties).map((propertyName) => ({
+          name: String(propertyName),
+          isOptional: properties[propertyName].optional,
+          value: getPropertyValue(eventName, properties[propertyName]),
+        })).forEach(
+          property => writeObjectProperty(tsWriter, eventName, property)
+        )
 
-          getObjectKeys(properties).map((propertyName) => ({
-            name: String(propertyName),
-            isOptional: properties[propertyName].optional,
-            value: getPropertyValue(eventName, properties[propertyName]),
-          })).forEach(
-            property => writeObjectProperty(tsWriter, eventName, property)
-          )
+        tsWriter.writeLine('});');
+      }
+    )
 
-          tsWriter.writeLine('});');
-        }
-      )
-
-      tsWriter.writeLine();
-    }
+    tsWriter.writeLine();
   });
+
+  writeEntityFactory(tsWriter, 'Event', nonAbstractEvents);
 
 });
 
+const getParametersFromProperties = (entityName, entity, properties) => getObjectKeys(properties).reduce((parameters, propertyName) => {
+  const property = properties[propertyName];
+
+  if(property?.internal) {
+    return parameters;
+  }
+
+  parameters.push({
+    name: String(propertyName),
+    description: getPropertyDescription(entity, propertyName, descriptionsType, descriptionsTarget),
+    typeName: getTypeForProperty(property),
+    isOptional: property.optional,
+    value: getPropertyValue(entityName, property),
+  })
+
+  return parameters;
+}, []);
+
 const writeEntityFactory = (tsWriter: TypeScriptWriter, entityType: 'Event' | 'Context', entityNames) => {
+  tsWriter.writeJsDocLines([
+    `A factory to generate any ${entityType}.`
+  ]);
   const entityPropsName = `${entityType.toLowerCase()}Props`;
   entityNames.forEach(entityName => {
-    // TODO generate props after _type (probably a good idea to output them as a type when generating factories above)
-    tsWriter.writeLine(`export function makeContext (contextProps: { _type: '${entityName}', id: string }): ${entityName};`)
+    const entity = getEntityByName(entityName);
+    const properties = getEntityProperties(entity);
+    tsWriter.write(`export function make${entityType} (`);
+    tsWriter.writeProps({
+      propsName: `${entityType.toLowerCase()}Props`,
+      parameters: [
+        {
+          name: '_type',
+          typeName: `'${entityName}'`,
+        },
+        ...getParametersFromProperties(entityName, entity, properties)
+      ],
+    });
+    tsWriter.writeLine(`): ${entityName};`);
+    tsWriter.writeEndOfLine(``);
   })
-  tsWriter.writeLine(`export function makeContext ({ _type, ...contextProps }: any) {`)
+  tsWriter.writeLine(`export function make${entityType} ({ _type, ...${entityPropsName} }: any) {`)
   tsWriter.increaseIndent();
   tsWriter.writeLine(`switch(_type) {`)
   entityNames.forEach(entityName => {
-    tsWriter.writeLine(`${tsWriter.indentString}case ${entityName}:`)
+    tsWriter.writeLine(`${tsWriter.indentString}case '${entityName}':`)
     tsWriter.writeLine(`${tsWriter.indentString.repeat(2)}return make${entityName}(${entityPropsName});`);
   });
   tsWriter.writeLine(`}`);

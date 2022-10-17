@@ -378,61 +378,154 @@ export const makeSessionContext = (props: {
   _type: GlobalContextName.SessionContext,
 });
 
-export function makeContext (contextProps: { _type: 'ApplicationContext', id: string }): ApplicationContext;
-export function makeContext (contextProps: { _type: 'ContentContext', id: string }): ContentContext;
-export function makeContext (contextProps: { _type: 'CookieIdContext', id: string }): CookieIdContext;
-export function makeContext (contextProps: { _type: 'ExpandableContext', id: string }): ExpandableContext;
-export function makeContext (contextProps: { _type: 'HttpContext', id: string }): HttpContext;
-export function makeContext (contextProps: { _type: 'IdentityContext', id: string }): IdentityContext;
-export function makeContext (contextProps: { _type: 'InputContext', id: string }): InputContext;
-export function makeContext (contextProps: { _type: 'InputValueContext', id: string }): InputValueContext;
-export function makeContext (contextProps: { _type: 'LinkContext', id: string }): LinkContext;
-export function makeContext (contextProps: { _type: 'LocaleContext', id: string }): LocaleContext;
-export function makeContext (contextProps: { _type: 'MarketingContext', id: string }): MarketingContext;
-export function makeContext (contextProps: { _type: 'MediaPlayerContext', id: string }): MediaPlayerContext;
-export function makeContext (contextProps: { _type: 'NavigationContext', id: string }): NavigationContext;
-export function makeContext (contextProps: { _type: 'OverlayContext', id: string }): OverlayContext;
-export function makeContext (contextProps: { _type: 'PathContext', id: string }): PathContext;
-export function makeContext (contextProps: { _type: 'PressableContext', id: string }): PressableContext;
-export function makeContext (contextProps: { _type: 'RootLocationContext', id: string }): RootLocationContext;
-export function makeContext (contextProps: { _type: 'SessionContext', id: string }): SessionContext;
+/**
+* A factory to generate any Context.
+*/
+export function makeContext (contextProps: {
+  _type: 'ApplicationContext',
+  id: string,
+}): ApplicationContext;
+
+export function makeContext (contextProps: {
+  _type: 'ContentContext',
+  id: string,
+}): ContentContext;
+
+export function makeContext (contextProps: {
+  _type: 'CookieIdContext',
+  cookie_id: string,
+  id: string,
+}): CookieIdContext;
+
+export function makeContext (contextProps: {
+  _type: 'ExpandableContext',
+  id: string,
+}): ExpandableContext;
+
+export function makeContext (contextProps: {
+  _type: 'HttpContext',
+  referrer: string,
+  user_agent: string,
+  remote_address?: string,
+  id: string,
+}): HttpContext;
+
+export function makeContext (contextProps: {
+  _type: 'IdentityContext',
+  value: string,
+  id: string,
+}): IdentityContext;
+
+export function makeContext (contextProps: {
+  _type: 'InputContext',
+  id: string,
+}): InputContext;
+
+export function makeContext (contextProps: {
+  _type: 'InputValueContext',
+  value: string,
+  id: string,
+}): InputValueContext;
+
+export function makeContext (contextProps: {
+  _type: 'LinkContext',
+  href: string,
+  id: string,
+}): LinkContext;
+
+export function makeContext (contextProps: {
+  _type: 'LocaleContext',
+  language_code?: string,
+  country_code?: string,
+  id: string,
+}): LocaleContext;
+
+export function makeContext (contextProps: {
+  _type: 'MarketingContext',
+  source: string,
+  medium: string,
+  campaign: string,
+  term?: string,
+  content?: string,
+  source_platform?: string,
+  creative_format?: string,
+  marketing_tactic?: string,
+  id: string,
+}): MarketingContext;
+
+export function makeContext (contextProps: {
+  _type: 'MediaPlayerContext',
+  id: string,
+}): MediaPlayerContext;
+
+export function makeContext (contextProps: {
+  _type: 'NavigationContext',
+  id: string,
+}): NavigationContext;
+
+export function makeContext (contextProps: {
+  _type: 'OverlayContext',
+  id: string,
+}): OverlayContext;
+
+export function makeContext (contextProps: {
+  _type: 'PathContext',
+  id: string,
+}): PathContext;
+
+export function makeContext (contextProps: {
+  _type: 'PressableContext',
+  id: string,
+}): PressableContext;
+
+export function makeContext (contextProps: {
+  _type: 'RootLocationContext',
+  id: string,
+}): RootLocationContext;
+
+export function makeContext (contextProps: {
+  _type: 'SessionContext',
+  hit_number: number,
+  id: string,
+}): SessionContext;
+
 export function makeContext ({ _type, ...contextProps }: any) {
   switch(_type) {
-    case ApplicationContext:
+    case 'ApplicationContext':
       return makeApplicationContext(contextProps);
-    case ContentContext:
+    case 'ContentContext':
       return makeContentContext(contextProps);
-    case CookieIdContext:
+    case 'CookieIdContext':
       return makeCookieIdContext(contextProps);
-    case ExpandableContext:
+    case 'ExpandableContext':
       return makeExpandableContext(contextProps);
-    case HttpContext:
+    case 'HttpContext':
       return makeHttpContext(contextProps);
-    case IdentityContext:
+    case 'IdentityContext':
       return makeIdentityContext(contextProps);
-    case InputContext:
+    case 'InputContext':
       return makeInputContext(contextProps);
-    case InputValueContext:
+    case 'InputValueContext':
       return makeInputValueContext(contextProps);
-    case LinkContext:
+    case 'LinkContext':
       return makeLinkContext(contextProps);
-    case LocaleContext:
+    case 'LocaleContext':
       return makeLocaleContext(contextProps);
-    case MarketingContext:
+    case 'MarketingContext':
       return makeMarketingContext(contextProps);
-    case MediaPlayerContext:
+    case 'MediaPlayerContext':
       return makeMediaPlayerContext(contextProps);
-    case NavigationContext:
+    case 'NavigationContext':
       return makeNavigationContext(contextProps);
-    case OverlayContext:
+    case 'OverlayContext':
       return makeOverlayContext(contextProps);
-    case PathContext:
+    case 'PathContext':
       return makePathContext(contextProps);
-    case PressableContext:
+    case 'PressableContext':
       return makePressableContext(contextProps);
-    case RootLocationContext:
+    case 'RootLocationContext':
       return makeRootLocationContext(contextProps);
-    case SessionContext:
+    case 'SessionContext':
       return makeSessionContext(contextProps);
   }
 }

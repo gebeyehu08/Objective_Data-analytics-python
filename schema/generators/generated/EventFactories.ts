@@ -374,3 +374,152 @@ export const makeVisibleEvent = (props: {
   time: props.time,
 });
 
+/**
+* A factory to generate any Event.
+*/
+export function makeEvent (eventProps: {
+  _type: 'ApplicationLoadedEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): ApplicationLoadedEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'FailureEvent',
+  message: string,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): FailureEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'HiddenEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): HiddenEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'InputChangeEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): InputChangeEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'InteractiveEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): InteractiveEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'MediaEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): MediaEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'MediaLoadEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): MediaLoadEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'MediaPauseEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): MediaPauseEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'MediaStartEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): MediaStartEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'MediaStopEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): MediaStopEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'NonInteractiveEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): NonInteractiveEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'PressEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): PressEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'SuccessEvent',
+  message: string,
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): SuccessEvent;
+
+export function makeEvent (eventProps: {
+  _type: 'VisibleEvent',
+  location_stack: LocationStack,
+  global_contexts: GlobalContexts,
+  id: string,
+  time: number,
+}): VisibleEvent;
+
+export function makeEvent ({ _type, ...eventProps }: any) {
+  switch(_type) {
+    case 'ApplicationLoadedEvent':
+      return makeApplicationLoadedEvent(eventProps);
+    case 'FailureEvent':
+      return makeFailureEvent(eventProps);
+    case 'HiddenEvent':
+      return makeHiddenEvent(eventProps);
+    case 'InputChangeEvent':
+      return makeInputChangeEvent(eventProps);
+    case 'InteractiveEvent':
+      return makeInteractiveEvent(eventProps);
+    case 'MediaEvent':
+      return makeMediaEvent(eventProps);
+    case 'MediaLoadEvent':
+      return makeMediaLoadEvent(eventProps);
+    case 'MediaPauseEvent':
+      return makeMediaPauseEvent(eventProps);
+    case 'MediaStartEvent':
+      return makeMediaStartEvent(eventProps);
+    case 'MediaStopEvent':
+      return makeMediaStopEvent(eventProps);
+    case 'NonInteractiveEvent':
+      return makeNonInteractiveEvent(eventProps);
+    case 'PressEvent':
+      return makePressEvent(eventProps);
+    case 'SuccessEvent':
+      return makeSuccessEvent(eventProps);
+    case 'VisibleEvent':
+      return makeVisibleEvent(eventProps);
+  }
+}

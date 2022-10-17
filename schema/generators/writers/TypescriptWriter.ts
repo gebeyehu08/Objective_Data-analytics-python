@@ -4,6 +4,7 @@
 
 import { TextWriter } from '@yellicode/core';
 import { FunctionDefinition, TypeScriptWriter as OriginalTypeScriptWriter, VariableDefinition } from '@yellicode/typescript';
+import { ParameterDefinition } from "@yellicode/typescript/dist/types/model";
 
 type ES6FunctionDefinition = Omit<FunctionDefinition, 'description'> & {
   description?: string,
@@ -49,19 +50,28 @@ export class TypeScriptWriter extends OriginalTypeScriptWriter {
       export: func.export,
     });
 
-    this.writeLine(` = (props: {`);
-    this.increaseIndent();
 
-    func.parameters.forEach(parameter => {
-      this.writeLine(`${parameter.name}${parameter.isOptional ? '?:' : ':'} ${parameter.typeName},`)
-    });
+    this.write(` = (`);
 
-    this.decreaseIndent();
-    this.write(`}): ${func.returnTypeName} => `);
+    this.writeProps({ propsName: 'props', parameters: func.parameters });
+
+    this.write(`): ${func.returnTypeName} => `);
 
     contents && contents(this);
 
     return this;
+  }
+
+  public writeProps({propsName, parameters}: { propsName: string, parameters: ParameterDefinition[] }) {
+    this.writeLine(`${propsName}: {`);
+    this.increaseIndent();
+
+    parameters.forEach(parameter => {
+      this.writeLine(`${parameter.name}${parameter.isOptional ? '?:' : ':'} ${parameter.typeName},`)
+    });
+
+    this.decreaseIndent();
+    this.write(`}`);
   }
 }
 
