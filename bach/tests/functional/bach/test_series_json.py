@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import pandas
 import pandas as pd
 
-from bach import DataFrame
+from bach import DataFrame, SeriesJson
 from bach.series import SeriesString, SeriesDict, SeriesList
 from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import get_df_with_json_data, \
@@ -336,28 +336,29 @@ def test_json_flatten_array(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
 
     list_column = df['list_column']
+    assert isinstance(list_column, SeriesJson)  # help mypy/pycharm a bit here
 
     result_item, result_offset = list_column.json.flatten_array()
-    result_item = result_item.sort_by_series(
-        by=[result_item.index['_index_row'], result_offset]
-    )
+    result_df = result_item.to_frame()
+    result_df['offset'] = result_offset
+    result_df = result_df.sort_values(['_index_row', 'offset'])
     assert_equals_data(
-        result_item,
-        expected_columns=['_index_row', 'list_column'],
+        result_df,
+        expected_columns=['_index_row', 'list_column', 'offset'],
         expected_data=[
-            [0, {'a': 'b'}],
-            [0, {'c': 'd'}],
-            [1, 'a'],
-            [1, 'b'],
-            [1, 'c'],
-            [1, 'd'],
-            [2, {'id': 'b', '_type': 'a'}],
-            [2, {'id': 'd', '_type': 'c'}],
-            [2, {'id': 'f', '_type': 'e'}],
-            [3, {'id': '#document', '_type': 'WebDocumentContext'}],
-            [3, {'id': 'home', '_type': 'SectionContext'}],
-            [3, {'id': 'top-10', '_type': 'SectionContext'}],
-            [3, {'id': '5o7Wv5Q5ZE', '_type': 'ItemContext'}],
+            [0, {'a': 'b'}, 0],
+            [0, {'c': 'd'}, 1],
+            [1, 'a', 0],
+            [1, 'b', 1],
+            [1, 'c', 2],
+            [1, 'd', 3],
+            [2, {'id': 'b', '_type': 'a'}, 0],
+            [2, {'id': 'd', '_type': 'c'}, 1],
+            [2, {'id': 'f', '_type': 'e'}, 2],
+            [3, {'id': '#document', '_type': 'WebDocumentContext'}, 0],
+            [3, {'id': 'home', '_type': 'SectionContext'}, 1],
+            [3, {'id': 'top-10', '_type': 'SectionContext'}, 2],
+            [3, {'id': '5o7Wv5Q5ZE', '_type': 'ItemContext'}, 3],
         ],
         use_to_pandas=True,
     )
