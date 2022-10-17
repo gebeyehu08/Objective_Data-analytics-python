@@ -177,3 +177,17 @@ class AthenaArrayFlattening(ArrayFlattening):
             _ITEM_IDENTIFIER_EXPR,
             _OFFSET_IDENTIFIER_EXPR,
         )
+
+    def _get_column_expressions(self) -> Dict[str, Expression]:
+        """
+            Updates column expression for offset columns, since Athena uses ordinality instead of offset.
+        """
+        column_expressions = super()._get_column_expressions()
+
+        offset_expr = Expression.construct(
+            '{} - 1 AS {}',
+            _OFFSET_IDENTIFIER_EXPR,
+            Expression.identifier(name=self.item_offset_series_name)
+        )
+        column_expressions[self.item_offset_series_name] = offset_expr
+        return column_expressions
