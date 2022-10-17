@@ -199,7 +199,7 @@ def assert_series_db_types(
     for series_name, series_type in expected_series.items():
         assert isinstance(df[series_name], series_type)
 
-        type_override = expected_db_type_overrides.get(db_dialect, {}).get(series_name, None)
+        type_override = expected_db_type_overrides.get(db_dialect, {}).get(series_name)
         if type_override is not None:
             expected_db_types_dialect[series_name] = type_override
         else:
