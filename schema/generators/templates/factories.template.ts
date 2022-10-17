@@ -4,9 +4,8 @@
 
 import { NameUtility, TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
-import { TypeScriptWriter } from "@yellicode/typescript";
 import Objectiv from '../../base_schema.json';
-import { TypescriptWriter } from '../writers/TypescriptWriter';
+import { TypeScriptWriter } from '../writers/TypeScriptWriter';
 import {
   getChildren,
   getContextNames,
@@ -48,7 +47,7 @@ export type PropertyDefinition = {
 };
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (writer: TextWriter) => {
-  const tsWriter = new TypescriptWriter(writer);
+  const tsWriter = new TypeScriptWriter(writer);
 
   tsWriter.writeMultiLineImports('@objectiv/schema', contextNames.filter(contextName => {
     return !contextName.startsWith('Abstract');
@@ -57,100 +56,102 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
-  contextNames.forEach((contextName) => {
+  const nonAbstractContexts = contextNames.filter(
+    contextName => !contextName.startsWith('Abstract')
+  );
+
+  nonAbstractContexts.forEach((contextName) => {
     const context = Objectiv.contexts[contextName];
     const properties = getEntityProperties(context);
     const parents = getEntityParents(context);
-    const isAbstract = contextName.startsWith('Abstract');
     const hasChildren = getChildren(contextName).length;
     const isLocationContext = parents.includes('AbstractLocationContext') || contextName === 'AbstractLocationContext';
     const isGlobalContext = parents.includes('AbstractGlobalContext') || contextName === 'AbstractGlobalContext';
 
-    if(!isAbstract) {
-      tsWriter.writeES6FunctionBlock(
-        {
-          export: true,
-          description: getEntityDescription(context, descriptionsType, descriptionsTarget),
-          name: `make${contextName}`,
-          returnTypeName: contextName,
-          multiLineSignature: true,
-          parameters: getObjectKeys(properties).reduce((parameters, propertyName) => {
-            const property = properties[propertyName];
+    tsWriter.writeES6FunctionBlock(
+      {
+        export: true,
+        description: getEntityDescription(context, descriptionsType, descriptionsTarget),
+        name: `make${contextName}`,
+        returnTypeName: contextName,
+        multiLineSignature: true,
+        parameters: getObjectKeys(properties).reduce((parameters, propertyName) => {
+          const property = properties[propertyName];
 
-            if(property?.internal) {
-              return parameters;
-            }
-
-            parameters.push({
-              name: String(propertyName),
-              description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
-              typeName: getTypeForProperty(property),
-              isOptional: property.optional,
-              value: getPropertyValue(contextName, property),
-            })
-
+          if(property?.internal) {
             return parameters;
-          }, []),
-        },
-        (tsWriter: TypescriptWriter) => {
-          tsWriter.writeLine('({');
-
-          writeObjectProperty(tsWriter, contextName, {
-            name: '__instance_id',
-            value: 'generateGUID()'
-          })
-
-          if(hasChildren) {
-            writeObjectProperty(tsWriter, contextName, {
-              name: `__${NameUtility.camelToKebabCase(contextName).replace(/-/g, '_')}`,
-              value: 'true'
-            })
           }
 
-          parents.forEach(parentName => {
-            const isAbstract = parentName.startsWith('Abstract');
-            if(!isAbstract) {
-              writeObjectProperty(tsWriter, contextName, {
-                name: `__${NameUtility.camelToKebabCase(parentName).replace(/-/g, '_')}`,
-                value: 'true'
-              })
-            }
-          })
-
-          if(isLocationContext) {
-            writeObjectProperty(tsWriter, contextName, {
-              name: '__location_context',
-              value: 'true'
-            })
-          }
-
-          if(isGlobalContext) {
-            writeObjectProperty(tsWriter, contextName, {
-              name: '__global_context',
-              value: 'true'
-            })
-          }
-
-          getObjectKeys(properties).map((propertyName) => ({
+          parameters.push({
             name: String(propertyName),
-            isOptional: properties[propertyName].optional,
-            value: getPropertyValue(contextName, properties[propertyName]),
-          })).forEach(
-            property => writeObjectProperty(tsWriter, contextName, property)
-          )
+            description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
+            typeName: getTypeForProperty(property),
+            isOptional: property.optional,
+            value: getPropertyValue(contextName, property),
+          })
 
-          tsWriter.writeLine('});');
+          return parameters;
+        }, []),
+      },
+      (tsWriter: TypeScriptWriter) => {
+        tsWriter.writeLine('({');
+
+        writeObjectProperty(tsWriter, contextName, {
+          name: '__instance_id',
+          value: 'generateGUID()'
+        })
+
+        if(hasChildren) {
+          writeObjectProperty(tsWriter, contextName, {
+            name: `__${NameUtility.camelToKebabCase(contextName).replace(/-/g, '_')}`,
+            value: 'true'
+          })
         }
-      )
 
-      tsWriter.writeLine();
-    }
+        parents.forEach(parentName => {
+          const isAbstract = parentName.startsWith('Abstract');
+          if(!isAbstract) {
+            writeObjectProperty(tsWriter, contextName, {
+              name: `__${NameUtility.camelToKebabCase(parentName).replace(/-/g, '_')}`,
+              value: 'true'
+            })
+          }
+        })
+
+        if(isLocationContext) {
+          writeObjectProperty(tsWriter, contextName, {
+            name: '__location_context',
+            value: 'true'
+          })
+        }
+
+        if(isGlobalContext) {
+          writeObjectProperty(tsWriter, contextName, {
+            name: '__global_context',
+            value: 'true'
+          })
+        }
+
+        getObjectKeys(properties).map((propertyName) => ({
+          name: String(propertyName),
+          isOptional: properties[propertyName].optional,
+          value: getPropertyValue(contextName, properties[propertyName]),
+        })).forEach(
+          property => writeObjectProperty(tsWriter, contextName, property)
+        )
+
+        tsWriter.writeLine('});');
+      }
+    )
+
+    tsWriter.writeLine();
   });
 
+  writeEntityFactory(tsWriter, 'Context', nonAbstractContexts);
 });
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.ts` }, (writer: TextWriter) => {
-  const tsWriter = new TypescriptWriter(writer);
+  const tsWriter = new TypeScriptWriter(writer);
 
   tsWriter.writeMultiLineImports('@objectiv/schema', [
     ...[
@@ -199,7 +200,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
             return parameters;
           }, []),
         },
-        (tsWriter: TypescriptWriter) => {
+        (tsWriter: TypeScriptWriter) => {
           tsWriter.writeLine('({');
 
           writeObjectProperty(tsWriter, eventName, {
@@ -241,6 +242,24 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
   });
 
 });
+
+const writeEntityFactory = (tsWriter: TypeScriptWriter, entityType: 'Event' | 'Context', entityNames) => {
+  const entityPropsName = `${entityType.toLowerCase()}Props`;
+  entityNames.forEach(entityName => {
+    // TODO generate props after _type (probably a good idea to output them as a type when generating factories above)
+    tsWriter.writeLine(`export function makeContext (contextProps: { _type: '${entityName}', id: string }): ${entityName};`)
+  })
+  tsWriter.writeLine(`export function makeContext ({ _type, ...contextProps }: any) {`)
+  tsWriter.increaseIndent();
+  tsWriter.writeLine(`switch(_type) {`)
+  entityNames.forEach(entityName => {
+    tsWriter.writeLine(`${tsWriter.indentString}case ${entityName}:`)
+    tsWriter.writeLine(`${tsWriter.indentString.repeat(2)}return make${entityName}(${entityPropsName});`);
+  });
+  tsWriter.writeLine(`}`);
+  tsWriter.decreaseIndent();
+  tsWriter.writeLine(`}`);
+}
 
 const getTypeForProperty = (property) => {
   const mappedType = SchemaToTypeScriptPropertyTypeMap[property.type];

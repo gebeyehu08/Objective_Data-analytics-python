@@ -3,14 +3,14 @@
  */
 
 import { TextWriter } from '@yellicode/core';
-import { FunctionDefinition, TypeScriptWriter, VariableDefinition } from '@yellicode/typescript';
+import { FunctionDefinition, TypeScriptWriter as OriginalTypeScriptWriter, VariableDefinition } from '@yellicode/typescript';
 
 type ES6FunctionDefinition = Omit<FunctionDefinition, 'description'> & {
   description?: string,
   export?: boolean
 }
 
-export class TypescriptWriter extends TypeScriptWriter {
+export class TypeScriptWriter extends OriginalTypeScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
@@ -59,7 +59,7 @@ export class TypescriptWriter extends TypeScriptWriter {
     this.decreaseIndent();
     this.write(`}): ${func.returnTypeName} => `);
 
-    contents(this);
+    contents && contents(this);
 
     return this;
   }

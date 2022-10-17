@@ -4,7 +4,7 @@
 
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
-import { TypescriptWriter } from '../writers/TypescriptWriter';
+import { TypeScriptWriter } from '../writers/TypeScriptWriter';
 import { getContextNames, getEntityByName, getEntityParents, getEventNames, sortArrayByName } from "./common";
 
 // TODO temporarily generate this in the /generated folder, as we need TS to be finished before we can use it
@@ -15,7 +15,7 @@ const contextNames = getContextNames();
 const eventNames = getEventNames();
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writer: TextWriter) => {
-  const tsWriter = new TypescriptWriter(writer);
+  const tsWriter = new TypeScriptWriter(writer);
   const globalContexts = [];
   const locationContexts = [];
   const abstractContexts = [];
@@ -94,7 +94,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
 });
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer: TextWriter) => {
-  const tsWriter = new TypescriptWriter(writer);
+  const tsWriter = new TypeScriptWriter(writer);
   const events = [];
   const abstractEvents = [];
 

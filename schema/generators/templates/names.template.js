@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const templating_1 = require("@yellicode/templating");
-const TypescriptWriter_1 = require("../writers/TypescriptWriter");
+const TypeScriptWriter_1 = require("../writers/TypeScriptWriter");
 const common_1 = require("./common");
 const destinationFolder = '../generated/';
 const contextNames = common_1.getContextNames();
 const eventNames = common_1.getEventNames();
 templating_1.Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writer) => {
-    const tsWriter = new TypescriptWriter_1.TypescriptWriter(writer);
+    const tsWriter = new TypeScriptWriter_1.TypeScriptWriter(writer);
     const globalContexts = [];
     const locationContexts = [];
     const abstractContexts = [];
@@ -62,7 +62,7 @@ templating_1.Generator.generateFromModel({ outputFile: `${destinationFolder}/Con
     ]);
 });
 templating_1.Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer) => {
-    const tsWriter = new TypescriptWriter_1.TypescriptWriter(writer);
+    const tsWriter = new TypeScriptWriter_1.TypeScriptWriter(writer);
     const events = [];
     const abstractEvents = [];
     eventNames.forEach(eventName => {
