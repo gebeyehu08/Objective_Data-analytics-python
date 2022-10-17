@@ -20,6 +20,10 @@
     },
     {
       "modelFile": "../base_schema.json",
+      "templateFile": "templates/names.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
       "templateFile": "templates/schema.template.ts"
     },
     {

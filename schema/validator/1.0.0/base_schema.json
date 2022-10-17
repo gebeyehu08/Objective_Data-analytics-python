@@ -202,11 +202,10 @@
         { "description": "This is the abstract parent of all Events.", "type": "text", "target": "primary" }
       ],
       "properties":{
-        "schema_version": {
+        "_schema_version": {
           "description": "The version of the Objectiv Taxonomy Schema used to generate this event.",
           "type": "string",
-          "optional": "true",
-          "internal": "true"
+          "internal": true
         },
         "_types": {
           "description": "An ordered list of the parents of this Event, itself included as the last element.",
@@ -214,8 +213,7 @@
           "items": {
             "type": "string"
           },
-          "optional": "true",
-          "internal": "true"
+          "internal": true
         },
         "location_stack": {
           "type": "LocationStack"
@@ -224,8 +222,9 @@
           "type": "GlobalContexts"
         },
         "_type": {
-          "description": "A string literal used during serialization. Should always match the Event interface name.",
-          "type": "discriminator"
+          "description": "A string literal used during serialization. Hardcoded to the Event name.",
+          "type": "discriminator",
+          "internal": true
         },
         "id": {
           "description": "Unique identifier for a specific instance of an event.",
@@ -454,16 +453,16 @@
           "items": {
             "type": "string"
           },
-          "optional": "true",
-          "internal": "true"
+          "internal": true
         },
         "id": {
           "description":"A unique string identifier to be combined with the Context Type (`_type`) \nfor Context instance uniqueness.",
           "type": "string"
         },
         "_type": {
-          "description": "A string literal used during serialization. Should always match the Context interface name.",
-          "type": "discriminator"
+          "description": "A string literal used during serialization. Hardcoded to the Context name.",
+          "type": "discriminator",
+          "internal": true
         }
       }
     },

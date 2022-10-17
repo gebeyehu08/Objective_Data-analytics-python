@@ -93,8 +93,6 @@ export class ZodWriter extends JavaScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
-    this.writeFile('./validator.template.static.ts');
-    this.writeLine();
   }
 
   public writeEnumeration(enumeration: Enumeration): void {
@@ -132,7 +130,7 @@ export class ZodWriter extends JavaScriptWriter {
     this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${propertyValue})` : property.typeName}`);
 
     if (property.isOptional) {
-      this.write('.optional()');
+      this.write('.nullable()');
     }
 
     this.writeEndOfLine(',');

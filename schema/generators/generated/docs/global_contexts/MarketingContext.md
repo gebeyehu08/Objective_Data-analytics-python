@@ -12,7 +12,6 @@ A [GlobalContext](/taxonomy/global-contexts) describing the marketing channel & 
 `string` marketing_tactic: Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
-`discriminator` _type: A string literal used during serialization. Should always match the Context interface name.
 
 :::info setting of the properties
 The backend will automatically set all the properties based on the UTM parameters in the PathContext.
