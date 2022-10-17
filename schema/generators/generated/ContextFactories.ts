@@ -102,14 +102,14 @@ export const makeExpandableContext = (props: {
 export const makeHttpContext = (props: {
   referrer: string,
   user_agent: string,
-  remote_address?: string,
+  remote_address: string,
   id: string,
 }): HttpContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
   referrer: props.referrer,
   user_agent: props.user_agent,
-  remote_address: props.remote_address ?? null,
+  remote_address: props.remote_address,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -203,14 +203,14 @@ export const makeLinkContext = (props: {
 * A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).
 */
 export const makeLocaleContext = (props: {
-  language_code?: string,
-  country_code?: string,
+  language_code: string,
+  country_code: string,
   id: string,
 }): LocaleContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  language_code: props.language_code ?? null,
-  country_code: props.country_code ?? null,
+  language_code: props.language_code,
+  country_code: props.country_code,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -228,11 +228,11 @@ export const makeMarketingContext = (props: {
   source: string,
   medium: string,
   campaign: string,
-  term?: string,
-  content?: string,
-  source_platform?: string,
-  creative_format?: string,
-  marketing_tactic?: string,
+  term: string,
+  content: string,
+  source_platform: string,
+  creative_format: string,
+  marketing_tactic: string,
   id: string,
 }): MarketingContext => ({
   __instance_id: generateGUID(),
@@ -240,11 +240,11 @@ export const makeMarketingContext = (props: {
   source: props.source,
   medium: props.medium,
   campaign: props.campaign,
-  term: props.term ?? null,
-  content: props.content ?? null,
-  source_platform: props.source_platform ?? null,
-  creative_format: props.creative_format ?? null,
-  marketing_tactic: props.marketing_tactic ?? null,
+  term: props.term,
+  content: props.content,
+  source_platform: props.source_platform,
+  creative_format: props.creative_format,
+  marketing_tactic: props.marketing_tactic,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -406,7 +406,7 @@ export function makeContext (contextProps: {
   _type: 'HttpContext',
   referrer: string,
   user_agent: string,
-  remote_address?: string,
+  remote_address: string,
   id: string,
 }): HttpContext;
 
@@ -435,8 +435,8 @@ export function makeContext (contextProps: {
 
 export function makeContext (contextProps: {
   _type: 'LocaleContext',
-  language_code?: string,
-  country_code?: string,
+  language_code: string,
+  country_code: string,
   id: string,
 }): LocaleContext;
 
@@ -445,11 +445,11 @@ export function makeContext (contextProps: {
   source: string,
   medium: string,
   campaign: string,
-  term?: string,
-  content?: string,
-  source_platform?: string,
-  creative_format?: string,
-  marketing_tactic?: string,
+  term: string,
+  content: string,
+  source_platform: string,
+  creative_format: string,
+  marketing_tactic: string,
   id: string,
 }): MarketingContext;
 

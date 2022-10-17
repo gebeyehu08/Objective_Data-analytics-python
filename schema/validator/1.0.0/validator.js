@@ -690,7 +690,7 @@ const ApplicationLoadedEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -732,7 +732,7 @@ const FailureEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -769,7 +769,7 @@ const HiddenEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -806,7 +806,7 @@ const InputChangeEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -869,7 +869,7 @@ const InteractiveEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -920,7 +920,7 @@ const MediaEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -966,7 +966,7 @@ const MediaLoadEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -1003,7 +1003,7 @@ const MediaPauseEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -1040,7 +1040,7 @@ const MediaStartEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -1077,7 +1077,7 @@ const MediaStopEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -1114,7 +1114,7 @@ const NonInteractiveEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -1152,7 +1152,7 @@ const PressEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -1203,7 +1203,7 @@ const SuccessEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */
@@ -1240,7 +1240,7 @@ const VisibleEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  _schema_version: z.string(),
+  _schema_version: z.string().optional(),
   /**
    * An ordered list of the parents of this Event, itself included as the last element.
    */

@@ -37,6 +37,7 @@ export type Enumeration = {
 export type PropertyDefinition = {
   name: string;
   typeName: string;
+  isNullable?: boolean;
   isOptional?: boolean;
   value?: string;
   description?: string;
@@ -129,8 +130,12 @@ export class ZodWriter extends JavaScriptWriter {
     }
     this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${propertyValue})` : property.typeName}`);
 
-    if (property.isOptional) {
+    if (property.isNullable) {
       this.write('.nullable()');
+    }
+
+    if (property.isOptional) {
+      this.write('.optional()');
     }
 
     this.writeEndOfLine(',');
