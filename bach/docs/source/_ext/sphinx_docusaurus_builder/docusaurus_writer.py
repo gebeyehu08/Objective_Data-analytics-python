@@ -578,7 +578,7 @@ class DocusaurusTranslator(Translator):
             for i, line in enumerate(node_lines[output_index:]):
                 # if first line is a known language, add it before the backticks, else start on a new line
                 if (i==0 and line in known_output_languages):
-                    node_output += line + "\n"
+                    node_output += line
                 else:
                     node_output += "\n" + line
 
