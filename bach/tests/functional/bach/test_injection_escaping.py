@@ -60,7 +60,7 @@ def test_format_injection_merge(engine):
 
 
 def test_percentage_injection(engine):
-    # We use(d) format() in multiple places, this test is to prevent regressions in correct escaping
+    # In some places '%' is used for placehorders. This test is to prevent regressions in correct escaping
     bt = get_df_with_test_data(engine)[['city']]
     bt['city'] = bt['city'] + ' %(test)s %%  ?'
     print(bt.engine)

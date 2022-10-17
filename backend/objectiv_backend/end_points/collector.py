@@ -1,36 +1,37 @@
 import json
-import urllib.parse
 from datetime import datetime
 
 import flask
 import time
 from urllib.parse import urlparse, parse_qs
-from typing import List
-
+from typing import List, Callable
+import hashlib
 import psycopg2
 from flask import Response, Request
 
-from objectiv_backend.common.config import get_collector_config
+from objectiv_backend.common.config import get_collector_config, AnonymousModeConfig
 from objectiv_backend.common.types import EventData, EventDataList, EventList
 from objectiv_backend.common.db import get_db_connection
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
-from objectiv_backend.end_points.common import get_json_response, get_cookie_id
+from objectiv_backend.end_points.common import get_json_response, get_cookie_id_context
 from objectiv_backend.end_points.extra_output import events_to_json, write_data_to_fs_if_configured, \
     write_data_to_s3_if_configured, write_data_to_snowplow_if_configured
 from objectiv_backend.schema.validate_events import validate_structure_event_list, EventError
-from objectiv_backend.workers.pg_queues import PostgresQueues, ProcessingStage
-from objectiv_backend.workers.pg_storage import insert_events_into_nok_data
+from objectiv_backend.workers.pg_storage import insert_events_into_nok_data, insert_events_into_data
 from objectiv_backend.workers.worker_entry import process_events_entry
-from objectiv_backend.workers.worker_finalize import insert_events_into_data
 
-from objectiv_backend.schema.schema import HttpContext, CookieIdContext, MarketingContext
+from objectiv_backend.schema.schema import HttpContext, MarketingContext
 
 # Some limits on the inputs we accept
 DATA_MAX_SIZE_BYTES = 1_000_000
 DATA_MAX_EVENT_COUNT = 1_000
 
 
-def collect() -> Response:
+def anonymous() -> Response:
+    return collect(anonymous_mode=True)
+
+
+def collect(anonymous_mode: bool = False) -> Response:
     """
     Endpoint that accepts event data from the tracker and stores it for further processing.
     """
@@ -41,21 +42,55 @@ def collect() -> Response:
         transport_time: int = event_data['transport_time']
     except ValueError as exc:
         print(f'Data problem: {exc}')  # todo: real error logging
-        return _get_collector_response(error_count=1, event_count=-1, data_error=exc.__str__())
+        return _get_collector_response(error_count=1, event_count=-1, data_error=exc.__str__(),
+                                       anonymous_mode=anonymous_mode)
+
+    # check for SessionContext to get client session id
+    if 'client_session_id' in event_data:
+        # TEMPORARY: we remove the first 7 characters from the string ('client-'), because we only want the uuid
+        # part of the client_session_id. This can go when the tracker provides a proper uuid
+        # TODO: remove the string slicing
+        if event_data['client_session_id'].startswith('client-'):
+            client_session_id = event_data['client_session_id'][7:]
+        else:
+            client_session_id = event_data['client_session_id']
+    else:
+        client_session_id = None
 
     # Do all the enrichment steps that can only be done in this phase
-    add_enriched_contexts(events)
+    add_enriched_contexts(events, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
     set_time_in_events(events, current_millis, transport_time)
 
-    if not get_collector_config().async_mode:
-        ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
-        print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
-        write_sync_events(ok_events=ok_events, nok_events=nok_events, event_errors=event_errors)
-        return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors)
-    else:
-        write_async_events(events=events)
-        return _get_collector_response(error_count=0, event_count=len(events))
+    config = get_collector_config()
+    if anonymous_mode:
+        # in anonymous mode we hash certain properties, as defined in config.anonymous_mode.to_hash
+        anonymize_events(events, config.anonymous_mode)
+
+    ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
+    print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
+    write_sync_events(ok_events=ok_events, nok_events=nok_events, event_errors=event_errors)
+    return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors,
+                                   anonymous_mode=anonymous_mode, client_session_id=client_session_id)
+
+
+def hash_property(property_to_hash: str) -> str:
+    return hashlib.md5(str(property_to_hash).encode()).hexdigest()
+
+
+def anonymize_events(events: EventDataList, config: AnonymousModeConfig, hash_method: Callable = hash_property):
+    """
+    Modify events in the list, by hashing the fields as specified in the config
+    :param events: List of events to anonymize
+    :param config: AnonymousModeConfig,
+    :param hash_method: Callable to hash property with
+    :return:
+    """
+    for event in events:
+        for context_type in config.to_hash:
+            for context in get_contexts(event, context_type):
+                for context_property in config.to_hash[context_type]:
+                    context[context_property] = hash_method(context[context_property])
 
 
 def _get_event_data(request: Request) -> EventList:
@@ -94,8 +129,12 @@ def _get_event_data(request: Request) -> EventList:
     return event_data
 
 
-def _get_collector_response(
-        error_count: int, event_count: int, event_errors: List[EventError] = None, data_error: str = '') -> Response:
+def _get_collector_response(error_count: int,
+                            event_count: int,
+                            event_errors: List[EventError] = None,
+                            data_error: str = '',
+                            anonymous_mode: bool = False,
+                            client_session_id: str = None) -> Response:
     """
     Create a Response object, with a json message with event counts, and a cookie set if needed.
     """
@@ -117,29 +156,31 @@ def _get_collector_response(
     })
     # we always return a HTTP 200 status code, so we can handle any errors
     # on the application layer.
-    return get_json_response(status=200, msg=msg)
+    return get_json_response(status=200, msg=msg, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
 
-def add_enriched_contexts(events: EventDataList):
+def add_enriched_contexts(events: EventDataList, anonymous_mode: bool, client_session_id: str):
     """
     Enrich the list of events
     """
 
-    add_cookie_id_contexts(events)
+    add_cookie_id_context(events, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
     for event in events:
         add_http_context_to_event(event=event, request=flask.request)
         add_marketing_context_to_event(event=event)
 
 
-def add_cookie_id_contexts(events: EventDataList):
+def add_cookie_id_context(events: EventDataList, anonymous_mode: bool, client_session_id: str) -> None:
     """
-    Modify the given list of events: Add the CookieIdContext to each event, if cookies are enabled.
+    In anonymous mode we only consider the client_session_id. In normal mode, we check for a cookie, but if the
+    client_session_id is set, we don't generate a cookie, but rather "promote" the client_session_id
+    :param events: List of events
+    :param anonymous_mode:
+    :param client_session_id:
+    :return:
     """
-    cookie_config = get_collector_config().cookie
-    if not cookie_config:
-        return
-    cookie_id = get_cookie_id()
-    cookie_id_context = CookieIdContext(id=cookie_id, cookie_id=cookie_id)
+    cookie_id_context = get_cookie_id_context(anonymous_mode=anonymous_mode, client_session_id=client_session_id)
+
     for event in events:
         add_global_context_to_event(event, cookie_id_context)
 
@@ -152,19 +193,25 @@ def set_time_in_events(events: EventDataList, current_millis: int, client_millis
     then correct `event.time` using this offset and set it in `event.time`
     :param events: List of events to modify
     :param current_millis: time in milliseconds since epoch UTC, when this request was received.
-    :param client_millis: time sent by client
+    :param client_millis: time sent by client.
     """
 
     if not client_millis:
         client_millis = current_millis
 
     offset = current_millis - client_millis
-    print(f'debug - time offset: {offset}')
     for event in events:
         # here we correct the tracking time with the calculated offset
         # the assumption here is that transport time should be the same as the server time (current_millis)
         # to account for clients that have an out-of-sync clock
-        event['time'] = event['time'] + offset
+        # this means we have the following timestamps in an event:
+        # time: timestamp when the event occurred according to the client
+        # corrected_time: timestamp when the event occurred, corrected for transport latency
+        # transport_time: timestamp when the event was sent by the client-side transport layer
+        # collector_time: timestamp when the collector received the event to process it
+        event['corrected_time'] = event['time'] + offset
+        event['transport_time'] = client_millis
+        event['collector_time'] = current_millis
 
 
 def _get_remote_address(request: Request) -> str:
@@ -319,32 +366,3 @@ def write_sync_events(ok_events: EventDataList, nok_events: EventDataList, event
             moment = datetime.utcnow()
             write_data_to_fs_if_configured(data=data, prefix=prefix, moment=moment)
             write_data_to_s3_if_configured(data=data, prefix=prefix, moment=moment)
-
-
-def write_async_events(events: EventDataList):
-    """
-    Write the events to the following sinks, if configured:
-        * postgres - To the entry queue
-        * aws - to the 'RAW' prefix
-        * file system - to the 'RAW' directory
-    """
-    output_config = get_collector_config().output
-    # todo: add exception handling. if one output fails, continue to next if configured.
-    if output_config.postgres:
-        connection = get_db_connection(output_config.postgres)
-        try:
-            with connection:
-                pg_queue = PostgresQueues(connection=connection)
-                pg_queue.put_events(queue=ProcessingStage.ENTRY, events=events)
-        finally:
-            connection.close()
-
-    if not output_config.file_system and not output_config.aws:
-        return
-    prefix = 'RAW'
-    if events:
-        data = events_to_json(events)
-        moment = datetime.utcnow()
-        write_data_to_fs_if_configured(data=data, prefix=prefix, moment=moment)
-        write_data_to_s3_if_configured(data=data, prefix=prefix, moment=moment)
-

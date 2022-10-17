@@ -70,7 +70,7 @@ describe('TrackedInputContext', () => {
           id={'input-id'}
           data-testid={'test-input'}
           defaultValue={'text'}
-          trackValue={true}
+          objectiv={{ trackValue: true }}
         />
       </ObjectivProvider>
     );
@@ -120,9 +120,9 @@ describe('TrackedInputContext', () => {
         <TrackedInput
           type={'text'}
           id={'Input id 2'}
-          normalizeId={false}
           data-testid={'test-input-2'}
           defaultValue={'text'}
+          objectiv={{ normalizeId: false }}
         />
       </ObjectivProvider>
     );
@@ -165,7 +165,7 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedInput type={'text'} id={'☹️'} />
           </TrackedDiv>
@@ -175,7 +175,32 @@ describe('TrackedInputContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for InputContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for InputContext:text @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
+    );
+  });
+
+  it('should console.warn when trying to use TrackedInput for checkboxes or radios', () => {
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv id={'content'}>
+            <TrackedInput type={'checkbox'} id={'test-1'} />
+            <TrackedInput type={'radio'} id={'test-2'} />
+          </TrackedDiv>
+        </TrackedRootLocationContext>
+      </ObjectivProvider>
+    );
+
+    expect(MockConsoleImplementation.warn).toHaveBeenCalledTimes(2);
+    expect(MockConsoleImplementation.warn).toHaveBeenNthCalledWith(
+      1,
+      '｢objectiv｣ We recommend using TrackedInputCheckbox for tracking checkbox inputs.'
+    );
+    expect(MockConsoleImplementation.warn).toHaveBeenNthCalledWith(
+      2,
+      '｢objectiv｣ We recommend using TrackedInputRadio for tracking radio inputs.'
     );
   });
 });

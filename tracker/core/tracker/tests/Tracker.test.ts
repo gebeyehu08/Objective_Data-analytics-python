@@ -2,10 +2,16 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ConfigurableMockTransport, LogTransport, matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import {
+  ConfigurableMockTransport,
+  LogTransport,
+  matchUUID,
+  MockConsoleImplementation,
+  UUIDV4_REGEX,
+} from '@objectiv/testing-tools';
 import {
   ContextsConfig,
-  generateUUID,
+  generateGUID,
   GlobalContextName,
   LocationContextName,
   Tracker,
@@ -32,18 +38,31 @@ describe('Tracker', () => {
     const testTracker = new Tracker(trackerConfig);
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toBe(undefined);
-    expect(testTracker.plugins.plugins).toEqual([
+    expect(testTracker.plugins).toEqual([
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
         initialized: true,
         validationRules: [
           {
-            validationRuleName: 'GlobalContextValidationRule',
+            validationRuleName: 'UniqueGlobalContextValidationRule',
+            logPrefix: 'OpenTaxonomyValidationPlugin',
+            platform: 'CORE',
+            validate: expect.any(Function),
+          },
+          {
+            validationRuleName: 'MissingGlobalContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
             contextName: GlobalContextName.ApplicationContext,
             platform: 'CORE',
-            once: true,
             validate: expect.any(Function),
+          },
+          {
+            validationRuleName: 'MissingGlobalContextValidationRule',
+            logPrefix: 'OpenTaxonomyValidationPlugin',
+            contextName: GlobalContextName.PathContext,
+            platform: 'CORE',
+            validate: expect.any(Function),
+            eventMatches: expect.any(Function),
           },
           {
             validationRuleName: 'LocationContextValidationRule',
@@ -51,15 +70,6 @@ describe('Tracker', () => {
             contextName: LocationContextName.RootLocationContext,
             platform: 'CORE',
             position: 0,
-            once: true,
-            validate: expect.any(Function),
-            eventMatches: expect.any(Function),
-          },
-          {
-            validationRuleName: 'GlobalContextValidationRule',
-            logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: GlobalContextName.PathContext,
-            platform: 'CORE',
             once: true,
             validate: expect.any(Function),
             eventMatches: expect.any(Function),
@@ -79,22 +89,36 @@ describe('Tracker', () => {
     const testTracker = new Tracker({
       applicationId: 'app-id',
       transport: testTransport,
+      endpoint: 'localhost',
     });
     await expect(testTracker.waitForQueue()).resolves.toBe(true);
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toStrictEqual(testTransport);
-    expect(testTracker.plugins.plugins).toEqual([
+    expect(testTracker.plugins).toEqual([
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
         initialized: true,
         validationRules: [
           {
-            validationRuleName: 'GlobalContextValidationRule',
+            validationRuleName: 'UniqueGlobalContextValidationRule',
+            logPrefix: 'OpenTaxonomyValidationPlugin',
+            platform: 'CORE',
+            validate: expect.any(Function),
+          },
+          {
+            validationRuleName: 'MissingGlobalContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
             contextName: GlobalContextName.ApplicationContext,
             platform: 'CORE',
-            once: true,
             validate: expect.any(Function),
+          },
+          {
+            validationRuleName: 'MissingGlobalContextValidationRule',
+            logPrefix: 'OpenTaxonomyValidationPlugin',
+            contextName: GlobalContextName.PathContext,
+            platform: 'CORE',
+            validate: expect.any(Function),
+            eventMatches: expect.any(Function),
           },
           {
             validationRuleName: 'LocationContextValidationRule',
@@ -102,15 +126,6 @@ describe('Tracker', () => {
             contextName: LocationContextName.RootLocationContext,
             platform: 'CORE',
             position: 0,
-            once: true,
-            validate: expect.any(Function),
-            eventMatches: expect.any(Function),
-          },
-          {
-            validationRuleName: 'GlobalContextValidationRule',
-            logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: GlobalContextName.PathContext,
-            platform: 'CORE',
             once: true,
             validate: expect.any(Function),
             eventMatches: expect.any(Function),
@@ -127,12 +142,12 @@ describe('Tracker', () => {
     const initialContextsState: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'A' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'B' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'A' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'B' },
       ],
     };
 
@@ -148,7 +163,7 @@ describe('Tracker', () => {
 
     // Refine Location Stack of the new Tracker with an extra Section
     newTestTracker.location_stack.push({
-      __instance_id: generateUUID(),
+      __instance_id: generateGUID(),
       __location_context: true,
       _type: 'section',
       id: 'X',
@@ -174,12 +189,12 @@ describe('Tracker', () => {
     const mainTrackerContexts: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Y' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'X' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Y' },
       ],
     };
     const mainTracker = new Tracker(mainTrackerContexts);
@@ -188,11 +203,11 @@ describe('Tracker', () => {
     const sectionTracker = new Tracker(
       mainTracker,
       {
-        location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' }],
-        global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Z' }],
+        location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' }],
+        global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Z' }],
       },
       {
-        location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'C' }],
+        location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'C' }],
       },
       // These last two configurations are useless, but we want to make sure nothing breaks with them
       {
@@ -222,33 +237,40 @@ describe('Tracker', () => {
   describe('trackEvent', () => {
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'item', id: 'C' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'item', id: 'C' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'W' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'W' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'X' },
       ],
     };
-    const testEvent = new TrackerEvent(
-      {
-        _type: 'test-event',
-      },
-      eventContexts
-    );
+    const testEvent = {
+      _type: 'test-event',
+      ...eventContexts,
+    };
     const trackerConfig: TrackerConfig = { applicationId: 'app-id' };
+
+    it('should allow overriding the generateGUID function', async () => {
+      const testTracker1 = new Tracker({ applicationId: 'app-id' });
+      const testTracker2 = new Tracker({ applicationId: 'app-id', generateGUID: () => 'not-so-unique-after-all' });
+      const trackedEvent1 = await testTracker1.trackEvent(testEvent);
+      const trackedEvent2 = await testTracker2.trackEvent(testEvent);
+      expect(trackedEvent1.id).toMatch(UUIDV4_REGEX);
+      expect(trackedEvent2.id).toBe('not-so-unique-after-all');
+    });
 
     it('should merge Tracker Location Stack and Global Contexts with the Event ones', async () => {
       const trackerContexts: TrackerConfig = {
         transport: new LogTransport(),
         applicationId: 'app-id',
         location_stack: [
-          { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
-          { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+          { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
+          { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
         ],
         global_contexts: [
-          { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Y' },
-          { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Z' },
+          { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Y' },
+          { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Z' },
         ],
       };
       const testTracker = new Tracker(trackerContexts);
@@ -271,6 +293,17 @@ describe('Tracker', () => {
         { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Y' },
         { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Z' },
       ]);
+    });
+
+    it('should console.log when a Tracker Plugin gets overridden', () => {
+      new Tracker({
+        applicationId: 'app-id',
+        plugins: [{ pluginName: 'OpenTaxonomyValidationPlugin', isUsable: () => true }],
+      });
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Plugin OpenTaxonomyValidationPlugin replaced by a new instance.`,
+        'font-weight:bold;color:orange;'
+      );
     });
 
     it('should execute all plugins implementing the initialize callback', () => {
@@ -326,6 +359,36 @@ describe('Tracker', () => {
       expect(testTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: testEvent._type }));
     });
 
+    it('events should not carry a SessionContext in their global contexts', () => {
+      const testTransport = new LogTransport();
+      jest.spyOn(testTransport, 'handle');
+      const testTracker = new Tracker({ applicationId: 'app-id', transport: testTransport, anonymous: true });
+      testTracker.trackEvent(testEvent);
+      expect(testTransport.handle).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _type: testEvent._type,
+          global_contexts: expect.not.arrayContaining([
+            expect.objectContaining({
+              _type: GlobalContextName.SessionContext,
+            }),
+          ]),
+        })
+      );
+
+      testTracker.setAnonymous(false);
+      testTracker.trackEvent(testEvent);
+      expect(testTransport.handle).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _type: testEvent._type,
+          global_contexts: expect.not.arrayContaining([
+            expect.objectContaining({
+              _type: GlobalContextName.SessionContext,
+            }),
+          ]),
+        })
+      );
+    });
+
     it("should not send the Event via the given TrackerTransport if it's not usable", () => {
       const unusableTransport = new ConfigurableMockTransport({ isUsable: false });
       expect(unusableTransport.isUsable()).toEqual(false);
@@ -356,29 +419,70 @@ describe('Tracker', () => {
         applicationId: 'app-id',
         transport: testTransport,
       });
-      testTracker.plugins.plugins = [];
       jest.resetAllMocks();
       testTracker.setActive(false);
       testTracker.setActive(true);
       testTracker.setActive(false);
       testTracker.trackEvent(testEvent);
       expect(testTransport.handle).not.toHaveBeenCalled();
-      expect(MockConsoleImplementation.log).toHaveBeenCalledTimes(3);
-      expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
-        1,
-        `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Active: false`,
         'font-weight: bold'
       );
-      expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
-        2,
-        `%c｢objectiv:Tracker:app-id｣ New state: active`,
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Active: false`,
         'font-weight: bold'
       );
-      expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(
-        3,
-        `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Active: false`,
         'font-weight: bold'
       );
+    });
+
+    it('should console.log when Tracker changes anonymous state', () => {
+      const testTransport = new LogTransport();
+      jest.spyOn(testTransport, 'handle');
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        transport: testTransport,
+      });
+      jest.resetAllMocks();
+      testTracker.setAnonymous(false);
+      testTracker.setAnonymous(true);
+      testTracker.setAnonymous(false);
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Anonymous: false`,
+        'font-weight: bold'
+      );
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Anonymous: false`,
+        'font-weight: bold'
+      );
+      expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+        `%c｢objectiv:Tracker:app-id｣ Anonymous: false`,
+        'font-weight: bold'
+      );
+    });
+
+    it('should switch endpoint to /anonymous when anonymous state is set to true', () => {
+      const testTransport = new LogTransport();
+      jest.spyOn(testTransport, 'handle');
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        transport: testTransport,
+        endpoint: 'test',
+      });
+      jest.resetAllMocks();
+      expect(testTracker.endpoint).toBe('test');
+      testTracker.setAnonymous(true);
+      expect(testTracker.endpoint).toBe('test/anonymous');
+    });
+
+    it('should return undefined if endpoint has not been set', () => {
+      const testTracker = new Tracker({ applicationId: 'app-id' });
+      expect(testTracker.endpoint).toBe(undefined);
+      testTracker.setAnonymous(true);
+      expect(testTracker.endpoint).toBe(undefined);
     });
 
     it('should wait and/or flush the queue according to the given options', async () => {
@@ -453,11 +557,11 @@ describe('Tracker', () => {
   describe('TrackerQueue', () => {
     const testEventName = 'test-event';
     const testContexts: ContextsConfig = {
-      location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
-      global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
+      location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'test' }],
+      global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'test' }],
     };
-    const testEvent1 = new TrackerEvent({ _type: testEventName, ...testContexts });
-    const testEvent2 = new TrackerEvent({ _type: testEventName, ...testContexts });
+    const testEvent1 = { _type: testEventName, ...testContexts };
+    const testEvent2 = { _type: testEventName, ...testContexts };
     const processFunctionSpy = jest.fn(() => Promise.resolve());
 
     beforeEach(() => {
@@ -521,23 +625,23 @@ describe('Tracker', () => {
       expect(trackerQueue2.processFunction).not.toBeUndefined();
       expect(trackerQueue2.processFunction).not.toHaveBeenCalled();
 
-      await testTracker.trackEvent(testEvent1);
+      const trackedTestEvent1 = await testTracker.trackEvent(testEvent1);
       expect(trackerQueue1.processingEventIds).toHaveLength(0);
       expect(trackerQueue1.processFunction).toHaveBeenCalledTimes(1);
       expect(trackerQueue1.processFunction).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
-          id: testEvent1.id,
+          id: trackedTestEvent1.id,
         })
       );
 
-      await testTrackerWithConsole.trackEvent(testEvent2);
+      const trackedTestEvent2 = await testTrackerWithConsole.trackEvent(testEvent2);
       expect(trackerQueue2.processingEventIds).toHaveLength(0);
       expect(trackerQueue2.processFunction).toHaveBeenCalledTimes(1);
       expect(trackerQueue2.processFunction).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
-          id: testEvent2.id,
+          id: trackedTestEvent2.id,
         })
       );
     });
@@ -568,7 +672,9 @@ describe('Tracker', () => {
       expect(trackerQueue.processFunction).not.toBeUndefined();
       expect(trackerQueue.processFunction).not.toHaveBeenCalled();
 
-      await testTracker.queue?.store.write(testEvent1, testEvent2);
+      const trackedTestEvent1 = new TrackerEvent({ ...testEvent1, id: generateGUID(), time: Date.now() });
+      const trackedTestEvent2 = new TrackerEvent({ ...testEvent2, id: generateGUID(), time: Date.now() });
+      await testTracker.queue?.store.write(trackedTestEvent1, trackedTestEvent2);
 
       expect(queueStore.length).toBe(2);
 
@@ -610,6 +716,31 @@ describe('Without developer tools', () => {
     expect(testTracker.transport).toStrictEqual(testTransport);
     expect(testTracker.location_stack).toStrictEqual([]);
     expect(testTracker.global_contexts).toStrictEqual([]);
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+  });
+
+  it('should not console.log when a Tracker Plugin gets overridden', () => {
+    new Tracker({
+      applicationId: 'app-id',
+      plugins: [
+        { pluginName: 'Plugin', isUsable: () => true },
+        { pluginName: 'Plugin', isUsable: () => true },
+      ],
+    });
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+  });
+
+  it('should not console.log when the Tracker changes active state', () => {
+    const tracker = new Tracker({ applicationId: 'app-id', active: false });
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+    tracker.setActive(true);
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+  });
+
+  it('should not console.log when the Tracker changes anonymous state', () => {
+    const tracker = new Tracker({ applicationId: 'app-id', anonymous: false });
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+    tracker.setAnonymous(true);
     expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
   });
 });

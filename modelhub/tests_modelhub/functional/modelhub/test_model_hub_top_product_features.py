@@ -1,15 +1,16 @@
 """
 Copyright 2022 Objectiv B.V.
 """
+import pytest
 
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 
 def test_top_product_features(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+    df, modelhub = get_objectiv_dataframe_test(db_params, global_contexts=['application'])
     initial_columns = df.data_columns
     # without location_stack
     tdf = modelhub.aggregate.top_product_features(df)
@@ -65,8 +66,8 @@ def test_top_product_features(db_params):
             ['objectiv-website', 'Link: Cookies', 'ClickEvent', 1, 'ookies'],
             ['objectiv-website', 'Link: cta-docs-location-stack', 'ClickEvent', 1, 'ta-docs-location-stack'],
             ['objectiv-website', 'Link: cta-docs-taxonomy', 'ClickEvent', 1, 'ta-docs-taxonomy'],
-            ['objectiv-website', 'Link: cta-repo-button', 'ClickEvent', 1, 'ta-repo-button']]
-,
+            ['objectiv-website', 'Link: cta-repo-button', 'ClickEvent', 1, 'ta-repo-button']
+        ],
         use_to_pandas=True,
         order_by=['application', 'sort_str', 'user_id_nunique']
 

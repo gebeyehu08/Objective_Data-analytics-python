@@ -36,12 +36,12 @@ describe('TrackedNav', () => {
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>Trigger Event</div>;
+      return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedNav>
+        <TrackedNav objectiv={{ id: 'nav' }}>
           <TrackedButton />
         </TrackedNav>
       </ObjectivProvider>
@@ -72,7 +72,7 @@ describe('TrackedNav', () => {
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>{children}</div>;
+      return <div onClick={() => trackPressEvent()}>{children}</div>;
     };
 
     const { container } = render(
@@ -80,7 +80,7 @@ describe('TrackedNav', () => {
         <TrackedNav id={'Nav 1'}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedNav>
-        <TrackedNav id={'Nav 2'} normalizeId={false}>
+        <TrackedNav id={'Nav 2'} objectiv={{ normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedNav>
       </ObjectivProvider>
@@ -124,8 +124,8 @@ describe('TrackedNav', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
             <TrackedNav id={'☹️'} />
           </TrackedDiv>
         </TrackedRootLocationContext>
@@ -134,7 +134,7 @@ describe('TrackedNav', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for NavigationContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for NavigationContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
@@ -145,7 +145,7 @@ describe('TrackedNav', () => {
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>Trigger Event</div>;
+      return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
     };
 
     const { container } = render(

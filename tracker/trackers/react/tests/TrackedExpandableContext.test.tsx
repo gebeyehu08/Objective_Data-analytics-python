@@ -2,9 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen } from '@testing-library/react';
+import { fireEvent, getByText, render } from '@testing-library/react';
 import React, { createRef } from 'react';
 import {
   ObjectivProvider,
@@ -18,9 +18,9 @@ import {
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
-const TrackedButton = () => {
+const TrackedButton = ({ text = 'Trigger Event' }: { text?: string }) => {
   const trackPressEvent = usePressEventTracker();
-  return <div onClick={trackPressEvent}>Trigger Event</div>;
+  return <div onClick={() => trackPressEvent()}>{text}</div>;
 };
 
 describe('TrackedExpandableContext', () => {
@@ -41,15 +41,19 @@ describe('TrackedExpandableContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'div'} id={'expandable-id'}>
-          <TrackedButton />
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'expandable-id-1' }}>
+          <TrackedButton text={'Trigger Event 1'} />
+        </TrackedExpandableContext>
+        <TrackedExpandableContext id={'expandable-id-2'} objectiv={{ Component: 'div' }}>
+          <TrackedButton text={'Trigger Event 2'} />
         </TrackedExpandableContext>
       </ObjectivProvider>
     );
 
-    fireEvent.click(getByText(container, /trigger event/i));
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -63,7 +67,19 @@ describe('TrackedExpandableContext', () => {
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.ExpandableContext,
-            id: 'expandable-id',
+            id: 'expandable-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.ExpandableContext,
+            id: 'expandable-id-2',
           }),
         ]),
       })
@@ -77,15 +93,15 @@ describe('TrackedExpandableContext', () => {
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>{children}</div>;
+      return <div onClick={() => trackPressEvent()}>{children}</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'div'} id={'Expandable id 1'}>
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'Expandable id 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedExpandableContext>
-        <TrackedExpandableContext Component={'div'} id={'Expandable id 2'} normalizeId={false}>
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'Expandable id 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedExpandableContext>
       </ObjectivProvider>
@@ -133,9 +149,9 @@ describe('TrackedExpandableContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedExpandableContext Component={'div'} id={'☹️'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedExpandableContext objectiv={{ Component: 'div', id: '☹️' }}>
               {/* nothing to see here */}
             </TrackedExpandableContext>
           </TrackedDiv>
@@ -145,7 +161,7 @@ describe('TrackedExpandableContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for ExpandableContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for ExpandableContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 
@@ -156,7 +172,7 @@ describe('TrackedExpandableContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'div'} id={'expandable-id'} isVisible={false}>
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'expandable-id', isVisible: false }}>
           <TrackedButton />
         </TrackedExpandableContext>
       </ObjectivProvider>
@@ -176,7 +192,7 @@ describe('TrackedExpandableContext', () => {
 
     const { rerender } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'div'} id={'expandable-id'} isVisible={false}>
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'expandable-id', isVisible: false }}>
           <TrackedButton />
         </TrackedExpandableContext>
       </ObjectivProvider>
@@ -192,7 +208,7 @@ describe('TrackedExpandableContext', () => {
 
     rerender(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'div'} id={'expandable-id'} isVisible={true}>
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'expandable-id', isVisible: true }}>
           <TrackedButton />
         </TrackedExpandableContext>
       </ObjectivProvider>
@@ -209,7 +225,7 @@ describe('TrackedExpandableContext', () => {
 
     rerender(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'div'} id={'expandable-id'} isVisible={false}>
+        <TrackedExpandableContext objectiv={{ Component: 'div', id: 'expandable-id', isVisible: false }}>
           <TrackedButton />
         </TrackedExpandableContext>
       </ObjectivProvider>
@@ -223,36 +239,13 @@ describe('TrackedExpandableContext', () => {
     );
   });
 
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'div'} id={'expandable-id-1'} data-testid={'test-expandable-1'}>
-          test
-        </TrackedExpandableContext>
-        <TrackedExpandableContext
-          Component={'div'}
-          id={'expandable-id-2'}
-          forwardId={true}
-          data-testid={'test-expandable-2'}
-        >
-          test
-        </TrackedExpandableContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-expandable-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-expandable-2').getAttribute('id')).toBe('expandable-id-2');
-  });
-
   it('should allow forwarding refs', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
     const ref = createRef<HTMLDivElement>();
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedExpandableContext Component={'ul'} id={'expandable-id'} ref={ref}>
+        <TrackedExpandableContext objectiv={{ Component: 'ul', id: 'expandable-id' }} ref={ref}>
           <li>option 1</li>
           <li>option 2</li>
           <li>option 3</li>

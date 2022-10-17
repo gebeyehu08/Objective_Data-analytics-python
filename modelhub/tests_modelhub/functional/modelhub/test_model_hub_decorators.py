@@ -20,19 +20,19 @@ def test_compare_decorator_limiting(db_params, monkeypatch) -> None:
 
     # final node
     assert len(decorated_pch.base_node.column_expressions) == 10
-    assert len(mocked_decorated_pch.base_node.column_expressions) == 15
+    assert len(mocked_decorated_pch.base_node.column_expressions) == 14
 
     # result from materialization of __conversions max window function
     dec_prev_node = decorated_pch.base_node.references['prev']
     mocked_dec_prev_node = mocked_decorated_pch.base_node.references['prev']
     assert len(dec_prev_node.column_expressions) == 9
-    assert len(mocked_dec_prev_node.column_expressions) == 14
+    assert len(mocked_dec_prev_node.column_expressions) == 13
 
     # result from conversions in time calculation
     dec_prev_node = dec_prev_node.references['prev']
     mocked_dec_prev_node = mocked_dec_prev_node.references['prev']
     assert len(dec_prev_node.column_expressions) == 8
-    assert len(mocked_dec_prev_node.column_expressions) == 13
+    assert len(mocked_dec_prev_node.column_expressions) == 12
 
     # initial df
     dec_prev_node = dec_prev_node.references['prev']

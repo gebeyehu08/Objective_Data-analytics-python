@@ -11,11 +11,16 @@ done
   
 >&2 echo "Postgres is up - executing command"
 
-for sql in /services/*.sql
-do
-  echo "Loading data from $sql into $POSTGRES_HOSTNAME/$POSTGRES_DB"
-  cat $sql | psql -U $POSTGRES_USER -h $POSTGRES_HOSTNAME $POSTGRES_DB
-done
+if [ -z "$OBJECTIV_SKIP_IMPORT" -o "$OBJECTIV_SKIP_IMPORT" != 'true' ];
+then
+  for sql in /services/*.sql
+  do
+    echo "Loading data from $sql into $POSTGRES_HOSTNAME/$POSTGRES_DB"
+    cat $sql | psql -U $POSTGRES_USER -h $POSTGRES_HOSTNAME $POSTGRES_DB
+  done
+else
+  echo "Skipping import"
+fi
 
 # load virtualenv
 source /services/venv/bin/activate

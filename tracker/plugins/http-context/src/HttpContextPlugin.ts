@@ -2,7 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { HttpContext } from '@objectiv/schema';
 import {
+  ContextsConfig,
   GlobalContextName,
   makeHttpContext,
   TrackerEvent,
@@ -19,11 +21,12 @@ export class HttpContextPlugin implements TrackerPluginInterface {
   readonly pluginName = `HttpContextPlugin`;
   validationRules: TrackerValidationRuleInterface[] = [];
   initialized: boolean = false;
+  httpContext?: HttpContext;
 
   /**
    * Generates an HttpContext and initializes validation rules.
    */
-  initialize({ global_contexts, platform }: TrackerInterface): void {
+  initialize({ platform }: TrackerInterface): void {
     if (!this.isUsable()) {
       globalThis.objectiv.devTools?.TrackerConsole.error(
         `｢objectiv:${
@@ -35,29 +38,43 @@ export class HttpContextPlugin implements TrackerPluginInterface {
 
     if (globalThis.objectiv.devTools) {
       this.validationRules = [
-        globalThis.objectiv.devTools.makeGlobalContextValidationRule({
+        globalThis.objectiv.devTools.makeMissingGlobalContextValidationRule({
           platform,
           logPrefix: this.pluginName,
           contextName: GlobalContextName.HttpContext,
-          once: true,
         }),
       ];
     }
 
-    const httpContext = makeHttpContext({
+    this.httpContext = makeHttpContext({
       id: 'http_context',
       referrer: document.referrer ?? '',
       user_agent: navigator.userAgent ?? '',
     });
 
-    global_contexts.push(httpContext);
-
     this.initialized = true;
 
-    globalThis.objectiv.devTools?.TrackerConsole.log(
-      `%c｢objectiv:${this.pluginName}｣ Initialized`,
-      'font-weight: bold'
-    );
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
+      globalThis.objectiv.devTools.TrackerConsole.group(`Http Context:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(this.httpContext);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
+    }
+  }
+
+  /**
+   * Add the HttpContext to the Event's Global Contexts
+   */
+  enrich(contexts: Required<ContextsConfig>): void {
+    if (!this.initialized) {
+      globalThis.objectiv.devTools?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot enrich. Make sure to initialize the plugin first.`
+      );
+    }
+    if (this.httpContext) {
+      contexts.global_contexts.push(this.httpContext);
+    }
   }
 
   /**

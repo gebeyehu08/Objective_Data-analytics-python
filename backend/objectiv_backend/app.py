@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 
-from objectiv_backend.common.config import init_collector_config
+from objectiv_backend.common.config import get_collector_config
 
 
 def create_app() -> Flask:
@@ -10,12 +10,13 @@ def create_app() -> Flask:
 
     # load config - this will raise an error if there are configuration problems, and will cache the
     # result for later calls.
-    init_collector_config()
+    get_collector_config()
 
     flask_app = Flask(__name__, static_folder=None)  # type: ignore
     flask_app.add_url_rule(rule='/schema', view_func=schema.schema, methods=['GET'])
     flask_app.add_url_rule(rule='/jsonschema', view_func=schema.json_schema, methods=['GET'])
     flask_app.add_url_rule(rule='/', view_func=collector.collect, methods=['POST'])
+    flask_app.add_url_rule(rule='/anonymous', view_func=collector.anonymous, methods=['POST'])
     init_cors(flask_app)
     return flask_app
 

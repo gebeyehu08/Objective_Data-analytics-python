@@ -7,10 +7,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bach import DataFrame
-from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-    get_df_with_test_data, get_df_with_food_data
+from bach import DataFrame, SeriesTimedelta
+from sql_models.util import is_athena
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
+
+from bach.testing import assert_equals_data
 
 
 def test_timedelta_arithmetic(engine):
@@ -103,7 +105,6 @@ def test_timedelta(engine):
     )
 
 
-
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['td'] = datetime.timedelta(days=321, seconds=9877)
@@ -135,25 +136,26 @@ def test_timedelta_operations(engine):
 
 
 def test_timedelta_dt_properties(engine) -> None:
+    unit = 'ms' if is_athena(engine) else 'us'
     pdf = pd.DataFrame(
         data={
             'start_date': [
-                np.datetime64("2022-01-01 12:34:56.7800"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-10 02:34:56.7800"),
-                np.datetime64("2020-12-10 02:34:56.7800"),
-                np.datetime64("2022-01-05 01:23:45.1234567"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-03"),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-10 02:34:56.7800", unit),
+                np.datetime64("2020-12-10 02:34:56.7800", unit),
+                np.datetime64("2022-01-05 01:23:45.1234567", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-03", unit),
             ],
             'end_date': [
-                np.datetime64("2022-01-03"),
-                np.datetime64("2022-01-06"),
-                np.datetime64("2022-01-10"),
-                np.datetime64("2022-01-10"),
-                np.datetime64("2022-01-05 01:23:45.7700"),
-                np.datetime64("1999-12-31 01:23:45.6700"),
-                np.datetime64("2022-01-01 12:34:56.7800"),
+                np.datetime64("2022-01-03", unit),
+                np.datetime64("2022-01-06", unit),
+                np.datetime64("2022-01-10", unit),
+                np.datetime64("2022-01-10", unit),
+                np.datetime64("2022-01-05 01:23:45.7700", unit),
+                np.datetime64("1999-12-31 01:23:45.6700", unit),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
             ]
         }
     )
@@ -182,12 +184,17 @@ def test_timedelta_dt_properties(engine) -> None:
 
     properties_df['total_seconds'] = df['diff'].dt.total_seconds
 
+    row_w_diff_precision = [0.,       0., 646544.,     0.64654]
+    if is_athena(engine):
+        # athena supports till milliseconds, therefore components might be rounded
+        row_w_diff_precision = [0.,       0., 647000.,     0.64700]
+
     expected_data = [
         [1.,   41103., 220000.,   127503.22],
         [0.,   81374., 330000.,    81374.33],
         [-1.,  77103., 220000.,    -9296.78],
         [395., 77103., 220000., 34205103.22],
-        [0.,       0., 646544.,     0.64654],
+        row_w_diff_precision,
         [-8041.,   0.,      0., -694742400.],
         [-2.,  45296., 780000.,  -127503.22],
     ]
@@ -197,21 +204,22 @@ def test_timedelta_dt_properties(engine) -> None:
 
 
 def test_timedelta_dt_components(engine) -> None:
+    unit = 'ms' if is_athena(engine) else 'us'
     pdf = pd.DataFrame(
         data={
             'start_date': [
-                np.datetime64("2022-01-01 12:34:56.7800"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-05 01:23:45.1234567"),
-                np.datetime64("2022-01-05 01:23:45.6700"),
-                np.datetime64("2022-01-03"),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-05 01:23:45.1234567", unit),
+                np.datetime64("2022-01-05 01:23:45.6700", unit),
+                np.datetime64("2022-01-03", unit),
             ],
             'end_date': [
-                np.datetime64("2022-01-03"),
-                np.datetime64("2022-01-06"),
-                np.datetime64("2022-01-05 01:23:45.7700"),
-                np.datetime64("1999-12-31 01:23:45.6700"),
-                np.datetime64("2022-01-01 12:34:56.7800"),
+                np.datetime64("2022-01-03", unit),
+                np.datetime64("2022-01-06", unit),
+                np.datetime64("2022-01-05 01:23:45.7700", unit),
+                np.datetime64("1999-12-31 01:23:45.6700", unit),
+                np.datetime64("2022-01-01 12:34:56.7800", unit),
             ]
         }
     )
@@ -227,7 +235,8 @@ def test_timedelta_dt_components(engine) -> None:
     pd.testing.assert_frame_equal(expected, result, check_names=False)
 
 
-@pytest.mark.skip_postgres
+@pytest.mark.skip_postgres('BigQuery specific test')
+@pytest.mark.skip_athena('BigQuery specific test')
 def test_mean_bigquery_remove_nano_precision(engine) -> None:
     pdf = pd.DataFrame(
         {
@@ -257,3 +266,31 @@ def test_mean_bigquery_remove_nano_precision(engine) -> None:
         use_to_pandas=True,
     )
 
+
+def test_from_total_seconds(engine) -> None:
+    pdf = pd.DataFrame(
+        data={
+            'total_seconds': [
+                127503.22,
+                81374.33,
+                0.64654,
+                -694742400,
+                -127503.22
+            ]
+        }
+    )
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    result = SeriesTimedelta.from_total_seconds(df['total_seconds'])
+
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'total_seconds'],
+        expected_data=[
+            [0, datetime.timedelta(seconds=127503.22)],
+            [1, datetime.timedelta(seconds=81374.33)],
+            [2, datetime.timedelta(seconds=0.64654)],
+            [3, datetime.timedelta(seconds=-694742400)],
+            [4, datetime.timedelta(seconds=-127503.22)],
+        ],
+        use_to_pandas=True,
+    )

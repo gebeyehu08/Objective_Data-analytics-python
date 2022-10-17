@@ -3,17 +3,15 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-
-
-
 from typing import Iterable
+
 import bach
 from sklearn.linear_model import LogisticRegression
 from modelhub import ModelHub
 import numpy as np
 
 
-class TestLR:
+class LRTestHelper:
     """
     Tests if model used on Bach gives the same outcome as model used on sklearn.
     Note that it only works for solvers that provide consistent outcomes.
@@ -29,6 +27,8 @@ class TestLR:
 
         self.X = X
         self.y = y
+
+        self.precision = 18
 
         data = X.copy()
         data[y.name] = y
@@ -48,6 +48,11 @@ class TestLR:
     def test_fitted_model(self):
         for key, value in self.sklearn_lr.__dict__.items():
             modelhub_value = getattr(self.modelhub_lr, key)
+
+            if key in ['coef_', 'intercept_']:
+                value = value.round(self.precision)
+                modelhub_value = modelhub_value.round(self.precision)
+
             print(f'testing {key}')
             print(f'modelhub value: {modelhub_value}\nsklearn value : {value}\n')
             result = modelhub_value == value
@@ -92,6 +97,10 @@ class TestLR:
         else:
             modelhub_data = modelhub_data.sort_index().to_numpy()
             equals = np.isclose(sklearn_data, modelhub_data).all()
+
+        if method_name == 'predict_proba':
+            modelhub_data = modelhub_data.round(self.precision)
+            sklearn_data = sklearn_data.round(self.precision)
 
         assert equals, f"modelhub_data: {modelhub_data} != sklearn_data: {sklearn_data}"
 

@@ -149,6 +149,8 @@ class SeriesJson(Series):
     }
     supported_value_types = (dict, list, str, float, int, bool)
 
+    supported_source_dtypes = ('json', 'json_postgres', 'string')
+
     @property
     def json(self) -> 'JsonAccessor':
         """
@@ -164,6 +166,13 @@ class SeriesJson(Series):
     @property
     def elements(self):
         return self.json
+
+    @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
+        if is_bigquery(dialect):
+            from bach.series import SeriesString
+            return SeriesString.get_db_dtype(dialect)
+        return super().get_db_dtype(dialect)
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
@@ -206,7 +215,13 @@ class SeriesJson(Series):
         if is_bigquery(dialect):
             if source_dtype in ('json', 'string'):
                 return expression
-            raise ValueError(f'cannot convert {source_dtype} to json')
+            elif source_dtype in ('dict', 'list'):
+                # BQ can convert most types into json format, and since we use string as the container
+                # in our BQ implementation, this is basically a cast.
+                # https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#to_json_string
+                return Expression.construct(f'to_json_string({{}})', expression)
+            else:
+                raise ValueError(f'cannot convert {source_dtype} to json')
         raise DatabaseNotSupportedException(dialect)
 
     def to_pandas_info(self) -> Optional['ToPandasInfo']:
@@ -230,26 +245,24 @@ class SeriesJson(Series):
         self,
         other: Union['Series', AllSupportedLiteralTypes],
         comparator: str,
-        other_dtypes=tuple()
+        other_dtypes=tuple(),
+        strict_other_dtypes=tuple()
     ) -> 'SeriesBoolean':
         if is_postgres(self.engine):
             other_dtypes = ('json_postgres', 'json', 'string')
-            fmt_str = f'cast({{}} as jsonb) {comparator} cast({{}} as jsonb)'
+            strict_other_dtypes = tuple(['json_postgres'])
         elif is_athena(self.engine):
-            # TODO: support string here to for compatibility with other databases
-            #  https://github.com/objectiv/objectiv-analytics/issues/1142
-            other_dtypes = ('json')
-            fmt_str = f'{{}} {comparator} {{}}'
+            other_dtypes = ('json', 'string')
+            strict_other_dtypes = tuple(['json'])
         elif is_bigquery(self.engine):
             other_dtypes = ('json', 'string')
-            fmt_str = f'{{}} {comparator} {{}}'
         else:
             raise DatabaseNotSupportedException(self.engine)
 
         result = self._binary_operation(
             other, operation=f"comparator '{comparator}'",
-            fmt_str=fmt_str,
-            other_dtypes=other_dtypes, dtype='bool'
+            fmt_str=f'{{}} {comparator} {{}}',
+            other_dtypes=other_dtypes, dtype='bool', strict_other_dtypes=strict_other_dtypes
         )
         return cast('SeriesBoolean', result)  # we told _binary_operation to return dtype='bool'
 
@@ -774,7 +787,7 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
         stop_expression = self._get_slice_partial_expr(value=key.stop, is_start=False)
 
         values_expression = Expression.construct(
-            "slice(cast({} as array(json)), {}, {})",
+            "try(slice(cast({} as array(json)), {}, {}))",
             self._series_object,
             start_expression,  # startpoint of slice
             Expression.construct('({} - {})', stop_expression, start_expression),  # length of slice
@@ -851,56 +864,57 @@ class JsonAthenaAccessorImpl(Generic[TSeriesJson]):
         if not all(isinstance(value, str) for value in filtering_slice.values()):
             raise TypeError(f'Values in the key dict, should all be strings')
 
-        array_expr = Expression.construct('cast({} as array(json))', self._series_object)
         array_map_expr = Expression.construct(
             'try(cast({} as array(map(varchar, json))))',
             self._series_object
         )
-        filter_condition_exprs = [
+        key_to_extract = [
             Expression.construct(
-                "x[{}] = cast({} as json)",
+                '({}, __x[{}])',
                 Expression.string_value(key),
-                Expression.string_value(value)
+                Expression.string_value(key),
             )
             for key, value in filtering_slice.items()
         ]
-        # filter_array_map_expr: array of maps, but only with the maps that match the filter criteria
-        filter_array_map_expr = Expression.construct(
-            'filter({}, x -> ({}))',
-            array_map_expr,
-            join_expressions(filter_condition_exprs, ' and ')
-        )
-        # filter_array_expr: array with all json objects that match the filter criteria, in the same order
-        # as they appear in the original json array
-        filter_array_expr = Expression.construct('cast({} as array(json))', filter_array_map_expr)
+        key_values_to_match = [
+            Expression.construct(
+                '({}, {})',
+                Expression.string_value(key),
+                Expression.string_value(value),
+            )
+            for key, value in filtering_slice.items()
+        ]
 
+        # extracts only the keys to match
+        transform_array = Expression.construct(
+            'transform({}, __x -> cast(map_from_entries(array[{}]) as json))',
+            array_map_expr,
+            join_expressions(key_to_extract),
+        )
+        element_to_match = Expression.construct(
+            'cast(map_from_entries(array[{}]) as json)',
+            join_expressions(key_values_to_match)
+        )
         if is_start:
             # Find the position in the original array, of the first object that matches the filter criteria
             first_element_pos_expr = Expression.construct(
-                'array_position({}, element_at({}, 1))',
-                array_expr,
-                filter_array_expr
+                'array_position({}, {})',
+                transform_array,
+                element_to_match,
             )
             return first_element_pos_expr
-        # elif not is_start: Find the position in the reversed original array, of the last element that
+
+        # elif not is_start: Find the position in the reversed transformed array, of the last element that
         # matches the filter criteria. This is the last element that matches the criteria in the original
         # array.
-        element_reverse_pos_expr = Expression.construct(
-            'array_position(reverse({}), element_at({}, -1))',
-            array_expr,
-            filter_array_expr
-        )
-        # We need to translate the location in the reverse array to the position in the actual array.
-        # Formula for this: `(array_length + 1 ) - element_reverse_pos_expr`
-        # Additionally we need to add 1, because for historical reasons the end of a filtering slice
+        # Additionally, we need to add 1, because for historical reasons the end of a filtering slice
         # includes the last matched element (unlike a regular slice where the end element is not
         # included).
-        last_element_pos_expr = Expression.construct(
-            '({} + 2 ) - {}',
-            self.get_array_length(),
-            element_reverse_pos_expr
+        return Expression.construct(
+            'array_position(reverse({}), {}) + 1',
+            transform_array,
+            element_to_match,
         )
-        return last_element_pos_expr
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
         """

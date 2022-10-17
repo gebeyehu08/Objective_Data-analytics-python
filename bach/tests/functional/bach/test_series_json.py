@@ -2,11 +2,16 @@
 Copyright 2021 Objectiv B.V.
 """
 import pandas
+import pandas as pd
 
 from bach import DataFrame
+from bach.series import SeriesString, SeriesDict, SeriesList
 from sql_models.util import is_postgres, is_bigquery, is_athena
-from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_json_data, \
+    get_df_with_test_data
 import pytest
+
+from bach.testing import assert_equals_data
 
 # We want to run all tests here for all supported databases, and thus we have the 'engine' argument on all
 # tests.
@@ -16,7 +21,6 @@ import pytest
 
 pytestmark = [
     pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True),
-    pytest.mark.athena_supported()
 ]
 
 
@@ -68,6 +72,23 @@ def test_json_get_single_value(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     a = bt.mixed_column[2]
     assert a == {'a': 'b', 'c': {'a': 'c'}}
+
+
+def test_json_equals(engine, dtype):
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    df['j2j_dict'] = df['dict_column'] == df['dict_column']
+    df['j2literal'] = df['list_column'] == '[{"a": "b"}, {"c": "d"}]'
+    assert_equals_data(
+        df[['j2j_dict', 'j2literal']],
+        expected_columns=['_index_row', 'j2j_dict', 'j2literal'],
+        expected_data=[
+            [0, True, True],
+            [1, True, False],
+            [2, True, False],
+            [3, True, False],
+            [4, None, None]
+        ]
+    )
 
 
 def test_json_array_contains(engine, dtype):
@@ -228,14 +249,16 @@ def test_json_getitem_slice(engine, dtype):
 
 def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
     # Slices only work on columns with only lists
-    # But behaviour of Postgres and Athena is different from BigQuery. For now we just accept that's the
-    # way it is.
+    # But behaviour of Postgres is different from Athena and BigQuery.
+    # For Athena, slicing is wrapped by try function for avoiding exceptions,
+    # while BigQuery will not raise an exception by default.
+    # For now we just accept that's the way it is.
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[1:-1]
-    if is_postgres(engine) or is_athena(engine):
+    if is_postgres(engine):
         with pytest.raises(Exception):
             bts.to_pandas()
-    elif is_bigquery(engine):
+    elif is_athena(engine) or is_bigquery(engine):
         assert_equals_data(
             bts,
             use_to_pandas=True,
@@ -337,4 +360,84 @@ def test_json_flatten_array(engine, dtype):
             [3, {'id': '5o7Wv5Q5ZE', '_type': 'ItemContext'}],
         ],
         use_to_pandas=True,
+    )
+
+
+def test_json_flatten_array_column_name_special_chars(engine, dtype):
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    df = df.sort_index()[:2]  # two rows should be enough, and keeps the expected data shorter
+
+    df = df.reset_index(drop=False)
+    df = df.rename(columns={'_index_row': '_Index_Row#!', 'list_column': 'List!_COLUMN'})
+    df = df.set_index('_Index_Row#!')
+
+    list_column = df['List!_COLUMN']
+
+    result_item, result_offset = list_column.json.flatten_array()
+    result_item = result_item.sort_by_series(
+        by=[result_item.index['_Index_Row#!'], result_offset]
+    )
+    assert_equals_data(
+        result_item,
+        expected_columns=['_Index_Row#!', 'List!_COLUMN'],
+        expected_data=[
+            [0, {'a': 'b'}],
+            [0, {'c': 'd'}],
+            [1, 'a'],
+            [1, 'b'],
+            [1, 'c'],
+            [1, 'd'],
+        ],
+        use_to_pandas=True,
+    )
+
+
+def test_complex_types_astype_json(engine, dtype):
+
+    if is_athena(engine) or is_postgres(engine):
+        # not supported on those platforms.
+        return None
+
+    df = get_df_with_test_data(engine)[['skating_order']]
+    df = df.sort_index()[:1].materialize()
+    struct = {
+        'a': 123,
+        'b': 'test',
+        'c': 123.456,
+    }
+    struct_dtype = {'a': 'int64', 'b': 'string', 'c': 'float64'}
+    llist = [
+        'a', 'b', 'c'
+    ]
+    llist_dtype = [SeriesString.dtype]
+    df['struct'] = SeriesDict.from_value(base=df, value=struct, name='struct', dtype=struct_dtype)
+    df['list'] = SeriesList.from_value(base=df, value=llist, name='list', dtype=llist_dtype)
+    df['struct_json'] = df['struct'].astype(dtype)
+    df['list_json'] = df['list'].astype(dtype)
+    assert_equals_data(
+        df,
+        expected_columns=['_index_skating_order', 'skating_order',
+                          'struct', 'list',
+                          'struct_json', 'list_json'],
+        expected_data=[[1, 1,
+                        {'a': 123, 'b': 'test', 'c': 123.456}, ['a', 'b', 'c'],
+                        '{"a":123,"b":"test","c":123.456}', '["a","b","c"]']]
+    )
+
+
+def test_json_str_as_str(engine, dtype) -> None:
+    pdf = pd.DataFrame({'json_strs': ['"hi"', '"ola"', '"hallo"', '"hola"']})
+    df = DataFrame.from_pandas(engine, df=pdf, convert_objects=True)
+    df['json_strs'] = df['json_strs'].astype(dtype)
+
+    result = df['json_strs'].astype('string')
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'json_strs'],
+        expected_data=[
+            [0, '"hi"'],
+            [1, '"ola"'],
+            [2, '"hallo"'],
+            [3, '"hola"'],
+        ],
     )

@@ -7,18 +7,16 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
-import uuid
-from decimal import Decimal
-from typing import List, Union, Type, Any, Dict
+from typing import Type, List, Any, Mapping
 
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy, Engine, Dialect
 
 from bach import DataFrame, Series
-from bach.types import get_series_type_from_db_dtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_bigquery, is_postgres, is_athena
+from sql_models.util import is_bigquery, quote_identifier
 from tests.unit.bach.util import get_pandas_df
+from bach.testing import assert_equals_data
 
 # Three data tables for testing are defined here that can be used in tests
 # 1. cities: 3 rows (or 11 for the full dataset) of data on cities
@@ -176,156 +174,76 @@ def df_to_list(df):
     return(data_list)
 
 
-def _convert_uuid_expected_data(engine: Engine, data: List[List[Any]]) -> List[List[Any]]:
-    """
-    Convert any UUID objects in data to string, if we represent uuids with strings in the engine's dialect.
-    """
-    if is_postgres(engine):
-        return data
-    if is_athena(engine) or is_bigquery(engine):
-        result = [
-            [str(cell) if isinstance(cell, uuid.UUID) else cell for cell in row]
-            for row in data
-        ]
-        return result
-    raise Exception(f'engine not supported {engine}')
-
-
-def assert_equals_data(
-    bt: Union[DataFrame, Series],
-    expected_columns: List[str],
-    expected_data: List[list],
-    order_by: Union[str, List[str]] = None,
-    use_to_pandas: bool = False,
-    round_decimals: bool = False,
-    decimal=4,
-    convert_uuid: bool = False,
-) -> List[List[Any]]:
-    """
-    Execute the sql of ButTuhDataFrame/Series's view_sql(), with the given order_by, and make sure the
-    result matches the expected columns and data.
-
-    Note: By default this does not call `to_pandas()`, which we nowadays consider our 'normal' path,
-    but directly executes the result from `view_sql()`. To test `to_pandas()` set use_to_pandas=True.
-    :return: the values queried from the database
-    """
-    if len(expected_data) == 0:
-        raise ValueError("Cannot check data if 0 rows are expected.")
-
-    if isinstance(bt, Series):
-        # Otherwise sorting does not work as expected
-        bt = bt.to_frame()
-
-    if convert_uuid:
-        expected_data = _convert_uuid_expected_data(bt.engine, expected_data)
-
-    if order_by:
-        bt = bt.sort_values(order_by)
-    elif not bt.order_by:
-        bt = bt.sort_index()
-
-    if not use_to_pandas:
-        column_names, db_values = _get_view_sql_data(bt)
-    else:
-        column_names, db_values = _get_to_pandas_data(bt)
-
-    assert len(db_values) == len(expected_data)
-    assert column_names == expected_columns
-    for i, df_row in enumerate(db_values):
-        expected_row = expected_data[i]
-        for j, val in enumerate(df_row):
-            if not round_decimals:
-                assert df_row == expected_row, f'row {i} is not equal: {expected_row} != {df_row}'
-                continue
-
-            if isinstance(val, (float, Decimal)):
-                assert round(Decimal(val), decimal) == round(Decimal(expected_row[j]), decimal)
-            else:
-                assert val == expected_row[j]
-    return db_values
-
-
-def _get_view_sql_data(df: DataFrame):
-    sql = df.view_sql()
-    db_rows = run_query(df.engine, sql)
-    column_names = list(db_rows.keys())
-    db_values = [list(row) for row in db_rows]
-    print(db_values)
-    return column_names, db_values
-
-
-def _get_to_pandas_data(df: DataFrame):
-    pdf = df.to_pandas()
-    # Convert pdf to the same format as _get_view_sql_data gives
-    column_names = (list(pdf.index.names) if df.index else []) + list(pdf.columns)
-    pdf = pdf.reset_index()
-    db_values = []
-    for value_row in pdf.to_numpy().tolist():
-        db_values.append(value_row if df.index else value_row[1:])  # don't include default index value
-    print(db_values)
-    return column_names, db_values
-
-
-def assert_postgres_type(
-        series: Series,
-        expected_db_type: str,
-        expected_series_type: Type[Series]
+def assert_series_db_types(
+        df: DataFrame,
+        expected_series: Mapping[str, Type[Series]],
+        expected_db_type_overrides: Mapping[DBDialect, Mapping[str, str]] = None
 ):
     """
-    Check that the given Series has the expected data type in the Postgres database, and that it has the
-    expected Series type after being read back from the database.
+    Check that in the given DataFrame, all of the expected_series:
+     1) have the expected Series subtype in the DataFrame.
+     2) have the expected data type in the database.
 
-    This uses series.engine as the connection.
-    NOTE: If series.engine is not a Postgres engine, then this function simply returns without doing any
-    asserts!
+    If the expected data-type in the database is non-standard for that Series subtype (e.g. 'varchar(4)'
+    instead of just 'varchar'), then that can be overriden with the expected_db_type_overrides.
 
-    :param series: Series object to check the type of
-    :param expected_db_type: one of the types listed on https://www.postgresql.org/docs/current/datatype.html
-    :param expected_series_type: Subclass of Series
+    :param df: DataFrame object for which to check the database types
+    :param expected_series: Per series-name, the expected Series subtype
+    :param expected_db_type_overrides: Per database dialect a mapping of series-names to database types. That
+        override the default expected database type.
     """
-    engine = series.engine
-    if not is_postgres(engine):
-        return
-    sql = series.to_frame().view_sql()
-    sql = f'with check_type as ({sql}) select pg_typeof("{series.name}") from check_type limit 1'
-    db_rows = run_query(engine=engine, sql=sql)
-    db_values = [list(row) for row in db_rows]
-    db_type = db_values[0][0]
-    if expected_db_type:
-        assert db_type == expected_db_type
-    series_type = get_series_type_from_db_dtype(DBDialect.POSTGRES, db_type)
-    assert series_type == expected_series_type
+    expected_db_type_overrides = {} if expected_db_type_overrides is None else expected_db_type_overrides
+
+    db_dialect = DBDialect.from_engine(df.engine)
+    expected_db_types_dialect = {}
+    for series_name, series_type in expected_series.items():
+        assert isinstance(df[series_name], series_type)
+
+        type_override = expected_db_type_overrides.get(db_dialect, {}).get(series_name)
+        if type_override is not None:
+            expected_db_types_dialect[series_name] = type_override
+        else:
+            expected_db_types_dialect[series_name] = series_type.get_db_dtype(dialect=df.engine.dialect)
+    expected_db_types = {db_dialect: expected_db_types_dialect}
+    assert_db_types(df=df, expected_db_types=expected_db_types)
 
 
 def assert_db_types(
         df: DataFrame,
-        series_expected_db_type: Dict[str, str],
+        expected_db_types: Mapping[DBDialect, Mapping[str, str]]
 ):
     """
     Check that the given series in the DataFrame have the expected data types in the database.
 
-    ONLY supported for Postgres and Athena. Other database engines will raise an exception.
-
     :param df: DataFrame object for which to check the database types
-    :param series_expected_db_type: mapping of series-names, to database types.
+    :param expected_db_types: Per database dialect a mapping of series-names to database types.
+        Must at least contain a mapping from series-name to expected database types for the db-dialect of
+        df.engine
     """
     engine = df.engine
-    if is_postgres(engine):
-        typeof_function_name = 'pg_typeof'
-    elif is_athena(engine):
-        typeof_function_name = 'typeof'
-    else:
-        raise Exception(f'Not supported: {engine.name}')
+    db_dialect = DBDialect.from_engine(engine)
+    if db_dialect not in expected_db_types:
+        raise Exception(f'db dialect "{db_dialect.name}" not in expected_db_types.')
+    db_expected_db_types = expected_db_types[db_dialect]
+
+    typeof_function_name = {
+        DBDialect.POSTGRES: 'pg_typeof',
+        DBDialect.ATHENA: 'typeof',
+        # `bqutil.fn.typeof` is not a default BQ function, but a community function that's available to all.
+        # https://github.com/GoogleCloudPlatform/bigquery-utils/tree/master/udfs/community#typeofinput-any-type
+        DBDialect.BIGQUERY: 'bqutil.fn.typeof',
+    }[db_dialect]
 
     df_sql = df.view_sql()
     types_sql = ', '.join(
-        f'{typeof_function_name}("{series_name}")'for series_name in series_expected_db_type.keys()
+        f'{typeof_function_name}({quote_identifier(dialect=engine.dialect, name=series_name)})'
+        for series_name in db_expected_db_types.keys()
     )
     sql = f'with check_type as ({df_sql}) select {types_sql} from check_type limit 1'
     db_rows = run_query(engine=engine, sql=sql)
     db_values = [list(row) for row in db_rows]
-    for i, series_name in enumerate(series_expected_db_type.keys()):
-        expected_db_type = series_expected_db_type[series_name]
+    for i, series_name in enumerate(db_expected_db_types.keys()):
+        expected_db_type = db_expected_db_types[series_name]
         db_type = db_values[0][i]
         msg = f"expected type {expected_db_type} for {series_name}, found {db_type}"
         assert db_type == expected_db_type, msg

@@ -13,7 +13,6 @@ globalThis.objectiv.versions.set(pkg.name, pkg.version);
 export * from '@objectiv/tracker-react-core';
 
 export * from './common/factories/makeAnchorClickHandler';
-export * from './common/factories/makeIdFromTrackedAnchorProps';
 export * from './common/factories/makeReactTrackerDefaultPluginsList';
 export * from './common/factories/makeReactTrackerDefaultQueue';
 export * from './common/factories/makeReactTrackerDefaultTransport';
@@ -34,9 +33,12 @@ export * from './trackedElements/TrackedDiv';
 export * from './trackedElements/TrackedFooter';
 export * from './trackedElements/TrackedHeader';
 export * from './trackedElements/TrackedInput';
+export * from './trackedElements/TrackedInputCheckbox';
+export * from './trackedElements/TrackedInputRadio';
 export * from './trackedElements/TrackedMain';
 export * from './trackedElements/TrackedNav';
 export * from './trackedElements/TrackedSection';
+export * from './trackedElements/TrackedSelect';
 
 export * from './ReactTracker';
 export * from './types';

@@ -12,7 +12,7 @@ from bach import DataFrameOrSeries
 from bach.series import Series
 from bach.expression import Expression, AggregateFunctionExpression
 from bach.series.series import WrappedPartition
-from bach.types import StructuredDtype
+from bach.types import StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
@@ -39,8 +39,9 @@ class SeriesAbstractNumeric(Series, ABC):
                               other_dtypes=('int64', 'float64'), dtype=None):
         return super()._arithmetic_operation(other, operation, fmt_str, other_dtypes, dtype)
 
-    def _comparator_operation(self, other, comparator, other_dtypes=('int64', 'float64')) -> 'SeriesBoolean':
-        return super()._comparator_operation(other, comparator, other_dtypes)
+    def _comparator_operation(self, other, comparator, other_dtypes=('int64', 'float64'),
+                              strict_other_dtypes=tuple()) -> 'SeriesBoolean':
+        return super()._comparator_operation(other, comparator, other_dtypes, strict_other_dtypes)
 
     def exp(self) -> 'SeriesAbstractNumeric':
         """
@@ -176,8 +177,11 @@ class SeriesAbstractNumeric(Series, ABC):
         :param partition: The partition or window to apply
         :param q: A quantile or list of quantiles to be calculated
         """
-        from bach.quantile import calculate_quantiles
-        result = calculate_quantiles(self, partition=partition, q=q)
+        result = self.to_frame().quantile(q=q, partition=partition)[f'{self.name}_quantile']
+        result = result.copy_override(name=self.name)
+
+        if not isinstance(q, list):
+            result = result.reset_index(level='quantile', drop=True)
         return cast('SeriesFloat64', result)
 
     def var(self, partition: WrappedPartition = None, skipna: bool = True, ddof: int = None, **kwargs):
@@ -246,6 +250,7 @@ class SeriesInt64(SeriesAbstractNumeric):
         DBDialect.BIGQUERY: 'INT64'
     }
     supported_value_types = (int, numpy.int64, numpy.int32)
+    supported_source_dtypes = ('float64', 'bool', 'string')
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
@@ -281,7 +286,7 @@ class SeriesInt64(SeriesAbstractNumeric):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'int64':
             return expression
-        if source_dtype not in ['float64', 'bool', 'string']:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to int64')
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
@@ -363,6 +368,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
         DBDialect.BIGQUERY: 'FLOAT64'
     }
     supported_value_types = (float, numpy.float64)
+    supported_source_dtypes = ('int64', 'string')
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():
     #
@@ -404,7 +410,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'float64':
             return expression
-        if source_dtype not in ['int64', 'string']:
+        if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to float64')
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 

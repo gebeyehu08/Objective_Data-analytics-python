@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { generateUUID } from './helpers';
+import { generateGUID } from './helpers';
 import { TrackerGlobalsInterface } from './TrackerGlobalsInterface';
 
 declare global {
@@ -20,7 +20,7 @@ globalThis.objectiv.versions.set(pkg.name, pkg.version);
 /**
  * Create a client session. This can be used to detect whether a user deleted its cookies in the middle of a session.
  */
-globalThis.objectiv.clientSessionId = generateUUID();
+globalThis.objectiv.clientSessionId = generateGUID();
 
 export * from './generated/ContextFactories';
 export * from './generated/ContextNames';
@@ -33,6 +33,8 @@ export * from './ContextValidationRules';
 export * from './ErrorMessages';
 export * from './EventRecorderInterface';
 export * from './helpers';
+export * from './isAbstractContext';
+export * from './isContextEqual';
 export * from './LocationTreeInterface';
 export * from './RecordedEventsInterface';
 export * from './Tracker';
@@ -56,3 +58,4 @@ export * from './TrackerTransportRetryAttempt';
 export * from './TrackerTransportSwitch';
 export * from './TrackerValidationRuleInterface';
 export * from './TrackerValidationLifecycleInterface';
+export * from './uuidv4';

@@ -46,9 +46,8 @@ def test_sort_values_basic(engine):
     )
 
 
-def test_sort_values_expression(pg_engine):
-    # TODO: BigQuery
-    bt = get_df_with_test_data(pg_engine)[['city', 'inhabitants']]
+def test_sort_values_expression(engine):
+    bt = get_df_with_test_data(engine)[['city', 'inhabitants']]
     bt['city'] = bt['city'].str[2:]
     bt = bt.sort_values('city')
     assert_equals_data(

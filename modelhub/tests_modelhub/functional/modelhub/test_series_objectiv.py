@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import pytest
 from modelhub import __version__  # Any import from modelhub initializes all the types, do not remove
 from tests_modelhub.data_and_utils.utils import get_df_with_json_data_real, DBParams
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 
 def test_get_real_data(db_params: DBParams):
@@ -24,45 +24,26 @@ def test_get_real_data(db_params: DBParams):
     )
 
 
-def test_objectiv_stack_type(db_params):
+def test_location_stack_get_from_context_with_type_series(db_params):
     bt = get_df_with_json_data_real(db_params)
 
-    bt['a'] = bt.global_contexts.astype('objectiv_global_context')
-    bts = bt.a.objectiv.get_from_context_with_type_series("CookieIdContext", "cookie_id")
+    bt['a'] = bt.location_stack.astype('objectiv_location_stack')
+    bts = bt.a.ls.get_from_context_with_type_series("WebDocumentContext", "id")
     assert_equals_data(
         bts,
         expected_columns=['_index_event_id', 'a'],
         expected_data=[
-            [1, 'f84446c6-eb76-4458-8ef4-93ade596fd5b'],
-            [2, 'f84446c6-eb76-4458-8ef4-93ade596fd5b'],
-            [3, 'f84446c6-eb76-4458-8ef4-93ade596fd5b'],
-            [4, 'f84446c6-eb76-4458-8ef4-93ade596fd5b'],
-            [5, 'f84446c6-eb76-4458-8ef4-93ade596fd5b'],
-            [6, 'f84446c6-eb76-4458-8ef4-93ade596fd5b']
+            [1, '#document'],
+            [2, '#document'],
+            [3, '#document'],
+            [4, '#document'],
+            [5, '#document'],
+            [6, '#document']
         ]
     )
 
 
-def test_objectiv_stack_type2(db_params):
-    bt = get_df_with_json_data_real(db_params)
-
-    bt['a'] = bt.global_contexts.astype('objectiv_global_context')
-    bts = bt.a.global_contexts.user_agent
-    assert_equals_data(
-        bts,
-        expected_columns=['_index_event_id', 'a'],
-        expected_data=[
-            [1, 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'],
-            [2, 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'],
-            [3, 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'],
-            [4, 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'],
-            [5, 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'],
-            [6, 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0']
-        ]
-    )
-
-
-def test_objectiv_stack_type3(db_params):
+def test_location_stack_navigation_features(db_params):
     bt = get_df_with_json_data_real(db_params)
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')
@@ -82,7 +63,7 @@ def test_objectiv_stack_type3(db_params):
     )
 
 
-def test_objectiv_stack_type4(db_params):
+def test_location_stack_feature_stack(db_params):
     bt = get_df_with_json_data_real(db_params)
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')
@@ -103,7 +84,7 @@ def test_objectiv_stack_type4(db_params):
     )
 
 
-def test_objectiv_stack_type5(db_params):
+def test_location_stack_nice_name(db_params):
     bt = get_df_with_json_data_real(db_params)
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')

@@ -5,11 +5,14 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from bach import DataFrame
 from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from unittest.mock import ANY
+
+from bach.testing import assert_equals_data
 
 
 def test_df_categorical_describe(engine) -> None:
@@ -77,8 +80,10 @@ def test_df_numerical_describe(engine) -> None:
     )
 
 
-def test_include_mixed(pg_engine) -> None:
-    df = get_df_with_test_data(engine=pg_engine)
+@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo()
+def test_include_mixed(engine) -> None:
+    df = get_df_with_test_data(engine=engine)
     # duplicate last row. This will make the `mode` well-defined for all columns
     df = df.append(df.sort_index()[2:3])
 
@@ -107,6 +112,7 @@ def test_include_mixed(pg_engine) -> None:
     pd.testing.assert_frame_equal(result.to_pandas(), expected_df)
 
 
+@pytest.mark.skip_athena_todo()
 def test_describe_datetime(engine) -> None:
     pdf = pd.DataFrame(
         data=[
@@ -158,6 +164,7 @@ def test_describe_date(engine) -> None:
     pd.testing.assert_frame_equal(expected_df, result.to_pandas())
 
 
+@pytest.mark.skip_athena_todo()
 def test_describe_time(engine) -> None:
     pdf = pd.DataFrame(
         data=[

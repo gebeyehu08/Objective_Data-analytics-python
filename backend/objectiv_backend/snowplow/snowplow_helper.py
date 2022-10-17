@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Callable
 
 import base64
 import json
@@ -9,58 +9,95 @@ from objectiv_backend.snowplow.schema.ttypes import CollectorPayload  # type: ig
 
 from objectiv_backend.common.config import SnowplowConfig, get_collector_config
 from objectiv_backend.common.event_utils import get_context
-from objectiv_backend.common.types import EventDataList, EventData
+from objectiv_backend.common.types import EventDataList, EventData, CookieIdSource
 from objectiv_backend.schema.validate_events import EventError
 
 from thrift.protocol import TBinaryProtocol
 from thrift.transport import TTransport
 
 # only load imports if needed
-snowplow_config = get_collector_config().output.snowplow
-if snowplow_config.gcp_enabled:
-    from google.cloud import pubsub_v1
-    from google.api_core.exceptions import NotFound
+output_config = get_collector_config().output
 
-if snowplow_config.aws_enabled:
-    import boto3
-    import botocore.exceptions
+if output_config.snowplow:
+    snowplow_config = output_config.snowplow
+    if snowplow_config.gcp_enabled:
+        from google.cloud import pubsub_v1
+        from google.api_core.exceptions import NotFound
+
+        gcp_publisher = pubsub_v1.PublisherClient()
+
+    if snowplow_config.aws_enabled:
+        import boto3
+        import botocore.exceptions
 
 
-def make_snowplow_custom_context(self_describing_event: Dict, config: SnowplowConfig) -> str:
+def filter_dict(data: Dict, filter_keys: List) -> Dict:
+    return {k: v for k, v in data.items() if k not in filter_keys}
+
+
+def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> str:
     """
-    Create Snowplow custom context, containing snowplow_event, base64 encoded, ready to be inserted into a
-    snowplow event
-    :param self_describing_event: Dict containing a schema and a payload
+    Create Snowplow custom contexts, mapping contexts of an Objectiv Event onto Snowplow custom contexts:
+    - global contexts are mapped onto individual custom contexts
+    - location stack is mapped as a single object
+
+    returns a list of self describing Snowplow customcontexts, base64 encoded a string
+
+    :param event: List of Dict containing a schema and a payload
     :param config: SnowplowConfig
     :return: base64 encoded snowplow self-describing custom context
     """
+    self_describing_contexts = []
+
+    # first add global contexts
+    blocked = ['_type', '_types']
+    version = config.schema_objectiv_contexts_version
+    schema_base = config.schema_objectiv_contexts_base
+    for context in event['global_contexts']:
+        context_type = context['_type']
+        schema = f'{schema_base}/{context_type}/jsonschema/{version}'
+        data = filter_dict(context, blocked)
+        self_describing_contexts.append(make_snowplow_context(schema, data))
+
+    # add location_stack, but only if there's at least 1 item in it
+    schema = f'{config.schema_objectiv_location_stack}/jsonschema/{version}'
+    location_stack = {'location_stack': [filter_dict(v, ['_types']) for i, v in enumerate(event['location_stack'])]}
+    if len(location_stack['location_stack']) > 0:
+        self_describing_contexts.append(make_snowplow_context(schema, location_stack))
+
+    # original format
+    # Uncomment these lines to also send the original event / structure
+    #
+    # schema = config.schema_objectiv_taxonomy
+    # _event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
+    # try:
+    #     cookie_context = get_context(event, 'CookieIdContext')
+    # except ValueError:
+    #     cookie_context = {}
+    # _event['cookie_id'] = cookie_context.get('cookie_id', '')
+    # self_describing_contexts.append(make_snowplow_context(schema, _event))
+
     snowplow_contexts_schema = config.schema_contexts
     custom_context = {
         'schema': snowplow_contexts_schema,
-        'data': [self_describing_event]
+        'data': self_describing_contexts
     }
     custom_context_json = json.dumps(custom_context)
     return str(base64.b64encode(custom_context_json.encode('UTF-8')), 'UTF-8')
 
 
-def objectiv_event_to_snowplow(event: EventData, config: SnowplowConfig) -> Dict[str, Union[str, EventData]]:
-    """
-    Wrap objectiv event in self-describing Snowplow object
-    :param event: EventData
-    :param config: SnowplowConfig
-    :return: Dict containing event and schema describing the event
-    """
-    objectiv_schema = config.schema_objectiv_taxonomy
-
+def make_snowplow_context(schema: str, data: Union[Dict, List]) -> Dict:
     return {
-        'schema': objectiv_schema,
-        'data': event
+        'schema': schema,
+        'data': data
     }
 
 
 def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig) -> CollectorPayload:
     """
-    Transform Objectiv event to Snowplow Collector Payload object
+    Transform Objectiv event to Snowplow Collector Payload object:
+    - Map Objectiv event properties onto the tracker protocol(using a structured event) / payload
+    - Encode Objectiv event contexts onto custom contexts
     :param event: EventData
     :param config: SnowplowConfig
     :return: CollectorPayload
@@ -83,28 +120,92 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     except ValueError:
         path_context = {}
 
+    try:
+        application_context = get_context(event, 'ApplicationContext')
+    except ValueError:
+        application_context = {}
     query_string = urlparse(str(path_context.get('id', ''))).query
 
-    rich_event = {'event_id' if k == 'id' else k: v for k, v in event.items()}
-    rich_event['cookie_id'] = cookie_context.get('id', '')
+    snowplow_custom_contexts = make_snowplow_custom_contexts(event=event, config=config)
+    collector_tstamp = event['collector_time']
 
-    snowplow_event = objectiv_event_to_snowplow(event=rich_event, config=config)
-    snowplow_custom_context = make_snowplow_custom_context(self_describing_event=snowplow_event, config=config)
-    payload = {
-        "schema": snowplow_payload_data_schema,
-        "data": [{
+    """
+    Mapping of Objectiv data to Snowplow
+    
+    
+    ## Timestamps, set by collector (as event properties)
+    time            -> ttm       -> true_tstamp, derived_tstamp
+    transport_time  -> stm      -> dvce_sent_tstamp
+    corrected_time  -> dtm      -> dvce_created_tstamp
+    collector_time  -> payload  -> collector_tstamp
+    
+    Additional time fields in Snowplow data are:
+    etl_tstamp: timestamp for when the event was validated and enriched
+    load_tstamp: timestamp for when the event was loaded by the loader
+    
+    ## Event properties
+    event_id        -> eid      -> event_id
+    _type           -> se_ac    -> se_action
+    _types          -> se_ca    -> se_category
+    
+    ## Global context properties
+    ApplicationContext.id       -> aid      -> app_id
+    CookieIdContext.cookie_id   -> payload  -> network_userid 
+    HttpContext.referrer        -> refr     -> page_referrer
+    HttpContext.remote_address  -> ip       -> user_ipaddress
+    PathContext.id              -> url      -> page_url
+    
+    Furthermore all global contexts are mapped as individual custom contexts, resulting in a separate column per
+    global context type.
+    
+    The location_stack is mapped as a separate custom context, preserving the original location contexts, and the 
+    order they were in when the event was constructed
+    
+    for more info on the Snowplow tracker format, and db fields:
+    https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/snowplow-tracker-protocol/
+    https://docs.snowplowanalytics.com/docs/understanding-your-pipeline/canonical-event/#Date_time_fields
+    https://snowplowanalytics.com/blog/2015/09/15/improving-snowplows-understanding-of-time/
+    
+    Objectiv taxonomy reference:
+    https://objectiv.io/docs/taxonomy/reference
+    """
+
+    cookie_id = cookie_context.get('cookie_id', '')
+    cookie_source = cookie_context.get('id', '')
+
+    data = {
             "e": "se",  # mandatory: event type: structured event
             "p": "web",  # mandatory: platform
-            "tv": "objectiv-tracker-0.0.5",  # mandatory: tracker version
-            "eid": event['id'],  # event_id
-            "url": path_context.get('id', ''),
-            "cx": snowplow_custom_context
-        }]
+            "tv": "0.0.5",  # mandatory: tracker version
+            "tna": "objectiv-tracker",  # tracker name
+            "se_ac": event['_type'],  # structured event action -> event_type
+            "se_ca": json.dumps(event.get('_types', [])),  # structured event category -> event_types
+            "eid": event['id'],  # event_id / UUID
+            "url": path_context.get('id', ''),  # Page URL
+            "refr": http_context.get('referrer', ''),  # HTTP Referrer URL
+            "cx": snowplow_custom_contexts,  # base64 encoded custom context
+            "aid": application_context.get('id', ''),  # application id
+            "ip": http_context.get('remote_address', ''),  # IP address
+            "dtm": str(event['corrected_time']),  # Timestamp when event occurred, as recorded by client device
+            "stm": str(event['transport_time']),  # Timestamp when event was sent by client device to collector
+            "ttm": str(event['time']),  # User-set exact timestamp
+
+        }
+    if cookie_source == CookieIdSource.CLIENT:
+        # only set domain_sessionid if we have a client_side id
+        data["sid"] = cookie_id
+    elif cookie_source == CookieIdSource.BACKEND:
+        # Unique identifier for a user, based on a cookie from the collector, so only set if the source was a cookie
+        data["nuid"] = cookie_id
+
+    payload = {
+        "schema": snowplow_payload_data_schema,
+        "data": [data]
     }
     return CollectorPayload(
         schema=snowplow_collector_payload_schema,
         ipAddress=http_context.get('remote_address', ''),
-        timestamp=int(datetime.now().timestamp() * 1000),
+        timestamp=collector_tstamp,
         encoding='UTF-8',
         collector='objectiv_collector',
         userAgent=http_context.get('user_agent', ''),
@@ -115,7 +216,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         headers=[],
         contentType='application/json',
         hostname='',
-        networkUserId=cookie_context.get('id', '')
+        networkUserId=cookie_id if cookie_source == CookieIdSource.BACKEND else None
     )
 
 
@@ -166,18 +267,6 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
             "value": value[:512]
         })
 
-    # look for our custom context, so we can fill the enrich section
-    event = {}
-    if 'cx' in data:
-        context_container_encoded = data['cx']
-        context_container_decoded = json.loads(base64.b64decode(context_container_encoded).decode('utf-8'))
-        contexts = context_container_decoded['data']
-        for context in contexts:
-            if 'schema' in context and context['schema'] == config.schema_objectiv_taxonomy and 'data' in context:
-                event = context['data']
-                # we pick the first
-                break
-
     ts_format = '%Y-%m-%dT%H:%M:%S.%fZ'
     return {
         "schema": config.schema_schema_violations,
@@ -188,8 +277,7 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
                 # Timestamp at which the failure occurred --> 2022-03-11T09:37:47.093932Z
                 "timestamp": datetime.now().strftime(ts_format),
                 # List of failure messages associated with the tracker protocol violations
-                "messages": [
-                    {
+                "messages": [{
                     "schemaKey": config.schema_objectiv_taxonomy,
                     "error": {
                         "error": "ValidationError",
@@ -221,10 +309,6 @@ def snowplow_schema_violation_json(payload: CollectorPayload, config: SnowplowCo
                     "timestamp": datetime.fromtimestamp(payload.timestamp/1000).strftime(ts_format),
                     "useragent": payload.userAgent,
                     "userId": payload.networkUserId
-                },
-                "enrich": {
-                    "event_id": event.get('id'),
-                    "context": context_container_encoded
                 }
             },
             # Information about the piece of software responsible for the creation of schema violations
@@ -271,7 +355,7 @@ def prepare_event_for_snowplow_pipeline(event: EventData,
 
 
 def write_data_to_gcp_pubsub(events: EventDataList, config: SnowplowConfig, good: bool = True,
-                             event_errors: List[EventError] = None) -> None:
+                             event_errors: List[EventError] = None) -> List:
     """
     Write provided list of events to the Snowplow GCP pipeline, using GCP PubSub
     :param events: EventDataList - List of EventData
@@ -289,16 +373,20 @@ def write_data_to_gcp_pubsub(events: EventDataList, config: SnowplowConfig, good
         # not ok events get sent to the bad topic
         topic = config.gcp_pubsub_topic_bad
 
-    publisher = pubsub_v1.PublisherClient()
     topic_path = f'projects/{project}/topics/{topic}'
 
+    pubsub_futures = []
     for event in events:
         data = prepare_event_for_snowplow_pipeline(event=event, good=good, event_errors=event_errors, config=config)
 
         try:
-            publisher.publish(topic_path, data=data)
+            pubsub_future = gcp_publisher.publish(topic_path, data=data)
+            pubsub_futures.append(pubsub_future)
+
         except NotFound as e:
             print(f'PubSub topic {topic} could not be found! {e}')
+
+    return pubsub_futures
 
 
 def write_data_to_aws_pipeline(events: EventDataList, config: SnowplowConfig,

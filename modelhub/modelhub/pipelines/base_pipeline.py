@@ -24,9 +24,8 @@ class BaseDataPipeline:
         self.validate_pipeline_result(result)
         return result
 
-    @classmethod
     @abstractmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+    def validate_pipeline_result(self, result: bach.DataFrame) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -65,7 +64,7 @@ class BaseDataPipeline:
             - Series type for expected dtype must be a parent class or same class from
               its respective current dtype. For example:
                 expected_dtype = 'json',             current_dtype = 'objectiv_global_context'
-                expected_series_type = SeriesJson,   current_series_type = SeriesGlobalContexts
+                expected_series_type = SeriesJson,   current_series_type = SeriesGlobalContext
 
               Therefore, current_dtype is valid.
         """

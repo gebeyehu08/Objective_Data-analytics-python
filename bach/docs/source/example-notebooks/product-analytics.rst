@@ -4,292 +4,707 @@
 
 .. currentmodule:: bach_open_taxonomy
 
-=======================
-Basic product analytics
-=======================
+=================
+Product analytics
+=================
 
-This example shows how the open model hub can be used for basic product analytics. It's also available in a 
-`notebook <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-product-analytics.ipynb>`_
-to run on your own data, or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
-out with demo data in 5 minutes.
+This example notebook shows how you can easily analyze the basics of product analytics. It's also available 
+as a `full Jupyter notebook 
+<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/product-analytics.ipynb>`_
+to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
+or you can instead `run Objectiv Up </docs/home/up/>`__ to try it out. The dataset used here is the same as in 
+Up.
 
-First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
-:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
+Get started
+-----------
+We first have to instantiate the model hub and an Objectiv DataFrame object.
 
-The data used in this example is based on the data set that comes with our quickstart docker demo. Let's have 
-a look:
+.. doctest::
+	:skipif: engine is None
 
-.. code-block:: python
+	>>> # set the timeframe of the analysis
+	>>> start_date = '2022-03-01'
+	>>> end_date = None
 
-    df.sort_values('session_id', ascending=False).head()
+.. we override the timeframe for the doctests below
+	
+.. testsetup:: product-analytics
+	:skipif: engine is None
 
-The columns 'global_contexts' and the 'location_stack' contain most of the event specific data. These columns
-are json type columns and we can extract data from it based on the keys of the json objects using
-:doc:`get_from_context_with_type_series <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.objectiv>`.
-Or use methods specific to the :ref:`location_stack` or :ref:`global_contexts` to extract the data.
+	start_date = '2022-03-01'
+	end_date = '2022-07-30'
+	pd.set_option('display.max_colwidth', 93)
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> from modelhub import ModelHub, display_sql_as_markdown
+	>>> from datetime import datetime
+	>>> # instantiate the model hub and set the default time aggregation to daily
+	>>> # and set the global contexts that will be used in this example
+	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application'])
+	>>> # get a Bach DataFrame with Objectiv data within a defined timeframe
+	>>> df = modelhub.get_objectiv_dataframe(start_date=start_date, end_date=end_date)
+
+The `location_stack` column, and the columns taken from the global contexts, contain most of the 
+event-specific data. These columns are JSON typed, and we can extract data from it using the keys of the JSON 
+objects with :doc:`SeriesLocationStack 
+<../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack>` methods, or the `context` 
+accessor for global context columns. See the :doc:`open taxonomy example <./open-taxonomy>` for how to use 
+the `location_stack` and global contexts.
 
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    # add 'application', 'feature_nice_name' and 'root_location' as columns, so that we can use it for grouping etc later
-    df['application'] = df.global_contexts.gc.application
-    df['feature_nice_name'] = df.location_stack.ls.nice_name
-    df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
-    
-    # have a look at the data
-    df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
+	>>> df['application_id'] = df.application.context.id
+	>>> df['feature_nice_name'] = df.location_stack.ls.nice_name
+	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
 
-Now we will go though a selection of basic analytics metrics. We can use models from the :ref:`models
-<models>`
-for this purpose or use :ref:`Bach <bach>` to do data analysis directly on the data stored in the SQL database using
-pandas-like syntax.
 
-For each example, `head()`, `to_pandas()` or `to_numpy()` can be used to execute the generated SQL and get
-the results in your notebook.
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.ModelHub <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub>`
+	* :doc:`modelhub.ModelHub.get_objectiv_dataframe <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.get_objectiv_dataframe>`
+	* :ref:`Using global context data <location-stack-and-global-contexts>`
+	* :doc:`modelhub.SeriesLocationStack.ls <../open-model-hub/api-reference/SeriesLocationStack/modelhub.SeriesLocationStack.ls>`
+
+Have a look at the data
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # sort by users sessions
+	>>> df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
+	                                             day                  moment                               user_id                                     location_stack              event_type                                  stack_event_types  session_id  session_hit_number                                        application    application_id                                  feature_nice_name root_location
+	event_id                                                                                                                                                                                                                                                                                                                                                                                  
+	17f50b0a-2aa9-46bc-9610-efe8d4240577  2022-07-30 2022-07-30 18:59:16.074  8a2fbdc0-f7af-4a3a-a6da-95220fc8e36a  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        5371                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Overlay: star-us-notification-overlay located ...          home
+	03081098-94f7-490e-9f94-bee37aa78270  2022-07-30 2022-07-30 18:26:50.260  1f7afff0-bde4-44da-9fa6-a2d6b0289373  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        5370                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Overlay: star-us-notification-overlay located ...          home
+	ed409433-8ca4-417b-a9fd-007e5dd4388c  2022-07-30 2022-07-30 15:14:24.087  136b4cc0-ead0-47ae-9c87-55be86027e4f  [{'id': 'home', '_type': 'RootLocationContext'...            VisibleEvent  [AbstractEvent, NonInteractiveEvent, VisibleEv...        5369                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Overlay: star-us-notification-overlay located ...          home
+	306d1fce-6cae-4956-844a-64000288ca5a  2022-07-30 2022-07-30 14:38:03.785  8d69b136-7db4-4a89-88e7-ba562fcd1f04  [{'id': 'home', '_type': 'RootLocationContext'...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInt...        5368                   1  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website                                Root Location: home          home
+	825f6ab6-4499-4bca-a38f-a9828a0cd17e  2022-07-30 2022-07-30 13:44:58.251  102a4b16-8123-4f06-94a1-2e7e4787ebbe  [{'id': 'about', '_type': 'RootLocationContext...              PressEvent      [AbstractEvent, InteractiveEvent, PressEvent]        5367                   4  [{'id': 'objectiv-website', '_type': 'Applicat...  objectiv-website  Link: blog located at Root Location: about => ...         about
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # explore the data with describe
+	>>> df.describe(include='all').head()
+	               day                   moment user_id location_stack              event_type stack_event_types  session_id  session_hit_number application    application_id                             feature_nice_name root_location
+	__stat
+	count        38835                    38835   38835          38835                   38835             38835    38835.00            38835.00       38835             38835                                         38835         38835
+	mean          None                     None    None           None                    None              None     2691.15               20.66        None              None                                          None          None
+	std           None                     None    None           None                    None              None     1576.04               45.75        None              None                                          None          None
+	min     2022-03-01  2022-03-01 02:38:04.495    None           None  ApplicationLoadedEvent              None        1.00                1.00        None     objectiv-docs  Content: hero located at Root Location: home         about
+	max     2022-07-30  2022-07-30 18:59:16.074    None           None            VisibleEvent              None     5371.00              504.00        None  objectiv-website                       Root Location: tracking      tracking
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
+	* :doc:`bach.DataFrame.describe <../bach/api-reference/DataFrame/bach.DataFrame.describe>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+
+Next we'll go though a selection of product analytics metrics. We can use models from the 
+:doc:`open model hub <../open-model-hub/index>`, or use :doc:`modeling library Bach <../bach/index>` to run 
+data analyses directly on the data store, with Pandas-like syntax.
+
+For each example, :doc:`head() <../bach/api-reference/DataFrame/bach.DataFrame.head>`, 
+:doc:`to_pandas() <../bach/api-reference/DataFrame/bach.DataFrame.to_pandas>` or 
+:doc:`to_numpy() <../bach/api-reference/DataFrame/bach.DataFrame.to_numpy>` can be used to 
+execute the generated SQL and get the results in your notebook.
 
 Unique users
 ------------
-The `daily_users` uses the `time_aggregation` as set when the model hub was instantiated. In this case
-`time_aggregation` was set to '%Y-%m-%d', so the aggregation is daily. For `monthly_users`, the
-default time_aggregation is overridden by using a different `groupby`.
+Let's see the number of unique users over time, with the 
+:doc:`unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>` model. By default 
+it will use the `time_aggregation` set when the model hub was instantiated, in this case '%Y-%m-%d', so daily. 
+For `monthly_users`, the default time_aggregation is overridden by using a different `groupby` argument.
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    # model hub: unique users, monthly
-    monthly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
-    monthly_users.sort_index(ascending=False).head()
+	>>> # unique users, monthly
+	>>> monthly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
+	>>> monthly_users.sort_index(ascending=False).head()
+	time_aggregation
+	2022-07     830
+	2022-06     497
+	2022-05    1682
+	2022-04     304
+	2022-03     288
+	Name: unique_users, dtype: int64
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    # model hub: unique users, daily
-    daily_users = modelhub.aggregate.unique_users(df)
-    daily_users.sort_index(ascending=False).head(10)
+	>>> # unique users, daily
+	>>> daily_users = modelhub.aggregate.unique_users(df)
+	>>> daily_users.sort_index(ascending=False).head(10)
+	time_aggregation
+	2022-07-30      9
+	2022-07-29     28
+	2022-07-28     17
+	2022-07-27     78
+	2022-07-26    102
+	2022-07-25    102
+	2022-07-24     75
+	2022-07-23     80
+	2022-07-22     81
+	2022-07-21     43
+	Name: unique_users, dtype: int64
 
-.. code-block:: python
+To see the number of users per main product section, group by its 
+`root_location <https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext>`_.
 
-    # model hub: unique users, per main product section
-    users_root = modelhub.aggregate.unique_users(df, groupby=['application', 'root_location'])
-    users_root.sort_index(ascending=False).head(10)
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # unique users, per main product section
+	>>> users_root = modelhub.aggregate.unique_users(df, groupby=['application_id', 'root_location'])
+	>>> users_root.sort_index(ascending=False).head(10)
+	application_id    root_location
+	objectiv-website  privacy            13
+	                  join-slack         47
+	                  jobs              214
+	                  home             2812
+	                  cla                 2
+	                  blog              346
+	                  about             305
+	objectiv-docs     tracking          337
+	                  taxonomy          488
+	                  modeling          423
+	Name: unique_users, dtype: int64
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
+	* :doc:`bach.DataFrame.sort_index <../bach/api-reference/DataFrame/bach.DataFrame.sort_index>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
 
 Retention
 ---------
-To measure how well we are doing at keeping the users with us after the first interaction, we can use a retention matrix.
+To measure how well we are doing at keeping users with us after their first interaction, we can use a 
+retention matrix.
 
-To calculate the retention matrix, we need to distribute the users into mutually exclusive cohorts based on the `time_period` (it can be `daily`, `weekly`, `monthly`, or `yearly`) when they first interacted.
+To calculate the retention matrix, we need to distribute the users into mutually exclusive cohorts based on 
+the `time_period` (can be `daily`, `weekly`, `monthly`, or `yearly`) they first interacted.
 
 In the retention matrix:
-    - each row represents a cohort,
-    - each column represents a time range, where time is calculated with respect to the cohort start time,
-    - the values of the matrix elements are the number or percentage (depending on `percentage` parameter) of users in a given cohort that returned again in a given time range.
 
-N.B. the users' activity starts to be traced from start_date specified in modelhub where we load the data: `modelhub.get_objectiv_dataframe(start_date='2022-02-02')`.
+- each row represents a cohort;
+- each column represents a time range, where time is calculated with respect to the cohort start time;
+- the values of the matrix elements are the number or percentage (depending on `percentage` parameter) of users in a given cohort that returned again in a given time range.
 
-.. code-block:: python
+The users' activity starts to be counted from the `start_date` specified when the modelhub was instantiated.
 
-    retention_matrix = modelhub.aggregate.retention_matrix(df, time_period='monthly', percentage=True, display=True)
-    retention_matrix.head()
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-**Drilling down cohorts**
+	>>> # retention matrix, monthly, with percentages
+	>>> retention_matrix = modelhub.aggregate.retention_matrix(df, time_period='monthly', percentage=True, display=True)
+	>>> retention_matrix.head()
+	                 _0        _1        _2        _3        _4
+	first_cohort                                               
+	2022-03       100.0  9.722222  6.944444  4.513889  4.861111
+	2022-04       100.0  6.521739  2.173913  1.086957       NaN
+	2022-05       100.0  3.527981  0.851582       NaN       NaN
+	2022-06       100.0  4.523810       NaN       NaN       NaN
+	2022-07       100.0       NaN       NaN       NaN       NaN
 
-From our retention matrix, we can see that in the second cohort there is a drop in retained users in the next month, just 3.6% came back. We can try to zoom in on the different cohorts and see what is the difference.
+.. image:: ../img/docs/example-notebooks/product-analytics-retention-matrix.png
+  :alt: Retention Matrix
 
-.. code-block:: python
 
-    # calculate the first cohort
-    cohorts = df[['user_id', 'moment']].groupby('user_id')['moment'].min().reset_index()
-    cohorts = cohorts.rename(columns={'moment': 'first_cohort'})
+Drilling down retention cohorts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # add first cohort of the users to our DataFrame
-    df_with_cohorts = df.merge(cohorts, on='user_id')
+In the retention matrix above, we can see there's a drop in retained users in the second cohort the next 
+month. We can directly zoom into the different cohorts and see the difference.
 
-    # filter data where users belong to # 0 cohort
-    cohort0_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 2, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 3, 1))
-    df_with_cohorts[cohort0_filter]['event_type'].value_counts().head()
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    # filter data where users belong to # 1 cohort (the problematic one)
-    cohort1_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 3, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 4, 1))
-    df_with_cohorts[cohort1_filter]['event_type'].value_counts().head()
+	>>> # calculate the first cohort
+	>>> cohorts = df[['user_id', 'moment']].groupby('user_id')['moment'].min().reset_index()
+	>>> cohorts = cohorts.rename(columns={'moment': 'first_cohort'})
+	>>> # add first cohort of the users to our DataFrame
+	>>> df_with_cohorts = df.merge(cohorts, on='user_id')
 
-It is interesting to see that we have relatively more `VisibleEvent` in the first cohort than in second 'problematic' one.
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-This is  just a simple example to demonstrate the differences you can find between the cohorts, one can do similar tests e.g. with `top product features
-<https://objectiv.io/docs/modeling/open-model-hub/models/aggregation/top_product_features/>`_, or develop more in-depth analysis depending on the product needs.
+	>>> # filter data where users belong to the #0 cohort
+	>>> cohort0_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 3, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 4, 1))
+	>>> df_with_cohorts[cohort0_filter]['event_type'].value_counts().head()
+	event_type
+	VisibleEvent              3646
+	PressEvent                2363
+	ApplicationLoadedEvent    2004
+	MediaLoadEvent             754
+	HiddenEvent                293
+	Name: value_counts, dtype: int64
 
-User time spent
----------------
-We can also calculate the average session duration for time intervals. `duration_root_month` gives the
-average time spent per root location per month.
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-.. code-block:: python
+	>>> # filter data where users belong to the #1 cohort (the problematic one)
+	>>> cohort1_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 4, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 5, 1))
+	>>> df_with_cohorts[cohort1_filter]['event_type'].value_counts().head()
+	event_type
+	PressEvent                1202
+	VisibleEvent              1191
+	ApplicationLoadedEvent     630
+	MediaLoadEvent             246
+	HiddenEvent                128
+	Name: value_counts, dtype: int64
 
-    duration_daily = modelhub.aggregate.session_duration(df)
-    duration_monthly = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, '%Y-%m'))
-    duration_root_month = modelhub.aggregate.session_duration(df, groupby=['root_location', modelhub.time_agg(df, '%Y-%m')])
+One interesting thing to note here, for example, is that there are relatively more `VisibleEvents 
+<https://objectiv.io/docs/taxonomy/reference/events/VisibleEvent>`_ in the first cohort than in the second 
+'problematic' one.
 
-This example shows the quartiles of time spent. Materialization is needed because the expression of the
-created series contains aggregated data, and it is not allowed to aggregate that.
+This is  just a simple example to demonstrate the differences you can find between cohorts. You could run 
+other models like 
+:doc:`top product features <../open-model-hub/models/aggregation/modelhub.Aggregate.top_product_features>`, 
+or develop more in-depth analyses.
 
-.. code-block:: python
+.. admonition:: Reference
+	:class: api-reference
 
-    session_duration = modelhub.aggregate.session_duration(df, groupby='session_id', exclude_bounces=False)
-    session_duration.materialize().quantile(q=[0.25, 0.50, 0.75]).head()
+	* :doc:`modelhub.Aggregate.retention_matrix <../open-model-hub/models/aggregation/modelhub.Aggregate.retention_matrix>`
+	* :doc:`bach.DataFrame.groupby <../bach/api-reference/DataFrame/bach.DataFrame.groupby>`
+	* :doc:`bach.DataFrame.min <../bach/api-reference/DataFrame/bach.DataFrame.min>`
+	* :doc:`bach.DataFrame.reset_index <../bach/api-reference/DataFrame/bach.DataFrame.reset_index>`
+	* :doc:`bach.DataFrame.rename <../bach/api-reference/DataFrame/bach.DataFrame.rename>`
+	* :doc:`bach.DataFrame.merge <../bach/api-reference/DataFrame/bach.DataFrame.merge>`
+	* :doc:`bach.DataFrame.value_counts <../bach/api-reference/DataFrame/bach.DataFrame.value_counts>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+
+Time spent (aka duration)
+-------------------------
+Here we calculate the average duration of a user's session, using the 
+:doc:`session_duration model <../open-model-hub/models/aggregation/modelhub.Aggregate.session_duration>`.
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # duration, monthly average
+	>>> duration_monthly = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, '%Y-%m'))
+	>>> duration_monthly.sort_index(ascending=False).head()
+	time_aggregation
+	2022-07   0 days 00:04:39.795993
+	2022-06   0 days 00:02:54.086814
+	2022-05   0 days 00:02:58.417140
+	2022-04   0 days 00:03:02.069818
+	2022-03   0 days 00:04:24.103417
+	Name: session_duration, dtype: timedelta64[ns]
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # duration, daily average
+	>>> duration_daily = modelhub.aggregate.session_duration(df)
+	>>> duration_daily.sort_index(ascending=False).head()
+	time_aggregation
+	2022-07-30   0 days 00:00:34.376800
+	2022-07-29   0 days 00:06:46.552000
+	2022-07-28   0 days 00:03:00.315214
+	2022-07-27   0 days 00:02:52.322250
+	2022-07-26   0 days 00:04:25.374743
+	Name: session_duration, dtype: timedelta64[ns]
+
+To see the average time spent by users in each main product section (per month in this case), group by its 
+`root_location <https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext>`_.
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # duration, monthly average per root_location
+	>>> duration_root_month = modelhub.aggregate.session_duration(df, groupby=['application_id', 'root_location', modelhub.time_agg(df, '%Y-%m')]).sort_index()
+	>>> duration_root_month.head(10)
+	application_id root_location  time_aggregation
+	objectiv-docs  home           2022-03            0 days 00:03:15.469159
+	                              2022-04            0 days 00:02:24.079984
+	                              2022-05            0 days 00:02:28.704679
+	                              2022-06            0 days 00:01:28.630640
+	                              2022-07            0 days 00:01:54.750826
+	               modeling       2022-03            0 days 00:07:10.507312
+	                              2022-04            0 days 00:05:22.437091
+	                              2022-05            0 days 00:04:39.967000
+	                              2022-06            0 days 00:03:36.990824
+	                              2022-07            0 days 00:03:55.341517
+	Name: session_duration, dtype: timedelta64[ns]
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # how is the overall time spent distributed?
+	>>> session_duration = modelhub.aggregate.session_duration(df, groupby='session_id', exclude_bounces=False)
+	>>> # materialization is needed because the expression of the created Series contains aggregated data, and it is not allowed to aggregate that.
+	>>> session_duration.materialize().quantile(q=[0.25, 0.50, 0.75]).head()
+	quantile
+	0.25   0 days 00:00:00.013000
+	0.50   0 days 00:00:05.893000
+	0.75   0 days 00:01:10.487500
+	Name: session_duration, dtype: timedelta64[ns]
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.Aggregate.session_duration <../open-model-hub/models/aggregation/modelhub.Aggregate.session_duration>`
+	* :doc:`bach.DataFrame.sort_index <../bach/api-reference/DataFrame/bach.DataFrame.sort_index>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+	* :doc:`bach.DataFrame.groupby <../bach/api-reference/DataFrame/bach.DataFrame.groupby>`
+	* :doc:`bach.DataFrame.materialize <../bach/api-reference/DataFrame/bach.DataFrame.materialize>`
 
 Top used product features
 -------------------------
-Let's get the top used features in the product by our users, for that we can call the `top_product_features` function from the model hub.
+To see which features are most used, we can use the 
+:doc:`top_product_features <../open-model-hub/models/aggregation/modelhub.Aggregate.top_product_features>`
+model. 
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    top_product_features = modelhub.aggregate.top_product_features(df)
-    top_product_features.head()
+	>>> # see top used product features - by default we select only user actions (InteractiveEvents)
+	>>> top_product_features = modelhub.aggregate.top_product_features(df)
+	>>> top_product_features.head()
+	                                                                                                                           user_id_nunique
+	application      feature_nice_name                                                                             event_type                 
+	objectiv-website Pressable: after located at Root Location: home => Content: capture-data => Content: data-... PressEvent              527
+	                 Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... PressEvent              321
+	                 Pressable: before located at Root Location: home => Content: capture-data => Content: data... PressEvent              292
+	                 Link: about-us located at Root Location: home => Navigation: navbar-top                       PressEvent              265
+	                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 PressEvent              244
 
-Top used product areas
-----------------------
+Top used features per product area
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we use the model hub to get the unique users per application, root location, feature, and event type.
-From this prepared dataset, we show the users for the home page first.
+We also want to look at which features were used most in our top product areas.
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    # select only user actions, so stack_event_types must contain 'InteractiveEvent'
-    interactive_events = df[df.stack_event_types.json.array_contains('InteractiveEvent')]
+	>>> # select only user actions, so stack_event_types must contain 'InteractiveEvent'
+	>>> interactive_events = df[df.stack_event_types.json.array_contains('InteractiveEvent')]
+	>>> # from these interactions, get the number of unique users per application, root_location, feature, and event type.
+	>>> top_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application_id','root_location','feature_nice_name', 'event_type'])
+	>>> top_interactions = top_interactions.reset_index()
 
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    top_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
-    top_interactions = top_interactions.reset_index()
+	>>> # let's look at the homepage on our website
+	>>> home_users = top_interactions[(top_interactions.application_id == 'objectiv-website') & (top_interactions.root_location == 'home')]
+	>>> home_users.sort_values('unique_users', ascending=False).head()
+	     application_id root_location                                                                             feature_nice_name  event_type  unique_users
+	0  objectiv-website          home  Pressable: after located at Root Location: home => Content: capture-data => Content: data...  PressEvent           527
+	1  objectiv-website          home  Pressable: after located at Root Location: home => Content: modeling => Content: modeling...  PressEvent           321
+	2  objectiv-website          home  Pressable: before located at Root Location: home => Content: capture-data => Content: dat...  PressEvent           292
+	3  objectiv-website          home                       Link: about-us located at Root Location: home => Navigation: navbar-top  PressEvent           265
+	4  objectiv-website          home                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top  PressEvent           244
 
-    home_users = top_interactions[(top_interactions.application == 'objectiv-website') &
-                                  (top_interactions.root_location == 'home')]
-    home_users.sort_values('unique_users', ascending=False).head()
+From the same `top_interactions` object, we can see the top used features on our documentation, which is a separate application.
 
-From the same `top_interactions` object, we can select the top interactions for the 'docs' page.
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-.. code-block:: python
+	>>> # see the top used features on our documentation application
+	>>> docs_users = top_interactions[top_interactions.application_id == 'objectiv-docs']
+	>>> docs_users.sort_values('unique_users', ascending=False).head()
+	  application_id root_location                                                                  feature_nice_name  event_type  unique_users
+	0  objectiv-docs          home  Link: Quickstart Guide located at Root Location: home => Navigation: docs-sidebar  PressEvent            90
+	1  objectiv-docs          home                Link: logo located at Root Location: home => Navigation: navbar-top  PressEvent            76
+	2  objectiv-docs      tracking            Link: logo located at Root Location: tracking => Navigation: navbar-top  PressEvent            65
+	3  objectiv-docs      taxonomy            Link: logo located at Root Location: taxonomy => Navigation: navbar-top  PressEvent            62
+	4  objectiv-docs          home            Link: Tracking located at Root Location: home => Navigation: navbar-top  PressEvent            62
 
-    docs_users = top_interactions[top_interactions.application == 'objectiv-docs']
-    docs_users.sort_values('unique_users', ascending=False).head()
+.. admonition:: Reference
+	:class: api-reference
 
-Acquisition
------------
-
-We create a copy of the original df, as to not clutter our original df with columns that are only required for acquisition analysis.
-
-.. code-block:: python
-
-    df_acquisition = df.copy()
-    # extract referrer and marketing contexts from the global contexts
-    df_acquisition['referrer'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='HttpContext', key='referrer')
-    df_acquisition['utm_source'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='source')
-    df_acquisition['utm_medium'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='medium')
-    df_acquisition['utm_campaign'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='campaign')
-    df_acquisition['utm_content'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='content')
-    df_acquisition['utm_term'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='term')
-
-User origin
-~~~~~~~~~~~
-
-.. code-block:: python
-
-    # users by referrer
-    modelhub.agg.unique_users(df_acquisition, groupby='referrer').sort_values(ascending=False).head()
-
-Marketing
-~~~~~~~~~
-Calculate the number of users per campaign.
-
-.. code-block:: python
-
-    # users by marketing campaign
-    campaign_users = modelhub.agg.unique_users(df_acquisition, groupby=['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'])
-    campaign_users = campaign_users.reset_index().dropna(axis=0, how='any', subset='utm_source')
-
-    campaign_users.sort_values('utm_source', ascending=True).head()
-
-Look at top used features by campaign for only user interactions.
-
-.. code-block:: python
-
-    # users by feature per campaign source & term
-    users_feature_campaign = modelhub.agg.unique_users(df_acquisition[
-        df_acquisition.stack_event_types.json.array_contains('InteractiveEvent')],
-                                                       groupby=['utm_source',
-                                                                'utm_term',
-                                                                'feature_nice_name',
-                                                                'event_type'])
-    users_feature_campaign = users_feature_campaign.reset_index().dropna(axis=0, how='any', subset='utm_source')
-
-    users_feature_campaign.sort_values(['utm_source', 'utm_term', 'unique_users'], ascending=[True, True, False]).head()
+	* :doc:`modelhub.Aggregate.top_product_features <../open-model-hub/models/aggregation/modelhub.Aggregate.top_product_features>`
+	* :doc:`bach.SeriesJson.json.array_contains <../bach/api-reference/Series/Json/bach.SeriesJson.json>`
+	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
+	* :doc:`bach.DataFrame.reset_index <../bach/api-reference/DataFrame/bach.DataFrame.reset_index>`
+	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
 
 Conversions
 -----------
-First we define a conversion event in the Objectiv DataFrame we created for acquisition analysis.
+Users have impact on product goals, e.g. conversion to a signup. Here we look at their conversion to such 
+goals. First you define a conversion event, which in this example we've defined as clicking a link to our 
+GitHub repo.
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    # create a column that extracts all location stacks that lead to our github
-    df_acquisition['github_press'] = df_acquisition.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
-    df_acquisition.loc[df_acquisition.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press'] = df_acquisition.location_stack
+	>>> # create a column that extracts all location stacks that lead to our GitHub repo
+	>>> df['github_press'] = df.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
+	>>> df.loc[df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press'] = df.location_stack
+	>>> # define which events to use as conversion events
+	>>> modelhub.add_conversion_event(location_stack=df.github_press, event_type='PressEvent', name='github_press')
 
-    # define which events to use as conversion events
-    modelhub.add_conversion_event(location_stack=df_acquisition.github_press,
-                                  event_type='PressEvent',
-                                  name='github_press')
+This conversion event can then be used by several models using the defined name ('github_press'). First we 
+calculate the number of unique converted users.
 
-This can be used by several models from the model hub using the defined name ('github_press'). First we calculate
-the number of unique converted users.
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-.. code-block:: python
+	>>> # number of conversions, daily
+	>>> df['is_conversion_event'] = modelhub.map.is_conversion_event(df, 'github_press')
+	>>> conversions = modelhub.aggregate.unique_users(df[df.is_conversion_event])
+	>>> conversions.to_frame().sort_index(ascending=False).head(10)
+	                  unique_users
+	time_aggregation              
+	2022-07-28                   1
+	2022-07-27                   1
+	2022-07-26                   3
+	2022-07-25                   1
+	2022-07-24                   1
+	2022-07-21                   1
+	2022-07-20                   2
+	2022-07-18                   2
+	2022-07-17                   1
+	2022-07-15                   1
 
-    # model hub: calculate conversions
-    df_acquisition['is_conversion_event'] = modelhub.map.is_conversion_event(df_acquisition, 'github_press')
-    conversions = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event])
-    conversions.to_frame().sort_index(ascending=False).head(10)
+Conversion rate
+~~~~~~~~~~~~~~~
+To calculate the daily conversion rate, we use the earlier created `daily_users` DataFrame.
 
-We use the earlier created `daily_users` to calculate the daily conversion rate.
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-.. code-block:: python
+	>>> # conversion rate, daily
+	>>> conversion_rate = conversions / daily_users
+	>>> conversion_rate.sort_index(ascending=False).head(10)
+	time_aggregation
+	2022-07-30         NaN
+	2022-07-29         NaN
+	2022-07-28    0.058824
+	2022-07-27    0.012821
+	2022-07-26    0.029412
+	2022-07-25    0.009804
+	2022-07-24    0.013333
+	2022-07-23         NaN
+	2022-07-22         NaN
+	2022-07-21    0.023256
+	Name: unique_users, dtype: float64
 
-    # calculate conversion rate
-    conversion_rate = conversions / daily_users
-    conversion_rate.sort_index(ascending=False).head(10)
 
-Conversions by marketing campaign.
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-.. code-block:: python
+	>>> # combined DataFrame with #conversions + conversion rate, daily
+	>>> conversions_plus_rate = conversions.to_frame().merge(conversion_rate.to_frame(), on='time_aggregation', how='left').sort_index(ascending=False)
+	>>> conversions_plus_rate = conversions_plus_rate.rename(columns={'unique_users_x': 'converted_users', 'unique_users_y': 'conversion_rate'})
+	>>> conversions_plus_rate.head()
+	                  converted_users  conversion_rate
+	time_aggregation
+	2022-07-28                      1         0.058824
+	2022-07-27                      1         0.012821
+	2022-07-26                      3         0.029412
+	2022-07-25                      1         0.009804
+	2022-07-24                      1         0.013333
 
-    # model hub: calculate conversions per marketing canpaign based on UTM data in MarketingContext
-    campaign_conversions = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event],
-                                                           groupby=['utm_source', 'utm_medium', 'utm_campaign'])
-    campaign_conversions.reset_index().dropna(axis=0, how='any', subset='utm_source').head()
-
-From which product feature do users convert most?
-
-.. code-block:: python
-
-    conversion_locations = modelhub.agg.unique_users(df_acquisition[df_acquisition.is_conversion_event],
-                                                     groupby=['application', 'feature_nice_name', 'event_type'])
-
-    # calling .to_frame() for nicer formatting
-    conversion_locations.sort_values(ascending=False).to_frame().head()
-
+Features  before conversion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can calculate what users did _before_ converting.
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df_acquisition, name='github_press')
-    top_features_before_conversion.head()
+	>>> # features used before users converted
+	>>> top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df, name='github_press')
+	>>> top_features_before_conversion.head()
+	                                                                                                                           unique_users
+	application      feature_nice_name                                                                             event_type              
+	objectiv-website Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 PressEvent            29
+	                 Pressable: after located at Root Location: home => Content: capture-data => Content: data-... PressEvent            20
+	                 Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... PressEvent            16
+	                 Pressable: before located at Root Location: home => Content: modeling => Content: modeling... PressEvent            10
+	                 Pressable: before located at Root Location: home => Content: capture-data => Content: data... PressEvent             9
 
-At last we want to know how much time users that converted spent on our site before they converted.
+Exact features that converted
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Let's understand which product features actually triggered the conversion.
 
-.. code-block:: python
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    # label sessions with a conversion
-    df_acquisition['converted_users'] = modelhub.map.conversions_counter(df_acquisition, name='github_press') >= 1
+	>>> # features that triggered the conversion
+	>>> conversion_locations = modelhub.agg.unique_users(df[df.is_conversion_event], groupby=['application_id', 'feature_nice_name', 'event_type'])
+	>>> conversion_locations.sort_values(ascending=False).to_frame().head()
+	                                                                                                                           unique_users
+	application_id   feature_nice_name                                                                             event_type              
+	objectiv-website Link: github located at Root Location: home => Navigation: navbar-top                         PressEvent            70
+	                 Link: github located at Root Location: home => Navigation: navbar-top => Overlay: hamburge... PressEvent            28
+	                 Link: github located at Root Location: about => Navigation: navbar-top                        PressEvent             6
+	                 Link: github located at Root Location: jobs => Navigation: navbar-top                         PressEvent             5
+	objectiv-docs    Link: github located at Root Location: tracking => Navigation: navbar-top                     PressEvent             4
 
-    # label hits where at that point in time, there are 0 conversions in the session
-    df_acquisition['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_acquisition, 'github_press') == 0
+Time spent before conversion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Finally, let's see how much time converted users spent before they converted.
 
-    # filter on above created labels
-    converted_users = df_acquisition[(df_acquisition.converted_users & df_acquisition.zero_conversions_at_moment)]
+.. doctest:: product-analytics
+	:skipif: engine is None
 
-    modelhub.aggregate.session_duration(converted_users, groupby=None).to_frame().head()
+	>>> # label sessions with a conversion
+	>>> df['converted_users'] = modelhub.map.conversions_counter(df, name='github_press') >= 1
+	>>> # label hits where at that point in time, there are 0 conversions in the session
+	>>> df['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df, 'github_press') == 0
+	>>> # filter on above created labels
+	>>> converted_users = df[(df.converted_users & df.zero_conversions_at_moment)]
+	>>> # how much time do users spend before they convert?
+	>>> modelhub.aggregate.session_duration(converted_users, groupby=None).to_frame().head()
+	        session_duration
+	0 0 days 00:03:11.007148
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`bach.SeriesJson.json <../bach/api-reference/Series/Json/bach.SeriesJson.json>`
+	* :doc:`modelhub.ModelHub.add_conversion_event <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.add_conversion_event>`
+	* :doc:`modelhub.Map.is_conversion_event <../open-model-hub/models/helper-functions/modelhub.Map.is_conversion_event>`
+	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
+	* :doc:`bach.Series.to_frame <../bach/api-reference/Series/bach.Series.to_frame>`
+	* :doc:`bach.DataFrame.sort_index <../bach/api-reference/DataFrame/bach.DataFrame.sort_index>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+	* :doc:`modelhub.Aggregate.top_product_features_before_conversion <../open-model-hub/models/aggregation/modelhub.Aggregate.top_product_features_before_conversion>`
+	* :doc:`modelhub.Map.conversions_counter <../open-model-hub/models/helper-functions/modelhub.Map.conversions_counter>`
+	* :doc:`modelhub.Map.conversions_in_time <../open-model-hub/models/helper-functions/modelhub.Map.conversions_in_time>`
+	* :doc:`modelhub.Aggregate.session_duration <../open-model-hub/models/aggregation/modelhub.Aggregate.session_duration>`
+
+Get the SQL for any analysis
+----------------------------
+The SQL for any analysis can be exported with one command, so you can use models in production directly to 
+simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
+
+.. the testsetup below is a workaround to show the actual SQL output
+
+.. doctest:: product-analytics
+	:hide:
+	
+	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+
+.. doctest:: product-analytics
+	:skipif: engine is None
+
+	>>> # show SQL for analysis; this is just one example, and works for any Objectiv model/analysis
+	>>> display_sql_as_markdown(monthly_users)
+	sql
+	WITH "manual_materialize___e627e9bdda472e6a76c583c57c6d37ed" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "cookie_id" AS "user_id",
+	               "value"->>'_type' AS "event_type",
+	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
+	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
+	               cast("value"->>'time' AS bigint) AS "time",
+	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application"
+	          FROM "data"
+	       ),
+	       "getitem_where_boolean___64691f3d96b0031460768c7d88c29861" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "location_stack" AS "location_stack",
+	               "time" AS "time",
+	               "application" AS "application"
+	          FROM "manual_materialize___e627e9bdda472e6a76c583c57c6d37ed"
+	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-07-30' AS date))))
+	       ),
+	       "context_data___5420e4ab121cc6ebf6ded99c4338ea34" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application"
+	          FROM "getitem_where_boolean___64691f3d96b0031460768c7d88c29861"
+	       ),
+	       "session_starts___14d0995bc0268269f794bdfa05982ec4" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
+	                    ELSE cast(TRUE AS boolean)
+	                     END AS "is_start_of_session"
+	          FROM "context_data___5420e4ab121cc6ebf6ded99c4338ea34"
+	       ),
+	       "session_id_and_count___911c8ceaa9af5ddae1f70759155ef6e3" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "is_start_of_session" AS "is_start_of_session",
+	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+	                    ELSE cast(NULL AS bigint)
+	                     END AS "session_start_id",
+	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
+	          FROM "session_starts___14d0995bc0268269f794bdfa05982ec4"
+	       ),
+	       "objectiv_sessionized_data___054d4037d24a400c0d317cca2546947e" AS (
+	        SELECT "event_id" AS "event_id",
+	               "day" AS "day",
+	               "moment" AS "moment",
+	               "user_id" AS "user_id",
+	               "location_stack" AS "location_stack",
+	               "event_type" AS "event_type",
+	               "stack_event_types" AS "stack_event_types",
+	               "application" AS "application",
+	               "is_start_of_session" AS "is_start_of_session",
+	               "session_start_id" AS "session_start_id",
+	               "is_one_session" AS "is_one_session",
+	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
+	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
+	          FROM "session_id_and_count___911c8ceaa9af5ddae1f70759155ef6e3"
+	       ) SELECT to_char("moment", 'YYYY"-"MM') AS "time_aggregation",
+	       count(DISTINCT "user_id") AS "unique_users"
+	  FROM "objectiv_sessionized_data___054d4037d24a400c0d317cca2546947e"
+	 GROUP BY to_char("moment", 'YYYY"-"MM')
+	<BLANKLINE>
+
+That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
+
+Next Steps
+----------
+
+Play with this notebook in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in  under 5 minutes, 
+and play with this example notebook yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* :doc:`Marketing Analytics notebook <./marketing-analytics>` - analyze the above metrics and more for users 
+	coming from marketing efforts.
+* :doc:`Funnel Discovery notebook <./funnel-discovery>` - analyze the paths that users take that impact your 
+	product goals.

@@ -5,17 +5,13 @@
 import { TrackerTransportInterface, TrackerTransportRetry, TrackerTransportSwitch } from '@objectiv/tracker-core';
 import { FetchTransport } from '@objectiv/transport-fetch';
 import { XHRTransport } from '@objectiv/transport-xhr';
-import { BrowserTrackerConfig } from '../../definitions/BrowserTrackerConfig';
 
 /**
  * A factory to create the default Transport of Browser Tracker.
  */
-export const makeBrowserTrackerDefaultTransport = (trackerConfig: BrowserTrackerConfig): TrackerTransportInterface =>
+export const makeBrowserTrackerDefaultTransport = (): TrackerTransportInterface =>
   new TrackerTransportRetry({
     transport: new TrackerTransportSwitch({
-      transports: [
-        new FetchTransport({ endpoint: trackerConfig.endpoint }),
-        new XHRTransport({ endpoint: trackerConfig.endpoint }),
-      ],
+      transports: [new FetchTransport(), new XHRTransport()],
     }),
   });

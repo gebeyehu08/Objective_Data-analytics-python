@@ -17,6 +17,7 @@ class ReversedStringType(Series):
     dtype_aliases = ('reversed_text', 'backwards_string')
     supported_db_dtype = {
         DBDialect.POSTGRES: 'text',
+        DBDialect.ATHENA: 'varchar',
         DBDialect.BIGQUERY: 'string',
     }
     supported_value_types = (str,)

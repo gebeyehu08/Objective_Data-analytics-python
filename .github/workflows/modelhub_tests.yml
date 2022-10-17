@@ -14,7 +14,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10.6']
         # See https://docs.github.com/en/actions/learn-github-actions/contexts#github-context on why we use endsWith
         isMain:
           - ${{ endsWith(github.ref,'/main') }}
@@ -24,7 +24,7 @@ jobs:
           - isMain: false
             python-version: '3.9'
           - isMain: false
-            python-version: '3.10'
+            python-version: '3.10.6'
     services:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
       postgres:
@@ -49,6 +49,8 @@ jobs:
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       # Just the path to a temp file, the actual secret is fully contained in the env var above.
       OBJ_DB_BQ_CREDENTIALS_PATH: './sa.json'
+      OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID: ${{ secrets.OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID }}
+      OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY: ${{ secrets.OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -97,3 +99,11 @@ jobs:
         run: |
           cd modelhub
           pytest -n 4 --dist loadgroup --big-query tests_modelhub/functional/
+      - name: Unit tests Athena
+        run: |
+          cd modelhub
+          pytest --athena tests_modelhub/unit
+      - name: Functional tests Athena
+        run: |
+          cd modelhub
+          pytest -n 4 --dist loadgroup --athena tests_modelhub/functional/

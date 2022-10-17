@@ -3,11 +3,11 @@
  */
 
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
-import { expectToThrow, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { expectToThrow, LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
+  generateGUID,
   GlobalContextName,
   TrackerEvent,
-  TrackerPlugins,
   TrackerQueue,
   TrackerQueueMemoryStore,
   TrackerTransportRetry,
@@ -49,9 +49,7 @@ describe('BrowserTracker', () => {
         new BrowserTracker({
           applicationId: 'app-id',
           endpoint: 'localhost',
-          transport: new FetchTransport({
-            endpoint: 'localhost',
-          }),
+          transport: new FetchTransport(),
         })
     );
   });
@@ -118,8 +116,9 @@ describe('BrowserTracker', () => {
     it('should have some Web Plugins configured by default when no `plugins` have been specified', () => {
       const testTracker = new BrowserTracker({ applicationId: 'app-id', transport: new LogTransport() });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
-      expect(testTracker.plugins?.plugins).toEqual(
+      expect(testTracker.plugins).toEqual(
         expect.arrayContaining([
+          expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
           expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
           expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
           expect.objectContaining({ pluginName: 'PathContextFromURLPlugin' }),
@@ -128,7 +127,7 @@ describe('BrowserTracker', () => {
       );
     });
 
-    it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
+    it('should allow disabling all plugins, exception made for the Core ones', () => {
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
         transport: new LogTransport(),
@@ -138,9 +137,7 @@ describe('BrowserTracker', () => {
         trackRootLocationContextFromURL: false,
       });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
-      expect(testTracker.plugins?.plugins).toEqual([
-        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
-      ]);
+      expect(testTracker.plugins).toEqual([expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' })]);
     });
 
     it('should allow customizing a plugin, without affecting the existing ones', () => {
@@ -154,7 +151,7 @@ describe('BrowserTracker', () => {
         ],
       });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
-      expect(testTracker.plugins?.plugins).toEqual([
+      expect(testTracker.plugins).toEqual([
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
@@ -171,11 +168,11 @@ describe('BrowserTracker', () => {
       const trackerClone = new BrowserTracker({
         applicationId: 'app-id',
         transport: new LogTransport(),
-        plugins: new TrackerPlugins({ tracker: testTracker, plugins: testTracker.plugins.plugins }),
+        plugins: testTracker.plugins,
       });
 
       expect(trackerClone).toBeInstanceOf(BrowserTracker);
-      expect(trackerClone.plugins?.plugins).toEqual([
+      expect(trackerClone.plugins).toEqual([
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
@@ -200,7 +197,7 @@ describe('BrowserTracker', () => {
 
     it('should auto-track Application and Path Contexts by default', async () => {
       const testTracker = new BrowserTracker({ applicationId: 'app-id', transport: new LogTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
       expect(testEvent.location_stack).toHaveLength(0);

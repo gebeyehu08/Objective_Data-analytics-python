@@ -5,9 +5,9 @@
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
 import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
+  generateGUID,
   GlobalContextName,
   TrackerEvent,
-  TrackerPlugins,
   TrackerQueue,
   TrackerTransportRetry,
 } from '@objectiv/tracker-core';
@@ -40,9 +40,7 @@ describe('ReactNativeTracker', () => {
         new ReactNativeTracker({
           applicationId: 'app-id',
           endpoint: 'localhost',
-          transport: new FetchTransport({
-            endpoint: 'localhost',
-          }),
+          transport: new FetchTransport(),
         })
     );
   });
@@ -86,31 +84,32 @@ describe('ReactNativeTracker', () => {
   it('should instantiate with given `transport`', () => {
     const testTracker = new ReactNativeTracker({
       applicationId: 'app-id',
-      transport: new FetchTransport({ endpoint: 'localhost' }),
+      transport: new FetchTransport(),
     });
     expect(testTracker).toBeInstanceOf(ReactNativeTracker);
     expect(testTracker.transport).toBeInstanceOf(FetchTransport);
   });
 
   describe('Default Plugins', () => {
-    it('should have some Web Plugins configured by default when no `plugins` have been specified', () => {
+    it('should have some Plugins configured by default when no `plugins` have been specified', () => {
       const testTracker = new ReactNativeTracker({ applicationId: 'app-id', endpoint: 'localhost' });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
-      expect(testTracker.plugins?.plugins).toEqual(
-        expect.arrayContaining([expect.objectContaining({ pluginName: 'ApplicationContextPlugin' })])
+      expect(testTracker.plugins).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+          expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
+        ])
       );
     });
 
-    it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
+    it('should allow disabling all plugins, exception made for the Core ones', () => {
       const testTracker = new ReactNativeTracker({
         applicationId: 'app-id',
         endpoint: 'localhost',
         trackApplicationContext: false,
       });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
-      expect(testTracker.plugins?.plugins).toEqual([
-        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
-      ]);
+      expect(testTracker.plugins).toEqual([expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' })]);
     });
 
     it('should add Plugins `plugins` has been specified', () => {
@@ -127,7 +126,7 @@ describe('ReactNativeTracker', () => {
         ],
       });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
-      expect(testTracker.plugins?.plugins).toEqual(
+      expect(testTracker.plugins).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
           expect.objectContaining({ pluginName: 'TestPlugin' }),
@@ -146,7 +145,7 @@ describe('ReactNativeTracker', () => {
         ],
       });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
-      expect(testTracker.plugins?.plugins).toEqual([
+      expect(testTracker.plugins).toEqual([
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
         expect.objectContaining({ pluginName: 'RootLocationContextFromURLPlugin' }),
@@ -161,11 +160,11 @@ describe('ReactNativeTracker', () => {
       const trackerClone = new ReactNativeTracker({
         applicationId: 'app-id',
         endpoint: 'localhost',
-        plugins: new TrackerPlugins({ tracker: testTracker, plugins: testTracker.plugins.plugins }),
+        plugins: testTracker.plugins,
       });
 
       expect(trackerClone).toBeInstanceOf(ReactNativeTracker);
-      expect(trackerClone.plugins?.plugins).toEqual([
+      expect(trackerClone.plugins).toEqual([
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
         expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
       ]);
@@ -183,7 +182,7 @@ describe('ReactNativeTracker', () => {
 
     it('should auto-track Application Context by default', async () => {
       const testTracker = new ReactNativeTracker({ applicationId: 'app-id', transport: new DebugTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
 

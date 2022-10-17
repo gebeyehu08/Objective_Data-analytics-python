@@ -16,6 +16,8 @@ RUN mkdir -p $APP && \
 
 COPY docker/00_objectiv.sql  /services/
 COPY docker/0_objectiv_data.sql /services/
+COPY docker/1_metabase_init.sql /services
+COPY docker/2_metabase_data.sql /services
 
 COPY requirements.txt /services
 
@@ -28,8 +30,9 @@ RUN . /services/venv/bin/activate && \
 COPY docker/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
-COPY *.ipynb $APP
+COPY product-analytics.ipynb $APP
+COPY marketing-analytics.ipynb $APP
 
 USER notebook
-ENV OBJECTIV_VERSION_CHECK_DISABLE=true
+ENV OBJECTIV_VERSION_CHECK_DISABLE=false
 ENTRYPOINT /entrypoint.sh

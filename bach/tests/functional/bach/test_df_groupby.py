@@ -6,12 +6,12 @@ from decimal import Decimal
 import numpy
 import pandas as pd
 import pytest
-from psycopg2._range import NumericRange
 
 from bach import Series, SeriesAbstractNumeric, SeriesNumericInterval
 from bach.partitioning import GroupingList, GroupingSet, Rollup, Cube
-from sql_models.util import is_postgres, is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from sql_models.util import is_postgres, is_bigquery, is_athena
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
+from bach.testing import assert_equals_data
 
 
 def test_group_by_all(engine):
@@ -377,11 +377,10 @@ def test_dataframe_agg_numeric_only(engine):
             'inhabitants_sum': 'int64'
         }
 
-
-def test_cube_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_cube_basics(engine):
     # TODO: BigQuery
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
 
     # instant stonks through variable naming
     btc = bt.cube(['municipality', 'city'])
@@ -420,7 +419,7 @@ def test_rollup_basics(engine):
 
     result_expression = btr.group_by.get_group_by_column_expression().to_sql(engine.dialect)
 
-    if is_postgres(engine):
+    if is_postgres(engine) or is_athena(engine):
         expected_expression = 'rollup ("municipality", "city")'
     elif is_bigquery(engine):
         expected_expression = 'rollup (`municipality`, `city`)'
@@ -447,11 +446,11 @@ def test_rollup_basics(engine):
     )
 
 
-def test_grouping_list_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_grouping_list_basics(engine):
     # TODO: BigQuery
     # This is not the greatest test, but at least it tests the interface.
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
     btl1 = bt.groupby([['municipality'], ['city']])
     btl2 = bt.groupby([['municipality'], 'city'])
     btl3 = bt.groupby(['municipality', ['city']])
@@ -481,11 +480,11 @@ def test_grouping_list_basics(pg_engine):
     )
 
 
-def test_grouping_set_basics(pg_engine):
+@pytest.mark.skip_bigquery_todo()
+def test_grouping_set_basics(engine):
     # TODO: BigQuery
     # This is not the greatest test, but at least it tests the interface.
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+    bt = get_df_with_test_data(engine, full_data_set=False)
     bts1 = bt.groupby((('municipality'), ('city')))
     bts2 = bt.groupby((('municipality'), 'city'))
     bts3 = bt.groupby(('municipality', ('city')))
@@ -538,6 +537,7 @@ def test_grouping_set_basics(pg_engine):
     )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_groupby_frame_split_series_aggregation(engine):
     bt = get_df_with_test_data(engine, full_data_set=False)[['municipality', 'inhabitants', 'founding']]
     btg1 = bt.groupby(['municipality'])
@@ -716,18 +716,10 @@ def test_groupby_w_multi_level_series(engine):
     ).to_pandas()
     pd.testing.assert_frame_equal(expected.sort_index(), result_pdf)
 
-    if is_postgres(engine):
-        range_1 = NumericRange(lower=Decimal('0.'), upper=Decimal('1.'), bounds='[]')
-        range_2 = NumericRange(lower=Decimal('1.'), upper=Decimal('3.'), bounds='[]')
-        range_3 = NumericRange(lower=Decimal('2.'), upper=Decimal('5.'), bounds='[]')
-        range_4 = NumericRange(lower=Decimal('3.'), upper=Decimal('7.'), bounds='[]')
-    elif is_bigquery(engine):
-        range_1 = {'lower': 0., 'upper': 1., 'bounds': '[]'}
-        range_2 = {'lower': 1., 'upper': 3., 'bounds': '[]'}
-        range_3 = {'lower': 2., 'upper': 5., 'bounds': '[]'}
-        range_4 = {'lower': 3., 'upper': 7., 'bounds': '[]'}
-    else:
-        raise Exception()
+    range_1 = pd.Interval(0., 1., closed='both')
+    range_2 = pd.Interval(1., 3., closed='both')
+    range_3 = pd.Interval(2., 5., closed='both')
+    range_4 = pd.Interval(3., 7., closed='both')
 
     assert_equals_data(
         result,
@@ -743,4 +735,5 @@ def test_groupby_w_multi_level_series(engine):
             [range_4, 'Súdwest-Fryslân', 48080, 17],
             [range_4, 'Waadhoeke', 12760, 10],
         ],
+        use_to_pandas=True
     )

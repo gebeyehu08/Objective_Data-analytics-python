@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 import pytest
 
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.unit.bach.util import get_fake_df_test_data
 
 
@@ -31,14 +31,14 @@ def test_generated_sql_order_last_select(dialect):
     bt_sorted = bt.sort_values(by='city')
     sql_sorted = bt_sorted.view_sql()
 
-    if is_postgres(dialect):
-        expected_order_str = 'order by "city" asc'
+    if is_postgres(dialect) or is_athena(dialect):
+        expected_order_str = 'ORDER BY "city" ASC'
     elif is_bigquery(dialect):
-        expected_order_str = 'order by `city` asc'
+        expected_order_str = 'ORDER BY `city` ASC'
     else:
         raise Exception(f'Need to expand test to support {dialect}')
 
-    assert 'order by' not in sql_not_sorted[-60:]
+    assert 'ORDER BY' not in sql_not_sorted[-60:]
     assert expected_order_str in sql_sorted[-60:]
 
 

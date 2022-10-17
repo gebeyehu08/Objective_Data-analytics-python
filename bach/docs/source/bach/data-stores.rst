@@ -9,8 +9,8 @@ Supported data stores
 =====================
 Our aim is to support all popular data stores with Bach. Currently we support `PostgreSQL 
 </docs/tracking/collector/postgresql>`_ and `Google BigQuery </docs/tracking/collector/google-bigquery>`_; 
-see below for more details and tips on each. Our roadmap includes Amazon Athena, Databrick, Redshift, 
-Clickhouse, etcetera.
+see below for more details and tips on each. Amazon Athena support is coming soon, and our roadmap includes 
+Databricks, Redshift, Clickhouse, etcetera.
 
 PostgreSQL
 ---------------
@@ -25,12 +25,15 @@ Google BigQuery is supported via a Snowplow pipeline. See `how to set up Google 
 
 A few things are useful to keep in mind while modeling on BigQuery, see the tips below.
 
-**Use valid column names**
+**Use valid column names for cleaner SQL**
 
-The Series in a Bach DataFrame map directly to database columns, hence a Series name must be a valid 
-BigQuery column name, and contain only letters (`a-z`, `A-Z`), numbers (`0-9`), or underscores (`_`), and 
-it must start with a letter or underscore. Consider this especially when using 
-:py:meth:`DataFrame.unstack()`.
+All Series in a Bach DataFrame map directly to database columns with the same name. However, BigQuery limits
+the characters than can be used in column names. To accommodate this, Bach will transparently
+map 'troublesome' Series names to different column names.
+
+This does mean that the columns names in the generated SQL query can be different from the names in a
+DataFrame. If that's undesired, then stick to Series names only containing the characters `a-z`, `0-9`,
+and `\_`, and that start with `a-z`.
 
 **Use a data sample**
 

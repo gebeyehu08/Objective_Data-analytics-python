@@ -2,10 +2,11 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { Button } from '@material-ui/core';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
-import { fireEvent, getByText, render, screen, waitFor } from '@testing-library/react';
-import React, { createRef } from 'react';
+import { fireEvent, getByText, render, waitFor } from '@testing-library/react';
+import React, { ComponentProps, createRef } from 'react';
 import {
   ObjectivProvider,
   ReactTracker,
@@ -36,7 +37,87 @@ describe('TrackedPressableContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedPressableContext Component={'button'} id={'pressable-id'}>
+        <TrackedPressableContext objectiv={{ Component: 'button', id: 'pressable-id' }}>
+          Trigger Event
+        </TrackedPressableContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event/i));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.PressableContext,
+            id: 'pressable-id',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should wrap around custom Components', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const CustomButton = (props: ComponentProps<'button'> & { label: string }) => <button {...props} />;
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedPressableContext<ComponentProps<typeof CustomButton>>
+          label={'test label'}
+          objectiv={{ Component: CustomButton, id: 'pressable-id' }}
+        >
+          Trigger Event
+        </TrackedPressableContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event/i));
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.PressableContext,
+            id: 'pressable-id',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should wrap around third-party Components', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedPressableContext<ComponentProps<typeof Button>>
+          variant="contained"
+          objectiv={{ Component: Button, id: 'pressable-id' }}
+        >
           Trigger Event
         </TrackedPressableContext>
       </ObjectivProvider>
@@ -72,10 +153,10 @@ describe('TrackedPressableContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedPressableContext Component={'button'} id={'Pressable id 1'}>
+        <TrackedPressableContext objectiv={{ Component: 'button', id: 'Pressable id 1' }}>
           Trigger Event 1
         </TrackedPressableContext>
-        <TrackedPressableContext Component={'button'} id={'Pressable id 2'} normalizeId={false}>
+        <TrackedPressableContext objectiv={{ Component: 'button', id: 'Pressable id 2', normalizeId: false }}>
           Trigger Event 2
         </TrackedPressableContext>
       </ObjectivProvider>
@@ -117,38 +198,17 @@ describe('TrackedPressableContext', () => {
     );
   });
 
-  it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedPressableContext Component={'button'} id={'pressable-id-1'} data-testid={'test-pressable-1'}>
-          test
-        </TrackedPressableContext>
-        <TrackedPressableContext
-          Component={'button'}
-          id={'pressable-id-2'}
-          forwardId={true}
-          data-testid={'test-pressable-2'}
-        >
-          test
-        </TrackedPressableContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-pressable-1').getAttribute('id')).toBe(null);
-    expect(screen.getByTestId('test-pressable-2').getAttribute('id')).toBe('pressable-id-2');
-  });
-
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
-            <TrackedPressableContext Component={'button'}>{/* nothing to see here */}</TrackedPressableContext>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
+            <TrackedPressableContext objectiv={{ Component: 'button' }}>
+              {/* nothing to see here */}
+            </TrackedPressableContext>
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -156,37 +216,8 @@ describe('TrackedPressableContext', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for PressableContext @ RootLocation:root / Content:content. Please provide either the `title` or the `id` property manually.'
+      '｢objectiv｣ Could not generate a valid id for PressableContext @ RootLocation:root / Content:content. Please provide either the `title` or the `objectiv.id` property manually.'
     );
-  });
-
-  it('should allow forwarding the title property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
-
-    render(
-      <ObjectivProvider tracker={tracker}>
-        <TrackedPressableContext
-          Component={'a'}
-          id={'pressable-id-1'}
-          title={'Press me'}
-          data-testid={'test-pressable-1'}
-        >
-          test
-        </TrackedPressableContext>
-        <TrackedPressableContext
-          Component={'a'}
-          id={'pressable-id-2'}
-          title={'Press me'}
-          forwardTitle={true}
-          data-testid={'test-pressable-2'}
-        >
-          test
-        </TrackedPressableContext>
-      </ObjectivProvider>
-    );
-
-    expect(screen.getByTestId('test-pressable-1').getAttribute('title')).toBe(null);
-    expect(screen.getByTestId('test-pressable-2').getAttribute('title')).toBe('Press me');
   });
 
   it('should allow forwarding refs', () => {
@@ -195,7 +226,7 @@ describe('TrackedPressableContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedPressableContext Component={'a'} ref={ref}>
+        <TrackedPressableContext ref={ref} objectiv={{ Component: 'a' }}>
           Press me!
         </TrackedPressableContext>
       </ObjectivProvider>
@@ -214,7 +245,7 @@ describe('TrackedPressableContext', () => {
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedPressableContext Component={'button'} id={'pressable-id'} onClick={clickSpy}>
+        <TrackedPressableContext onClick={clickSpy} objectiv={{ Component: 'button', id: 'pressable-id' }}>
           Press me
         </TrackedPressableContext>
       </ObjectivProvider>

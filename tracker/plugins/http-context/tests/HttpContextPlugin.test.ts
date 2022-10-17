@@ -5,7 +5,7 @@
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
-  generateUUID,
+  generateGUID,
   GlobalContextName,
   makeHttpContext,
   Tracker,
@@ -21,6 +21,14 @@ describe('HttpContextPlugin', () => {
     jest.resetAllMocks();
   });
 
+  it('should TrackerConsole.error when calling `enrich` before `initialize`', () => {
+    const testHttpContextPlugin = new HttpContextPlugin();
+    testHttpContextPlugin.enrich({ location_stack: [], global_contexts: [] });
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv:HttpContextPlugin｣ Cannot enrich. Make sure to initialize the plugin first.'
+    );
+  });
+
   it('should TrackerConsole.error when calling `validate` before `initialize`', () => {
     const testHttpContextPlugin = new HttpContextPlugin();
     const validEvent = new TrackerEvent({
@@ -33,6 +41,8 @@ describe('HttpContextPlugin', () => {
           remote_address: 'test',
         }),
       ],
+      id: generateGUID(),
+      time: Date.now(),
     });
     testHttpContextPlugin.validate(validEvent);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
@@ -52,15 +62,15 @@ describe('HttpContextPlugin', () => {
     });
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateGUID(), time: Date.now() });
     expect(testEvent.location_stack).toHaveLength(2);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(2);
@@ -93,7 +103,7 @@ describe('HttpContextPlugin', () => {
       applicationId: 'app-id',
       plugins: [new HttpContextPlugin()],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(0);
@@ -133,6 +143,12 @@ describe('HttpContextPlugin', () => {
       plugins: [new HttpContextPlugin()],
     });
 
+    it('should return silently when `enrich` is called before `initialize`', () => {
+      const testHttpContextPlugin = new HttpContextPlugin();
+      testHttpContextPlugin.enrich({ location_stack: [], global_contexts: [] });
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+    });
+
     it('should return silently  when calling `validate` before `initialize`', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
       const validEvent = new TrackerEvent({
@@ -145,6 +161,8 @@ describe('HttpContextPlugin', () => {
             remote_address: 'test',
           }),
         ],
+        id: generateGUID(),
+        time: Date.now(),
       });
       testHttpContextPlugin.validate(validEvent);
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
@@ -169,6 +187,8 @@ describe('HttpContextPlugin', () => {
             remote_address: 'test',
           }),
         ],
+        id: generateGUID(),
+        time: Date.now(),
       });
 
       jest.resetAllMocks();

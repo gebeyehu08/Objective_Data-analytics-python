@@ -6,7 +6,7 @@ from typing import Optional
 import pytest
 
 from sql_models.graph_operations import get_graph_nodes_info
-from sql_models.util import is_bigquery, is_postgres
+from sql_models.util import is_bigquery, is_postgres, is_athena
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
@@ -34,6 +34,7 @@ def test_get_sample(engine, unique_table_test_name):
                                   sample_percentage=50)
 
 
+@pytest.mark.skip_athena('We do not support the seed parameter for athena')
 @pytest.mark.skip_bigquery('We do not support the seed parameter for bigquery')
 def test_get_sample_seed(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
@@ -125,6 +126,35 @@ def test_sample_operations_filter(engine, unique_table_test_name):
     )
 
 
+def test_sample_column_name_special_char(engine, unique_table_test_name):
+    bt = get_df_with_test_data(engine, True)
+    bt_sample = bt.get_sample(table_name=unique_table_test_name,
+                              filter=bt.skating_order % 2 == 0,
+                              overwrite=True)
+
+    bt_sample['City'] = bt_sample.city + '_better'
+    bt_sample['a#'] = bt_sample.city.str[:2] + bt_sample.municipality.str[:2]
+    bt_sample['A#'] = bt_sample.inhabitants + 10
+    bt_sample['b_b'] = bt_sample.inhabitants + bt_sample.founding
+
+    all_data_bt = bt_sample.get_unsampled()
+    all_data_bt['B_B'] = all_data_bt.inhabitants + 5
+
+    expected_columns = [
+        '_index_skating_order',  # index
+        'skating_order', 'city', 'municipality', 'inhabitants', 'founding',
+        'City', 'a#', 'A#', 'b_b', 'B_B'
+    ]
+
+    assert list(bt_sample.all_series.keys()) == expected_columns[:-1]
+    assert_equals_data(
+        all_data_bt,
+        use_to_pandas=True,
+        expected_columns=expected_columns,
+        expected_data=_EXPECTED_DATA_OPERATIONS
+    )
+
+
 def test_combine_unsampled_with_before_data(engine, unique_table_test_name):
     # Test that the get_unsampled() df has a base_node and state that is compatible with the base_node and
     # state of the original df
@@ -183,6 +213,7 @@ def test_get_unsampled_multiple_nodes(engine, unique_table_test_name):
     )
 
 
+@pytest.mark.skip_athena_todo('TODO: final decision on supporting temporary table or not')
 def test_sample_w_temp_tables(engine, unique_table_test_name):
     # Test to prevent regression: get_sample() should work after materialize(materialization='temp_table')
     df = get_df_with_test_data(engine, True)
@@ -303,7 +334,7 @@ def test_sample_operations_variable(engine, unique_table_test_name):
 
 def _get_seed(engine) -> Optional[int]:
     """ Return 200 if the database supports seeding. """
-    if is_bigquery(engine):
+    if is_bigquery(engine) or is_athena(engine):
         return None
     if is_postgres(engine):
         return 200

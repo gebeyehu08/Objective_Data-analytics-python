@@ -14,7 +14,8 @@ from bach.dataframe import DtypeNamePair
 from bach.expression import (
     Expression, join_expressions, TableColumnReferenceToken,  ExpressionToken, ColumnReferenceToken,
 )
-from bach.utils import ResultSeries, get_result_series_dtype_mapping
+from bach.utils import ResultSeries, get_result_series_dtype_mapping, get_sql_column_name, \
+    get_name_from_sql_column_name, get_name_to_column_mapping
 from sql_models.constants import NotSet, not_set
 from sql_models.model import Materialization, CustomSqlModelBuilder, SqlModel, SqlModelSpec
 from bach.sql_model import BachSqlModel, construct_references
@@ -306,7 +307,7 @@ def merge(
     right: DataFrameOrSeries,
     how: str,
     on: Union[str, 'SeriesBoolean', List[Union[str, 'SeriesBoolean']], None],
-    left_on: Union[str, List[str],  None],  # todo: also support array-like arguments?
+    left_on: Union[str, List[str],  None],
     right_on: Union[str, List[str], None],
     left_index: bool,
     right_index: bool,
@@ -360,13 +361,16 @@ def merge(
     variables = copy(right_variables)
     variables.update(left.variables)
 
+    new_column_list = new_index_list + new_data_list
+    name_to_column_mapping = get_name_to_column_mapping(dialect, [rs.name for rs in new_column_list])
+
     model = _get_merge_sql_model(
         dialect=dialect,
         left=left,
         right=right,
         how=real_how,
         merge_on=merge_on,
-        new_column_list=new_index_list + new_data_list,
+        new_column_list=new_column_list,
         variables=variables
     )
 
@@ -378,7 +382,8 @@ def merge(
         group_by=None,
         order_by=[],  # merging resets any sorting
         savepoints=left.savepoints.merge(right_savepoints),
-        variables=variables
+        variables=variables,
+        name_to_column_mapping=name_to_column_mapping
     )
 
 
@@ -402,7 +407,7 @@ def revert_merge(base: DataFrame) -> Tuple[DataFrame, DataFrame]:
 
     left_series, right_series = _determine_series_per_source(
         base=base,
-        series_to_unmerge=list(set(base.base_node.columns) - set(base.index_columns)),
+        series_to_unmerge=list(set(base.base_node.series_names) - set(base.index_columns)),
         left_index=left_index,
         right_index=right_index,
     )
@@ -469,38 +474,45 @@ def _determine_series_per_source(
         for sub_expr in expressions:
             table_name, column_name, expr = sub_expr.remove_table_column_references()
 
-            column_name = column_name if sub_expr.has_table_column_references else series_name
+            original_series_name = get_name_from_sql_column_name(column_name) if column_name else series_name
             if table_name == _LEFT_NODE_ALIAS or not sub_expr.has_table_column_references:
-                left_series[column_name] = series.copy_override(
+                left_series[original_series_name] = series.copy_override(
                     base_node=left_node,
                     index=left_index,
-                    name=column_name,
+                    name=original_series_name,
                     expression=expr,
                 )
             if table_name == _RIGHT_NODE_ALIAS or not sub_expr.has_table_column_references:
-                right_series[column_name] = series.copy_override(
+                right_series[original_series_name] = series.copy_override(
                     base_node=right_node,
                     index=right_index,
-                    name=column_name,
+                    name=original_series_name,
                     expression=expr,
                 )
 
-    # sort mapping based in order from node's columns
-    ordered_left_series = {
-        **{col: left_series[col] for col in left_node.columns if col in left_series},
-        **{
-            series_name: series for series_name, series in left_series.items()
-            if series_name not in left_node.columns
-        },
-    }
-    ordered_right_series = {
-        **{col: right_series[col] for col in right_node.columns if col in right_series},
-        **{
-            series_name: series for series_name, series in right_series.items()
-            if series_name not in right_node.columns
-        },
-    }
+    ordered_left_series = _order_series_based_on_node(left_node, left_series)
+    ordered_right_series = _order_series_based_on_node(right_node, right_series)
     return ordered_left_series, ordered_right_series
+
+
+def _order_series_based_on_node(
+        original_node: BachSqlModel,
+        unordered_series: Mapping[str, Series]
+) -> Dict[str, Series]:
+    """
+    Sort the given mapping of Series name to Series in the same way as the columns are sorted in the
+    original_node. Series that are not in original_node are sorted at the end.
+
+    :return: A sorted dictionary mapping Series.name to Series
+    """
+    ordered_series = {}
+    for series_name in original_node.series_names:
+        if series_name in unordered_series:
+            ordered_series[series_name] = unordered_series[series_name]
+    for series_name, series in unordered_series.items():
+        if series_name not in ordered_series:
+            ordered_series[series_name] = series
+    return ordered_series
 
 
 def _get_merge_sql_model(
@@ -522,12 +534,14 @@ def _get_merge_sql_model(
         on_clause = _get_merge_on_clause(dialect, left, right, merge_on)
 
     columns_expr = join_expressions(
-        [Expression.construct_expr_as_name(rc.expression, rc.name) for rc in new_column_list]
+        [Expression.construct_expr_as_sql_name(dialect=dialect, expr=rc.expression, name=rc.name)
+         for rc in new_column_list]
     )
     join_type_expr = Expression.construct('full outer' if how == How.outer else how.value)
 
+    column_expressions = {rc.name: rc.expression for rc in new_column_list}
     return MergeSqlModel.get_instance(
-        column_expressions={rc.name: rc.expression for rc in new_column_list},
+        column_expressions=column_expressions,
         dialect=dialect,
         columns_expr=columns_expr,
         join_type_expr=join_type_expr,
@@ -588,7 +602,8 @@ def _resolve_merge_expression_references(
                 new_tokens.append(token)
                 continue
 
-            prev_expression = cond.base_node.column_expressions[token.column_name]
+            token_original_name = get_name_from_sql_column_name(token.column_name)
+            prev_expression = cond.base_node.column_expressions[token_original_name]
             resolved_nested_tokens: List[Union[Expression, ExpressionToken]] = []
 
             for nested_token in prev_expression.get_all_tokens():
@@ -608,11 +623,12 @@ def _resolve_merge_expression_references(
 
                 # nested_token.column_name might not be the same to token.column_name
                 # since series can be renamed
-                expr_label = (
+                column_name = (
                     nested_token.column_name
-                    if nested_token.column_name == cond.name
+                    if nested_token.column_name == get_sql_column_name(dialect, cond.name)
                     else token.column_name
                 )
+                expr_label = get_name_from_sql_column_name(column_name)
                 resolved_expr = _get_expression(df_series=df_series, label=expr_label)
                 resolved_expr = resolved_expr.resolve_column_references(dialect, table_alias)
                 resolved_nested_tokens.append(resolved_expr)

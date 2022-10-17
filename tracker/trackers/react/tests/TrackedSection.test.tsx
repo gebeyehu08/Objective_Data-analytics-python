@@ -36,12 +36,12 @@ describe('TrackedSection', () => {
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>Trigger Event</div>;
+      return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSection id={'section-id'}>
+        <TrackedSection objectiv={{ id: 'section-id' }}>
           <TrackedButton />
         </TrackedSection>
       </ObjectivProvider>
@@ -72,15 +72,15 @@ describe('TrackedSection', () => {
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>{children}</div>;
+      return <div onClick={() => trackPressEvent()}>{children}</div>;
     };
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedSection id={'Section 1'}>
+        <TrackedSection objectiv={{ id: 'Section 1' }}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedSection>
-        <TrackedSection id={'Section 2'} normalizeId={false}>
+        <TrackedSection objectiv={{ id: 'Section 2', normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedSection>
       </ObjectivProvider>
@@ -124,17 +124,23 @@ describe('TrackedSection', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
-          <TrackedDiv id={'content'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
+          <TrackedDiv objectiv={{ id: 'content' }}>
             <TrackedSection id={'☹️'} />
+            <TrackedSection />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
     );
 
-    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
-    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      1,
+      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
+    );
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
+      2,
+      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 });

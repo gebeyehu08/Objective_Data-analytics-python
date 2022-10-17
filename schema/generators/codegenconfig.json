@@ -1,0 +1,26 @@
+{
+  "compileTypeScript": true,
+  "typeScriptConfigFile": "./tsconfig.json",
+  "templates": [
+    {
+      "modelFile": "../base_schema.json",
+      "templateFile": "templates/docs.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
+      "templateFile": "templates/factories.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
+      "templateFile": "templates/iglu.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
+      "templateFile": "templates/schema.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
+      "templateFile": "templates/validator.template.ts"
+    }
+  ]
+}

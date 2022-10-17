@@ -5,11 +5,11 @@ from unittest.mock import ANY
 
 import pandas as pd
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime
 
 from bach import DataFrame
-from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
+
 
 DATA = [
     [None, None, None, None, None, 'a',   datetime(2022, 1, 1)],
@@ -32,6 +32,7 @@ def test_basic_fillna(engine) -> None:
     result = df.fillna(value=0)
     assert_equals_data(
         result,
+        use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E'],
         expected_data=[
             [0, 0, 0, 0, 0, 0],
@@ -97,16 +98,16 @@ def test_fillna_w_methods(engine) -> None:
     sort_by = ['A', 'B', 'C']
     ascending = [False, True, False]
 
-    tz_info = timezone.utc if is_bigquery(engine) else None
     assert_equals_data(
         df.sort_values(by=sort_by, ascending=ascending),
+        use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2, tzinfo=tz_info)],
-            [5,    1, None, None, None, None,  'd', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [3, None,    2, None,    0, None,  'c',                                 None],
-            [2, None,    3, None,    4, None,  'b',                                 None],
-            [7, None, None,    1, None, None,  'f',                                 None],
+            [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
+            [5,    1, None, None, None, None,  'd', datetime(2022, 1, 5)],
+            [3, None,    2, None,    0, None,  'c',                 None],
+            [2, None,    3, None,    4, None,  'b',                 None],
+            [7, None, None,    1, None, None,  'f',                 None],
             # last 3 rows are non-deterministic because A, B, C are all nulls
             [ANY, None, None, None] + [ANY] * 4,
             [ANY, None, None, None] + [ANY] * 4,
@@ -117,13 +118,14 @@ def test_fillna_w_methods(engine) -> None:
     result_ffill = df.fillna(method='ffill', sort_by=sort_by, ascending=ascending)
     assert_equals_data(
         result_ffill,
+        use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2, tzinfo=tz_info)],
-            [5,    1,    4, None,    1,    1,  'd', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [3,    1,    2, None,    0,    1,  'c', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [2,    1,    3, None,    4,    1,  'b', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [7,    1,    3,    1,    4,    1,  'f', datetime(2022, 1, 5, tzinfo=tz_info)],
+            [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
+            [5,    1,    4, None,    1,    1,  'd', datetime(2022, 1, 5)],
+            [3,    1,    2, None,    0,    1,  'c', datetime(2022, 1, 5)],
+            [2,    1,    3, None,    4,    1,  'b', datetime(2022, 1, 5)],
+            [7,    1,    3,    1,    4,    1,  'f', datetime(2022, 1, 5)],
             # last 3 rows are non-deterministic because A, B, C were initially all nulls
             [ANY,  1,    3,    1] + [ANY] * 4,
             [ANY,  1,    3,    1] + [ANY] * 4,
@@ -136,10 +138,11 @@ def test_fillna_w_methods(engine) -> None:
     )
     assert_equals_data(
         result_bfill,
+        use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [1,    3,    4,    1,    1,    1,  'd', datetime(2022, 1, 2, tzinfo=tz_info)],
-            [5,    1,    2,    1,    0,  ANY,  'd', datetime(2022, 1, 5, tzinfo=tz_info)],
+            [1,    3,    4,    1,    1,    1,  'd', datetime(2022, 1, 2)],
+            [5,    1,    2,    1,    0,  ANY,  'd', datetime(2022, 1, 5)],
             [3, None,    2,    1,    0,  ANY,  'c',                 ANY],
             [2, None,    3,    1,    4,  ANY,  'b',                 ANY],
             [7, None, None,    1,  ANY,  ANY,  'f',                 ANY],
@@ -152,39 +155,39 @@ def test_fillna_w_methods(engine) -> None:
 
 
 def test_fillna_w_methods_w_sorted_df(engine) -> None:
-    tz_info = timezone.utc if is_bigquery(engine) else None
-
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
 
     result_ffill = df.fillna(method='ffill')
     assert_equals_data(
         result_ffill,
+        use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [0, None, None, None, None, None, 'a', datetime(2022, 1, 1, tzinfo=tz_info)],
-            [1, 3,    4,    None, 1,    1,    'a', datetime(2022, 1, 2, tzinfo=tz_info)],
-            [2, 3,    3,    None, 4,    1,    'b', datetime(2022, 1, 2, tzinfo=tz_info)],
-            [3, 3,    2,    None, 0,    1,    'c', datetime(2022, 1, 2, tzinfo=tz_info)],
-            [4, 3,    2,    None, 0,    2,    'c', datetime(2022, 1, 2, tzinfo=tz_info)],
-            [5, 1,    2,    None, 0,    2,    'd', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [6, 1,    2,    None, 0,    3,    'e', datetime(2022, 1, 6, tzinfo=tz_info)],
-            [7, 1,    2,    1,    0,    3,    'f', datetime(2022, 1, 6, tzinfo=tz_info)],
+            [0, None, None, None, None, None, 'a', datetime(2022, 1, 1)],
+            [1, 3,    4,    None, 1,    1,    'a', datetime(2022, 1, 2)],
+            [2, 3,    3,    None, 4,    1,    'b', datetime(2022, 1, 2)],
+            [3, 3,    2,    None, 0,    1,    'c', datetime(2022, 1, 2)],
+            [4, 3,    2,    None, 0,    2,    'c', datetime(2022, 1, 2)],
+            [5, 1,    2,    None, 0,    2,    'd', datetime(2022, 1, 5)],
+            [6, 1,    2,    None, 0,    3,    'e', datetime(2022, 1, 6)],
+            [7, 1,    2,    1,    0,    3,    'f', datetime(2022, 1, 6)],
         ],
     )
 
     result_bfill = df.fillna(method='bfill')
     assert_equals_data(
         result_bfill,
+        use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [0, 3,    4,    1, 1,    1,    'a', datetime(2022, 1, 1, tzinfo=tz_info)],
-            [1, 3,    4,    1, 1,    1,    'b', datetime(2022, 1, 2, tzinfo=tz_info)],
-            [2, 1,    3,    1, 4,    2,    'b', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [3, 1,    2,    1, 0,    2,    'c', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [4, 1,    None, 1, None, 2,    'd', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [5, 1,    None, 1, None, 3,    'd', datetime(2022, 1, 5, tzinfo=tz_info)],
-            [6, None, None, 1, None, 3,    'e', datetime(2022, 1, 6, tzinfo=tz_info)],
+            [0, 3,    4,    1, 1,    1,    'a', datetime(2022, 1, 1)],
+            [1, 3,    4,    1, 1,    1,    'b', datetime(2022, 1, 2)],
+            [2, 1,    3,    1, 4,    2,    'b', datetime(2022, 1, 5)],
+            [3, 1,    2,    1, 0,    2,    'c', datetime(2022, 1, 5)],
+            [4, 1,    None, 1, None, 2,    'd', datetime(2022, 1, 5)],
+            [5, 1,    None, 1, None, 3,    'd', datetime(2022, 1, 5)],
+            [6, None, None, 1, None, 3,    'e', datetime(2022, 1, 6)],
             [7, None, None, 1, None, None, 'f', None],
         ],
     )

@@ -29,7 +29,7 @@ describe('TrackedDiv', () => {
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>Trigger Event</div>;
+      return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
     };
 
     const { container } = render(
@@ -65,7 +65,7 @@ describe('TrackedDiv', () => {
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>{children}</div>;
+      return <div onClick={() => trackPressEvent()}>{children}</div>;
     };
 
     const { container } = render(
@@ -73,7 +73,7 @@ describe('TrackedDiv', () => {
         <TrackedDiv id={'Div id 1'}>
           <TrackedButton>Trigger Event 1</TrackedButton>
         </TrackedDiv>
-        <TrackedDiv id={'Div id 2'} normalizeId={false}>
+        <TrackedDiv id={'Div id 2'} objectiv={{ normalizeId: false }}>
           <TrackedButton>Trigger Event 2</TrackedButton>
         </TrackedDiv>
       </ObjectivProvider>
@@ -117,7 +117,7 @@ describe('TrackedDiv', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedRootLocationContext Component={'div'} id={'root'}>
+        <TrackedRootLocationContext objectiv={{ Component: 'div', id: 'root' }}>
           <TrackedDiv id={'content'}>
             <TrackedDiv id={'☹️'}>{/* nothing to see here */}</TrackedDiv>
           </TrackedDiv>
@@ -127,7 +127,7 @@ describe('TrackedDiv', () => {
 
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `id` property.'
+      '｢objectiv｣ Could not generate a valid id for ContentContext @ RootLocation:root / Content:content. Please provide the `objectiv.id` property.'
     );
   });
 });

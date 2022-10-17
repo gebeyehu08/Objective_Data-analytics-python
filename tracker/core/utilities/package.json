@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/utilities",
-  "version": "0.0.24",
+  "version": "0.0.26",
   "private": true,
   "license": "Apache-2.0",
   "description": "Objectiv Core Utilities",
@@ -16,15 +16,15 @@
     "generate:language-codes": "node src/generateLanguageCodes.js",
     "generate:locale-codes": "yarn generate:country-codes && yarn generate:language-codes",
     "generate": "yarn generate:schema && yarn generate:errors && yarn generate:locale-codes",
-    "depcheck": "npx depcheck --ignores uuid"
+    "depcheck": "npx depcheck"
   },
   "devDependencies": {
-    "@objectiv/tracker-core": "^0.0.24",
+    "@objectiv/tracker-core": "^0.0.26",
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.12",
-    "json5": "^2.2.0",
-    "prettier": "^2.5.1",
-    "tsup": "^5.12.0",
-    "typescript": "^4.6.2"
+    "json5": "^2.2.1",
+    "prettier": "^2.7.1",
+    "tsup": "^6.2.1",
+    "typescript": "^4.7.4"
   }
 }

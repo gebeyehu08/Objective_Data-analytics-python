@@ -5,7 +5,6 @@ import re
 from typing import List
 
 import pytest
-from sqlalchemy.dialects.postgresql.base import PGDialect
 
 from sql_models.graph_operations import get_node, get_graph_nodes_info
 from sql_models.model import SqlModel, RefPath, CustomSqlModelBuilder, Materialization
@@ -13,9 +12,7 @@ from sql_models.sql_generator import to_sql
 from tests.unit.sql_models.util import RefModel, ValueModel, JoinModel
 
 
-pytestmark = [pytest.mark.db_independent]  # mark all tests here as database independent.
-
-
+@pytest.mark.db_independent
 def test_builder_cycles_raise_exception():
     rm1 = RefModel()
     rm2 = RefModel(ref=rm1)
@@ -28,7 +25,7 @@ def test_builder_cycles_raise_exception():
     with pytest.raises(Exception):
         rm2.instantiate_recursively()
 
-
+@pytest.mark.db_independent
 def test_equality_base_cases():
     vm1 = ValueModel.build(key='X', val=1)
     vm2 = ValueModel.build(key='X', val=2)
@@ -47,6 +44,7 @@ def test_equality_base_cases():
     assert graph1 != rm
 
 
+@pytest.mark.db_independent
 def test_equality_different_classes():
     vm1 = ValueModel.build(key='X', val=1)
     vm2 = ValueModel.build(key='X', val=2)
@@ -69,6 +67,7 @@ def test_equality_different_classes():
     assert vm2 == csm2
 
 
+@pytest.mark.db_independent
 def test_equality_different_property_formatters():
     csm_builder = CustomSqlModelBuilder(sql='select {val} as value')
     csm_alt_builder = CustomSqlModelBuilder(sql='select {val} as value')
@@ -93,8 +92,7 @@ def test_equality_different_property_formatters():
     assert csm1.set(tuple(), val=3).hash != csm3.set(tuple(), val=3).hash
 
 
-def test_set():
-    dialect = PGDialect()
+def test_set(dialect):
     # Build a simple graph
     vm1 = ValueModel.build(key='X', val=1)
     vm2 = ValueModel.build(key='X', val=2)
@@ -140,6 +138,7 @@ def test_set():
     assert sql_diff_ignore_hash_changes == [('X', 'Y')]
 
 
+@pytest.mark.db_independent
 def test_set_complex_graph():
     # Build a complex graph, and use set() to update a node
     #
@@ -213,12 +212,14 @@ def test_set_complex_graph():
     _assert_graph_difference(graph, new_graph3, same_paths, changed_paths)
 
 
+@pytest.mark.db_independent
 def test_set_error():
     vm1 = ValueModel.build(key='a', val=1)
     with pytest.raises(ValueError, match='non-existing placeholder'):
         vm1.set(tuple(), xyz=123)
 
 
+@pytest.mark.db_independent
 def test_link():
     # Graph:
     # vm1 <--+-- rm <-----\
@@ -261,6 +262,7 @@ def test_link():
     assert get_node(new_graph3, ('ref_right',)) is graph
 
 
+@pytest.mark.db_independent
 def test_set_materialization():
     # Graph:
     # vm1 <--+-- rm <-----\
@@ -303,6 +305,7 @@ def test_set_materialization():
     assert get_node(new_graph2, ('ref_left', 'ref_right')) is not vm1
 
 
+@pytest.mark.db_independent
 def test_set_materialization_name():
     # Graph:
     # vm1 <--+-- rm <-----\

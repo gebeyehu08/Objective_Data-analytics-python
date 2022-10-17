@@ -2,10 +2,11 @@ import pytest
 
 from bach import SeriesNumericInterval, SeriesFloat64, SeriesString, Series
 from bach.expression import Expression, MultiLevelExpression
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.unit.bach.util import get_fake_df_test_data
 
 
+@pytest.mark.db_independent
 def test_series_numeric_interval_levels_dtypes() -> None:
     supported_dtypes = SeriesNumericInterval.get_supported_level_dtypes()
     assert 'lower' in supported_dtypes
@@ -144,7 +145,7 @@ def test_series_numeric_expression(dialect) -> None:
 
     sql_result = numeric_interval.expression.to_sql(dialect, table_name='table')
 
-    if is_postgres(dialect):
+    if is_athena(dialect) or is_postgres(dialect):
         assert sql_result == '"table"."inhabitants","table"."inhabitants",\'[]\''
     elif is_bigquery(dialect):
         assert sql_result == '`table`.`inhabitants`,`table`.`inhabitants`,"""[]"""'
@@ -168,13 +169,19 @@ def test_series_numeric_interval_get_column_expression(dialect) -> None:
     if is_postgres(dialect):
         assert result == (
             'CASE WHEN (((((cast(0 as bigint) is not null)) AND ((cast(1 as bigint) is not null)))) '
-            'AND ((\'(]\' is not null))) THEN numrange(cast(cast(0 as bigint) as numeric), '
-            'cast(cast(1 as bigint) as numeric), \'(]\') ELSE NULL END as "num_interval"'
+            'AND ((\'(]\' is not null))) THEN numrange(cast(0 as bigint)::text::numeric, '
+            'cast(1 as bigint)::text::numeric, \'(]\') ELSE NULL END as "num_interval"'
         )
     elif is_bigquery(dialect):
         assert result == (
             'CASE WHEN (((((0 is not null)) AND ((1 is not null)))) AND (("""(]""" is not null))) '
-            'THEN struct(0 as lower, 1 as upper, """(]""" as bounds) ELSE NULL END as `num_interval`'
+            'THEN struct(0 as `lower`, 1 as `upper`, """(]""" as `bounds`) ELSE NULL END as `num_interval`'
+        )
+    elif is_athena(dialect):
+        assert result == (
+            'CASE WHEN (((((cast(0 as bigint) is not null)) AND ((cast(1 as bigint) is not null)))) '
+            'AND ((\'(]\' is not null))) THEN cast(cast(row(cast(0 as bigint), cast(1 as bigint), \'(]\') as '
+            'row(lower double, upper double, bounds varchar(2))) as json) ELSE NULL END as "num_interval"'
         )
     else:
         raise Exception()

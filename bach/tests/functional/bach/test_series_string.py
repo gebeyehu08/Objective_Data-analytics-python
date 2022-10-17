@@ -2,7 +2,6 @@
 Copyright 2021 Objectiv B.V.
 """
 import pandas as pd
-import pytest
 
 from bach import Series, SeriesString, DataFrame
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
@@ -41,6 +40,7 @@ def test_string_slice(engine):
         0, 1, 3, -3, -1,
         # some single value slices
         slice(0), slice(1), slice(5), slice(-5), slice(-1),
+        slice(0, None), slice(1, None), slice(5, None), slice(-5, None), slice(-1, None),
         # simple slices
         slice(0, 3), slice(1, 3), slice(3, 3), slice(4, 3),
         # Some negatives
@@ -48,7 +48,10 @@ def test_string_slice(engine):
         # some longer than some of the input strings
         slice(1, -8), slice(8, 1), slice(8, -4),
         # Some more with no beginnings or endings
-        slice(None, 3), slice(3, None), slice(None, -3), slice(-3, None)
+        slice(None, 3), slice(3, None), slice(None, -3), slice(-3, None),
+        # slices with out of range indexes
+        slice(1000, 40), slice(-1000, -40), slice(200, -3), slice(-100, 10),
+        slice(-100, -2), slice(-1, -1), slice(-10, -1)
     ]
 
     expected_data = {
@@ -58,12 +61,16 @@ def test_string_slice(engine):
     # Now try some slices
     for idx, s in enumerate(slices):
         print(f'slice: {s}')
-        if (isinstance(s, slice)):
-            bts1 = bt['city'].str[s.start:s.stop]
-            bts2 = bt['city'].str.slice(s.start, s.stop)
+        if isinstance(s, slice):
+            _slice_1 = slice(s.start, s.stop)
+            _slice_2 = slice(s.start, s.stop)
         else:
-            bts1 = bt['city'].str[s]
-            bts2 = bt['city'].str.slice(s, s+1)
+            # str[-1] != str[-1:0]
+            _slice_1 = s
+            _slice_2 = slice(s, s + 1)
+
+        bts1 = bt['city'].str[_slice_1]
+        bts2 = bt['city'].str.slice(_slice_2.start, _slice_2.stop)
 
         assert isinstance(bts1, Series)
         assert isinstance(bts2, Series)
@@ -71,9 +78,14 @@ def test_string_slice(engine):
         bt[f'city_slice_1_{idx}'] = bts1
         bt[f'city_slice_2_{idx}'] = bts2
 
-        expected_results = ['Ljouwert'.__getitem__(s), 'Snits'.__getitem__(s), 'Drylts'.__getitem__(s)]
-        expected_data[f'city_slice_1_{idx}'] = expected_results
-        expected_data[f'city_slice_2_{idx}'] = expected_results
+        expected_results_1 = [
+            'Ljouwert'.__getitem__(_slice_1), 'Snits'.__getitem__(_slice_1), 'Drylts'.__getitem__(_slice_1)
+        ]
+        expected_results_2 = [
+            'Ljouwert'.__getitem__(_slice_2), 'Snits'.__getitem__(_slice_2), 'Drylts'.__getitem__(_slice_2)
+        ]
+        expected_data[f'city_slice_1_{idx}'] = expected_results_1
+        expected_data[f'city_slice_2_{idx}'] = expected_results_2
 
     expected = pd.DataFrame(expected_data)
     expected = expected.set_index('_index_skating_order')
@@ -105,6 +117,7 @@ def test_get_dummies(engine) -> None:
     assert set(expected_columns) == set(result.data_columns)
     assert_equals_data(
         result[expected_columns],
+        use_to_pandas=True,
         expected_columns=['_index_skating_order'] + expected_columns,
         expected_data=[
             [1, 0, 1, 0],
@@ -135,7 +148,6 @@ def test_string_replace(engine) -> None:
     assert_equals_data(result_df, expected_columns=expected_columns, expected_data=expected_data)
 
 
-@pytest.mark.athena_supported
 def test_string_lower_upper(engine) -> None:
     df = get_df_with_test_data(engine, full_data_set=True)
     df['municipality_lower'] = df['municipality'].str.lower()
@@ -155,6 +167,21 @@ def test_string_lower_upper(engine) -> None:
             [9, 'Harlingen', 'harlingen', 'HARLINGEN'],
             [10, 'Waadhoeke', 'waadhoeke', 'WAADHOEKE'],
             [11, 'Noardeast-Fryslân', 'noardeast-fryslân', 'NOARDEAST-FRYSLÂN'],
+        ]
+    )
+
+
+def test_string_len(engine) -> None:
+    df = get_df_with_test_data(engine)
+    df['city_len'] = df['city'].str.len()
+
+    assert_equals_data(
+        df[['city', 'city_len']],
+        expected_columns=['_index_skating_order', 'city', 'city_len'],
+        expected_data=[
+            [1, 'Ljouwert', 8],
+            [2, 'Snits', 5],
+            [3, 'Drylts', 6],
         ]
     )
 

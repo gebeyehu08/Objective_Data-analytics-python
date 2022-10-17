@@ -12,8 +12,9 @@ import {
   TrackerValidationRuleInterface,
 } from '@objectiv/tracker-core';
 import { TrackerConsole } from './TrackerConsole';
-import { makeGlobalContextValidationRule } from './validationRules/makeGlobalContextValidationRule';
 import { makeLocationContextValidationRule } from './validationRules/makeLocationContextValidationRule';
+import { makeMissingGlobalContextValidationRule } from './validationRules/makeMissingGlobalContextValidationRule';
+import { makeUniqueGlobalContextValidationRule } from './validationRules/makeUniqueGlobalContextValidationRule';
 
 /**
  * Validates a number of rules related to the Open Taxonomy:
@@ -30,11 +31,20 @@ export const OpenTaxonomyValidationPlugin = new (class implements TrackerPluginI
    */
   initialize({ platform }: TrackerInterface) {
     this.validationRules = [
-      makeGlobalContextValidationRule({
+      makeUniqueGlobalContextValidationRule({
+        platform,
+        logPrefix: this.pluginName,
+      }),
+      makeMissingGlobalContextValidationRule({
         platform,
         logPrefix: this.pluginName,
         contextName: GlobalContextName.ApplicationContext,
-        once: true,
+      }),
+      makeMissingGlobalContextValidationRule({
+        platform,
+        logPrefix: this.pluginName,
+        contextName: GlobalContextName.PathContext,
+        eventMatches: (event: EventToValidate) => event.__interactive_event === true,
       }),
       makeLocationContextValidationRule({
         platform,
@@ -42,13 +52,6 @@ export const OpenTaxonomyValidationPlugin = new (class implements TrackerPluginI
         contextName: LocationContextName.RootLocationContext,
         once: true,
         position: 0,
-        eventMatches: (event: EventToValidate) => event.__interactive_event === true,
-      }),
-      makeGlobalContextValidationRule({
-        platform,
-        logPrefix: this.pluginName,
-        contextName: GlobalContextName.PathContext,
-        once: true,
         eventMatches: (event: EventToValidate) => event.__interactive_event === true,
       }),
     ];

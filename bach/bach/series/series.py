@@ -22,11 +22,11 @@ from bach.sql_model import BachSqlModel
 from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrAlias,\
     AllSupportedLiteralTypes, value_to_series_type
 from bach.utils import (
-    is_valid_column_name, validate_node_column_references_in_sorting_expressions, SortColumn
+    validate_node_column_references_in_sorting_expressions, SortColumn, get_sql_column_name
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena, is_postgres
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
@@ -117,6 +117,14 @@ class Series(ABC):
     by :meth:`supported_value_to_literal()`.
     """
 
+    supported_source_dtypes: Tuple[str, ...] = tuple()
+    """
+    INTERNAL: List of dtypes that can be casted into this Series dtype.
+    For example a SeriesString can be casted into a SeriesTimestamp. e.g `x.astype('timestamp')`.
+
+    Subclasses can override this value to indicate which dtypes they can handle for casting.
+    """
+
     def __init__(
         self,
         engine: Engine,
@@ -188,8 +196,9 @@ class Series(ABC):
             raise ValueError(f'Series and aggregation index do not match: {group_by.index} != {index}')
         if not group_by and expression.has_aggregate_function:
             raise ValueError('Expression has an aggregation function set, but there is no group_by')
-        if not is_valid_column_name(dialect=engine.dialect, name=name):
-            raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
+        # Make sure that name can be converted to a valid sql-column name. get_sql_column_name() will
+        # raise an exception if the name cannot be converted to a valid sql column name
+        get_sql_column_name(dialect=engine.dialect, name=name)
 
         for value in index.values():
             if value.base_node != base_node:
@@ -201,7 +210,11 @@ class Series(ABC):
                 )
 
         if order_by:
-            validate_node_column_references_in_sorting_expressions(node=base_node, order_by=order_by)
+            validate_node_column_references_in_sorting_expressions(
+                dialect=engine.dialect,
+                node=base_node,
+                order_by=order_by
+            )
 
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
@@ -373,13 +386,17 @@ class Series(ABC):
     @classmethod
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
         """
-        Give the static db_dtype of this Series, for the given database dialect.
+        Give the database type used to store values of this Series, for the given database dialect.
 
         :raises DatabaseNotSupportedException: If the Series subclass doesn't support the database dialect.
-        :return: database type as string, or None if this Series has no database type for which it is the
-            standard Series for that database, or if that type is a structural type whose exact type depends
-            on the data of the subtypes (e.g. SeriesList will return None on BigQuery, as it can handle all
-            ARRAY<*> subtypes)
+        :return: Database type as string, or None if this Series database type is a structural type whose
+            exact type depends on the data of the subtypes (e.g. SeriesList will return None on BigQuery,
+            as it can handle all ARRAY<*> subtypes)
+
+        .. note::
+            Multiple Series types might return the same db_dtype. For example on BigQuery
+            :class:`SeriesUuid`, :class:`SeriesJson`, and :class:`SeriesString` will all return 'STRING'.
+            As we use the STRING database type to store all of those value types.
         """
         db_dialect = DBDialect.from_dialect(dialect)
         if db_dialect not in cls.supported_db_dtype:
@@ -611,7 +628,8 @@ class Series(ABC):
     def get_column_expression(self, table_alias: Optional[str] = None) -> Expression:
         """ INTERNAL: Get the column expression for this Series """
         expression = self.expression.resolve_column_references(self.engine.dialect, table_alias)
-        return Expression.construct_expr_as_name(expression, self.name)
+        dialect = self.engine.dialect
+        return Expression.construct_expr_as_sql_name(dialect=dialect, expr=expression, name=self.name)
 
     def _get_supported(
         self,
@@ -714,7 +732,7 @@ class Series(ABC):
         }
         if (
             other.base_node == left.base_node
-            and not set(self.base_node.columns) >= {other.name, f'{other.name}__other'}
+            and not set(self.base_node.series_names) >= {other.name, f'{other.name}__other'}
             and f'{other.name}__other' in df.all_series
         ):
             # column was referenced before from right node
@@ -1132,28 +1150,42 @@ class Series(ABC):
         operation: str,
         fmt_str: str,
         other_dtypes: Tuple[str, ...] = (),
-        dtype: Optional[Union[str, Mapping[str, Optional[str]]]] = None
+        dtype: Optional[Union[str, Mapping[str, Optional[str]]]] = None,
+        strict_other_dtypes: Tuple[str, ...] = ()
     ) -> 'Series':
         """
         The standard way to perform a binary operation
 
-        :param self: SeriesSubTypehe left hand side expression (lhs) in the operation
+        :param self: SeriesSubType: the left hand side expression (lhs) in the operation
         :param other: The right hand side expression (rhs) in the operation
         :param operation: A user-readable representation of the operation
         :param fmt_str: An Expression.construct format string, accepting lhs and rhs as the only parameters,
             in that order.
-        :param other_dtypes: The acceptable dtypes for the rhs expression
+        :param other_dtypes: The acceptable dtypes for the rhs expression. There will be
+            an explicit cast/astype to lhs; we accept the type as rhs for this operation. If the DB
+            does not know what to do with the types in the operation, explicit type conversions can be done
+            using the `strict_other_dtypes` parameter.
         :param dtype: The new dtype for the Series that results from this operation. Leave None for same
             as lhs, pass a string with the new explicit dtype, or pass a dict that maps rhs.dtype to the
             resulting dtype. If the dict does not contain the rhs.dtype, None is assumed, using the lhs
             dtype.
+        :param strict_other_dtypes: list of dtypes that are accepted directly into the rhs, all other ones
+            (from `other_dtypes`) will be cast to lhs.dtype before the operation. Defaults to
+            `other_dtypes` if none given.
         """
         if len(other_dtypes) == 0:
             raise NotImplementedError(f'binary operation {operation} not supported '
                                       f'for {self.__class__} and {other.__class__}')
 
+        if len(strict_other_dtypes) == 0:
+            strict_other_dtypes = other_dtypes
+
         other = value_to_series(base=self, value=other)
         self_modified, other = self._get_supported(operation, other_dtypes, other)
+
+        if other.dtype not in strict_other_dtypes:
+            other = other.astype(self_modified.dtype)
+
         expression = NonAtomicExpression.construct(fmt_str, self_modified, other)
 
         new_dtype: Optional[str]
@@ -1241,7 +1273,8 @@ class Series(ABC):
         self,
         other: Union['Series', AllSupportedLiteralTypes],
         comparator: str,
-        other_dtypes: Tuple[str, ...] = ()
+        other_dtypes: Tuple[str, ...] = (),
+        strict_other_dtypes: Tuple[str, ...] = (),
     ) -> 'SeriesBoolean':
         if len(other_dtypes) == 0:
             raise TypeError(f'comparator {comparator} not supported for '
@@ -1249,7 +1282,7 @@ class Series(ABC):
         return cast('SeriesBoolean', self._binary_operation(
             other=other, operation=f"comparator '{comparator}'",
             fmt_str=f'{{}} {comparator} {{}}',
-            other_dtypes=other_dtypes, dtype='bool'
+            other_dtypes=other_dtypes, dtype='bool', strict_other_dtypes=strict_other_dtypes
         ))
 
     def __ne__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':   # type: ignore
@@ -1567,12 +1600,29 @@ class Series(ABC):
             For more information:
             https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_top_count
         """
-        agg_expr = f'mode() within group (order by {{}})'
-        if is_bigquery(self.engine):
+        if is_postgres(self.engine):
+            agg_expr = f'mode() within group (order by {{}})'
+        elif is_athena(self.engine):
+            # PrestoDB currently does not support mode or any approximation to it
+            # Therefore we should calculate manually by building a map with the occurrences
+            # per value (histogram) and get the key with the highest value
+            agg_expr = f"""
+                reduce(
+                    map_entries(histogram({{}})),
+                    CAST(ROW(NULL, 0) AS ROW(field0 {self.get_db_dtype(self.engine.dialect)}, field1 BIGINT)),
+                    (prev, curr) -> IF(prev.field0 IS NULL, curr, IF(prev.field1 < curr.field1, curr, prev)),
+                    val -> val
+                ).field0
+            """
+
+        elif is_bigquery(self.engine):
             # BigQuery has no aggregate function for mode, therefore we use
             # APPROX_TOP_COUNT which return an approximation of the exact result
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions
             agg_expr = f'approx_top_count({{}}, 1)[offset(0)].value'
+
+        else:
+            raise DatabaseNotSupportedException(self.engine)
 
         result = self._derived_agg_func(
             partition=partition,
@@ -1631,6 +1681,18 @@ class Series(ABC):
         """
         from bach.partitioning import Window
         checked_window = cast(Window, self._check_unwrap_groupby(window, isin=(Window, )))
+
+        if not checked_window.order_by:
+            raise ValueError(
+                (
+                    f'Window must be sorted when applying {agg_function.value}, '
+                    'otherwise results might be non-deterministic or an exception will be raised '
+                    'depending on the engine been used. '
+                    'Please create a new instance by calling any of the following:\n'
+                    '`DataFrame.sort_values(by=...).window()`, `DataFrame.sort_index().window()` '
+                    'or `Window(order_by=[], ...)` and try again.'
+                )
+            )
 
         if not agg_function.supports_window_frame_clause(dialect=self.engine.dialect):
             # remove boundaries if the functions does not support window frame clause

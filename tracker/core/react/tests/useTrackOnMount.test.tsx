@@ -3,8 +3,7 @@
  */
 
 import { makeVisibleEvent, Tracker } from '@objectiv/tracker-core';
-import { render } from '@testing-library/react';
-import { renderHook } from '@testing-library/react-hooks';
+import { render, renderHook } from '@testing-library/react';
 import React from 'react';
 import { useEffect } from 'react';
 import { TrackerProvider, useTrackOnMount } from '../src';

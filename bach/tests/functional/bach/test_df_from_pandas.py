@@ -3,10 +3,10 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from bach import DataFrame
-from sql_models.util import is_bigquery, is_postgres
+from bach import DataFrame, SeriesFloat64, SeriesInt64, SeriesBoolean, SeriesTimestamp, SeriesString
+from sql_models.constants import DBDialect
 from tests.functional.bach.test_data_and_utils import TEST_DATA_CITIES, CITIES_COLUMNS, \
-    assert_equals_data, convert_expected_data_timestamps
+    assert_equals_data, convert_expected_data_timestamps, assert_series_db_types
 import datetime
 from uuid import UUID
 import pandas as pd
@@ -49,10 +49,11 @@ TYPES_COLUMNS = ['int_column', 'float_column', 'bool_column', 'datetime_column',
                  'dict_column', 'timedelta_column', 'mixed_column']
 
 
-def test_from_pandas_table(pg_engine, unique_table_test_name):
+@pytest.mark.skip_athena_todo()  # TODO: Athena
+def test_from_pandas_table(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     bt = DataFrame.from_pandas(
-        engine=pg_engine,
+        engine=engine,
         df=pdf,
         convert_objects=True,
         name=unique_table_test_name,
@@ -62,31 +63,23 @@ def test_from_pandas_table(pg_engine, unique_table_test_name):
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS, expected_data=EXPECTED_DATA)
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_from_pandas_table_injection(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
-    if is_postgres(engine):
-        bt = DataFrame.from_pandas(
-            engine=engine,
-            df=pdf,
-            convert_objects=True,
-            name=unique_table_test_name,
-            materialization='table',
-            if_exists='replace',
-        )
-        assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
-
-    elif is_bigquery(engine):
-        with pytest.raises(ValueError, match=r'Invalid column names'):
-            DataFrame.from_pandas(
-                engine=engine,
-                df=pdf,
-                convert_objects=True,
-                name=unique_table_test_name,
-                materialization='table',
-                if_exists='replace',
-            )
-    else:
-        raise Exception()
+    bt = DataFrame.from_pandas(
+        engine=engine,
+        df=pdf,
+        convert_objects=True,
+        name=unique_table_test_name,
+        materialization='table',
+        if_exists='replace',
+    )
+    assert_equals_data(
+        bt,
+        use_to_pandas=True,
+        expected_columns=EXPECTED_COLUMNS_INJECTION,
+        expected_data=EXPECTED_DATA_INJECTION
+    )
 
 
 def test_from_pandas_ephemeral_basic(engine):
@@ -102,42 +95,35 @@ def test_from_pandas_ephemeral_basic(engine):
 
 
 def test_from_pandas_ephemeral_injection(engine):
-    # We only support 'weird' Series names on Postgres. We must make sure tho that these 'weird' names are
-    # handled correctly, which we test here.
-    # On bigquery we cannot support 'weird' series names, because we map Series names directly to column
-    # names and BigQuery only allows [a-zA-Z0-9_] in quoted column names. This behaviour for BigQuery is
-    # tested in tests/unit/bach/test_df_from_pandas.py
+    # On Postgres 'weird' Series names are used directly as column names. We must make sure that the column
+    # names are escaped properly.
+    # On Athena and BigQuery, we encode the 'weird' names into legal column names, that we map internally
+    # to the 'weird' columns names.
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
 
-    if is_postgres(engine):
-        bt = DataFrame.from_pandas(
-            engine=engine,
-            df=pdf,
-            convert_objects=True,
-            materialization='cte',
-            name='ephemeral data'
-        )
-        assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
-    elif is_bigquery(engine):
-        with pytest.raises(ValueError, match='Invalid column name'):
-            DataFrame.from_pandas(
-                engine=engine,
-                df=pdf,
-                convert_objects=True,
-                materialization='cte',
-                name='ephemeral data'
-            )
-    else:
-        raise Exception(f'Test does not support {engine.dialect}')
+    bt = DataFrame.from_pandas(
+        engine=engine,
+        df=pdf,
+        convert_objects=True,
+        materialization='cte',
+        name='ephemeral data'
+    )
+    assert_equals_data(
+        bt,
+        use_to_pandas=True,
+        expected_columns=EXPECTED_COLUMNS_INJECTION,
+        expected_data=EXPECTED_DATA_INJECTION
+    )
 
 
-def test_from_pandas_non_happy_path(pg_engine, unique_table_test_name):
+@pytest.mark.skip_athena_todo()  # TODO: Athena
+def test_from_pandas_non_happy_path(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     with pytest.raises(TypeError):
         # if convert_objects is false, we'll get an error, because pdf's dtype for 'city' and 'municipality'
         # is 'object'
         DataFrame.from_pandas(
-            engine=pg_engine,
+            engine=engine,
             df=pdf,
             convert_objects=False,
             name=unique_table_test_name,
@@ -148,14 +134,14 @@ def test_from_pandas_non_happy_path(pg_engine, unique_table_test_name):
     # Might fail on either the first or second try. As we don't clean up between tests.
     with pytest.raises(ValueError, match=f"Table '{unique_table_test_name}' already exists"):
         DataFrame.from_pandas(
-            engine=pg_engine,
+            engine=engine,
             df=pdf,
             convert_objects=True,
             name=unique_table_test_name,
             materialization='table',
         )
         DataFrame.from_pandas(
-            engine=pg_engine,
+            engine=engine,
             df=pdf,
             convert_objects=True,
             name=unique_table_test_name,
@@ -163,12 +149,14 @@ def test_from_pandas_non_happy_path(pg_engine, unique_table_test_name):
         )
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
+@pytest.mark.skip_bigquery_todo()
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
-def test_from_pandas_index(materialization: str, pg_engine, unique_table_test_name):
+def test_from_pandas_index(materialization: str, engine, unique_table_test_name):
     # test multilevel index
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS).set_index(['skating_order', 'city'])
     bt = DataFrame.from_pandas(
-        engine=pg_engine,
+        engine=engine,
         df=pdf,
         convert_objects=True,
         name=unique_table_test_name,
@@ -188,7 +176,7 @@ def test_from_pandas_index(materialization: str, pg_engine, unique_table_test_na
     # test nameless index
     pdf.reset_index(inplace=True)
     bt = DataFrame.from_pandas(
-        engine=pg_engine,
+        engine=engine,
         df=pdf,
         convert_objects=True,
         name=unique_table_test_name,
@@ -207,12 +195,14 @@ def test_from_pandas_index(materialization: str, pg_engine, unique_table_test_na
         expected_data=[[idx] + x[1:] for idx, x in enumerate(EXPECTED_DATA)])
 
 
+@pytest.mark.skip_athena_todo()  # TODO: Athena
+@pytest.mark.skip_bigquery_todo()
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
-def test_from_pandas_types(materialization: str, pg_engine, unique_table_test_name):
+def test_from_pandas_types(materialization: str, engine, unique_table_test_name):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
     df = DataFrame.from_pandas(
-        engine=pg_engine,
+        engine=engine,
         df=pdf.loc[:, :'string_column'],
         convert_objects=True,
         name=unique_table_test_name,
@@ -226,6 +216,7 @@ def test_from_pandas_types(materialization: str, pg_engine, unique_table_test_na
 
     assert_equals_data(
         df,
+        use_to_pandas=True,
         expected_columns=[
             '_index_int_column',
             'float_column',
@@ -240,7 +231,7 @@ def test_from_pandas_types(materialization: str, pg_engine, unique_table_test_na
     pdf.set_index(pdf.columns[0], drop=False, inplace=True)
     pdf['int32_column'] = pdf.int_column.astype(np.int32)
     df = DataFrame.from_pandas(
-        engine=pg_engine,
+        engine=engine,
         df=pdf[['int32_column']],
         convert_objects=True,
         name=unique_table_test_name,
@@ -253,6 +244,7 @@ def test_from_pandas_types(materialization: str, pg_engine, unique_table_test_na
 
     assert_equals_data(
         df,
+        use_to_pandas=True,
         expected_columns=[
             '_index_int_column',
             'int32_column'
@@ -261,11 +253,11 @@ def test_from_pandas_types(materialization: str, pg_engine, unique_table_test_na
     )
 
 
-def test_from_pandas_types_cte(pg_engine, unique_table_test_name):
+def test_from_pandas_types_cte(engine, unique_table_test_name):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
     df = DataFrame.from_pandas(
-        engine=pg_engine,
+        engine=engine,
         df=pdf.loc[:, :'timedelta_column'],
         convert_objects=True,
         materialization='cte'
@@ -284,6 +276,7 @@ def test_from_pandas_types_cte(pg_engine, unique_table_test_name):
 
     assert_equals_data(
         df,
+        use_to_pandas=True,
         expected_columns=['_index_int_column',
                           'float_column',
                           'bool_column',
@@ -299,7 +292,7 @@ def test_from_pandas_types_cte(pg_engine, unique_table_test_name):
 
     with pytest.raises(TypeError, match="unsupported dtype for"):
         DataFrame.from_pandas(
-            engine=pg_engine,
+            engine=engine,
             df=pdf.loc[:, :'timedelta_column'],
             convert_objects=True,
             name=unique_table_test_name,
@@ -309,7 +302,7 @@ def test_from_pandas_types_cte(pg_engine, unique_table_test_name):
 
     with pytest.raises(TypeError, match="multiple types found in column"):
         DataFrame.from_pandas(
-            engine=pg_engine,
+            engine=engine,
             df=pdf.loc[:, :'mixed_column'],
             convert_objects=True,
             materialization='cte'
@@ -371,3 +364,26 @@ def test_from_pandas_columns_w_nulls(engine) -> None:
         expected_data=expected_data
     )
 
+
+def test_all_supported_types_db_dtypes(engine):
+    TEST_DATA_SUPPORTED_TYPES = [
+        [1.32, 4, datetime.datetime(2015, 12, 13, 9, 54, 45, 543), 'fierljeppen', True]
+    ]
+    df = DataFrame.from_pandas(
+        engine=engine,
+        df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['float', 'int', 'timestamp', 'string', 'bool']),
+        convert_objects=True,
+    )
+    expected_series = {
+            'float': SeriesFloat64,
+            'int': SeriesInt64,
+            'timestamp': SeriesTimestamp,
+            'string': SeriesString,
+            'bool': SeriesBoolean
+        }
+    expected_db_type_overrides = {DBDialect.ATHENA: {'string': 'varchar(11)'}}
+    assert_series_db_types(
+        df=df,
+        expected_series=expected_series,
+        expected_db_type_overrides=expected_db_type_overrides
+    )
