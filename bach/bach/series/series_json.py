@@ -454,7 +454,8 @@ class JsonAccessor(Generic[TSeriesJson]):
         Since the operation might destroy the order of the elements,
         a series containing the offset is also returned.
 
-        :returns: Tuple with SeriesJson (element from the array) and SeriesInt64 (offset of the element)
+        :returns: Tuple with SeriesJson (element from the array) and SeriesInt64 (0-based offset of the
+            element)
 
         .. note::
             Both returned series objects will share same base node, but this node is not
