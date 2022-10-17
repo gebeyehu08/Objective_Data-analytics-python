@@ -154,7 +154,6 @@ class GroupBy:
             # b) SELECT `x` + 1 as `x`, sum(y) from table GROUP BY `x` + 1
             # GROUP BY expression from b) actually is (`x` + 1) + 1
             # meanwhile GROUP BY expression from a) is (`x` + 1)
-            # this logic does not applies in Postgres
             if is_bigquery(idx.engine):
                 exprs.append(Expression.column_reference(idx.name))
 
@@ -163,10 +162,12 @@ class GroupBy:
             # In order to avoid this type of situations, is best to use ordinals, as we can make reference
             # to complex expressions by just using there ordinal position in the SELECT clause.
             # By default, index columns are the first in the SELECT clause. So, we can trust the order of
-            # the Grouby.index.
+            # the GroupBy.index.
             # https://prestodb.io/docs/current/sql/select.html#group-by-clause
             elif is_athena(idx.engine) and idx.expression != Expression.column_reference(idx.name):
                 exprs.append(ConstValueExpression.construct(f'{pos + 1}'))
+
+            # this logic does not applies in Postgres
             else:
                 exprs.append(idx.expression)
 
