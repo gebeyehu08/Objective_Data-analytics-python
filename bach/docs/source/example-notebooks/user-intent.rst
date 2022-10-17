@@ -125,7 +125,7 @@ Finally, let's look at the distribution of time spent. We'll use this distributi
 	>>> session_duration = session_duration.materialize()
 	>>> # show quantiles
 	>>> session_duration.quantile(q=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]).head(10)
-	q
+	quantile
 	0.1   0 days 00:00:00.009000
 	0.2   0 days 00:00:01.019000
 	0.3   0 days 00:00:01.815000
