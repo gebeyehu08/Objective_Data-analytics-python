@@ -21,17 +21,6 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. doctest::
 	:skipif: engine is None
 
-	.. >>> import pandas as pd
-	.. >>> pd.set_option('display.max_columns', None) # show all columns where possible, so dataframes don't get unneccesarily cut off
-	.. >>> pd.set_option('display.expand_frame_repr', False)  # do not output dataframes on multiple lines, but over full width
-	.. >>> pd.set_option('display.max_colwidth', 93)
-	.. >>> from bach.dataframe import DataFrame
-	.. >>> import os
-	.. >>> import sqlalchemy
-	.. >>> DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
-	.. >>> engine = sqlalchemy.create_engine(DB_URL)
-	.. >>> start_date = '2022-06-01'
-	.. >>> end_date = '2022-06-30'
 	>>> # set the timeframe of the analysis
 	>>> start_date = '2022-06-01'
 	>>> end_date = None
