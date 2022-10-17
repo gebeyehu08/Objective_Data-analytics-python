@@ -303,7 +303,8 @@ class ModelHub:
                                  root_location: str = None,
                                  location_stack: Union[str, 'SeriesLocationStack'] = None,
                                  n_top_examples=40,
-                                 return_df: bool = False):
+                                 return_df: bool = False,
+                                 show: bool = True):
         """
         Shows the location stack as a sankey chart per element for the selected root location. It shows the
         different elements by type and id as nodes from left to right. The size of the nodes and links
@@ -319,6 +320,9 @@ class ModelHub:
             too many examples to plot it can slow down the browser).
         :param return_df: returns a :py:class:`bach.DataFrame` with the data from which the sankey diagram is
             created.
+        :param show: if True, it shows the plot, if False it only returns the DataFrame with the data that
+            is to be plotted.
+
         :returns: None or DataFrame
         """
 
@@ -380,7 +384,7 @@ class ModelHub:
         funnel_df = funnel.get_navigation_paths(data_merged_cp, steps=2, by='event_id',
                                                 location_stack='__name', sort_by='__result_offset')
 
-        result = funnel.plot_sankey_diagram(funnel_df, n_top_examples=n_top_examples)
+        result = funnel.plot_sankey_diagram(funnel_df, n_top_examples=n_top_examples, show=show)
 
         if return_df:
             return result
