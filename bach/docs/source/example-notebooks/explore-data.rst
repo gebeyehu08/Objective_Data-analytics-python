@@ -21,6 +21,14 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. doctest::
 	:skipif: engine is None
 
+	>>> import pandas as pd
+	>>> pd.set_option('display.max_columns', None) # show all columns where possible, so dataframes don't get unneccesarily cut off
+	>>> pd.set_option('display.expand_frame_repr', False)  # do not output dataframes on multiple lines, but over full width
+	>>> from bach.dataframe import DataFrame
+	>>> import os
+	>>> import sqlalchemy
+	>>> DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	>>> engine = sqlalchemy.create_engine(DB_URL)
 	>>> # set the timeframe of the analysis
 	>>> start_date = '2022-06-01'
 	>>> end_date = None
@@ -244,6 +252,15 @@ It also means you can make product features very readable and easy to understand
 	Link: docs located at Root Location: home => Navigation: navbar-top                            PressEvent                        23
 	Pressable: hamburger located at Root Location: home => Navigation: navbar-top                  PressEvent                        21
 
+.. doctest:: explore-data-features
+	:skipif: engine is None
+	:hide:
+
+	>>> import os
+	>>> f = open("./product_feature_data.tmp", "w")
+	>>> f.write('sql' + product_feature_data.view_sql()) # doctest: +ELLIPSIS
+	6...
+
 .. admonition:: Reference
 	:class: api-reference
 
@@ -266,16 +283,17 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 
 	# --- hide: start ---
 	import os
-	from modelhub import ModelHub
-	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'path'])
-	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
-	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-06-01', end_date='2022-06-30')
-	df['feature_nice_name'] = df.location_stack.ls.nice_name
-	product_feature_data = modelhub.agg.unique_users(df, groupby=['feature_nice_name', 'event_type'])
-	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	product_feature_data = './product_feature_data.tmp'
+	def display_sql_as_markdown(arg): [print(open(arg).read())]
 	# --- hide: stop ---
 	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
 	display_sql_as_markdown(product_feature_data)
+	# --- hide: start ---
+	if os.path.isfile(product_feature_data):
+	  os.remove(product_feature_data)
+	else: ## Show an error ##
+	  print("Error: %s temp file not found" % product_feature_data)
+	# --- hide: stop ---
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 
