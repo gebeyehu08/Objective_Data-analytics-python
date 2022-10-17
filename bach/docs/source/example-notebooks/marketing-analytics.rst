@@ -157,22 +157,22 @@ Users from marketing _source_ per day
 	           day utm_source  unique_users
 	0   2022-08-20    twitter             7
 	1   2022-08-20     reddit             6
-	2   2022-08-19     reddit             3
-	3   2022-08-19    twitter             9
-	4   2022-08-18    twitter             4
-	5   2022-08-18     reddit             3
+	2   2022-08-19    twitter             9
+	3   2022-08-19     reddit             3
+	4   2022-08-18     reddit             3
+	5   2022-08-18    twitter             4
 	6   2022-08-17    twitter             6
 	7   2022-08-17     reddit             4
 	8   2022-08-16    twitter            10
 	9   2022-08-16     reddit             3
-	10  2022-08-15     reddit             4
-	11  2022-08-15    twitter            19
-	12  2022-08-14     reddit             5
-	13  2022-08-14    twitter            10
-	14  2022-08-13     reddit             7
-	15  2022-08-13    twitter             8
-	16  2022-08-12     reddit             2
-	17  2022-08-12    twitter             8
+	10  2022-08-15    twitter            19
+	11  2022-08-15     reddit             4
+	12  2022-08-14    twitter            10
+	13  2022-08-14     reddit             5
+	14  2022-08-13    twitter             8
+	15  2022-08-13     reddit             7
+	16  2022-08-12    twitter             8
+	17  2022-08-12     reddit             2
 	18  2022-08-11     reddit             3
 	19  2022-08-11    twitter             9
 
@@ -181,6 +181,7 @@ Users from marketing _source_ per day
 
 	>>> sud = source_users_daily.to_pandas().pivot(index='day', columns='utm_source')
 	>>> sud.plot.bar(stacked=True)
+	<AxesSubplot: xlabel='day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-users-from-marketing-source.png
   :alt: Daily #users from marketing
@@ -197,24 +198,24 @@ Users from marketing _campaign_ per day
 	           day utm_source utm_medium     utm_campaign  unique_users
 	0   2022-08-20     reddit       paid  july_conversion             6
 	1   2022-08-20    twitter       paid  july_conversion             7
-	2   2022-08-19    twitter       paid  july_conversion             9
-	3   2022-08-19     reddit       paid  july_conversion             3
-	4   2022-08-18    twitter       paid  july_conversion             3
-	5   2022-08-18     reddit       paid  july_conversion             3
-	6   2022-08-18    twitter     social             blog             1
+	2   2022-08-19     reddit       paid  july_conversion             3
+	3   2022-08-19    twitter       paid  july_conversion             9
+	4   2022-08-18    twitter     social             blog             1
+	5   2022-08-18    twitter       paid  july_conversion             3
+	6   2022-08-18     reddit       paid  july_conversion             3
 	7   2022-08-17    twitter       paid  july_conversion             6
 	8   2022-08-17     reddit       paid  july_conversion             4
 	9   2022-08-16    twitter       paid  july_conversion            10
 	10  2022-08-16     reddit       paid  july_conversion             3
-	11  2022-08-15     reddit       paid  july_conversion             4
-	12  2022-08-15    twitter       paid  july_conversion            19
-	13  2022-08-14    twitter       paid  july_conversion            10
-	14  2022-08-14     reddit       paid  july_conversion             5
+	11  2022-08-15    twitter       paid  july_conversion            19
+	12  2022-08-15     reddit       paid  july_conversion             4
+	13  2022-08-14     reddit       paid  july_conversion             5
+	14  2022-08-14    twitter       paid  july_conversion            10
 	15  2022-08-13    twitter       paid  july_conversion             8
 	16  2022-08-13     reddit       paid  july_conversion             7
 	17  2022-08-12     reddit       paid  july_conversion             2
 	18  2022-08-12    twitter       paid  july_conversion             8
-	19  2022-08-11    twitter       paid  july_conversion             8
+	19  2022-08-11     reddit       paid  july_conversion             3
 
 Referrers overall
 ~~~~~~~~~~~~~~~~~
@@ -226,26 +227,26 @@ Referrers overall
 	>>> referrer_users = modelhub.agg.unique_users(df_acquisition, groupby=['referrer']).sort_values(ascending=False)
 	>>> referrer_users.head(20)
 	referrer
-	                                                           1258
-	https://www.google.com/                                     188
-	https://www.reddit.com/                                     153
-	https://objectiv.io/                                        151
-	https://t.co/                                                70
-	https://www.linkedin.com/                                    56
-	https://github.com/objectiv/objectiv-analytics               45
-	https://github.com/                                          40
-	https://www.kdnuggets.com/                                   23
-	https://github.com/RunaCapital/awesome-oss-alternatives      20
-	https://news.ycombinator.com/                                19
-	https://stackshare.io/                                       18
-	android-app://com.linkedin.android/                          12
-	https://www.google.nl/                                       10
-	https://www.fly.vc/                                           9
-	https://objectiv.io/docs/modeling/                            9
-	android-app://com.slack/                                      9
-	https://objectiv.io/docs/home/quickstart-guide/               8
-	https://objectiv.io/docs/modeling/open-model-hub/             8
-	https://www.curiosityvc.com/                                  7
+	                                                           392
+	https://www.reddit.com/                                     82
+	https://www.google.com/                                     80
+	https://t.co/                                               27
+	https://github.com/objectiv/objectiv-analytics              21
+	https://www.linkedin.com/                                   19
+	https://www.kdnuggets.com/                                  14
+	https://github.com/RunaCapital/awesome-oss-alternatives     12
+	https://github.com/                                          9
+	https://www.fly.vc/                                          6
+	https://bohr.atomico.com/                                    4
+	https://objectiv.io/docs/modeling/                           4
+	https://news.ycombinator.com/                                4
+	https://stackshare.io/                                       3
+	android-app://com.linkedin.android/                          3
+	https://snowplowanalytics.com/                               3
+	https://okt.to/                                              3
+	https://www.google.nl/                                       3
+	android-app://com.slack/                                     2
+	https://objectiv.io/docs/home/quickstart-guide/              2
 	Name: unique_users, dtype: int64
 
 .. admonition:: Reference
@@ -443,11 +444,6 @@ Conversions per marketing _source_ daily
 	2022-08-14    twitter             2
 	2022-08-13     reddit             2
 	2022-08-04    twitter             1
-	2022-07-26    twitter             4
-	2022-07-26     reddit             1
-	2022-07-25    twitter             1
-	2022-07-23    twitter             3
-	2022-07-23     reddit             2
 
 Conversions per marketing _campaign_ daily
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -458,11 +454,13 @@ Conversions per marketing _campaign_ daily
 	>>> # split daily conversions by marketing _campaign_ (based on UTM data)
 	>>> campaign_conversions_campaign_daily = modelhub.aggregate.unique_users(df_marketing_selection[df_marketing_selection.is_conversion_event], ['day', 'utm_source', 'utm_campaign'])
 	>>> campaign_conversions_campaign_daily.reset_index().dropna(axis=0, how='any', subset='utm_campaign').set_index('day').sort_index(ascending=False).head(10)
-	  utm_source utm_medium     utm_campaign  unique_users
-	0    twitter       paid         utm_test             9
-	1    twitter       paid  july_conversion             3
-	2     reddit       paid  july_conversion             4
-	3     reddit       paid             june             3
+	           utm_source     utm_campaign  unique_users
+	day
+	2022-08-20     reddit  july_conversion             1
+	2022-08-16     reddit  july_conversion             1
+	2022-08-14    twitter  july_conversion             2
+	2022-08-13     reddit  july_conversion             2
+	2022-08-04    twitter  july_conversion             1
 
 .. admonition:: Reference
 	:class: api-reference
@@ -488,8 +486,8 @@ Avg. duration per ad source
 	>>> duration_per_source.sort_values(['utm_source'], ascending=False).head(10)
 	                 session_duration
 	utm_source
-	twitter    0 days 00:01:56.366776
-	reddit     0 days 00:01:41.576484
+	twitter    0 days 00:01:31.449472
+	reddit     0 days 00:01:04.909909
 
 Vs. avg. duration by all users
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -500,7 +498,7 @@ Vs. avg. duration by all users
 	>>> # vs time spent by all users
 	>>> modelhub.aggregate.session_duration(df_acquisition, groupby=None).to_frame().head()
 	        session_duration
-	0 0 days 00:03:45.365436
+	0 0 days 00:03:48.160022
 
 Avg. duration _before first conversion_ per _source_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -520,12 +518,12 @@ sessions after the moment of conversion).
 	>>> modelhub.aggregate.session_duration(converted_users, groupby=['utm_source']).to_frame().head()
 	                 session_duration
 	utm_source
-	reddit     0 days 00:00:52.422333
-	twitter    0 days 00:01:07.292833
+	reddit     0 days 00:00:17.502500
+	twitter    0 days 00:01:44.533667
 
-.. admonition:: 
+.. admonition:: Note
 	
-	Note: to filter out bounces, use parameter `exclude_bounces=True` for the `session_duration` model.
+	To filter out bounces, use parameter `exclude_bounces=True` for the `session_duration` model.
 
 
 .. admonition:: Reference
@@ -556,7 +554,7 @@ Duration & conversions
 	>>> converted_users = campaign_conversions_source_daily.to_frame().rename(columns={"unique_users": "converted_users"})
 	>>> source_duration_users_daily = source_duration_users_daily.merge(converted_users, how='left', on=['utm_source', 'day'])
 	>>> source_duration_users_daily = source_duration_users_daily.sort_values(['utm_source', 'day'], ascending=False)
-	>>> source_duration_users_daily.head(50)
+	>>> source_duration_users_daily.head(20)
 	                            session_duration  unique_users  converted_users
 	utm_source day
 	twitter    2022-08-20 0 days 00:02:54.795125             7              NaN
@@ -577,38 +575,8 @@ Duration & conversions
 	           2022-08-03 0 days 00:05:55.457000             4              NaN
 	           2022-08-02 0 days 00:00:09.290600             8              NaN
 	           2022-08-01 0 days 00:00:39.053833            11              NaN
-	           2022-07-31 0 days 00:01:10.712000             1              NaN
-	           2022-07-29 0 days 00:13:07.583500             6              NaN
-	           2022-07-28 0 days 00:00:32.512667             3              NaN
-	           2022-07-27 0 days 00:01:12.981000            18              NaN
-	           2022-07-26 0 days 00:01:24.773308            48              4.0
-	           2022-07-25 0 days 00:02:52.283667            44              1.0
-	           2022-07-24 0 days 00:03:46.970400            34              NaN
-	           2022-07-23 0 days 00:02:27.544364            44              3.0
-	           2022-07-22 0 days 00:06:42.148000            35              1.0
-	           2022-07-21 0 days 00:02:14.805500             6              NaN
-	           2022-07-06 0 days 00:00:01.071000             1              NaN
-	           2022-06-09 0 days 00:03:44.867333             1              NaN
 	reddit     2022-08-20 0 days 00:00:17.293333             6              1.0
 	           2022-08-19 0 days 00:00:46.239000             3              NaN
-	           2022-08-18 0 days 00:01:33.566500             3              NaN
-	           2022-08-17 0 days 00:00:07.143667             4              NaN
-	           2022-08-16 0 days 00:00:25.282500             3              1.0
-	           2022-08-15 0 days 00:00:47.769000             4              NaN
-	           2022-08-14 0 days 00:00:18.651500             5              NaN
-	           2022-08-13 0 days 00:06:51.505500             7              2.0
-	           2022-08-11 0 days 00:00:01.278000             3              NaN
-	           2022-08-10 0 days 00:00:04.849000             6              NaN
-	           2022-08-09 0 days 00:01:02.719333             4              NaN
-	           2022-08-08 0 days 00:01:14.918500             5              NaN
-	           2022-08-04 0 days 00:00:06.454000             2              NaN
-	           2022-08-03 0 days 00:00:28.143000             6              NaN
-	           2022-08-02 0 days 00:00:06.503000             8              NaN
-	           2022-08-01 0 days 00:00:01.911000             5              NaN
-	           2022-07-26 0 days 00:02:12.743000            15              1.0
-	           2022-07-25 0 days 00:00:04.305000            19              NaN
-	           2022-07-24 0 days 00:06:12.431143            18              NaN
-	           2022-07-23 0 days 00:00:25.027167            10              2.0
 
 .. admonition:: Reference
 	:class: api-reference
@@ -636,26 +604,26 @@ Top used product features for users from marketing campaigns
 	>>> top_product_features_from_marketing.head(20)
 	                                                                                                                           user_id_nunique
 	application      feature_nice_name                                                                             event_type
-	objectiv-website Link: about-us located at Root Location: home => Navigation: navbar-top                       PressEvent               32
-	                 Link: spin-up-the-demo located at Root Location: home => Content: hero                        PressEvent               27
-	                 Link: browse-on-github located at Root Location: home => Content: hero                        PressEvent               14
-	                 Link: docs located at Root Location: home => Navigation: navbar-top                           PressEvent               13
-	                 Link: blog located at Root Location: home => Navigation: navbar-top                           PressEvent                9
-	                 Link: logo located at Root Location: home => Navigation: navbar-top                           PressEvent                9
-	                 Link: spin-up-the-demo located at Root Location: home => Content: try-it                      PressEvent                8
-	                 Link: logo located at Root Location: blog => Navigation: navbar-top                           PressEvent                6
-	                 Link: docs-taxonomy located at Root Location: home => Content: taxonomy                       PressEvent                5
-	                 Link: jobs located at Root Location: home => Navigation: navbar-top                           PressEvent                5
-	                 Link: github located at Root Location: home => Navigation: navbar-top                         PressEvent                4
-	                 Link: docs-modeling located at Root Location: home => Content: solution                       PressEvent                3
-	                 Link: faq located at Root Location: home => Navigation: navbar-top                            PressEvent                3
-	                 Link: docs-open-model-hub located at Root Location: home => Content: solution                 PressEvent                3
-	                 Link: slack located at Root Location: home => Navigation: navbar-top                          PressEvent                2
+	objectiv-website Link: about-us located at Root Location: home => Navigation: navbar-top                       PressEvent               16
+	                 Link: spin-up-the-demo located at Root Location: home => Content: hero                        PressEvent               11
+	                 Link: docs located at Root Location: home => Navigation: navbar-top                           PressEvent                8
+	                 Link: blog located at Root Location: home => Navigation: navbar-top                           PressEvent                5
+	                 Link: browse-on-github located at Root Location: home => Content: hero                        PressEvent                4
+	                 Link: jobs located at Root Location: home => Navigation: navbar-top                           PressEvent                4
+	                 Link: spin-up-the-demo located at Root Location: home => Content: try-it                      PressEvent                4
+	                 Link: github located at Root Location: home => Navigation: navbar-top                         PressEvent                3
+	                 Link: logo located at Root Location: blog => Navigation: navbar-top                           PressEvent                3
+	                 Link: docs-open-model-hub located at Root Location: home => Content: solution                 PressEvent                2
+	                 Link: logo located at Root Location: home => Navigation: navbar-top                           PressEvent                2
+	                 Link: faq located at Root Location: home => Navigation: navbar-top                            PressEvent                2
 	                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 PressEvent                1
-	                 Link: about-us located at Root Location: blog => Navigation: navbar-top => Overlay: hambur... PressEvent                1
 	                 Link: about-us located at Root Location: home => Navigation: navbar-top => Overlay: hambur... PressEvent                1
-	                 Link: blog located at Root Location: blog => Navigation: navbar-top                           PressEvent                1
-	                 Link: docs located at Root Location: blog => Navigation: navbar-top                           PressEvent                1
+	                 Link: docs located at Root Location: blog => Navigation: navbar-top => Overlay: hamburger-... PressEvent                1
+	                 Link: docs-modeling located at Root Location: home => Content: solution                       PressEvent                1
+	                 Link: docs-taxonomy located at Root Location: home => Content: solution                       PressEvent                1
+	                 Link: docs-taxonomy located at Root Location: home => Content: taxonomy                       PressEvent                1
+	                 Link: open-model-hub located at Root Location: home => Content: data-modeling                 PressEvent                1
+	                 Link: privacy-policy located at Root Location: home => Navigation: footer                     PressEvent                1
 
 Top used product features for users from marketing campaigns, before they convert
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -666,13 +634,9 @@ Top used product features for users from marketing campaigns, before they conver
 	>>> # top used product features for users coming from marketing campaigns, before they convert
 	>>> top_features_before_conversion_from_marketing = modelhub.agg.top_product_features_before_conversion(df_marketing_selection, name='github_press')
 	>>> top_features_before_conversion_from_marketing.head(20)
-	                                                                                                      unique_users
-	application      feature_nice_name                                                        event_type
-	objectiv-website Link: about-us located at Root Location: home => Navigation: navbar-top  PressEvent             2
-	                 Link: docs-modeling located at Root Location: home => Content: solution  PressEvent             1
-	                 Link: docs-taxonomy located at Root Location: home => Content: taxonomy  PressEvent             1
-	                 Link: spin-up-the-demo located at Root Location: home => Content: hero   PressEvent             1
-	                 Link: spin-up-the-demo located at Root Location: home => Content: try-it PressEvent             1
+	                                                                                                     unique_users
+	application      feature_nice_name                                                       event_type
+	objectiv-website Link: about-us located at Root Location: home => Navigation: navbar-top PressEvent  1
 
 .. admonition:: Reference
 	:class: api-reference
@@ -702,11 +666,11 @@ Funnel Discovery: flows for _all_ users from marketing campaigns
 	>>> df_steps.head()
 	                                                                                        location_stack_step_1                                                    location_stack_step_2 location_stack_step_3 location_stack_step_4
 	user_id
-	00d9abb7-8f5b-40ef-b189-4b046450eb3d      Link: logo located at Root Location: home => Navigation: navbar-top  Link: about-us located at Root Location: home => Navigation: navbar-top                  None                  None
-	04ac1790-825a-47a3-aac3-dccfeee61ade      Link: logo located at Root Location: blog => Navigation: navbar-top                                                                     None                  None                  None
-	0586a3c6-3316-4e11-99d6-617942d28e28   Link: browse-on-github located at Root Location: home => Content: hero                                                                     None                  None                  None
+	00d9abb7-8f5b-40ef-b189-4b046450eb3d  Link: about-us located at Root Location: home => Navigation: navbar-top                                                                     None                  None                  None
 	06186850-48e2-49b1-963f-8615eab56f30  Link: about-us located at Root Location: home => Navigation: navbar-top                                                                     None                  None                  None
-	099dd8fd-696f-425a-a358-86da9c92a703  Link: about-us located at Root Location: home => Navigation: navbar-top                                                                     None                  None                  None
+	10a4beb9-a55b-4d30-8975-2c3c23015c1d      Link: docs located at Root Location: home => Navigation: navbar-top  Link: about-us located at Root Location: home => Navigation: navbar-top                  None                  None
+	11311189-2e02-458d-b474-9137b7d9d8f3       Link: faq located at Root Location: home => Navigation: navbar-top                                                                     None                  None                  None
+	132ef6df-8f7f-42a6-9a33-b63f3f408309   Link: spin-up-the-demo located at Root Location: home => Content: hero                                                                     None                  None                  None
 
 .. code-block:: jupyter-notebook
 	
@@ -725,13 +689,9 @@ Funnel Discovery: flows for _converted_ users from marketing
 	>>> # filter down to all sequences that have actually converted with the `only_converted_paths` param
 	>>> df_steps_till_conversion = funnel.get_navigation_paths(df_funnel_from_marketing, steps=max_steps, by='user_id', add_conversion_step_column=True, only_converted_paths=True)
 	>>> df_steps_till_conversion.head(5)
-	                                                                                        location_stack_step_1                                                   location_stack_step_2                                                   location_stack_step_3 location_stack_step_4  _first_conversion_step_number
+	                                                                                        location_stack_step_1                                                   location_stack_step_2 location_stack_step_3 location_stack_step_4  _first_conversion_step_number
 	user_id
-	99f741a0-d05e-4688-8bd9-53f66bf926aa  Link: about-us located at Root Location: home => Navigation: navbar-top  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
-	99f741a0-d05e-4688-8bd9-53f66bf926aa  Link: docs-taxonomy located at Root Location: home => Content: taxonomy  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
-	a4883c3d-8aa1-4222-b6ad-e765c6900179   Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
-	a4883c3d-8aa1-4222-b6ad-e765c6900179  Link: about-us located at Root Location: home => Navigation: navbar-top  Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: browse-on-github located at Root Location: home => Content: hero                  None                              3
-	ed42dc5f-6040-4ddc-b7e5-48162adb7bbc  Link: docs-modeling located at Root Location: home => Content: solution  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
+	99f741a0-d05e-4688-8bd9-53f66bf926aa  Link: about-us located at Root Location: home => Navigation: navbar-top  Link: browse-on-github located at Root Location: home => Content: hero                  None                  None                              2
 
 .. code-block:: jupyter-notebook
 	
@@ -757,12 +717,10 @@ Funnel Discovery: drop-off for users from marketing
 	>>> modelhub.aggregate.drop_off_locations(df_funnel_non_converted, groupby='user_id', percentage=True).head(10)
 	                                                                                               percentage
 	__location
-	Root Location: home                                                                             76.218324
-	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...   21.832359
-	Root Location: blog                                                                              0.974659
-	Content: post-release-objectiv-now-has-support-for-deepnote located at Root Location: blog       0.584795
-	Content: post-release-google-bigquery-support-our-mission-to-enable-data- located at Root ...    0.194932
-	Media Player: product-demo-e2e-testing located at Root Location: blog => Content: post-rel...    0.194932
+	Root Location: home                                                                             50.691244
+	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...   46.543779
+	Root Location: blog                                                                              1.843318
+	Content: post-release-objectiv-now-has-support-for-deepnote located at Root Location: blog       0.921659
 
 .. admonition:: Reference
 	:class: api-reference
@@ -795,13 +753,13 @@ For more details on how to do feature engineering, see our
 	>>> features_us = feature_prepare.groupby(['user_id', 'utm_source']).session_id.nunique()
 	>>> features_us_unstacked = features_us.unstack(fill_value=0)
 	>>> features_us_unstacked.head()
-	                                      test  reddit  linkedin  twitter  none  hs_email  reactdigest
+	                                      reddit  linkedin  twitter  none  reactdigest
 	user_id
-	0000bb2f-66e9-4e48-8e2f-7d0a82446ef4     0       0         0        0     1         0            0
-	000c5fff-ceb0-4533-b182-b285494fd822     0       0         0        0     1         0            0
-	002116e6-baf2-4f10-bcda-85166008c9b3     0       0         0        0     2         0            0
-	0030b2d8-4be4-4cba-bb59-f1c6e89dae4f     0       0         0        0     3         0            0
-	003fea99-74aa-4c71-8f9c-b81d8d882422     0       0         0        0     1         0            0
+	00d9abb7-8f5b-40ef-b189-4b046450eb3d       0         0        1     1            0
+	00f4ce36-a3dd-4830-a379-9d4d83340d34       0         0        1     0            0
+	01db2734-458c-4381-9761-1fbb5804cdd3       0         0        1     0            0
+	023ec189-91de-4458-9b46-6ac948b6d8b8       0         0        0     3            0
+	028552a8-5951-435e-ab2b-e1278bfc7d41       0         0        0     1            0
 
 .. admonition:: Reference
 	:class: api-reference
@@ -834,7 +792,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	>>> display_sql_as_markdown(users_from_marketing_daily)
 	sql
 	CREATE
-	TEMPORARY TABLE "manual_materialize___815b7c38d5e7aff77d5b169d66e1d2ad"
+	TEMPORARY TABLE "manual_materialize___2ba260e03ef23adeb29173018257afd8"
 	    ON COMMIT DROP AS WITH "loaded_data___f55033d1a2c6bc0844c0ded4ab5a824e" AS (
 	        SELECT *
 	          FROM (VALUES (cast(0 AS bigint), 'twitter'), (cast(1 AS bigint), 'reddit')) AS t("_index_0", "sources")
@@ -853,7 +811,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application"
 	          FROM "data"
 	       ),
-	       "getitem_where_boolean___6f0d200b48869b9af99ae1d3ef65adf7" AS (
+	       "getitem_where_boolean___f4ef1914b26f3bb69afb3e788f5314da" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -866,9 +824,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "marketing" AS "marketing",
 	               "application" AS "application"
 	          FROM "manual_materialize___d07b39cbe5f723cd8a1a9949800bccf6"
-	         WHERE ((("day" >= cast('2022-06-01' AS date))) AND (("day" <= cast('2022-08-20' AS date))))
+	         WHERE ((("day" >= cast('2022-08-01' AS date))) AND (("day" <= cast('2022-08-20' AS date))))
 	       ),
-	       "context_data___d8d23e5241341e03f373d55ad96f1c5a" AS (
+	       "context_data___90beb424c53da70345c7b0c2877b8683" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -879,9 +837,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "http" AS "http",
 	               "marketing" AS "marketing",
 	               "application" AS "application"
-	          FROM "getitem_where_boolean___6f0d200b48869b9af99ae1d3ef65adf7"
+	          FROM "getitem_where_boolean___f4ef1914b26f3bb69afb3e788f5314da"
 	       ),
-	       "session_starts___c37873fdec0f4e5bff96dcefb39b271c" AS (
+	       "session_starts___42d1da39818b989fb9b18f5d0eb8edd0" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -895,9 +853,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
-	          FROM "context_data___d8d23e5241341e03f373d55ad96f1c5a"
+	          FROM "context_data___90beb424c53da70345c7b0c2877b8683"
 	       ),
-	       "session_id_and_count___6538d40941491b932655cfc7558e6f42" AS (
+	       "session_id_and_count___a5e101de16a4d4e0c5a0cf9f64e013c2" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -913,9 +871,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	                    ELSE cast(NULL AS bigint)
 	                     END AS "session_start_id",
 	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___c37873fdec0f4e5bff96dcefb39b271c"
+	          FROM "session_starts___42d1da39818b989fb9b18f5d0eb8edd0"
 	       ),
-	       "objectiv_sessionized_data___8c71840e12f04ac92f8ae3c380b8e6e6" AS (
+	       "objectiv_sessionized_data___88068a115a61d170878748144b131106" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -931,9 +889,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "is_one_session" AS "is_one_session",
 	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___6538d40941491b932655cfc7558e6f42"
+	          FROM "session_id_and_count___a5e101de16a4d4e0c5a0cf9f64e013c2"
 	       ),
-	       "getitem_where_boolean___58003f6b45611abf0005322b7a06423c" AS (
+	       "getitem_where_boolean___c50b22959543e19605b18622f8457a8e" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -958,19 +916,19 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "marketing"->0->>'source' AS "utm_source",
 	               "marketing"->0->>'medium' AS "utm_medium",
 	               "marketing"->0->>'campaign' AS "utm_campaign"
-	          FROM "objectiv_sessionized_data___8c71840e12f04ac92f8ae3c380b8e6e6"
+	          FROM "objectiv_sessionized_data___88068a115a61d170878748144b131106"
 	         WHERE NOT (("marketing"->0->>'source' IS NULL))
 	       ),
-	       "getitem_where_boolean___7ea7136ed3d754c5d50debe2a760767b" AS (
+	       "getitem_where_boolean___9c53a0b4626ec25bcc5e52ac88f462f7" AS (
 	        SELECT "session_id" AS "session_id"
-	          FROM "getitem_where_boolean___58003f6b45611abf0005322b7a06423c"
+	          FROM "getitem_where_boolean___c50b22959543e19605b18622f8457a8e"
 	         WHERE NOT (((("session_id" IS NULL)) OR (("session_id" = cast('nan' AS double precision)))))
 	       ),
-	       "manual_materialize___1fa8f5c529bca2d5c053a84b3fba8e19" AS (
+	       "manual_materialize___40870fc0212554b51050caa5251285a2" AS (
 	        SELECT DISTINCT "session_id" AS "session_id"
-	          FROM "getitem_where_boolean___7ea7136ed3d754c5d50debe2a760767b"
+	          FROM "getitem_where_boolean___9c53a0b4626ec25bcc5e52ac88f462f7"
 	       ),
-	       "getitem_where_boolean___833bbd8e0df519b9d399d6dc3828033e" AS (
+	       "getitem_where_boolean___06584cd9c7201cbc2292c25a5b5a76e9" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -995,13 +953,13 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "marketing"->0->>'source' AS "utm_source",
 	               "marketing"->0->>'medium' AS "utm_medium",
 	               "marketing"->0->>'campaign' AS "utm_campaign"
-	          FROM "objectiv_sessionized_data___8c71840e12f04ac92f8ae3c380b8e6e6"
+	          FROM "objectiv_sessionized_data___88068a115a61d170878748144b131106"
 	         WHERE "session_id" in (
 	                SELECT "session_id" AS "session_id_unique"
-	                  FROM "manual_materialize___1fa8f5c529bca2d5c053a84b3fba8e19"
+	                  FROM "manual_materialize___40870fc0212554b51050caa5251285a2"
 	               )
 	       ),
-	       "getitem_where_boolean___05da4eb7f759e3f3cac12d59f4a92d33" AS (
+	       "getitem_where_boolean___8598d729e446213ed59d1d1074b90662" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -1020,7 +978,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "utm_source" AS "utm_source",
 	               "utm_medium" AS "utm_medium",
 	               "utm_campaign" AS "utm_campaign"
-	          FROM "getitem_where_boolean___833bbd8e0df519b9d399d6dc3828033e"
+	          FROM "getitem_where_boolean___06584cd9c7201cbc2292c25a5b5a76e9"
 	         WHERE "utm_source" in (
 	                SELECT "sources" AS "sources"
 	                  FROM "loaded_data___f55033d1a2c6bc0844c0ded4ab5a824e"
@@ -1043,9 +1001,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	       "utm_source" AS "utm_source",
 	       "utm_medium" AS "utm_medium",
 	       "utm_campaign" AS "utm_campaign"
-	  FROM "getitem_where_boolean___05da4eb7f759e3f3cac12d59f4a92d33" ;SELECT to_char("moment", 'YYYY"-"MM"-"DD') AS "time_aggregation",
+	  FROM "getitem_where_boolean___8598d729e446213ed59d1d1074b90662" ;SELECT to_char("moment", 'YYYY"-"MM"-"DD') AS "time_aggregation",
 	       count(DISTINCT "user_id") AS "unique_users"
-	  FROM "manual_materialize___815b7c38d5e7aff77d5b169d66e1d2ad"
+	  FROM "manual_materialize___2ba260e03ef23adeb29173018257afd8"
 	 GROUP BY to_char("moment", 'YYYY"-"MM"-"DD')
 	 ORDER BY to_char("moment", 'YYYY"-"MM"-"DD') DESC NULLS LAST
 	<BLANKLINE>
