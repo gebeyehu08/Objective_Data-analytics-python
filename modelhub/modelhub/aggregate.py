@@ -697,12 +697,11 @@ class Aggregate:
         step_completed_df = step_completed_df.groupby([f'{location}_step_1']).\
             count()[['user_id_x_count']].rename(columns={'user_id_x_count': 'n_users_completed_step'})
 
-        # dropoff_percentage
+        # drop-offs
         dropoff_df = self.drop_off_locations(data, location_stack=location,
                                              groupby=groupby,
-                                             percentage=True).reset_index() \
-            .rename(columns={'percentage': 'dropoff_percentage'})
-        dropoff_df['dropoff_percentage'] = cast(SeriesFloat64, dropoff_df['dropoff_percentage']).round(2)
+                                             percentage=False).reset_index() \
+            .rename(columns={'value_counts': 'dropoff'})
 
         # merging n_users with n_users completed_step and n_users for drop-offs
         step_visitors_df = step_visitors_df.reset_index().rename(columns={'user_id': 'n_users'})
@@ -710,8 +709,13 @@ class Aggregate:
                                         left_on=location,
                                         right_on=f'{location}_step_1',
                                         how='left').reset_index(drop=True)
+        result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
+
         # n_users drop-offs
         result = result.merge(dropoff_df, left_on=location, right_on='__location', how='left')
+        result['dropoff'] = result['dropoff'].fillna(0)
+        result['dropoff_rate'] = result['dropoff'] / result['dropoff'].sum()
+        result['dropoff_rate'] = cast(SeriesFloat64, result['dropoff_rate']).round(2)
 
         # step_conversion_rate
         result['step_conversion_rate'] = result['n_users_completed_step'] / result['n_users']
@@ -724,5 +728,5 @@ class Aggregate:
         result['full_conversion_rate'] = cast(SeriesFloat64, result['step_conversion_rate']).round(2)
 
         columns = [location, 'n_users', 'n_users_completed_step', 'step_conversion_rate',
-                   'full_conversion_rate', 'dropoff_percentage']
+                   'full_conversion_rate', 'dropoff_rate']
         return result[columns]
