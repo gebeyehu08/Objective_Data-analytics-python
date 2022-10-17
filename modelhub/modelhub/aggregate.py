@@ -2,7 +2,8 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
-from bach.series import Series, SeriesString, SeriesInt64
+from bach.series import Series, SeriesString, SeriesInt64, SeriesFloat64
+
 from sql_models.constants import NotSet, not_set
 from typing import cast, List, Union, TYPE_CHECKING
 
@@ -531,26 +532,121 @@ class Aggregate:
             result = result.sort_values(by='percentage', ascending=False)
         return result
 
+    # def funnel_conversion_old(self,
+    #                       data: bach.DataFrame,
+    #                       completion_column: str,
+    #                       location_stack: LocationStackType = None,
+    #                       steps_list: List = None) -> bach.DataFrame:
+    #     """
+    #     For each step in a funnel, calculates the number of unique users who started it,
+    #     the conversion rate to completing the step, the conversion rate to completing the step
+    #     when looking at all users who started the funnel (= the 'full' conversion rate),
+    #     and the percentage of users in the entire funnel who dropped off in that step.
+    #
+    #     :param data: The :py:class:`bach.DataFrame` to apply the operation on.
+    #     :param completion_column: The column name that holds whether the funnel was completed
+    #         (i.e. conversion on your goal).
+    #     :param location_stack: The column that holds the steps in the funnel. Can be:
+    #
+    #         - A string of the name of the column in `data`.
+    #         - Any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
+    #         - A Series with the same base node as `data`.
+    #
+    #         If its value is `None`, the whole location stack is taken.
+    #
+    #     :param steps_list: A list of funnel steps.
+    #
+    #         - If provided, only values for the listed steps are taken.
+    #         - If `None`, the whole location stack is taken.
+    #
+    #     :returns: :py:class:`bach.DataFrame` with the following columns: `step`
+    #         (the location considered as a
+    #         step, e.g. a feature or root_location), `n_users` (number of unique users starting the step),
+    #         `step_conversion_rate` (number of users completing the step / `n_users`), `full_conversion_rate`
+    #         (number of users completing the step / number of users starting the funnel), and
+    #         `dropoff_percentage` (percentage of users in the entire funnel dropping off in that step).
+    #
+    #     """
+    #     data = data.copy()
+    #
+    #     if completion_column not in data.columns:
+    #         raise ValueError(f'{completion_column} column is missing.')
+    #
+    #     steps_column = location_stack or data['location_stack']
+    #     if type(steps_column) == str:
+    #         steps_column = data[steps_column]
+    #
+    #     data['step'] = steps_column
+    #     if type(steps_column) == SeriesLocationStack:
+    #         # extract the nice name per event
+    #         data['step'] = steps_column.ls.nice_name
+    #
+    #     # select only those columns that we'll use later
+    #     data = data[['user_id', 'step', 'moment', completion_column]]
+    #
+    #     # filter with steps that we are interested in
+    #     if steps_list is not None:
+    #         import pandas as pd
+    #         steps_df = bach.DataFrame.from_pandas(engine=data.engine,
+    #                                               df=pd.DataFrame({'step': steps_list}),
+    #                                               convert_objects=True)
+    #         data = data[data['step'].isin(steps_df['step'])]
+    #
+    #     data = data.sort_values('moment').drop_duplicates(subset=['user_id', 'step',
+    #                                                               completion_column])
+    #
+    #     step_visitors_df = data.groupby('step')['user_id'].nunique().reset_index().rename(
+    #         columns={'user_id': 'n_users'})
+    #
+    #     step_completion_df = data[data[completion_column]].groupby('step')['user_id']\
+    #         .nunique().reset_index().rename(columns={'user_id': 'n_users_completed_step'})\
+    #         .fillna(value={'n_users_completed_step': 0})
+    #
+    #     dropoff_df = self.drop_off_locations(data, location_stack='step',
+    #                                          groupby='user_id',
+    #                                          percentage=True).reset_index()\
+    #         .rename(columns={'percentage': 'dropoff_percentage'})\
+    #
+    #     # merge the above dataframes
+    #     result_df = step_visitors_df.merge(step_completion_df, on='step', how='left')
+    #     result_df = result_df.merge(dropoff_df, left_on='step', right_on='__location', how='left')
+    #
+    #     result_df['step_conversion_rate'] = (result_df['n_users_completed_step'] / result_df['n_users'])\
+    #         .round(2)
+    #
+    #     # steps ordering
+    #     if steps_list is not None:
+    #         result_df = result_df.merge(steps_df.reset_index(), on='step').sort_values('_index_0')
+    #     else:
+    #         result_df = result_df.sort_values('n_users', ascending=False)
+    #
+    #     n_users_start = result_df.materialize(limit=1)['n_users'].head(1).iloc[0]
+    #     result_df['full_conversion_rate'] = (result_df['n_users_completed_step'] / n_users_start).round(2)
+    #
+    #     columns = ['step', 'n_users', 'step_conversion_rate',
+    #                'full_conversion_rate', 'dropoff_percentage']
+    #
+    #     return result_df[columns]
+
     def funnel_conversion(self,
                           data: bach.DataFrame,
-                          completion_column: str,
+                          groupby: Union[List[Union[str, Series]], str, Series] = 'user_id',
                           location_stack: LocationStackType = None,
                           steps_list: List = None) -> bach.DataFrame:
         """
         For each step in a funnel, calculates the number of unique users who started it,
-        the conversion rate to completing the step, the conversion rate to completing the step 
-        when looking at all users who started the funnel (= the 'full' conversion rate), 
+        the conversion rate to completing the step, the conversion rate to completing the step
+        when looking at all users who started the funnel (= the 'full' conversion rate),
         and the percentage of users in the entire funnel who dropped off in that step.
 
         :param data: The :py:class:`bach.DataFrame` to apply the operation on.
-        :param completion_column: The column name that holds whether the funnel was completed 
-            (i.e. conversion on your goal).
+        :param groupby: sets the column(s) to group by.
         :param location_stack: The column that holds the steps in the funnel. Can be:
-            
+
             - A string of the name of the column in `data`.
             - Any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
             - A Series with the same base node as `data`.
-            
+
             If its value is `None`, the whole location stack is taken.
 
         :param steps_list: A list of funnel steps.
@@ -558,70 +654,75 @@ class Aggregate:
             - If provided, only values for the listed steps are taken.
             - If `None`, the whole location stack is taken.
 
-        :returns: :py:class:`bach.DataFrame` with the following columns: `step` (the location considered as a 
-            step, e.g. a feature or root_location), `n_users` (number of unique users starting the step), 
-            `step_conversion_rate` (number of users completing the step / `n_users`), `full_conversion_rate` 
-            (number of users completing the step / number of users starting the funnel), and 
+        :returns: :py:class:`bach.DataFrame` with the following columns: `step` (the location considered as a
+            step, e.g. a feature or root_location), `n_users` (number of unique users starting the step),
+            `step_conversion_rate` (number of users completing the step / `n_users`), `full_conversion_rate`
+            (number of users completing the step / number of users starting the funnel), and
             `dropoff_percentage` (percentage of users in the entire funnel dropping off in that step).
 
         """
         data = data.copy()
 
-        if completion_column not in data.columns:
-            raise ValueError(f'{completion_column} column is missing.')
-
-        steps_column = location_stack or data['location_stack']
-        if type(steps_column) == str:
-            steps_column = data[steps_column]
-
-        data['step'] = steps_column
-        if type(steps_column) == SeriesLocationStack:
+        column = location_stack or data['location_stack']
+        if type(column) == str:
+            column = data[column]
+        data['location'] = column
+        if type(column) == SeriesLocationStack:
             # extract the nice name per event
-            data['step'] = steps_column.ls.nice_name
+            data['location'] = column.ls.nice_name
+        location = 'location'
 
-        # select only those columns that we'll use later
-        data = data[['user_id', 'step', 'moment', completion_column]]
+        df_root_user = data.drop_duplicates(subset=[location, 'user_id'], keep='first')
 
-        # filter with steps that we are interested in
         if steps_list is not None:
             import pandas as pd
-            steps_df = bach.DataFrame.from_pandas(engine=data.engine,
-                                                  df=pd.DataFrame({'step': steps_list}),
-                                                  convert_objects=True)
-            data = data[data['step'].isin(steps_df['step'])]
+            steps_series = bach.DataFrame.from_pandas(
+                engine=data.engine, df=pd.DataFrame({'step': steps_list}),
+                convert_objects=True).step
+            df_root_user = df_root_user[df_root_user[location].isin(steps_series)]
 
-        data = data.sort_values('moment').drop_duplicates(subset=['user_id', 'step',
-                                                                  completion_column])
+        funnel = self._mh.get_funnel_discovery()
+        df_steps = funnel.get_navigation_paths(df_root_user, location_stack=location,
+                                               steps=2, by=groupby, sort_by='moment')
 
-        step_visitors_df = data.groupby('step')['user_id'].nunique().reset_index().rename(
-            columns={'user_id': 'n_users'})
+        # n_users
+        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique()
 
-        step_completion_df = data[data[completion_column]].groupby('step')['user_id']\
-            .nunique().reset_index().rename(columns={'user_id': 'n_users_completed_step'})\
-            .fillna(value={'n_users_completed_step': 0})
+        # n_users_completed_step
+        # remove rows where 2nd step is NaN (it means the user left the funnel)
+        df_steps_nonna = df_steps.dropna().reset_index()
+        step_completed_df = df_steps_nonna.merge(step_visitors_df,
+                                                 left_on=f'{location}_step_1',
+                                                 right_on=location, how='left')
+        step_completed_df = step_completed_df.groupby([f'{location}_step_1']).\
+            count()[['user_id_x_count']].rename(columns={'user_id_x_count': 'n_users_completed_step'})
 
-        dropoff_df = self.drop_off_locations(data, location_stack='step',
-                                             groupby='user_id',
-                                             percentage=True).reset_index()\
-            .rename(columns={'percentage': 'dropoff_percentage'})\
+        # dropoff_percentage
+        dropoff_df = self.drop_off_locations(data, location_stack=location,
+                                             groupby=groupby,
+                                             percentage=True).reset_index() \
+            .rename(columns={'percentage': 'dropoff_percentage'})
+        dropoff_df['dropoff_percentage'] = cast(SeriesFloat64, dropoff_df['dropoff_percentage']).round(2)
 
-        # merge the above dataframes
-        result_df = step_visitors_df.merge(step_completion_df, on='step', how='left')
-        result_df = result_df.merge(dropoff_df, left_on='step', right_on='__location', how='left')
+        # merging n_users with n_users completed_step and n_users for drop-offs
+        step_visitors_df = step_visitors_df.reset_index().rename(columns={'user_id': 'n_users'})
+        result = step_visitors_df.merge(step_completed_df,
+                                        left_on=location,
+                                        right_on=f'{location}_step_1',
+                                        how='left').reset_index(drop=True)
+        # n_users drop-offs
+        result = result.merge(dropoff_df, left_on=location, right_on='__location', how='left')
 
-        result_df['step_conversion_rate'] = (result_df['n_users_completed_step'] / result_df['n_users'])\
-            .round(2)
+        # step_conversion_rate
+        result['step_conversion_rate'] = result['n_users_completed_step'] / result['n_users']
+        result['step_conversion_rate'] = cast(SeriesFloat64, result['step_conversion_rate']).round(2)
 
-        # steps ordering
-        if steps_list is not None:
-            result_df = result_df.merge(steps_df.reset_index(), on='step').sort_values('_index_0')
-        else:
-            result_df = result_df.sort_values('n_users', ascending=False)
+        # full_conversion_rate
+        n_users_start = result.sort_values('n_users', ascending=False).\
+            materialize(limit=1)['n_users'].head(1).iloc[0]
+        result['full_conversion_rate'] = result['n_users_completed_step'] / n_users_start
+        result['full_conversion_rate'] = cast(SeriesFloat64, result['step_conversion_rate']).round(2)
 
-        n_users_start = result_df.materialize(limit=1)['n_users'].head(1).iloc[0]
-        result_df['full_conversion_rate'] = (result_df['n_users_completed_step'] / n_users_start).round(2)
-
-        columns = ['step', 'n_users', 'step_conversion_rate',
+        columns = [location, 'n_users', 'n_users_completed_step', 'step_conversion_rate',
                    'full_conversion_rate', 'dropoff_percentage']
-
-        return result_df[columns]
+        return result[columns]
