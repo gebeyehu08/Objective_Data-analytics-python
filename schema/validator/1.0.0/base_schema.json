@@ -205,7 +205,8 @@
         "_schema_version": {
           "description": "The version of the Objectiv Taxonomy Schema used to generate this event.",
           "type": "string",
-          "internal": true
+          "internal": true,
+          "optional": true
         },
         "_types": {
           "description": "An ordered list of the parents of this Event, itself included as the last element.",
@@ -535,7 +536,7 @@
         "remote_address": {
           "description": "(public) IP address of the agent that sent the event.",
           "type": "string",
-          "optional": true
+          "nullable": true
         }
       }
     },
@@ -601,12 +602,12 @@
         "language_code": {
           "description": "Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "country_code": {
           "description": "Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.",
           "type": "string",
-          "optional": true
+          "nullable": true
         }
       }
     },
@@ -633,27 +634,27 @@
         "term": {
           "description": "Search keywords.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "content": {
           "description": "Used to differentiate similar content, or links within the same ad.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "source_platform": {
           "description": "To differentiate similar content, or links within the same ad.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "creative_format": {
           "description": "Identifies the creative used (e.g., skyscraper, banner, etc).",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "marketing_tactic": {
           "description": "Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).",
           "type": "string",
-          "optional": true
+          "nullable": true
         }
       }
     },

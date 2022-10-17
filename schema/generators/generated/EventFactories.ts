@@ -34,7 +34,7 @@ export const makeApplicationLoadedEvent = (props: {
 }): ApplicationLoadedEvent => ({
   __instance_id: generateGUID(),
   __non_interactive_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -61,7 +61,7 @@ export const makeFailureEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   message: props.message,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -85,7 +85,7 @@ export const makeHiddenEvent = (props: {
 }): HiddenEvent => ({
   __instance_id: generateGUID(),
   __non_interactive_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -109,7 +109,7 @@ export const makeInputChangeEvent = (props: {
 }): InputChangeEvent => ({
   __instance_id: generateGUID(),
   __interactive_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.InteractiveEvent,
@@ -134,7 +134,7 @@ export const makeInteractiveEvent = (props: {
   __instance_id: generateGUID(),
   __interactive_event: true,
   location_stack: props.location_stack,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.InteractiveEvent
@@ -158,7 +158,7 @@ export const makeMediaEvent = (props: {
   __instance_id: generateGUID(),
   __media_event: true,
   __non_interactive_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -183,7 +183,7 @@ export const makeMediaLoadEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   __media_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -209,7 +209,7 @@ export const makeMediaPauseEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   __media_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -235,7 +235,7 @@ export const makeMediaStartEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   __media_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -261,7 +261,7 @@ export const makeMediaStopEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   __media_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -286,7 +286,7 @@ export const makeNonInteractiveEvent = (props: {
 }): NonInteractiveEvent => ({
   __instance_id: generateGUID(),
   __non_interactive_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent
@@ -310,7 +310,7 @@ export const makePressEvent = (props: {
 }): PressEvent => ({
   __instance_id: generateGUID(),
   __interactive_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.InteractiveEvent,
@@ -337,7 +337,7 @@ export const makeSuccessEvent = (props: {
   __instance_id: generateGUID(),
   __non_interactive_event: true,
   message: props.message,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
@@ -361,7 +361,7 @@ export const makeVisibleEvent = (props: {
 }): VisibleEvent => ({
   __instance_id: generateGUID(),
   __non_interactive_event: true,
-  _schema_version: '1.0.0',
+  _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.NonInteractiveEvent,
