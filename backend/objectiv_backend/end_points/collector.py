@@ -120,6 +120,10 @@ def _get_event_data(request: Request) -> EventList:
         raise ValueError('Could not find events key in event_data')
     if not isinstance(event_data['events'], list):
         raise ValueError('events is not a list')
+    if 'transport_time' not in event_data:
+        raise ValueError('Could not find transport_time key in event_data')
+    if not isinstance(event_data['transport_time'], int):
+        raise ValueError('transport_time is not an int')
     if len(event_data['events']) > DATA_MAX_EVENT_COUNT:
         raise ValueError('Events exceeds limit')
 
