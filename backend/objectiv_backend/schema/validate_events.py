@@ -38,7 +38,7 @@ def validate_event_adheres_to_schema(event: EventData) -> List[ErrorInfo]:
     :return: list with errors, empty if event validates
     """
     errors = []
-    ignore_keys = ['_types', 'corrected_time', 'transport_time', 'collector_time']
+    ignore_keys = ['corrected_time', 'transport_time', 'collector_time']
     event_copy = {k: v for k, v in event.items() if k not in ignore_keys}
     config = get_collector_config()
     headers = {'Content-type': 'Application/json'}
