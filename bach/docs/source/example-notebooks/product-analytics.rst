@@ -23,7 +23,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # set the timeframe of the analysis
-	>>> start_date = '2022-03-01'
+	>>> start_date = '2022-04-01'
 	>>> start_date_recent = '2022-07-01'
 	>>> end_date = None
 
@@ -32,7 +32,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. testsetup:: product-analytics
 	:skipif: engine is None
 
-	start_date = '2022-03-01'
+	start_date = '2022-04-01'
 	start_date_recent = '2022-07-01'
 	end_date = '2022-07-30'
 	pd.set_option('display.max_colwidth', 93)
@@ -125,7 +125,6 @@ For `monthly_users`, the default time_aggregation is overridden by using a diffe
 	2022-06     497
 	2022-05    1682
 	2022-04     304
-	2022-03     288
 	Name: unique_users, dtype: int64
 
 .. doctest:: product-analytics
@@ -198,13 +197,12 @@ The users' activity starts to be counted from the `start_date` specified when th
 	>>> # retention matrix, monthly, with percentages
 	>>> retention_matrix = modelhub.aggregate.retention_matrix(df_full, time_period='monthly', percentage=True, display=True)
 	>>> retention_matrix.head()
-	                 _0        _1        _2        _3        _4
-	first_cohort                                               
-	2022-03       100.0  9.722222  6.944444  4.513889  4.861111
-	2022-04       100.0  6.521739  2.173913  1.086957       NaN
-	2022-05       100.0  3.527981  0.851582       NaN       NaN
-	2022-06       100.0  4.523810       NaN       NaN       NaN
-	2022-07       100.0       NaN       NaN       NaN       NaN
+	                 _0         _1        _2        _3
+	first_cohort
+	2022-04       100.0  11.842105  5.592105  4.934211
+	2022-05       100.0   3.584447  0.850547       NaN
+	2022-06       100.0   4.513064       NaN       NaN
+	2022-07       100.0        NaN       NaN       NaN
 
 .. image:: ../img/docs/example-notebooks/product-analytics-retention-matrix.png
   :alt: Retention Matrix
@@ -212,8 +210,8 @@ The users' activity starts to be counted from the `start_date` specified when th
 Drilling down retention cohorts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the retention matrix above, we can see there's a drop in retained users in the second cohort the next 
-month. We can directly zoom into the different cohorts and see the difference.
+In the retention matrix above, we can see there's a strong drop in retained users in the second cohort the 
+next month. We can directly zoom into the different cohorts and see the difference.
 
 .. doctest:: product-analytics
 	:skipif: engine is None
@@ -228,31 +226,31 @@ month. We can directly zoom into the different cohorts and see the difference.
 	:skipif: engine is None
 
 	>>> # filter data where users belong to the #0 cohort
-	>>> cohort0_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 3, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 4, 1))
+	>>> cohort0_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 4, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 5, 1))
 	>>> df_with_cohorts[cohort0_filter]['event_type'].value_counts().head()
 	event_type
-	VisibleEvent              3646
-	PressEvent                2363
-	ApplicationLoadedEvent    2004
-	MediaLoadEvent             754
-	HiddenEvent                293
+	VisibleEvent              3712
+	PressEvent                2513
+	ApplicationLoadedEvent    1794
+	MediaLoadEvent             601
+	HiddenEvent                259
 	Name: value_counts, dtype: int64
 
 .. doctest:: product-analytics
 	:skipif: engine is None
 
 	>>> # filter data where users belong to the #1 cohort (the problematic one)
-	>>> cohort1_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 4, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 5, 1))
+	>>> cohort1_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 5, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 6, 1))
 	>>> df_with_cohorts[cohort1_filter]['event_type'].value_counts().head()
 	event_type
-	PressEvent                1202
-	VisibleEvent              1191
-	ApplicationLoadedEvent     630
-	MediaLoadEvent             246
-	HiddenEvent                128
+	VisibleEvent              5074
+	PressEvent                4661
+	ApplicationLoadedEvent    2642
+	MediaLoadEvent            1360
+	HiddenEvent                688
 	Name: value_counts, dtype: int64
 
-One interesting thing to note here, for example, is that there are relatively more `VisibleEvents 
+One interesting thing to note here, for example, is that there are relatively less `VisibleEvents 
 <https://objectiv.io/docs/taxonomy/reference/events/VisibleEvent>`_ in the first cohort than in the second 
 'problematic' one.
 
@@ -289,7 +287,6 @@ Here we calculate the average duration of a user's session, using the
 	2022-06   0 days 00:02:54.086814
 	2022-05   0 days 00:02:58.417140
 	2022-04   0 days 00:03:02.069818
-	2022-03   0 days 00:04:24.103417
 	Name: session_duration, dtype: timedelta64[ns]
 
 .. doctest:: product-analytics
@@ -335,17 +332,10 @@ To see the average time spent by users in each main product section (per month i
 	>>> session_duration = modelhub.aggregate.session_duration(df, groupby='session_id', exclude_bounces=False)
 	>>> # materialization is needed because the expression of the created Series contains aggregated data, and it is not allowed to aggregate that.
 	>>> session_duration.materialize().quantile(q=[0.25, 0.50, 0.75]).head()
-<<<<<<< Updated upstream
-	q
-	0.25   0 days 00:00:00.013000
-	0.50   0 days 00:00:05.893000
-	0.75   0 days 00:01:10.487500
-=======
 	quantile
 	0.25          0 days 00:00:00
 	0.50   0 days 00:00:00.883000
 	0.75   0 days 00:00:55.435000
->>>>>>> Stashed changes
 	Name: session_duration, dtype: timedelta64[ns]
 
 .. admonition:: Reference
@@ -604,7 +594,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application"
 	          FROM "data"
 	       ),
-	       "getitem_where_boolean___64691f3d96b0031460768c7d88c29861" AS (
+	       "getitem_where_boolean___c84bfa6accc1ce3212b86ef949acc5da" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -615,9 +605,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "time" AS "time",
 	               "application" AS "application"
 	          FROM "manual_materialize___e627e9bdda472e6a76c583c57c6d37ed"
-	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-07-30' AS date))))
+	         WHERE ((("day" >= cast('2022-04-01' AS date))) AND (("day" <= cast('2022-07-30' AS date))))
 	       ),
-	       "context_data___5420e4ab121cc6ebf6ded99c4338ea34" AS (
+	       "context_data___aa7d9ced0fae9455d776b199f0e18dab" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -626,9 +616,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "event_type" AS "event_type",
 	               "stack_event_types" AS "stack_event_types",
 	               "application" AS "application"
-	          FROM "getitem_where_boolean___64691f3d96b0031460768c7d88c29861"
+	          FROM "getitem_where_boolean___c84bfa6accc1ce3212b86ef949acc5da"
 	       ),
-	       "session_starts___14d0995bc0268269f794bdfa05982ec4" AS (
+	       "session_starts___525de4176fbdec684c13a2e799cd4534" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -640,9 +630,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
 	                    ELSE cast(TRUE AS boolean)
 	                     END AS "is_start_of_session"
-	          FROM "context_data___5420e4ab121cc6ebf6ded99c4338ea34"
+	          FROM "context_data___aa7d9ced0fae9455d776b199f0e18dab"
 	       ),
-	       "session_id_and_count___911c8ceaa9af5ddae1f70759155ef6e3" AS (
+	       "session_id_and_count___7b0999319dff5df7b588577160816ce2" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -656,9 +646,9 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	                    ELSE cast(NULL AS bigint)
 	                     END AS "session_start_id",
 	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___14d0995bc0268269f794bdfa05982ec4"
+	          FROM "session_starts___525de4176fbdec684c13a2e799cd4534"
 	       ),
-	       "objectiv_sessionized_data___054d4037d24a400c0d317cca2546947e" AS (
+	       "objectiv_sessionized_data___5aac3e8ab26bb45145b36e9afa63cb33" AS (
 	        SELECT "event_id" AS "event_id",
 	               "day" AS "day",
 	               "moment" AS "moment",
@@ -672,10 +662,10 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	               "is_one_session" AS "is_one_session",
 	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
 	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___911c8ceaa9af5ddae1f70759155ef6e3"
+	          FROM "session_id_and_count___7b0999319dff5df7b588577160816ce2"
 	       ) SELECT to_char("moment", 'YYYY"-"MM') AS "time_aggregation",
 	       count(DISTINCT "user_id") AS "unique_users"
-	  FROM "objectiv_sessionized_data___054d4037d24a400c0d317cca2546947e"
+	  FROM "objectiv_sessionized_data___5aac3e8ab26bb45145b36e9afa63cb33"
 	 GROUP BY to_char("moment", 'YYYY"-"MM')
 	<BLANKLINE>
 
