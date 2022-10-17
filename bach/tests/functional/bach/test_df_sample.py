@@ -5,9 +5,12 @@ from typing import Optional
 
 import pytest
 
+from bach import SeriesJson
 from sql_models.graph_operations import get_graph_nodes_info
 from sql_models.util import is_bigquery, is_postgres, is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_json_data
+
+from bach.testing import assert_equals_data
 
 
 def test_get_sample(engine, unique_table_test_name):
@@ -32,6 +35,24 @@ def test_get_sample(engine, unique_table_test_name):
     with pytest.raises(Exception, match='[aA]lready [eE]xists'):
         df_sample = df.get_sample(table_name=unique_table_test_name,
                                   sample_percentage=50)
+
+
+def test_get_sample_w_json_series(engine, unique_table_test_name):
+    df = get_df_with_json_data(engine)
+
+    assert isinstance(df['dict_column'], SeriesJson)
+    assert isinstance(df['list_column'], SeriesJson)
+    assert isinstance(df['mixed_column'], SeriesJson)
+
+    df_sample = df.get_sample(table_name=unique_table_test_name,
+                              sample_percentage=50,
+                              overwrite=True)
+
+    # get Pandas DataFrame to make sure engine supports storing json values
+    _ = df_sample.to_pandas()
+    assert isinstance(df_sample['dict_column'], SeriesJson)
+    assert isinstance(df_sample['list_column'], SeriesJson)
+    assert isinstance(df_sample['mixed_column'], SeriesJson)
 
 
 @pytest.mark.skip_athena('We do not support the seed parameter for athena')
