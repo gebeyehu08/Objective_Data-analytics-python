@@ -373,21 +373,23 @@ def test_json_flatten_array_column_name_special_chars(engine, dtype):
     df = df.set_index('_Index_Row#!')
 
     list_column = df['List!_COLUMN']
+    assert isinstance(list_column, SeriesJson)  # help mypy/pycharm a bit here
 
     result_item, result_offset = list_column.json.flatten_array()
-    result_item = result_item.sort_by_series(
-        by=[result_item.index['_Index_Row#!'], result_offset]
-    )
+    result_df = result_item.to_frame()
+    result_df['offset'] = result_offset
+    result_df = result_df.sort_values(['_Index_Row#!', 'offset'])
+
     assert_equals_data(
-        result_item,
-        expected_columns=['_Index_Row#!', 'List!_COLUMN'],
+        result_df,
+        expected_columns=['_Index_Row#!', 'List!_COLUMN', 'offset'],
         expected_data=[
-            [0, {'a': 'b'}],
-            [0, {'c': 'd'}],
-            [1, 'a'],
-            [1, 'b'],
-            [1, 'c'],
-            [1, 'd'],
+            [0, {'a': 'b'}, 0],
+            [0, {'c': 'd'}, 1],
+            [1, 'a', 0],
+            [1, 'b', 1],
+            [1, 'c', 2],
+            [1, 'd', 3],
         ],
         use_to_pandas=True,
     )
