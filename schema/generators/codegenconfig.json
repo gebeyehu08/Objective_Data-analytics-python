@@ -12,7 +12,15 @@
     },
     {
       "modelFile": "../base_schema.json",
+      "templateFile": "templates/hierarchy.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
       "templateFile": "templates/iglu.template.ts"
+    },
+    {
+      "modelFile": "../base_schema.json",
+      "templateFile": "templates/names.template.ts"
     },
     {
       "modelFile": "../base_schema.json",

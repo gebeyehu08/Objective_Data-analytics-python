@@ -18,6 +18,7 @@ import {
   getEventNames,
   getObjectKeys,
   getPropertyDescription,
+  getPropertyValue,
   sortArrayByName,
 } from './common';
 
@@ -29,6 +30,10 @@ const descriptionsTarget = 'primary';
 // Validator module
 Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.js` }, (writer: TextWriter) => {
   const zodWriter = new ZodWriter(writer);
+
+  // Static validation helpers
+  zodWriter.writeFile('fragments/validator.template.static.ts');
+  zodWriter.writeLine();
 
   // ContextTypes enum
   zodWriter.writeEnumeration({
@@ -58,8 +63,9 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         name: String(propertyName),
         description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
+        isNullable: properties[propertyName].nullable,
         isOptional: properties[propertyName].optional,
-        value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+        value: getPropertyValue(contextName, properties[propertyName]),
       })),
     });
     zodWriter.writeLine(';');
@@ -78,8 +84,9 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         name: String(propertyName),
         description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
+        isNullable: properties[propertyName].nullable,
         isOptional: properties[propertyName].optional,
-        value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+        value: getPropertyValue(contextName, properties[propertyName]),
       })),
     });
     zodWriter.writeLine(';');
@@ -95,8 +102,9 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
             name: String(propertyName),
             description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
             typeName: properties[propertyName].type,
+            isNullable: properties[propertyName].nullable,
             isOptional: properties[propertyName].optional,
-            value: properties[propertyName].type === 'discriminator' ? `ContextTypes.enum.${contextName}` : undefined,
+            value: getPropertyValue(contextName, properties[propertyName]),
           })),
         },
         ...childrenNames,
@@ -140,8 +148,9 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         name: String(propertyName),
         description: getPropertyDescription(event, propertyName, descriptionsType, descriptionsTarget),
         typeName: properties[propertyName].type,
+        isNullable: properties[propertyName].nullable,
         isOptional: properties[propertyName].optional,
-        value: properties[propertyName].type === 'discriminator' ? `EventTypes.enum.${eventName}` : undefined,
+        value: getPropertyValue(eventName, properties[propertyName]),
       })),
       rules: event.validation?.rules,
     });
@@ -185,7 +194,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
 Generator.generate({ outputFile: `${validatorFolder}common.js` }, (writer: TextWriter) => {
   const jsWriter = new JavaScriptWriter(writer);
 
-  jsWriter.writeFile('validator-common.template.ts');
+  jsWriter.writeFile('fragments/validator-common.template.ts');
 
   jsWriter.writeEndOfLine();
 
@@ -201,13 +210,13 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.t
   const jsWriter = new JavaScriptWriter(writer);
 
   // TODO actually generate tests
-  jsWriter.writeFile('validator-test.template.js');
+  jsWriter.writeFile('fragments/validator-test.template.js');
 });
 
 // Validator package.json
 const packageJsonPath = `${validatorFolder}${schemaVersion}/package.json`;
 Generator.generate({ outputFile: packageJsonPath }, (writer: TextWriter) => {
-  writer.writeFile('validator-package_json.template.json');
+  writer.writeFile('fragments/validator-package_json.template.json');
 
   fs.readFile(packageJsonPath, 'utf8', function (err, data) {
     fs.writeFileSync(packageJsonPath, data.replace(/{{schemaVersion}}/g, schemaVersion));
