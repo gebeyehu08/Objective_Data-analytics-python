@@ -36,6 +36,7 @@ entityNames.forEach(entityName => {
     private readonly _parent;
     private readonly _properties;
     private readonly _rules;
+    readonly documentation;
 
     /**
      * To ease working with arrays of entities we set their name in a new `name` property.
@@ -106,6 +107,20 @@ entityNames.forEach(entityName => {
     }
 
     /**
+     * Gets whether this entity is a Location Context.
+     */
+    get isLocationContext() {
+      return this.parents.find(parent => parent.name === 'AbstractLocationContext');
+    }
+
+    /**
+     * Gets whether this entity is a Global Context.
+     */
+    get isGlobalContext() {
+      return this.parents.find(parent => parent.name === 'AbstractGlobalContext');
+    }
+
+    /**
      * Gets the list of properties directly defined in this entity, not inherited. 
      */  
     get ownProperties() {
@@ -167,14 +182,53 @@ entityNames.forEach(entityName => {
     }
 
     /**
+     * Gets a documentation description by specifying `type` and `target`.
+     * Types: 'text' or 'markdown'
+     * Targets: 'primary', 'secondary', 'admonition'
+     */
+    getDescription(options: { type: 'text' | 'markdown', target: 'primary' | 'secondary' | 'admonition' }) {
+      if (!this.documentation) {
+        return null;
+      }
+
+      const { type, target } = options;
+
+      const matchingDescriptions = this.documentation
+        .filter((documentationBlock) => {
+          if (type && target) {
+            return documentationBlock?.type === type && documentationBlock.target === target;
+          }
+          if (type) {
+            return documentationBlock.type === type;
+          }
+          if (target) {
+            return documentationBlock.target === target;
+          }
+          return true;
+        })
+        .map((documentationBlock) => documentationBlock.description);
+
+      if(!matchingDescriptions.length) {
+        return null
+      }
+
+      return matchingDescriptions[0]
+    }
+
+    /**
      * Hydrates some known types (LocationStack, GlobalContexts) to their definition  
-     */  
+     */
     private _hydrateTypes(properties: Array<any>) {
       return properties.map(property => {
         switch(property.type) {
           case 'LocationStack':
           case 'GlobalContexts':
-            return {...property, ...getEntity(property.type)};
+            const typeDefinition = getEntity(property.type);
+            return {
+              ...property,
+              // Enrich with description from type definition. Text primary, since properties have no markdowns.
+              description: typeDefinition.getDescription({ type: 'text', target: 'primary' })
+            };
           default:
             return property;
         }

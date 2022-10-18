@@ -5,36 +5,26 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { MarkdownWriter } from '../writers/MarkdownWriter';
-import {
-  getEntityByName,
-  getEntityMarkdownDescription,
-  getEntityNames,
-  getEntityParents,
-  getEntityProperties,
-  getObjectKeys,
-} from './common';
+import { getContexts, getEvents } from "./parser";
 
 const destination = '../generated/docs/';
 
-getEntityNames().forEach((entityName) => {
-  const entityCategory = entityName.endsWith('Event') ? 'event' : 'context';
-  const entity = getEntityByName(entityName);
-  const entityProperties = getEntityProperties(entity);
-  const entityParents = getEntityParents(entity);
-  const primaryDescription = getEntityMarkdownDescription(entity, 'primary');
-  const admonitionDescription = getEntityMarkdownDescription(entity, 'admonition');
+[...getContexts(), ...getEvents()].forEach((entity) => {
+  const entityCategory = entity.isEvent ? 'event' : 'context';
+  const primaryDescription = entity.getDescription({ type: 'markdown', target: 'primary' });
+  const admonitionDescription = entity.getDescription({ type: 'markdown', target: 'admonition' });
 
-  const isAbstract = entityName.startsWith('Abstract');
-  const isLocationContext = entityParents.includes('AbstractLocationContext');
-  const isGlobalContext = entityParents.includes('AbstractGlobalContext');
+  const isAbstract = entity.isAbstract;
+  const isLocationContext = entity.isLocationContext;
+  const isGlobalContext = entity.isGlobalContext;
 
   const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location_' : isGlobalContext ? 'global_' : '';
   const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
 
-  Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entityName}.md` }, (writer: TextWriter) => {
+  Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entity.name}.md` }, (writer: TextWriter) => {
     const docsWriter = new MarkdownWriter(writer);
 
-    docsWriter.writeH1(entityName);
+    docsWriter.writeH1(entity.name);
     docsWriter.writeLine(primaryDescription);
     docsWriter.writeLine();
 
@@ -43,10 +33,10 @@ getEntityNames().forEach((entityName) => {
     docsWriter.writeH3('Properties');
 
     // TODO implement writeTable in docsWriter, e.g. writeTable({title, rows:[cell1, cell2, ...cellN]})
-    getObjectKeys(entityProperties).forEach((entityPropertyName) => {
-      const { type, description, internal } = entityProperties[entityPropertyName];
+    entity.properties.forEach((entityProperty) => {
+      const { name, type, description, internal } = entityProperty;
       if (!internal) {
-        docsWriter.writeLine(`\`${type}\` ${entityPropertyName.toString()}: ${description}`);
+        docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
       }
     });
 
