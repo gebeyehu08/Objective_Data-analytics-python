@@ -363,11 +363,7 @@ class ModelHub:
 
         root_location_type = "RootLocationContext"
         if root_location is None:
-            min_offset = 0
-            if is_athena(data.engine):
-                # offset starts at 1 for Athena
-                min_offset = 1
-            root_location_data = data_merged[data_merged['__result_offset'] == min_offset].groupby(
+            root_location_data = data_merged[data_merged['__result_offset'] == 0].groupby(
                 ['__type', '__id']).user_id.count().sort_values(
                 ascending=False).head()
             root_location_type = root_location_data.index[0][0].strip('"')
