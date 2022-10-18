@@ -580,7 +580,7 @@ class Aggregate:
                                                steps=2, by='user_id', sort_by='moment')
 
         # n_users
-        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique().\
+        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique().to_frame().\
             reset_index().rename(columns={'user_id': 'n_users'})
 
         # n_users_completed_step
