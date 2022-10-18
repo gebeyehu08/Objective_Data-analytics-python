@@ -580,8 +580,8 @@ class Aggregate:
                                                steps=2, by='user_id', sort_by='moment')
 
         # n_users
-        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique()
-        step_visitors_df = step_visitors_df.reset_index().rename(columns={'user_id': 'n_users'})
+        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique().\
+            reset_index().rename(columns={'user_id': 'n_users'})
 
         # n_users_completed_step
         # remove rows where 2nd step is NaN (it means the user left the funnel)
