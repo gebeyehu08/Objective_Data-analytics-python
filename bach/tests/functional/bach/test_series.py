@@ -250,8 +250,8 @@ def test_aggregation(engine):
         s.agg(['sum','sum'])
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1042')
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1042')
 def test_type_agnostic_aggregation_functions(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
     btg = bt.groupby()
@@ -382,7 +382,7 @@ def test_series_inherit_flag(engine):
     assert not bts_derived.expression.has_aggregate_function
 
 
-@pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1043')
 def test_series_independant_subquery_any_value_all_values(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
     s = bt.inhabitants.max() // 4
@@ -505,12 +505,10 @@ def test_series_dropna(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_series_unstack(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
 
-    stacked_bt = bt.groupby(['city','municipality']).inhabitants.sum()
+    stacked_bt = bt.groupby(['city', 'municipality']).inhabitants.sum()
     unstacked_bt = stacked_bt.unstack()
 
     expected_columns = [
@@ -521,6 +519,7 @@ def test_series_unstack(engine):
 
     assert_equals_data(
         unstacked_bt_sorted,
+        use_to_pandas=True,
         expected_columns=['city'] + expected_columns,
         expected_data=[
             ['Boalsert', None, None, None, None, 10120, None],
@@ -547,6 +546,7 @@ def test_series_unstack(engine):
 
     assert_equals_data(
         unstacked_bt_sorted,
+        use_to_pandas=True,
         expected_columns=['municipality'] + expected_columns,
         expected_data=[
             ['De Friese Meren', 'buh', 'buh', 'buh', 'buh', 'buh', 'Sleat', 'buh', 'buh', 'buh', 'buh', 'buh'],
@@ -571,6 +571,7 @@ def test_series_unstack(engine):
 
     assert_equals_data(
         unstacked_bt_sorted,
+        use_to_pandas=True,
         expected_columns=['skating_order'] + expected_columns,
         expected_data=[
             [1, None, 93485., None],
