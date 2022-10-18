@@ -294,3 +294,36 @@ def test_from_total_seconds(engine) -> None:
         ],
         use_to_pandas=True,
     )
+
+
+def test_timedelta_to_str(engine):
+    pdf = pd.DataFrame(
+        {
+            'timedelta': [
+                datetime.timedelta(seconds=127503.22),
+                datetime.timedelta(seconds=81374.33),
+                datetime.timedelta(seconds=0.64654),
+                datetime.timedelta(seconds=-694742400),
+                datetime.timedelta(seconds=-127503.22),
+            ]
+        }
+    )
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    result = df['timedelta'].astype('string')
+
+    row_3 = "0 days, 00:00:00.646540"
+    # value gets rounded do to precision
+    if is_athena(engine):
+        row_3 = "0 days, 00:00:00.647000"
+
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'timedelta'],
+        expected_data=[
+            [0, "1 days, 11:25:03.220000"],
+            [1, "0 days, 22:36:14.330000"],
+            [2, row_3],
+            [3, "-8041 days, 00:00:00.000000"],
+            [4, "-2 days, 12:34:56.780000"],
+        ]
+    )
