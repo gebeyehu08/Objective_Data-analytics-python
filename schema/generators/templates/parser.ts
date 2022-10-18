@@ -48,8 +48,7 @@ entityNames.forEach(entityName => {
     readonly isAbstract = entityName.startsWith('Abstract');
     readonly isContext = entityName.endsWith('Context');
     readonly isEvent = entityName.endsWith('Event');
-    readonly isLocationStack = entityName === 'LocationStack';
-    readonly isGlobalContexts = entityName === 'GlobalContexts';
+    readonly isParent = this.children.length > 0;
 
     /**
      * Assigns the entity definition onto the instance itself, omitting some properties we are going to enrich.
@@ -222,22 +221,23 @@ entityNames.forEach(entityName => {
  * Gets an entity from the BaseSchema, enriched with some extra attributes and getter functions to ease its usage.
  */
 export function getEntity(entityName) {
-  return entitiesMap[entityName];
+  return entitiesMap.get(entityName);
 }
 
 /**
  * Gets a list of enriched entities from the BaseSchema. By default, returns all supported entities.
  * Optionally supports filtering by: isContext, isEvent, isAbstract.
  */
-export function getEntities(options?: { isContext?: boolean, isEvent?: boolean, isAbstract?: boolean }) {
-  const { isContext, isEvent, isAbstract } = options ?? {}
+export function getEntities(options?: { isContext?: boolean, isEvent?: boolean, isAbstract?: boolean, isParent?: boolean }) {
+  const { isContext, isEvent, isAbstract, isParent } = options ?? {}
   const entities = [];
 
   for (let [_, entity] of entitiesMap) {
     if(
       (isContext === undefined || isContext === entity.isContext) &&
       (isEvent === undefined || isEvent === entity.isEvent) &&
-      (isAbstract === undefined || isAbstract === entity.isAbstract)
+      (isAbstract === undefined || isAbstract === entity.isAbstract) &&
+      (isParent === undefined || isParent === entity.isParent)
     ) {
       entities.push(entity);
     }
@@ -248,17 +248,17 @@ export function getEntities(options?: { isContext?: boolean, isEvent?: boolean, 
 
 /**
  * Shorthand to get a list of enriched Context entities from the BaseSchema. By default, returns all Contexts.
- * Optionally supports filtering by: isAbstract.
+ * Optionally supports filtering by: isAbstract and isParent.
  */
-export function getContexts(options?: { isAbstract: boolean }) {
+export function getContexts(options?: { isAbstract?: boolean, isParent?: boolean }) {
   return getEntities({ ...options, isContext: true });
 }
 
 /**
  * Shorthand to get a list of enriched Event entities from the BaseSchema. By default, returns all Events.
- * Optionally supports filtering by: isAbstract.
+ * Optionally supports filtering by: isAbstract and isParent.
  */
-export function getEvents(options?: { isAbstract: boolean }) {
+export function getEvents(options?: { isAbstract?: boolean, isParent?: boolean }) {
   return getEntities({ ...options, isEvent: true });
 }
 

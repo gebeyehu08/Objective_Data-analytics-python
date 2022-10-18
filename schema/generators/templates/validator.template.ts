@@ -5,10 +5,10 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import * as fs from 'fs';
+import glob from 'glob';
 import Objectiv from '../../base_schema.json';
 import { JavaScriptWriter } from '../writers/JavaScriptWriter';
 import { ZodWriter } from '../writers/ZodWriter';
-import glob from 'glob';
 import {
   filterAbstractNames,
   getChildren,
@@ -21,11 +21,14 @@ import {
   getPropertyValue,
   sortArrayByName,
 } from './common';
+import { getContexts, getEntity, getEvents } from "./parser";
 
 const validatorFolder = '../../validator/';
 const schemaVersion = Objectiv.version.base_schema;
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
+
+console.log(getEntity('PressableContext'));
 
 // Validator module
 Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.js` }, (writer: TextWriter) => {
