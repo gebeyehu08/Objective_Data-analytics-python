@@ -9,6 +9,7 @@ const entitiesMap = new Map();
 
 entityNames.forEach(entityName => {
   const entity = BaseSchema.contexts[entityName] ?? BaseSchema.events[entityName];
+
   entitiesMap.set(entityName, new class {
     private readonly _parent;
     private readonly _properties;
@@ -53,36 +54,6 @@ entityNames.forEach(entityName => {
       return children;
     }
 
-    private _objectToArray(object) {
-      if(object === undefined) {
-        return [];
-      }
-
-      return Object.keys(object).map(key => ({
-        name: key,
-        ...object[key]
-      }))
-    }
-
-    private _arrayToObject(array: Array<{ name: string }>) {
-      let object = {};
-
-      array.forEach(item => {
-        object[item.name] = item;
-      })
-
-      return object;
-    }
-
-    private _mergeByName (propertiesA: Array<{ name: string }>, propertiesB: Array<{ name: string }>) {
-      let mergedProperties = this._arrayToObject(propertiesA);
-
-      propertiesB.forEach(property => {
-        mergedProperties[property.name] = property;
-      });
-
-      return this._objectToArray(mergedProperties);
-    }
 
     get ownProperties() {
       if(this._properties === undefined) {
@@ -107,6 +78,35 @@ entityNames.forEach(entityName => {
 
     get properties() {
       return this._mergeByName(this.parentProperties, this.ownProperties);
+    }
+
+    private _objectToArray(object) {
+      if(object === undefined) {
+        return [];
+      }
+
+      return Object.keys(object).map(key => ({
+        name: key,
+        ...object[key]
+      }))
+    }
+    private _arrayToObject(array: Array<{ name: string }>) {
+      let object = {};
+
+      array.forEach(item => {
+        object[item.name] = item;
+      })
+
+      return object;
+    }
+    private _mergeByName (propertiesA: Array<{ name: string }>, propertiesB: Array<{ name: string }>) {
+      let mergedProperties = this._arrayToObject(propertiesA);
+
+      propertiesB.forEach(property => {
+        mergedProperties[property.name] = property;
+      });
+
+      return this._objectToArray(mergedProperties);
     }
   })
 })
