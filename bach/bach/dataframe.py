@@ -1184,12 +1184,13 @@ class DataFrame:
         df_cp = self.copy()
 
         # since hive does not support json type, we must cast all JSON series to string.
-        series_to_stringify = [series.name for series in self.all_series.values() if isinstance(series, SeriesJson)]
-        requires_json_casting = series_to_stringify and is_athena(dialect)
-
-        if requires_json_casting:
-            for series_name in series_to_stringify:
-                df_cp[series_name] = df_cp[series_name].astype('string')
+        series_to_stringify = {
+            series.name: 'string'
+            for series in self.all_series.values()
+            if isinstance(series, SeriesJson) and is_athena(dialect)
+        }
+        if series_to_stringify:
+            df_cp = df_cp.astype(series_to_stringify)
 
         model = df_cp.get_current_node(name='database_create_table')
         model = model.copy_set_materialization(Materialization.TABLE)
@@ -1211,13 +1212,15 @@ class DataFrame:
                 sql = escape_parameter_characters(conn, sql)
                 conn.execute(sql)
 
-        all_dtypes = {**self.index_dtypes, **self.dtypes}
-        return self.from_table(
+        all_dtypes = {**df_cp.index_dtypes, **df_cp.dtypes}
+        result = self.from_table(
             engine=self.engine,
             table_name=table_name,
             index=self.index_columns,
             all_dtypes=all_dtypes
         )
+        # cast to original dtypes
+        return result.astype(self.dtypes)
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
