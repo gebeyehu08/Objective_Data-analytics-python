@@ -173,6 +173,7 @@ export const getPropertyDescription = (entity, propertyName, type, target) => {
 };
 
 /**
+ * TODO see if we can embed this logic in the parser as well
  * Gets the value of complex properties, like discriminators or arrays
  */
 export const getPropertyValue = (entityName, property) => {

@@ -16,8 +16,8 @@ import {
   getEventNames,
   getObjectKeys,
   getPropertyDescription,
-  getPropertyValue
-} from "./common";
+  getPropertyValue,
+} from './common';
 
 // TODO temporarily generate this in the /generated folder, as we need TS to be finished before we can use it
 //const destinationFolder = '../../../tracker/core/tracker/src/generated/';
@@ -49,16 +49,17 @@ export type PropertyDefinition = {
 Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
-  tsWriter.writeMultiLineImports('@objectiv/schema', contextNames.filter(contextName => {
-    return !contextName.startsWith('Abstract');
-  }));
+  tsWriter.writeMultiLineImports(
+    '@objectiv/schema',
+    contextNames.filter((contextName) => {
+      return !contextName.startsWith('Abstract');
+    })
+  );
   tsWriter.writeImports('./ContextNames', ['AbstractContextName', 'GlobalContextName', 'LocationContextName']);
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
-  const nonAbstractContexts = contextNames.filter(
-    contextName => !contextName.startsWith('Abstract')
-  );
+  const nonAbstractContexts = contextNames.filter((contextName) => !contextName.startsWith('Abstract'));
 
   nonAbstractContexts.forEach((contextName) => {
     const context = Objectiv.contexts[contextName];
@@ -82,51 +83,51 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
 
         writeObjectProperty(tsWriter, contextName, {
           name: '__instance_id',
-          value: 'generateGUID()'
-        })
+          value: 'generateGUID()',
+        });
 
-        if(hasChildren) {
+        if (hasChildren) {
           writeObjectProperty(tsWriter, contextName, {
             name: `__${NameUtility.camelToKebabCase(contextName).replace(/-/g, '_')}`,
-            value: 'true'
-          })
+            value: 'true',
+          });
         }
 
-        parents.forEach(parentName => {
+        parents.forEach((parentName) => {
           const isAbstract = parentName.startsWith('Abstract');
-          if(!isAbstract) {
+          if (!isAbstract) {
             writeObjectProperty(tsWriter, contextName, {
               name: `__${NameUtility.camelToKebabCase(parentName).replace(/-/g, '_')}`,
-              value: 'true'
-            })
+              value: 'true',
+            });
           }
-        })
+        });
 
-        if(isLocationContext) {
+        if (isLocationContext) {
           writeObjectProperty(tsWriter, contextName, {
             name: '__location_context',
-            value: 'true'
-          })
+            value: 'true',
+          });
         }
 
-        if(isGlobalContext) {
+        if (isGlobalContext) {
           writeObjectProperty(tsWriter, contextName, {
             name: '__global_context',
-            value: 'true'
-          })
+            value: 'true',
+          });
         }
 
-        getObjectKeys(properties).map((propertyName) => ({
-          name: String(propertyName),
-          isOptional: properties[propertyName].optional,
-          value: getPropertyValue(contextName, properties[propertyName]),
-        })).forEach(
-          property => writeObjectProperty(tsWriter, contextName, property)
-        )
+        getObjectKeys(properties)
+          .map((propertyName) => ({
+            name: String(propertyName),
+            isOptional: properties[propertyName].optional,
+            value: getPropertyValue(contextName, properties[propertyName]),
+          }))
+          .forEach((property) => writeObjectProperty(tsWriter, contextName, property));
 
         tsWriter.writeLine('});');
       }
-    )
+    );
 
     tsWriter.writeLine();
   });
@@ -139,21 +140,19 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
 
   tsWriter.writeMultiLineImports('@objectiv/schema', [
     ...[
-      ...eventNames.filter(eventName => {
+      ...eventNames.filter((eventName) => {
         return !eventName.startsWith('Abstract');
       }),
       // TODO not so nice, we could automate this, but these two entities are a bit of a special case
       'LocationStack',
-      'GlobalContexts'
-    ].sort()
+      'GlobalContexts',
+    ].sort(),
   ]);
   tsWriter.writeImports('./EventNames', ['AbstractEventName', 'EventName']);
   tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
-  const nonAbstractEvents = eventNames.filter(
-    eventName => !eventName.startsWith('Abstract')
-  );
+  const nonAbstractEvents = eventNames.filter((eventName) => !eventName.startsWith('Abstract'));
 
   nonAbstractEvents.forEach((eventName) => {
     const event = Objectiv.events[eventName];
@@ -175,69 +174,67 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
 
         writeObjectProperty(tsWriter, eventName, {
           name: '__instance_id',
-          value: 'generateGUID()'
-        })
+          value: 'generateGUID()',
+        });
 
-        if(hasChildren) {
+        if (hasChildren) {
           writeObjectProperty(tsWriter, eventName, {
             name: `__${NameUtility.camelToKebabCase(eventName).replace(/-/g, '_')}`,
-            value: 'true'
-          })
+            value: 'true',
+          });
         }
 
-        parents.forEach(parentName => {
+        parents.forEach((parentName) => {
           const isAbstract = parentName.startsWith('Abstract');
-          if(!isAbstract) {
+          if (!isAbstract) {
             writeObjectProperty(tsWriter, eventName, {
               name: `__${NameUtility.camelToKebabCase(parentName).replace(/-/g, '_')}`,
-              value: 'true'
-            })
+              value: 'true',
+            });
           }
-        })
+        });
 
-        getObjectKeys(properties).map((propertyName) => ({
-          name: String(propertyName),
-          isOptional: properties[propertyName].optional,
-          value: getPropertyValue(eventName, properties[propertyName]),
-        })).forEach(
-          property => writeObjectProperty(tsWriter, eventName, property)
-        )
+        getObjectKeys(properties)
+          .map((propertyName) => ({
+            name: String(propertyName),
+            isOptional: properties[propertyName].optional,
+            value: getPropertyValue(eventName, properties[propertyName]),
+          }))
+          .forEach((property) => writeObjectProperty(tsWriter, eventName, property));
 
         tsWriter.writeLine('});');
       }
-    )
+    );
 
     tsWriter.writeLine();
   });
 
   writeEntityFactory(tsWriter, 'Event', nonAbstractEvents);
-
 });
 
-const getParametersFromProperties = (entityName, entity, properties) => getObjectKeys(properties).reduce((parameters, propertyName) => {
-  const property = properties[propertyName];
+const getParametersFromProperties = (entityName, entity, properties) =>
+  getObjectKeys(properties).reduce((parameters, propertyName) => {
+    const property = properties[propertyName];
 
-  if(property?.internal) {
+    if (property?.internal) {
+      return parameters;
+    }
+
+    parameters.push({
+      name: String(propertyName),
+      description: getPropertyDescription(entity, propertyName, descriptionsType, descriptionsTarget),
+      typeName: getTypeForProperty(property),
+      isOptional: property.optional,
+      value: getPropertyValue(entityName, property),
+    });
+
     return parameters;
-  }
-
-  parameters.push({
-    name: String(propertyName),
-    description: getPropertyDescription(entity, propertyName, descriptionsType, descriptionsTarget),
-    typeName: getTypeForProperty(property),
-    isOptional: property.optional,
-    value: getPropertyValue(entityName, property),
-  })
-
-  return parameters;
-}, []);
+  }, []);
 
 const writeEntityFactory = (tsWriter: TypeScriptWriter, entityType: 'Event' | 'Context', entityNames) => {
-  tsWriter.writeJsDocLines([
-    `A factory to generate any ${entityType}.`
-  ]);
+  tsWriter.writeJsDocLines([`A factory to generate any ${entityType}.`]);
   const entityPropsName = `${entityType.toLowerCase()}Props`;
-  entityNames.forEach(entityName => {
+  entityNames.forEach((entityName) => {
     const entity = getEntityByName(entityName);
     const properties = getEntityProperties(entity);
     tsWriter.write(`export function make${entityType} (`);
@@ -248,29 +245,29 @@ const writeEntityFactory = (tsWriter: TypeScriptWriter, entityType: 'Event' | 'C
           name: '_type',
           typeName: `'${entityName}'`,
         },
-        ...getParametersFromProperties(entityName, entity, properties)
+        ...getParametersFromProperties(entityName, entity, properties),
       ],
     });
     tsWriter.writeLine(`): ${entityName};`);
     tsWriter.writeEndOfLine(``);
-  })
-  tsWriter.writeLine(`export function make${entityType} ({ _type, ...${entityPropsName} }: any) {`)
+  });
+  tsWriter.writeLine(`export function make${entityType} ({ _type, ...${entityPropsName} }: any) {`);
   tsWriter.increaseIndent();
-  tsWriter.writeLine(`switch(_type) {`)
-  entityNames.forEach(entityName => {
-    tsWriter.writeLine(`${tsWriter.indentString}case '${entityName}':`)
+  tsWriter.writeLine(`switch(_type) {`);
+  entityNames.forEach((entityName) => {
+    tsWriter.writeLine(`${tsWriter.indentString}case '${entityName}':`);
     tsWriter.writeLine(`${tsWriter.indentString.repeat(2)}return make${entityName}(${entityPropsName});`);
   });
   tsWriter.writeLine(`}`);
   tsWriter.decreaseIndent();
   tsWriter.writeLine(`}`);
-}
+};
 
 const getTypeForProperty = (property) => {
   const mappedType = SchemaToTypeScriptPropertyTypeMap[property.type];
   const mappedSubType = property.type === 'array' ? SchemaToTypeScriptPropertyTypeMap[property.items.type] : undefined;
-  return `${mappedType ?? property.type}${mappedSubType ? `<${mappedSubType}>` : ''}`
-}
+  return `${mappedType ?? property.type}${mappedSubType ? `<${mappedSubType}>` : ''}`;
+};
 
 const mapInternalTypeToEnum = (entityName) => {
   const entity = getEntityByName(entityName);
@@ -281,28 +278,28 @@ const mapInternalTypeToEnum = (entityName) => {
   const isContext = entityParents.includes('AbstractContext') || entityName === 'AbstractContext';
   const isEvent = entityParents.includes('AbstractEvent') || entityName === 'AbstractEvent';
 
-  if(isAbstract) {
-    if(isContext) {
+  if (isAbstract) {
+    if (isContext) {
       return `AbstractContextName.${entityName}`;
     }
 
-    if(isEvent) {
+    if (isEvent) {
       return `AbstractEventName.${entityName}`;
     }
   }
 
-  if(isLocationContext) {
-      return `LocationContextName.${entityName}`;
+  if (isLocationContext) {
+    return `LocationContextName.${entityName}`;
   }
 
-  if(isGlobalContext) {
-      return `GlobalContextName.${entityName}`;
+  if (isGlobalContext) {
+    return `GlobalContextName.${entityName}`;
   }
 
-  if(isEvent) {
-      return `EventName.${entityName}`;
+  if (isEvent) {
+    return `EventName.${entityName}`;
   }
-}
+};
 
 const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: PropertyDefinition) => {
   const entity = getEntityByName(entityName);
@@ -316,7 +313,7 @@ const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: P
 
   let propertyValue;
 
-  switch(property.name) {
+  switch (property.name) {
     case '_type':
       propertyValue = mapInternalTypeToEnum(entityName);
       break;
@@ -341,4 +338,4 @@ const writeObjectProperty = (tsWriter: TypeScriptWriter, entityName, property: P
 
   tsWriter.writeEndOfLine(',');
   tsWriter.decreaseIndent();
-}
+};

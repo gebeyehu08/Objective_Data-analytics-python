@@ -5,7 +5,7 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { MarkdownWriter } from '../writers/MarkdownWriter';
-import { getContexts, getEvents } from "./parser";
+import { getContexts, getEvents } from './parser';
 
 const destination = '../generated/docs/';
 
