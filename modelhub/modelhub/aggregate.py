@@ -607,7 +607,7 @@ class Aggregate:
 
         # n_users drop-offs
         result['dropoff_share'] = result['n_users'] - result['n_users_completed_step']
-        result['dropoff_share'] = (result['dropoff_share'] / n_users_start).round(3)
+        result['dropoff_share'] = cast(SeriesFloat64, (result['dropoff_share'] / n_users_start)).round(3)
 
         # step_conversion_rate
         result['step_conversion_rate'] = result['n_users_completed_step'] / result['n_users']
