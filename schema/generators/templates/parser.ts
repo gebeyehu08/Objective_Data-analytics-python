@@ -4,21 +4,27 @@
 
 import BaseSchema from '../../base_schema.json';
 
-const entityNames = [...Object.keys(BaseSchema.contexts), ...Object.keys(BaseSchema.events)];
+const entityNames = [
+  ...Object.keys(BaseSchema.contexts),
+  ...Object.keys(BaseSchema.events),
+  ...Object.keys(BaseSchema),
+];
 const entitiesMap = new Map();
 
 entityNames.forEach(entityName => {
-  const entity = BaseSchema.contexts[entityName] ?? BaseSchema.events[entityName];
+  const entity = BaseSchema.contexts[entityName] ?? BaseSchema.events[entityName] ?? BaseSchema[entityName];
 
   entitiesMap.set(entityName, new class {
     private readonly _parent;
     private readonly _properties;
     private readonly _rules;
 
-    readonly name = entityName
-    readonly isAbstract = entityName.startsWith('Abstract')
-    readonly isContext = entityName.endsWith('Context')
-    readonly isEvent = entityName.endsWith('Event')
+    readonly name = entityName;
+    readonly isAbstract = entityName.startsWith('Abstract');
+    readonly isContext = entityName.endsWith('Context');
+    readonly isEvent = entityName.endsWith('Event');
+    readonly isLocationStack = entityName === 'LocationStack';
+    readonly isGlobalContexts = entityName === 'GlobalContexts';
 
     constructor() {
       const { parent, properties, ...otherEntityProps } = entity;
@@ -62,10 +68,10 @@ entityNames.forEach(entityName => {
         return [];
       }
 
-      return Object.keys(this._properties).map(propertyName => ({
+      return this._hydrateProperties(Object.keys(this._properties).map(propertyName => ({
         name: propertyName,
         ...this._properties[propertyName]
-      }))
+      })))
     }
 
     get inheritedProperties() {
@@ -75,7 +81,7 @@ entityNames.forEach(entityName => {
         inheritedProperties = this._mergeBy('name', inheritedProperties, this._objectToArray(parent._properties));
       })
 
-      return inheritedProperties;
+      return this._hydrateProperties(inheritedProperties);
     }
 
     get properties() {
@@ -98,6 +104,18 @@ entityNames.forEach(entityName => {
 
     get rules() {
       return [...this.inheritedRules, ...this.ownRules];
+    }
+
+    private _hydrateProperties(properties: Array<any>) {
+      return properties.map(property => {
+        switch(property.type) {
+          case 'LocationStack':
+          case 'GlobalContexts':
+            return {...property, ...getEntity(property.type)};
+          default:
+            return property;
+        }
+      })
     }
 
     private _objectToArray(object) {
