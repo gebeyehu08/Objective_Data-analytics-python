@@ -126,7 +126,6 @@ class MultiplierWithId(SqlModelBuilder):
         '''
 
 
-@pytest.mark.skip_bigquery_todo()
 def test_model_thrice_simple(dialect):
     model = Double.build(
         source=Double(
@@ -149,6 +148,12 @@ def test_model_thrice_simple(dialect):
         select (val * 2) as val
         from "Double___82474fb08efe26024ac77a358a288af8"
     '''
+    if is_bigquery(dialect):
+        # replace " with `, except for "" which becomes a single "
+        expected = expected\
+            .replace('""', 'TMP_QUOTE')\
+            .replace('"', '`') \
+            .replace('TMP_QUOTE', '"')
     assert_roughly_equal_sql(result, expected)
 
 
