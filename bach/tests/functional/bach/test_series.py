@@ -1,6 +1,8 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from typing import List
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -41,12 +43,11 @@ def test_series__getitem__(engine):
         non_existing_value_ref.value
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_positional_slicing(engine):
     # TODO: make work with BigQuery and Athena.
     # See for inspiration: tests.functional.bach.test_df_getitem.test_positional_slicing
-    bt = get_df_with_test_data(engine=engine, full_data_set=True)['inhabitants'].sort_values()
+    bts = get_df_with_test_data(engine=engine, full_data_set=True)['inhabitants'].sort_values()
+    base_expected_data = sorted([row[3] for row in TEST_DATA_CITIES_FULL])
 
     class ReturnSlice:
         def __getitem__(self, key):
@@ -62,21 +63,30 @@ def test_positional_slicing(engine):
                   return_slice[:1]
                   ]
 
-    pbt = bt.to_pandas()
-    for s in slice_list:
-        bt_slice = bt[s]
+    all_dfs: List[DataFrame] = []
+    all_expected_data = []
+    for i, s in enumerate(slice_list):
+        bts_slice = bts[s]
 
-        assert isinstance(bt_slice, SeriesInt64)
+        assert isinstance(bts_slice, SeriesInt64)
 
         # if the slice length == 1, all Series need to have a single value expression
-        assert (len('slice_me_now'.__getitem__(s)) == 1) == bt_slice.expression.is_single_value
+        assert (len('slice_me_now'.__getitem__(s)) == 1) == bts_slice.expression.is_single_value
 
-        assert_equals_data(
-            bt_slice,
-            expected_columns=['_index_skating_order', 'inhabitants'],
-            expected_data=df_to_list(pbt[s]),
-            order_by=['inhabitants'],
-        )
+        df_slice = bts_slice.to_frame()
+        df_slice['slice'] = i
+        all_dfs.append(df_slice)
+        expected_data = [[row] + [i] for row in base_expected_data][s]
+        all_expected_data.extend(expected_data)
+
+    df = all_dfs[0].append(all_dfs[1:])
+    df = df.reset_index(drop=True)
+    df = df.sort_values(by=['slice', 'inhabitants'])
+    assert_equals_data(
+        df,
+        expected_columns=['inhabitants', 'slice'],
+        expected_data=all_expected_data,
+    )
 
 
 def test_series_value(engine):
