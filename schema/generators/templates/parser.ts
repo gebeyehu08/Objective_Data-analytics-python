@@ -48,7 +48,6 @@ entityNames.forEach(entityName => {
     readonly isAbstract = entityName.startsWith('Abstract');
     readonly isContext = entityName.endsWith('Context');
     readonly isEvent = entityName.endsWith('Event');
-    readonly isParent = this.children.length > 0;
 
     /**
      * Assigns the entity definition onto the instance itself, omitting some properties we are going to enrich.
@@ -91,12 +90,19 @@ entityNames.forEach(entityName => {
      */  
     get children() {
       let children = [];
-      for (let [childName, { parent }] of entitiesMap) {
-        if (parent === entityName) {
+      for (let [childName, { _parent }] of entitiesMap) {
+        if (_parent === this.name) {
           children.push(getEntity(childName))
         }
       }
       return children;
+    }
+
+    /**
+     * Gets whether this entity has at least one child.
+     */
+    get isParent() {
+      return this.children.length > 0;
     }
 
     /**
