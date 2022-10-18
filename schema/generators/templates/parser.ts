@@ -13,6 +13,8 @@ entityNames.forEach(entityName => {
   entitiesMap.set(entityName, new class {
     private readonly _parent;
     private readonly _properties;
+    private readonly _rules;
+
     readonly name = entityName
     readonly isAbstract = entityName.startsWith('Abstract')
     readonly isContext = entityName.endsWith('Context')
@@ -23,6 +25,7 @@ entityNames.forEach(entityName => {
       Object.assign(this, otherEntityProps);
       this._parent = parent;
       this._properties = properties;
+      this._rules = entity?.validation?.rules ?? [];
     }
 
     get parent() {
@@ -54,7 +57,6 @@ entityNames.forEach(entityName => {
       return children;
     }
 
-
     get ownProperties() {
       if(this._properties === undefined) {
         return [];
@@ -66,18 +68,36 @@ entityNames.forEach(entityName => {
       }))
     }
 
-    get parentProperties() {
-      let parentProperties = [];
+    get inheritedProperties() {
+      let inheritedProperties = [];
 
       this.parents.forEach(parent => {
-        parentProperties = this._mergeByName(parentProperties, this._objectToArray(parent._properties));
+        inheritedProperties = this._mergeBy('name', inheritedProperties, this._objectToArray(parent._properties));
       })
 
-      return parentProperties;
+      return inheritedProperties;
     }
 
     get properties() {
-      return this._mergeByName(this.parentProperties, this.ownProperties);
+      return this._mergeBy('name', this.inheritedProperties, this.ownProperties);
+    }
+
+    get ownRules() {
+      return this._rules;
+    }
+
+    get inheritedRules() {
+      let inheritedRules = [];
+
+      this.parents.forEach(parent => {
+        inheritedRules = [...inheritedRules, ...parent._rules];
+      })
+
+      return inheritedRules;
+    }
+
+    get rules() {
+      return [...this.inheritedRules, ...this.ownRules];
     }
 
     private _objectToArray(object) {
@@ -90,7 +110,8 @@ entityNames.forEach(entityName => {
         ...object[key]
       }))
     }
-    private _arrayToObject(array: Array<{ name: string }>) {
+
+    private _arrayToObject(array: Array<any>) {
       let object = {};
 
       array.forEach(item => {
@@ -99,11 +120,12 @@ entityNames.forEach(entityName => {
 
       return object;
     }
-    private _mergeByName (propertiesA: Array<{ name: string }>, propertiesB: Array<{ name: string }>) {
+
+    private _mergeBy (propertyName: string, propertiesA: Array<any>, propertiesB: Array<any>, ) {
       let mergedProperties = this._arrayToObject(propertiesA);
 
       propertiesB.forEach(property => {
-        mergedProperties[property.name] = property;
+        mergedProperties[property[propertyName]] = property;
       });
 
       return this._objectToArray(mergedProperties);
