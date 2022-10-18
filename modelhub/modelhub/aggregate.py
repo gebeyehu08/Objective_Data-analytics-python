@@ -603,7 +603,7 @@ class Aggregate:
         result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
 
         # n_users drop-offs
-        result = result.merge(dropoff_df, left_on=location, right_on='__location', how='left')
+        result = result.merge(dropoff_df, left_on=location, right_on='location', how='left')
         result['dropoff'] = result['dropoff'].fillna(0)
         result['dropoff_share'] = result['dropoff'] / result['dropoff'].sum()
         result['dropoff_share'] = cast(SeriesFloat64, result['dropoff_share']).round(3)
