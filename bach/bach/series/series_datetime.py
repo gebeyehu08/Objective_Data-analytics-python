@@ -16,7 +16,7 @@ from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code, parse_c_code_to_athena_code, warn_non_supported_format_codes
-from bach.types import DtypeOrAlias, StructuredDtype, value_to_series_type
+from bach.types import DtypeOrAlias, StructuredDtype, value_to_series_type, get_series_type_from_dtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
@@ -373,7 +373,7 @@ class SeriesAbstractDateTime(Series, ABC):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def astype(self, dtype: Union[str, Type]) -> Series:
-        if dtype != SeriesString.dtype and dtype != str:
+        if get_series_type_from_dtype(dtype) is not SeriesString:
             return super().astype(dtype=dtype)
 
         return self.dt.strftime(self._FINAL_DATE_TIME_FORMAT)
@@ -788,7 +788,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         return super().get_db_dtype(dialect)
 
     def astype(self, dtype: Union[str, Type]) -> Series:
-        if dtype != SeriesString.dtype and dtype != str:
+        if get_series_type_from_dtype(dtype) is not SeriesString:
             return super().astype(dtype=dtype)
 
         days_series = (self.dt.total_seconds // _TOTAL_SECONDS_PER_DATE_PART[DatePart.DAY]).astype('int64')
