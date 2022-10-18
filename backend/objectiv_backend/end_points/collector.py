@@ -10,7 +10,7 @@ import psycopg2
 from flask import Response, Request
 
 from objectiv_backend.common.config import get_collector_config, AnonymousModeConfig
-from objectiv_backend.common.types import EventData, EventDataList, EventList
+from objectiv_backend.common.types import EventData, EventDataList, EventList, ContextData
 from objectiv_backend.common.db import get_db_connection
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
 from objectiv_backend.end_points.common import get_json_response, get_cookie_id_context
@@ -192,7 +192,6 @@ def add_types_to_event(event: EventData) -> None:
     Simple enrichment, to encode hierarchy of events and contexts based on the schema into the event. This should only
     be done in the case it's not already set by the frontend. If event['_types'] exists, we assume it exists for
     all contexts as well. Furthermore, as the event is valid, we assume all events and contexts exist in the map.
-
     :param event: EventData
     :return:
     """
@@ -202,10 +201,18 @@ def add_types_to_event(event: EventData) -> None:
 
         event['_types'] = types_map[event['_type']]
 
-        for lc in event['location_stack']:
-            lc['_types'] = types_map[lc['_type']]
-        for gc in event['global_contexts']:
-            gc['_types'] = types_map[gc['_type']]
+        for ctx in event['location_stack'] + event['global_contexts']:
+            add_types_to_context(ctx)
+
+
+def add_types_to_context(context: ContextData) -> None:
+    """
+    Helper method for add_types_to_event, adds types to single context
+    :param context: ContextData
+    :return:
+    """
+    types_map = get_collector_config().schema_config.types_map
+    context['_types'] = types_map[context['_type']]
 
 
 def set_time_in_events(events: EventDataList, current_millis: int, client_millis: int):

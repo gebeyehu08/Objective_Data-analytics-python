@@ -5,7 +5,7 @@ from objectiv_backend.schema.schema import make_event_from_dict, make_context, \
     ContentContext, HttpContext, MarketingContext
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_context, remove_global_contexts
 from objectiv_backend.schema.validate_events import validate_event_adheres_to_schema
-from objectiv_backend.common.config import get_collector_config
+from objectiv_backend.end_points.collector import add_types_to_context
 
 
 CLICK_EVENT_JSON = '''
@@ -13,32 +13,58 @@ CLICK_EVENT_JSON = '''
     "events":[
         {
             "_type":"PressEvent",
+            "_schema_version": "1.0.0",
             "location_stack":[
                 {
                     "_type":"RootLocationContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractLocationContext",
+                        "RootLocationContext"
+                    ],
                     "id":"home"
                 },{
                     "_type":"NavigationContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractLocationContext",
+                        "NavigationContext"
+                    ],
                     "id":"navigation"
                 },{
                     "_type":"PressableContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractLocationContext",
+                        "PressableContext"
+                    ],
                     "id":"open-drawer"
                 }
             ],
             "global_contexts":[
                 {
                     "_type":"ApplicationContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractGlobalContext",
+                        "ApplicationContext"
+                    ],
                     "id":"rod-web-demo"
                 },
                 {
                     "_type":"PathContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractGlobalContext",
+                        "PathContext"
+                    ],
                     "id":"http://localhost:3000/"
                 }
             ],
             "_types": [
-                "PressEvent",
+                "AbstractEvent",
                 "InteractiveEvent",
-                "AbstractEvent"
+                "PressEvent"
             ],
             "time":1630049334860,
             "transport_time":1630049335313,
@@ -69,14 +95,13 @@ def test_remove_global_context():
     event_list = json.loads(CLICK_EVENT_JSON)
     event = event_list['events'][0]
 
+    gc = event['global_contexts'][1]
+
     remove_global_contexts(event, 'ApplicationContext')
 
     assert(len(event['global_contexts']) == 1)
 
-    assert(event['global_contexts'] == [{
-        "_type": "PathContext",
-        "id": "http://localhost:3000/"
-    }])
+    assert(event['global_contexts'] == [gc])
 
 
 def test_make_event_from_dict():
@@ -104,6 +129,7 @@ def test_make_content_context():
         'id': 'content_id',
         '_type': 'ContentContext'
     }
+    add_types_to_context(content_context)
 
     context = ContentContext(**content_context)
     # check dictionaries are the same
@@ -121,6 +147,7 @@ def test_add_global_context():
         'remote_address': 'test-address',
         'user_agent': 'test-user_agent'
     }
+    add_types_to_context(context_vars)
     context = make_context(**context_vars)
 
     # check if we've created a proper HttpContext Object
@@ -147,6 +174,7 @@ def test_add_context_to_incorrect_scope():
         'remote_address': 'test-address',
         'user_agent': 'test-user_agent'
     }
+    add_types_to_context(context_vars)
     context = make_context(**context_vars)
 
     # check if we've created a proper HttpContext Object

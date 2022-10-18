@@ -29,6 +29,7 @@ def _get_http_context():
     headers = HTTP_REQUEST.headers
     return {
         '_type': 'HttpContext',
+        '_types': ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
         'id': 'http_context',
         'remote_address': headers['X-Real-IP'],
         'referrer': headers['Referer'],
@@ -68,6 +69,7 @@ def test_enrich_http_context():
     headers = HTTP_REQUEST.headers
     http_context = {
         '_type': 'HttpContext',
+        '_types': ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
         'id': 'http_context',
         'remote_address': '127.0.0.1',
         'referrer': headers['Referer'],
@@ -134,6 +136,7 @@ def test_enrich_marketing_context():
     # dictionary representation of context
     marketing_context = {
         '_type': 'MarketingContext',
+        "_types": ["AbstractContext", "AbstractGlobalContext", "MarketingContext"],
         'campaign': 'test-campaign',
         'content': None,
         'creative_format': 'test-creative-format',
@@ -148,6 +151,7 @@ def test_enrich_marketing_context():
     # (ordered) json representation of dict
     marketing_context_json = '{' \
                              '"_type": "MarketingContext", ' \
+                             '"_types": ["AbstractContext", "AbstractGlobalContext", "MarketingContext"], ' \
                              '"campaign": "test-campaign", ' \
                              '"content": null, ' \
                              '"creative_format": "test-creative-format", ' \
@@ -261,6 +265,7 @@ def test_anonymous_mode_anonymization():
     # add created context to event
     event_list = json.loads(CLICK_EVENT_JSON)
     event = make_event_from_dict(event_list['events'][0])
+
     add_global_context_to_event(event, context)
 
     events = [event]
