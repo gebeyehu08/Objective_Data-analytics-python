@@ -20,7 +20,6 @@ class SchemaEntity(dict):
         if not hasattr(self, '_types'):
             self._types = self._get_types()
             self['_types'] = self._types
-            print(self._types)
 
     @staticmethod
     def _get_parents(cls, parents: list = None):
