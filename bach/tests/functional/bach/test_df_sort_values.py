@@ -46,10 +46,7 @@ def test_sort_values_basic(engine):
     )
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_sort_values_expression(engine):
-    # TODO: BigQuery, Athena
     bt = get_df_with_test_data(engine)[['city', 'inhabitants']]
     bt['city'] = bt['city'].str[2:]
     bt = bt.sort_values('city')

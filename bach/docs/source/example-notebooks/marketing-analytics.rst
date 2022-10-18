@@ -296,12 +296,12 @@ website or docs to our GitHub repo.
 	>>> # define the conversion event in `df_acquisition` and `df_marketing_selection`
 	>>> # in this example: clicking any link leading to our GitHub repo
 	>>> # create a column that extracts all location stacks that lead to our GitHub repo
-	>>> location_stack_conversion = {'id': 'browse-on-github', '_type': 'LinkContext'}
-	>>> modelhub.add_conversion_event(location_stack=df_acquisition.location_stack.json[location_stack_conversion:], event_type='PressEvent', name='github_press')
-	>>> modelhub.add_conversion_event(location_stack=df_marketing_selection.location_stack.json[location_stack_conversion:], event_type='PressEvent', name='github_press')
+	>>> df_acquisition['ls_conversion'] = df_acquisition[(df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'browse-on-github'}] != []) | (df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'github-stars-button'}] != []) | (df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'github'}] != [])].location_stack
+	>>> modelhub.add_conversion_event(location_stack=df_acquisition['ls_conversion'], event_type='PressEvent', name='github_press')
+	>>> df_marketing_selection['ls_conversion'] = df_marketing_selection[(df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'browse-on-github'}] != []) | (df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'github-stars-button'}] != []) | (df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'github'}] != [])].location_stack
+	>>> modelhub.add_conversion_event(location_stack=df_marketing_selection['ls_conversion'], event_type='PressEvent', name='github_press_marketing')
 	>>> df_acquisition['is_conversion_event'] = modelhub.map.is_conversion_event(df_acquisition, 'github_press')
-	>>> df_marketing_selection['is_conversion_event'] = modelhub.map.is_conversion_event(df_marketing_selection, 'github_press')
-
+	>>> df_marketing_selection['is_conversion_event'] = modelhub.map.is_conversion_event(df_marketing_selection, 'github_press_marketing')
 
 .. admonition:: Reference
 	:class: api-reference
@@ -321,11 +321,11 @@ Daily conversions from marketing
 	>>> conversions_from_marketing_daily = modelhub.aggregate.unique_users(conversions_from_marketing).sort_index(ascending=False)
 	>>> conversions_from_marketing_daily.head()
 	time_aggregation
-	2022-08-14    1
+	2022-08-20    1
+	2022-08-16    1
+	2022-08-14    2
 	2022-08-13    2
 	2022-08-04    1
-	2022-07-26    4
-	2022-07-25    1
 	Name: unique_users, dtype: int64
 
 .. doctest:: marketing-analytics
@@ -348,13 +348,13 @@ Daily conversion rate from marketing
 	>>> conversion_rate_from_marketing = (conversions_from_marketing_daily / users_from_marketing_daily) * 100
 	>>> conversion_rate_from_marketing.sort_index(ascending=False).fillna(0.0).head(10)
 	time_aggregation
-	2022-08-20     0.000000
+	2022-08-20     7.692308
 	2022-08-19     0.000000
 	2022-08-18     0.000000
 	2022-08-17     0.000000
-	2022-08-16     0.000000
+	2022-08-16     7.692308
 	2022-08-15     0.000000
-	2022-08-14     6.666667
+	2022-08-14    13.333333
 	2022-08-13    13.333333
 	2022-08-12     0.000000
 	2022-08-11     0.000000
@@ -378,11 +378,11 @@ Daily conversion rate from marketing
 	>>> conversions_from_marketing_plus_rate.head()
 	                  converted_users  conversion_rate
 	time_aggregation
-	2022-08-14                      1         6.666667
+	2022-08-20                      1         7.692308
+	2022-08-16                      1         7.692308
+	2022-08-14                      2        13.333333
 	2022-08-13                      2        13.333333
 	2022-08-04                      1         8.333333
-	2022-07-26                      4         6.349206
-	2022-07-25                      1         1.587302
 
 Daily conversions overall
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -394,11 +394,11 @@ Daily conversions overall
 	>>> conversions_overall = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event])
 	>>> conversions_overall.sort_index(ascending=False).head()
 	time_aggregation
-	2022-08-14    1
-	2022-08-13    2
-	2022-08-04    1
-	2022-07-26    4
-	2022-07-25    1
+	2022-08-20    1
+	2022-08-18    2
+	2022-08-17    4
+	2022-08-16    3
+	2022-08-15    3
 	Name: unique_users, dtype: int64
 
 	>>> # plot daily conversions overall (including from marketing campaigns)
@@ -419,16 +419,16 @@ Daily conversion rate overall
 	>>> conversion_rate_overall = (conversions_overall / daily_users) * 100
 	>>> conversion_rate_overall.sort_index(ascending=False).head(10)
 	time_aggregation
-	2022-08-20         NaN
-	2022-08-19         NaN
-	2022-08-18         NaN
-	2022-08-17         NaN
-	2022-08-16         NaN
-	2022-08-15         NaN
-	2022-08-14    2.702703
-	2022-08-13    6.666667
-	2022-08-12         NaN
-	2022-08-11         NaN
+	2022-08-20     3.703704
+	2022-08-19          NaN
+	2022-08-18     8.000000
+	2022-08-17    11.428571
+	2022-08-16     8.108108
+	2022-08-15     5.660377
+	2022-08-14     8.108108
+	2022-08-13    10.000000
+	2022-08-12     7.692308
+	2022-08-11     5.660377
 	Name: unique_users, dtype: float64
 
 	>>> conversion_rate_overall.sort_index(ascending=True).fillna(0.0).to_pandas().plot(kind='line', figsize=[15,5], title='Daily conversion rate overall', xlabel='Day')
@@ -461,8 +461,8 @@ Conversions per marketing _source_ over full timeframe
 	>>> campaign_conversions_source_timeframe = modelhub.aggregate.unique_users(df_marketing_selection[df_marketing_selection.is_conversion_event], ['utm_source'])
 	>>> campaign_conversions_source_timeframe.reset_index().dropna(axis=0, how='any', subset='utm_source').sort_values(['unique_users'], ascending=False).head()
 	  utm_source  unique_users
-	0    twitter             9
-	1     reddit             5
+	0    twitter            11
+	1     reddit             7
 
 Conversions per marketing _source_ daily
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -475,15 +475,16 @@ Conversions per marketing _source_ daily
 	>>> campaign_conversions_source_daily.reset_index().dropna(axis=0, how='any', subset='utm_source').set_index('day').sort_index(ascending=False).head(10)
 	           utm_source  unique_users
 	day
-	2022-08-14    twitter             1
+	2022-08-20     reddit             1
+	2022-08-16     reddit             1
+	2022-08-14    twitter             2
 	2022-08-13     reddit             2
 	2022-08-04    twitter             1
+	2022-07-26    twitter             4
 	2022-07-26     reddit             1
-	2022-07-26    twitter             3
 	2022-07-25    twitter             1
-	2022-07-23     reddit             2
 	2022-07-23    twitter             3
-	2022-07-22    twitter             1
+	2022-07-23     reddit             2
 
 Conversions per marketing _campaign_ over full timeframe
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -495,10 +496,10 @@ Conversions per marketing _campaign_ over full timeframe
 	>>> campaign_conversions_campaign = modelhub.aggregate.unique_users(df_marketing_selection[df_marketing_selection.is_conversion_event], ['utm_source', 'utm_medium', 'utm_campaign'])
 	>>> campaign_conversions_campaign.reset_index().dropna(axis=0, how='any', subset='utm_source').sort_values(['utm_source', 'unique_users'], ascending=False).head()
 	  utm_source utm_medium     utm_campaign  unique_users
-	0    twitter       paid         utm_test             8
-	1    twitter       paid  july_conversion             2
-	2     reddit       paid             june             3
-	3     reddit       paid  july_conversion             2
+	0    twitter       paid         utm_test             9
+	1    twitter       paid  july_conversion             3
+	2     reddit       paid  july_conversion             4
+	3     reddit       paid             june             3
 
 .. admonition:: Reference
 	:class: api-reference
@@ -554,8 +555,8 @@ Avg. duration for converted users per _source_
 	>>> modelhub.aggregate.session_duration(converted_users, groupby=['utm_source']).to_frame().sort_values('utm_source', ascending=False).head(20)
 	                 session_duration
 	utm_source
-	twitter    0 days 00:00:30.881667
-	reddit     0 days 00:02:02.262000
+	twitter    0 days 00:00:59.731000
+	reddit     0 days 00:00:52.422333
 
 Avg. duration per ad source for converted users
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -576,7 +577,9 @@ Avg. duration per ad source for converted users
 	>>> duration_per_source_converted.head(20)
 	                            session_duration
 	day        utm_source
-	2022-08-14 twitter    0 days 00:01:06.414000
+	2022-08-20 reddit     0 days 00:00:23.588000
+	2022-08-16 reddit     0 days 00:00:11.417000
+	2022-08-14 twitter    0 days 00:02:29.620500
 	2022-07-26 reddit     0 days 00:02:02.262000
 	           twitter    0 days 00:00:20.948500
 	2022-07-23 twitter    0 days 00:00:00.352000
@@ -593,7 +596,10 @@ Avg. duration per converted user
 	>>> duration_per_converted_user.head(20)
 	                                                                 session_duration
 	day        utm_source user_id
-	2022-08-14 twitter    c958488e-8279-4949-ace7-a759f69fda04 0 days 00:01:06.414000
+	2022-08-20 reddit     da6e0925-bb69-4175-82cc-8d4a08d79505 0 days 00:00:23.588000
+	2022-08-16 reddit     ad488caa-287c-4d65-be78-4072196cfec8 0 days 00:00:11.417000
+	2022-08-14 twitter    58a635f5-6704-4c22-8d7c-ba708aeb79d3 0 days 00:03:52.827000
+	                      c958488e-8279-4949-ace7-a759f69fda04 0 days 00:01:06.414000
 	2022-07-26 reddit     ed42dc5f-6040-4ddc-b7e5-48162adb7bbc 0 days 00:02:02.262000
 	           twitter    99f741a0-d05e-4688-8bd9-53f66bf926aa 0 days 00:00:41.883000
 	                      b2e983c9-11c2-4a98-bc15-b96cd93e0a23 0 days 00:00:00.014000
@@ -611,7 +617,7 @@ moment of conversion).
 	>>> # avg duration before conversion - overall
 	>>> modelhub.aggregate.session_duration(converted_users, groupby=None).to_frame().head()
 	        session_duration
-	0 0 days 00:00:48.865333
+	0 0 days 00:01:02.336000
 
 Avg. duration before first conversion per _source_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -625,8 +631,8 @@ sessions after the moment of conversion).
 	>>> modelhub.aggregate.session_duration(converted_users, groupby=['utm_source']).to_frame().head()
 	                 session_duration
 	utm_source
-	reddit     0 days 00:02:02.262000
-	twitter    0 days 00:00:34.186000
+	reddit     0 days 00:00:52.422333
+	twitter    0 days 00:01:07.292833
 
 Avg. duration with bounces filtered out
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -670,7 +676,7 @@ Avg. daily duration per campaign _source_
 	           2022-08-17 0 days 00:00:17.638400             6              NaN
 	           2022-08-16 0 days 00:01:22.959429            10              NaN
 	           2022-08-15 0 days 00:00:41.717133            19              NaN
-	           2022-08-14 0 days 00:01:23.530200            10              1.0
+	           2022-08-14 0 days 00:01:23.530200            10              2.0
 	           2022-08-13 0 days 00:01:08.181000             8              NaN
 	           2022-08-12 0 days 00:00:08.564000             8              NaN
 	           2022-08-11 0 days 00:00:15.621500             9              NaN
@@ -686,7 +692,7 @@ Avg. daily duration per campaign _source_
 	           2022-07-29 0 days 00:13:07.583500             6              NaN
 	           2022-07-28 0 days 00:00:32.512667             3              NaN
 	           2022-07-27 0 days 00:01:12.981000            18              NaN
-	           2022-07-26 0 days 00:01:24.773308            48              3.0
+	           2022-07-26 0 days 00:01:24.773308            48              4.0
 	           2022-07-25 0 days 00:02:52.283667            44              1.0
 	           2022-07-24 0 days 00:03:46.970400            34              NaN
 	           2022-07-23 0 days 00:02:27.544364            44              3.0
@@ -694,11 +700,11 @@ Avg. daily duration per campaign _source_
 	           2022-07-21 0 days 00:02:14.805500             6              NaN
 	           2022-07-06 0 days 00:00:01.071000             1              NaN
 	           2022-06-09 0 days 00:03:44.867333             1              NaN
-	reddit     2022-08-20 0 days 00:00:17.293333             6              NaN
+	reddit     2022-08-20 0 days 00:00:17.293333             6              1.0
 	           2022-08-19 0 days 00:00:46.239000             3              NaN
 	           2022-08-18 0 days 00:01:33.566500             3              NaN
 	           2022-08-17 0 days 00:00:07.143667             4              NaN
-	           2022-08-16 0 days 00:00:25.282500             3              NaN
+	           2022-08-16 0 days 00:00:25.282500             3              1.0
 	           2022-08-15 0 days 00:00:47.769000             4              NaN
 	           2022-08-14 0 days 00:00:18.651500             5              NaN
 	           2022-08-13 0 days 00:06:51.505500             7              2.0
@@ -791,9 +797,10 @@ Top used product features for users from marketing campaigns, before they conver
 	>>> # show the results, with .to_frame() for nicer formatting
 	>>> top_conversion_locations = top_conversion_locations.to_frame().rename(columns={'unique_users': 'converted_users_percentage'})
 	>>> top_conversion_locations.sort_values(by='converted_users_percentage', ascending=False).head()
-	                                                                         converted_users_percentage
+	                                                                        converted_users_percentage
 	feature_nice_name
-	Link: browse-on-github located at Root Location: home => Content: hero                       100.0
+	Link: browse-on-github located at Root Location: home => Content: hero                   77.777778
+	Link: github located at Root Location: home => Navigation: navbar-top                    22.222222
 
 .. admonition:: Reference
 	:class: api-reference
@@ -908,17 +915,13 @@ Funnel Discovery: drop-off for users from marketing
 	>>> # get the last used feature in the location_stack before dropping off
 	>>> modelhub.aggregate.drop_off_locations(df_funnel_non_converted, groupby='user_id', percentage=True).head(10)
 	                                                                                               percentage
-	__location
-	Root Location: home                                                                             62.618596
-	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...   15.370019
-	Link: about-us located at Root Location: home => Navigation: navbar-top                          5.123340
-	Link: spin-up-the-demo located at Root Location: home => Content: hero                           4.174573
-	Link: docs located at Root Location: home => Navigation: navbar-top                              2.277040
-	Link: blog located at Root Location: home => Navigation: navbar-top                              1.707780
-	Link: logo located at Root Location: home => Navigation: navbar-top                              1.328273
-	Link: spin-up-the-demo located at Root Location: home => Content: try-it                         1.138520
-	Link: jobs located at Root Location: home => Navigation: navbar-top                              0.948767
-	Link: docs-taxonomy located at Root Location: home => Content: taxonomy                          0.569260
+	location
+	Root Location: home                                                                             76.218324
+	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...   21.832359
+	Root Location: blog                                                                              0.974659
+	Content: post-release-objectiv-now-has-support-for-deepnote located at Root Location: blog       0.584795
+	Content: post-release-google-bigquery-support-our-mission-to-enable-data- located at Root ...    0.194932
+	Media Player: product-demo-e2e-testing located at Root Location: blog => Content: post-rel...    0.194932
 
 .. admonition:: Reference
 	:class: api-reference

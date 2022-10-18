@@ -350,34 +350,25 @@ class QCutOperation:
             Current implementation might go into a discussion in the future.
         """
         q_result = self.series.quantile(q=self.quantiles).copy_override(name='q_result')
-        min_q_result = q_result.min()
 
         quantile_ranges_df = q_result.to_frame()
-
-        # some quantiles might have the same result, we need to avoid having overlapped ranges
-        quantile_ranges_df = quantile_ranges_df.drop_duplicates(ignore_index=True)
 
         # lowest calculated quantile might be also be in the dataset, therefore
         # we need to extend the lowest bound
         # Be aware that this adjustment might generate errors when
         # 0 < lowest_quantile < RANGE_ADJUSTMENT
-        quantile_ranges_df['lower_bound'] = quantile_ranges_df['q_result'].copy_override(
-            expression=Expression.construct(
-                f'case when {{}} = {{}} then {{}} - {_RANGE_ADJUSTMENT} else {{}} end',
-                Series.as_independent_subquery(min_q_result),
-                *[quantile_ranges_df['q_result']] * 3
-            )
-        )
+        min_quantile = min(self.quantiles)
+        mask = quantile_ranges_df.index['quantile'] == min_quantile
+        quantile_ranges_df.loc[mask, 'q_result'] = quantile_ranges_df['q_result'] - _RANGE_ADJUSTMENT
 
-        # should call "series.lag" instead but just need sorting in the window function
-        quantile_ranges_df['upper_bound'] = quantile_ranges_df['lower_bound'].copy_override(
-            expression=Expression.construct(
-                f'lag({{}}, 1, NULL) over (order by {{}} desc)',
-                quantile_ranges_df['lower_bound'],
-                quantile_ranges_df['lower_bound'],
-            ),
-            name='upper_bound'
-        )
         quantile_ranges_df['bounds'] = '(]'
-        quantile_ranges_df = quantile_ranges_df.materialize()
-        return quantile_ranges_df[['lower_bound', 'upper_bound', 'bounds']]
+
+        # some quantiles might have the same result, we need to avoid having overlapped ranges
+        quantile_ranges_df = quantile_ranges_df.drop_duplicates(ignore_index=True)
+
+        quantile_ranges_df['lower_bound'] = quantile_ranges_df['q_result'].copy()
+        window = quantile_ranges_df.sort_values(by='q_result').groupby().window()
+        quantile_ranges_df['upper_bound'] = quantile_ranges_df['q_result'].window_lead(window=window)
+
+        quantile_ranges_df = quantile_ranges_df[['lower_bound', 'upper_bound', 'bounds']]
+        return quantile_ranges_df.materialize(node_name='q_range_calculation')

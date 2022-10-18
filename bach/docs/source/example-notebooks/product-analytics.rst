@@ -344,7 +344,7 @@ To see the average time spent by users in each main product section (per month i
 	>>> session_duration = modelhub.aggregate.session_duration(df, groupby='session_id', exclude_bounces=False)
 	>>> # materialization is needed because the expression of the created Series contains aggregated data, and it is not allowed to aggregate that.
 	>>> session_duration.materialize().quantile(q=[0.25, 0.50, 0.75]).head()
-	q
+	quantile
 	0.25   0 days 00:00:00.013000
 	0.50   0 days 00:00:05.893000
 	0.75   0 days 00:01:10.487500

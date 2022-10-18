@@ -6,12 +6,12 @@ from decimal import Decimal
 import numpy
 import pandas as pd
 import pytest
-from psycopg2._range import NumericRange
 
 from bach import Series, SeriesAbstractNumeric, SeriesNumericInterval
 from bach.partitioning import GroupingList, GroupingSet, Rollup, Cube
 from sql_models.util import is_postgres, is_bigquery, is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
+from bach.testing import assert_equals_data
 
 
 def test_group_by_all(engine):
@@ -124,7 +124,6 @@ def test_group_by_multiple_syntax(engine):
         }
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_group_by_expression(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     btg = bt.groupby(bt['city'].str[:1])
@@ -688,7 +687,6 @@ def test_materialize_on_double_aggregation(engine):
     numpy.testing.assert_almost_equal(value, 2413.5)
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_groupby_w_multi_level_series(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     bt['lower'] = 0
@@ -718,18 +716,10 @@ def test_groupby_w_multi_level_series(engine):
     ).to_pandas()
     pd.testing.assert_frame_equal(expected.sort_index(), result_pdf)
 
-    if is_postgres(engine):
-        range_1 = NumericRange(lower=Decimal('0.'), upper=Decimal('1.'), bounds='[]')
-        range_2 = NumericRange(lower=Decimal('1.'), upper=Decimal('3.'), bounds='[]')
-        range_3 = NumericRange(lower=Decimal('2.'), upper=Decimal('5.'), bounds='[]')
-        range_4 = NumericRange(lower=Decimal('3.'), upper=Decimal('7.'), bounds='[]')
-    elif is_bigquery(engine):
-        range_1 = {'lower': 0., 'upper': 1., 'bounds': '[]'}
-        range_2 = {'lower': 1., 'upper': 3., 'bounds': '[]'}
-        range_3 = {'lower': 2., 'upper': 5., 'bounds': '[]'}
-        range_4 = {'lower': 3., 'upper': 7., 'bounds': '[]'}
-    else:
-        raise Exception()
+    range_1 = pd.Interval(0., 1., closed='both')
+    range_2 = pd.Interval(1., 3., closed='both')
+    range_3 = pd.Interval(2., 5., closed='both')
+    range_4 = pd.Interval(3., 7., closed='both')
 
     assert_equals_data(
         result,
@@ -745,4 +735,5 @@ def test_groupby_w_multi_level_series(engine):
             [range_4, 'Súdwest-Fryslân', 48080, 17],
             [range_4, 'Waadhoeke', 12760, 10],
         ],
+        use_to_pandas=True
     )

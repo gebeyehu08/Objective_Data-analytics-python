@@ -16,6 +16,8 @@ Options:
     --end_date=<end_date>           Last date for which objectiv data is loaded for Modelhub. Format as 'YYYY-MM-DD'.
 
 Before running checks, please define .env file. Must include the following variables per engine:
+- ATHENA
+ATHENA_DB__DSN=
 
 - Postgres
 PG_DB__DSN
