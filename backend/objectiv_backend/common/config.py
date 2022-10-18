@@ -15,7 +15,7 @@ SCHEMA_VALIDATION_SERVICE_URL = os.environ.get('SCHEMA_VALIDATION_SERVICE_URL', 
 SCHEMA_VALIDATION_ERROR_REPORTING = os.environ.get('SCHEMA_VALIDATION_ERROR_REPORTING', 'false') == 'true'
 
 # file containing mapping from _type -> _types
-SCHEMA_TYPES_MAP_FILE = '../schema/types_map.json'
+SCHEMA_TYPES_MAP_FILE = '../schema/hierarchy.json'
 
 # Number of ms before an event is considered too old. set to 0 to disable
 MAX_DELAYED_EVENTS_MILLIS = 1000 * 3600
