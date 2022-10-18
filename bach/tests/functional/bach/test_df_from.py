@@ -174,8 +174,8 @@ def _assert_df_supports_basic_operations(df: DataFrame):
     )
 
 
-@pytest.mark.skip_bigquery_todo()
-@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1375')
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1375')
 def test_from_model_basic(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
@@ -236,8 +236,8 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
-@pytest.mark.skip_bigquery_todo()
-@pytest.mark.skip_athena_todo()
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1375')
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1375')
 def test_from_model_column_ordering(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_model_ordering(), but tests creating the dataframe with
     # from_model instead of from_table
