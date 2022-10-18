@@ -435,7 +435,8 @@ class FunnelDiscovery:
     def plot_sankey_diagram(
             self,
             steps_df: bach.DataFrame,
-            n_top_examples: int = None
+            n_top_examples: int = None,
+            show: bool = True
     ) -> bach.DataFrame:
         """
         Plot a Sankey Diagram of the Funnel with Plotly.
@@ -455,6 +456,8 @@ class FunnelDiscovery:
         :param steps_df: the dataframe which we get from `FunnelDiscovery.get_navigation_paths`.
         :param n_top_examples: number of top examples to plot (if we have
             too many examples to plot it can slow down the browser).
+        :param show: if True, it shows the plot, if False it only returns the DataFrame with the data that
+            is to be plotted.
 
         :returns: Bach DataFrame with `source`, `target` and `value` columns.
         """
@@ -502,7 +505,8 @@ class FunnelDiscovery:
                 font_color='black',
                 title_font_color='black',
                 title_text="Location Stack Flow", font_size=14)
-            fig.show()
+            if show:
+                fig.show()
         else:
             print("There is no data to plot.")
 
