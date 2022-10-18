@@ -1,5 +1,5 @@
 install_env_bach:
-	pip install -e ../../../bach
+	pip install -e ../../../bach[bigquery,athena]
 
 install_env_modelhub:
 	pip install -e ../../../modelhub
