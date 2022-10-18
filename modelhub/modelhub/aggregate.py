@@ -536,6 +536,9 @@ class Aggregate:
                           data: bach.DataFrame,
                           location_stack: LocationStackType = None) -> bach.DataFrame:
         """
+        Calculates conversion numbers for all locations stacks in the `data`.
+        N.B. Filter the dataframe beforehand if you don't want to include all location stacks .
+
         For each step in a funnel, calculates the number of unique users who started it,
         the number of unique users who completed the step (the step is considered
         completed if the user went to any other step of the funnel),
@@ -543,6 +546,10 @@ class Aggregate:
         when looking at all users who started the funnel (= the 'full' conversion rate),
         and the fraction of the users in the funnel dropping out at the given step.
 
+        N.B. We assumed that the funnel direction is always the same.
+        The implementation of VisibleEvents makes for the most accurate calculation
+        of the conversion numbers, as the number of users as well as the conversion rate
+        is based on events on each location stack.
 
         :param data: The :py:class:`bach.DataFrame` to apply the operation on.
         :param location_stack: The column that holds the steps in the funnel. Can be:
@@ -589,12 +596,6 @@ class Aggregate:
         step_completed_df = step_completed_df.groupby([f'{location}_step_1']).count()\
             .rename(columns={'user_id_count': 'n_users_completed_step'}).sort_index()
 
-        # drop-offs
-        dropoff_df = self.drop_off_locations(df_root_user, location_stack=location,
-                                             groupby='user_id',
-                                             percentage=False).reset_index()
-        dropoff_df = dropoff_df.rename(columns={'value_counts': 'dropoff'})
-
         # merging n_users with n_users completed_step and n_users for drop-offs
         result = step_visitors_df.merge(step_completed_df,
                                         left_on=location,
@@ -602,19 +603,17 @@ class Aggregate:
                                         how='left').reset_index(drop=True)
         result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
 
+        n_users_start = result['n_users'].max()
+
         # n_users drop-offs
-        result = result.merge(dropoff_df, left_on=location, right_on='location', how='left')
-        result['dropoff'] = result['dropoff'].fillna(0)
-        result['dropoff_share'] = result['dropoff'] / result['dropoff'].sum()
-        result['dropoff_share'] = cast(SeriesFloat64, result['dropoff_share']).round(3)
+        result['dropoff_share'] = result['n_users'] - result['n_users_completed_step']
+        result['dropoff_share'] = (result['dropoff_share'] / n_users_start).round(3)
 
         # step_conversion_rate
         result['step_conversion_rate'] = result['n_users_completed_step'] / result['n_users']
         result['step_conversion_rate'] = cast(SeriesFloat64, result['step_conversion_rate']).round(3)
 
         # full_conversion_rate
-        n_users_start = result.sort_values('n_users', ascending=False).\
-            materialize(limit=1)['n_users'].head(1).iloc[0]
         result['full_conversion_rate'] = result['n_users_completed_step'] / n_users_start
         result['full_conversion_rate'] = cast(SeriesFloat64, result['full_conversion_rate']).round(3)
 
