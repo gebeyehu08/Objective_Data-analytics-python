@@ -89,7 +89,7 @@ def get_sample(df: DataFrame,
             sample_cutoff = sample_percentage / 100
             df = df[SeriesFloat64.random(base=df) < sample_cutoff]
     if_exists = 'replace' if overwrite else 'fail'
-    from_table_df = df.database_create_table(table_name=table_name, if_exists=if_exists)
+    df.database_create_table(table_name=table_name, if_exists=if_exists)
 
     # Use SampleSqlModel, that way we can keep track of the current_node and undo this sampling
     # in get_unsampled() by switching this new node for the old node again.
