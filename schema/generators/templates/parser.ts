@@ -4,28 +4,56 @@
 
 import BaseSchema from '../../base_schema.json';
 
+/**
+ * A list of entity names the parser will enrich and support.
+ * This includes all Contexts, Events, LocationStack and GlobalContexts.
+ */
 const entityNames = [
   ...Object.keys(BaseSchema.contexts),
   ...Object.keys(BaseSchema.events),
-  ...Object.keys(BaseSchema),
+  'LocationStack',
+  'GlobalContexts',
 ];
+
+/**
+ * A global map fo all supported entities, by their name (_type).
+ */
 const entitiesMap = new Map();
 
+/**
+ * Process each supported entity and fill the entitiesMap with an enriched version of them.
+ */
 entityNames.forEach(entityName => {
+  /**
+   * Get the original entity definition from the BaseSchema
+   */  
   const entity = BaseSchema.contexts[entityName] ?? BaseSchema.events[entityName] ?? BaseSchema[entityName];
 
+  /**
+   * Create a class out of the entity. Most properties are simply set in state, some are enriched.
+   */  
   entitiesMap.set(entityName, new class {
     private readonly _parent;
     private readonly _properties;
     private readonly _rules;
 
+    /**
+     * To ease working with arrays of entities we set their name in a new `name` property.
+     */  
     readonly name = entityName;
+
+    /**
+     * Enrich entity instance with some boolean flags identifying several characteristics of this entity.
+     */  
     readonly isAbstract = entityName.startsWith('Abstract');
     readonly isContext = entityName.endsWith('Context');
     readonly isEvent = entityName.endsWith('Event');
     readonly isLocationStack = entityName === 'LocationStack';
     readonly isGlobalContexts = entityName === 'GlobalContexts';
 
+    /**
+     * Assigns the entity definition onto the instance itself, omitting some properties we are going to enrich.
+     */  
     constructor() {
       const { parent, properties, ...otherEntityProps } = entity;
       Object.assign(this, otherEntityProps);
@@ -34,10 +62,16 @@ entityNames.forEach(entityName => {
       this._rules = entity?.validation?.rules ?? [];
     }
 
+    /**
+     * Gets the parent entity of this entity, if any 
+     */  
     get parent() {
       return getEntity(this._parent);
     }
 
+    /**
+     * Gets the parent hierarchy of this entity, sorted by highest to lowest in hierarchy. 
+     */  
     get parents() {
       const getEntityParents = (entity, parents = []) => {
         if (!entity._parent) {
@@ -53,6 +87,9 @@ entityNames.forEach(entityName => {
       return getEntityParents(this);
     }
 
+    /**
+     * Gets a list of children of this entity. E.g. entities with `parent` set to this entity. 
+     */  
     get children() {
       let children = [];
       for (let [childName, { parent }] of entitiesMap) {
@@ -63,35 +100,50 @@ entityNames.forEach(entityName => {
       return children;
     }
 
+    /**
+     * Gets the list of properties directly defined in this entity, not inherited. 
+     */  
     get ownProperties() {
       if(this._properties === undefined) {
         return [];
       }
 
-      return this._hydrateProperties(Object.keys(this._properties).map(propertyName => ({
+      return this._hydrateTypes(Object.keys(this._properties).map(propertyName => ({
         name: propertyName,
         ...this._properties[propertyName]
       })))
     }
 
+    /**
+     * Gets the list of properties inherited from parents. Lower properties with the same name override higher ones. 
+     */  
     get inheritedProperties() {
       let inheritedProperties = [];
 
       this.parents.forEach(parent => {
-        inheritedProperties = this._mergeBy('name', inheritedProperties, this._objectToArray(parent._properties));
+        inheritedProperties = this._mergeBy('name', inheritedProperties, this._namedObjectToArray(parent._properties));
       })
 
-      return this._hydrateProperties(inheritedProperties);
+      return this._hydrateTypes(inheritedProperties);
     }
 
+    /**
+     * Gets all the properties of this entity, both inherited and its own. 
+     */  
     get properties() {
       return this._mergeBy('name', this.inheritedProperties, this.ownProperties);
     }
 
+    /**
+     * Gets the list of rules directly defined in this entity, not inherited. 
+     */  
     get ownRules() {
       return this._rules;
     }
 
+    /**
+     * Gets the list of rules inherited from parents. 
+     */  
     get inheritedRules() {
       let inheritedRules = [];
 
@@ -102,11 +154,17 @@ entityNames.forEach(entityName => {
       return inheritedRules;
     }
 
+    /**
+     * Gets all the rules of this entity, both inherited and its own. 
+     */  
     get rules() {
       return [...this.inheritedRules, ...this.ownRules];
     }
 
-    private _hydrateProperties(properties: Array<any>) {
+    /**
+     * Hydrates some known types (LocationStack, GlobalContexts) to their definition  
+     */  
+    private _hydrateTypes(properties: Array<any>) {
       return properties.map(property => {
         switch(property.type) {
           case 'LocationStack':
@@ -118,7 +176,10 @@ entityNames.forEach(entityName => {
       })
     }
 
-    private _objectToArray(object) {
+    /**
+     * Converts a named object, e.g. each key corresponds to an entity, to an array where the key is set to its `name`.   
+     */  
+    private _namedObjectToArray(object) {
       if(object === undefined) {
         return [];
       }
@@ -129,7 +190,10 @@ entityNames.forEach(entityName => {
       }))
     }
 
-    private _arrayToObject(array: Array<any>) {
+    /**
+     * Converts an array of named entities, e.g. each entity has a `name` property, to an object with `name` as key.   
+     */  
+    private _namedArrayToObject(array: Array<any>) {
       let object = {};
 
       array.forEach(item => {
@@ -139,18 +203,21 @@ entityNames.forEach(entityName => {
       return object;
     }
 
+    /**
+     * Merges two arrays by comparing their given `propertyName`. Properties in B with the same name, will override A.
+     */
     private _mergeBy (propertyName: string, propertiesA: Array<any>, propertiesB: Array<any>, ) {
-      let mergedProperties = this._arrayToObject(propertiesA);
+      let mergedProperties = this._namedArrayToObject(propertiesA);
 
       propertiesB.forEach(property => {
         mergedProperties[property[propertyName]] = property;
       });
 
-      return this._objectToArray(mergedProperties);
+      return this._namedObjectToArray(mergedProperties);
     }
   })
 })
 
 export function getEntity(entityName) {
-  return entitiesMap.get(entityName)
+  return entitiesMap.get(entityName);
 }
