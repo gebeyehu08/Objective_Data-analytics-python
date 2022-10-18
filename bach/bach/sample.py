@@ -4,11 +4,10 @@ Copyright 2021 Objectiv B.V.
 from typing import TYPE_CHECKING
 
 from bach import DataFrame
-from bach.series import SeriesJson
 from bach.sql_model import SampleSqlModel
 from sql_models.graph_operations import find_node, replace_node_in_graph
 from sql_models.model import CustomSqlModelBuilder, Materialization
-from sql_models.util import is_postgres, is_athena, DatabaseNotSupportedException
+from sql_models.util import is_postgres, DatabaseNotSupportedException
 
 if TYPE_CHECKING:
     from bach import SeriesBoolean
@@ -38,14 +37,6 @@ def get_sample(df: DataFrame,
     if seed is not None and not is_postgres(dialect):
         message_override = f'The `seed` parameter is not supported for database dialect "{dialect.name}".'
         raise DatabaseNotSupportedException(dialect, message_override=message_override)
-
-    # since hive does not support json type, we must cast all JSON series to string.
-    series_to_stringify = [series.name for series in df.all_series.values() if isinstance(series, SeriesJson)]
-    requires_json_casting = series_to_stringify and is_athena(dialect)
-
-    if requires_json_casting:
-        for series_name in series_to_stringify:
-            df[series_name] = df[series_name].astype('string')
 
     if not df.is_materialized:
         df = df.materialize('get_sample')
@@ -96,13 +87,7 @@ def get_sample(df: DataFrame,
         previous=original_node,
         column_expressions=original_node.column_expressions,
     )
-    df = df.copy_override_base_node(base_node=new_base_node)
-    # cast back to json
-    if requires_json_casting:
-        for series_name in series_to_stringify:
-            df[series_name] = df[series_name].astype(SeriesJson.dtype)
-
-    return df
+    return df.copy_override_base_node(base_node=new_base_node)
 
 
 def get_unsampled(df: DataFrame) -> 'DataFrame':
