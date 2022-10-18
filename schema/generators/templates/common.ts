@@ -12,7 +12,7 @@ export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<
 /**
  * Sorts the given array of objects by their `name` property
  */
-export const sortArrayByName = (array) => array.sort((a, b) => a.name.localeCompare(b.name));
+export const sortBy = (array, propertyName) => array.sort((a, b) => a[propertyName].localeCompare(b[propertyName]));
 
 /**
  * A utility to filter out Abstracts from the given list of Entity names (Contexts or Events)

@@ -5,6 +5,7 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { JavaScriptWriter } from '../writers/JavaScriptWriter';
+import { sortBy } from "./common";
 import { getContexts, getEvents } from "./parser";
 
 Generator.generate({ outputFile: `../../../backend/objectiv_backend/schema/hierarchy.json` }, (writer: TextWriter) => {
@@ -12,8 +13,7 @@ Generator.generate({ outputFile: `../../../backend/objectiv_backend/schema/hiera
 
   const hierarchy = {};
 
-  [...getContexts(), ...getEvents()]
-    .sort((a, b) => a.name.localeCompare(b.name))
+  sortBy([...getContexts(), ...getEvents()], 'name')
     .forEach((entity) => {
       hierarchy[entity.name] = [...entity.parents.map(({ name }) => name), entity.name];
     });

@@ -6,16 +6,16 @@ import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
 import { TypeScriptWriter } from '../writers/TypeScriptWriter';
-import { getObjectKeys, sortArrayByName } from './common';
+import { getObjectKeys, sortBy } from './common';
 
-Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: TextWriter, model: typeof Objectiv) => {
+Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: TextWriter) => {
   const schemaWriter = new TypeScriptWriter(writer);
 
   // ContextTypes enum
   schemaWriter.writeEnumeration({
     export: true,
     name: 'ContextTypes',
-    members: sortArrayByName(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
+    members: sortBy(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type })), 'name'),
   });
   writer.writeLine();
 
@@ -23,7 +23,7 @@ Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: T
   schemaWriter.writeEnumeration({
     export: true,
     name: 'EventTypes',
-    members: sortArrayByName(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
+    members: sortBy(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type })), 'name'),
   });
   writer.writeLine();
 });

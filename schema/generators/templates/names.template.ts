@@ -5,7 +5,7 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { TypeScriptWriter } from '../writers/TypeScriptWriter';
-import { getContextNames, getEntityByName, getEntityParents, getEventNames, sortArrayByName } from './common';
+import { getContextNames, getEntityByName, getEntityParents, getEventNames, sortBy } from './common';
 
 // TODO temporarily generate this in the /generated folder, as we need TS to be finished before we can use it
 //const destinationFolder = '../../../tracker/core/tracker/src/generated/';
@@ -41,7 +41,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
   tsWriter.writeEnumeration({
     export: true,
     name: 'AbstractContextName',
-    members: sortArrayByName(abstractContexts.map((_type) => ({ name: _type, value: _type }))),
+    members: sortBy(abstractContexts.map((_type) => ({ name: _type, value: _type })), 'name'),
   });
 
   tsWriter.writeEndOfLine();
@@ -58,7 +58,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
   tsWriter.writeEnumeration({
     export: true,
     name: 'GlobalContextName',
-    members: sortArrayByName(globalContexts.map((_type) => ({ name: _type, value: _type }))),
+    members: sortBy(globalContexts.map((_type) => ({ name: _type, value: _type })), 'name'),
   });
 
   tsWriter.writeEndOfLine();
@@ -75,7 +75,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
   tsWriter.writeEnumeration({
     export: true,
     name: 'LocationContextName',
-    members: sortArrayByName(locationContexts.map((_type) => ({ name: _type, value: _type }))),
+    members: sortBy(locationContexts.map((_type) => ({ name: _type, value: _type })), 'name'),
   });
 
   tsWriter.writeEndOfLine();
@@ -110,7 +110,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }
   tsWriter.writeEnumeration({
     export: true,
     name: 'AbstractEventName',
-    members: sortArrayByName(abstractEvents.map((_type) => ({ name: _type, value: _type }))),
+    members: sortBy(abstractEvents.map((_type) => ({ name: _type, value: _type })), 'name'),
   });
 
   tsWriter.writeEndOfLine();
@@ -127,7 +127,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }
   tsWriter.writeEnumeration({
     export: true,
     name: 'EventName',
-    members: sortArrayByName(events.map((_type) => ({ name: _type, value: _type }))),
+    members: sortBy(events.map((_type) => ({ name: _type, value: _type })), 'name'),
   });
 
   tsWriter.writeEndOfLine();
