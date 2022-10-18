@@ -52,15 +52,14 @@ export const makeApplicationLoadedEvent = (props: {
 * like an invalid email when sending a form.
 */
 export const makeFailureEvent = (props: {
-  message: string,
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
   id: string,
   time: number,
+  message: string,
 }): FailureEvent => ({
   __instance_id: generateGUID(),
   __non_interactive_event: true,
-  message: props.message,
   _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
@@ -72,6 +71,7 @@ export const makeFailureEvent = (props: {
   _type: EventName.FailureEvent,
   id: props.id,
   time: props.time,
+  message: props.message,
 });
 
 /**
@@ -133,12 +133,12 @@ export const makeInteractiveEvent = (props: {
 }): InteractiveEvent => ({
   __instance_id: generateGUID(),
   __interactive_event: true,
-  location_stack: props.location_stack,
   _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
     EventName.InteractiveEvent
   ],
+  location_stack: props.location_stack,
   global_contexts: props.global_contexts,
   _type: EventName.InteractiveEvent,
   id: props.id,
@@ -328,15 +328,14 @@ export const makePressEvent = (props: {
 * like sending an email form.
 */
 export const makeSuccessEvent = (props: {
-  message: string,
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
   id: string,
   time: number,
+  message: string,
 }): SuccessEvent => ({
   __instance_id: generateGUID(),
   __non_interactive_event: true,
-  message: props.message,
   _schema_version: '1.0.0' ?? null,
   _types: [
     AbstractEventName.AbstractEvent,
@@ -348,6 +347,7 @@ export const makeSuccessEvent = (props: {
   _type: EventName.SuccessEvent,
   id: props.id,
   time: props.time,
+  message: props.message,
 });
 
 /**
@@ -374,10 +374,7 @@ export const makeVisibleEvent = (props: {
   time: props.time,
 });
 
-/**
-* A factory to generate any Event.
-*/
-export function makeEvent (eventProps: {
+export function makeApplicationLoadedEvent (props: {
   _type: 'ApplicationLoadedEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -385,16 +382,16 @@ export function makeEvent (eventProps: {
   time: number,
 }): ApplicationLoadedEvent;
 
-export function makeEvent (eventProps: {
+export function makeFailureEvent (props: {
   _type: 'FailureEvent',
-  message: string,
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
   id: string,
   time: number,
+  message: string,
 }): FailureEvent;
 
-export function makeEvent (eventProps: {
+export function makeHiddenEvent (props: {
   _type: 'HiddenEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -402,7 +399,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): HiddenEvent;
 
-export function makeEvent (eventProps: {
+export function makeInputChangeEvent (props: {
   _type: 'InputChangeEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -410,7 +407,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): InputChangeEvent;
 
-export function makeEvent (eventProps: {
+export function makeInteractiveEvent (props: {
   _type: 'InteractiveEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -418,7 +415,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): InteractiveEvent;
 
-export function makeEvent (eventProps: {
+export function makeMediaEvent (props: {
   _type: 'MediaEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -426,7 +423,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): MediaEvent;
 
-export function makeEvent (eventProps: {
+export function makeMediaLoadEvent (props: {
   _type: 'MediaLoadEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -434,7 +431,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): MediaLoadEvent;
 
-export function makeEvent (eventProps: {
+export function makeMediaPauseEvent (props: {
   _type: 'MediaPauseEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -442,7 +439,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): MediaPauseEvent;
 
-export function makeEvent (eventProps: {
+export function makeMediaStartEvent (props: {
   _type: 'MediaStartEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -450,7 +447,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): MediaStartEvent;
 
-export function makeEvent (eventProps: {
+export function makeMediaStopEvent (props: {
   _type: 'MediaStopEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -458,7 +455,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): MediaStopEvent;
 
-export function makeEvent (eventProps: {
+export function makeNonInteractiveEvent (props: {
   _type: 'NonInteractiveEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -466,7 +463,7 @@ export function makeEvent (eventProps: {
   time: number,
 }): NonInteractiveEvent;
 
-export function makeEvent (eventProps: {
+export function makePressEvent (props: {
   _type: 'PressEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -474,16 +471,16 @@ export function makeEvent (eventProps: {
   time: number,
 }): PressEvent;
 
-export function makeEvent (eventProps: {
+export function makeSuccessEvent (props: {
   _type: 'SuccessEvent',
-  message: string,
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
   id: string,
   time: number,
+  message: string,
 }): SuccessEvent;
 
-export function makeEvent (eventProps: {
+export function makeVisibleEvent (props: {
   _type: 'VisibleEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -491,35 +488,35 @@ export function makeEvent (eventProps: {
   time: number,
 }): VisibleEvent;
 
-export function makeEvent ({ _type, ...eventProps }: any) {
+export function Event ({ _type, ...props }: any) {
   switch(_type) {
     case 'ApplicationLoadedEvent':
-      return makeApplicationLoadedEvent(eventProps);
+      return makeApplicationLoadedEvent(props);
     case 'FailureEvent':
-      return makeFailureEvent(eventProps);
+      return makeFailureEvent(props);
     case 'HiddenEvent':
-      return makeHiddenEvent(eventProps);
+      return makeHiddenEvent(props);
     case 'InputChangeEvent':
-      return makeInputChangeEvent(eventProps);
+      return makeInputChangeEvent(props);
     case 'InteractiveEvent':
-      return makeInteractiveEvent(eventProps);
+      return makeInteractiveEvent(props);
     case 'MediaEvent':
-      return makeMediaEvent(eventProps);
+      return makeMediaEvent(props);
     case 'MediaLoadEvent':
-      return makeMediaLoadEvent(eventProps);
+      return makeMediaLoadEvent(props);
     case 'MediaPauseEvent':
-      return makeMediaPauseEvent(eventProps);
+      return makeMediaPauseEvent(props);
     case 'MediaStartEvent':
-      return makeMediaStartEvent(eventProps);
+      return makeMediaStartEvent(props);
     case 'MediaStopEvent':
-      return makeMediaStopEvent(eventProps);
+      return makeMediaStopEvent(props);
     case 'NonInteractiveEvent':
-      return makeNonInteractiveEvent(eventProps);
+      return makeNonInteractiveEvent(props);
     case 'PressEvent':
-      return makePressEvent(eventProps);
+      return makePressEvent(props);
     case 'SuccessEvent':
-      return makeSuccessEvent(eventProps);
+      return makeSuccessEvent(props);
     case 'VisibleEvent':
-      return makeVisibleEvent(eventProps);
+      return makeVisibleEvent(props);
   }
 }
