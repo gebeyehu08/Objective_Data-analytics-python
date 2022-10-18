@@ -6,9 +6,9 @@ import datetime
 import pandas as pd
 import pytest
 
-from bach import SeriesDate, DataFrame
-from tests.functional.bach.test_data_and_utils import assert_equals_data,\
-    assert_postgres_type, get_df_with_test_data, get_df_with_food_data
+from bach import DataFrame
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data,\
+    get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES, \
@@ -21,8 +21,6 @@ def test_date_comparator(asstring: bool, engine):
 
     # import code has no means to distinguish between date and timestamp
     mt['date'] = mt['date'].astype('date')
-
-    assert_postgres_type(mt['date'], 'date', SeriesDate)
 
     from datetime import date
     dt = date(2021, 5, 4)

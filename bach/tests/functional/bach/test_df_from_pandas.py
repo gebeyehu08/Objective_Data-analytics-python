@@ -3,10 +3,10 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from bach import DataFrame
+from bach import DataFrame, SeriesFloat64, SeriesInt64, SeriesBoolean, SeriesTimestamp, SeriesString
 from sql_models.constants import DBDialect
 from tests.functional.bach.test_data_and_utils import TEST_DATA_CITIES, CITIES_COLUMNS, \
-    assert_equals_data, convert_expected_data_timestamps, assert_db_types
+    assert_equals_data, convert_expected_data_timestamps, assert_series_db_types
 import datetime
 from uuid import UUID
 import pandas as pd
@@ -365,7 +365,6 @@ def test_from_pandas_columns_w_nulls(engine) -> None:
     )
 
 
-@pytest.mark.skip_bigquery_todo()
 def test_all_supported_types_db_dtypes(engine):
     TEST_DATA_SUPPORTED_TYPES = [
         [1.32, 4, datetime.datetime(2015, 12, 13, 9, 54, 45, 543), 'fierljeppen', True]
@@ -375,22 +374,16 @@ def test_all_supported_types_db_dtypes(engine):
         df=get_pandas_df(TEST_DATA_SUPPORTED_TYPES, ['float', 'int', 'timestamp', 'string', 'bool']),
         convert_objects=True,
     )
-
-    all_expected_db_dtypes = {
-        DBDialect.POSTGRES: {
-            'float': 'double precision',
-            'int': 'bigint',
-            'timestamp': 'timestamp without time zone',
-            'string': 'text',
-            'bool': 'boolean'
-        },
-        DBDialect.ATHENA: {
-            'float': 'double',
-            'int': 'bigint',
-            'timestamp': 'timestamp',
-            'string': 'varchar(11)',
-            'bool': 'boolean'
+    expected_series = {
+            'float': SeriesFloat64,
+            'int': SeriesInt64,
+            'timestamp': SeriesTimestamp,
+            'string': SeriesString,
+            'bool': SeriesBoolean
         }
-    }
-    expected_db_dtypes = all_expected_db_dtypes[DBDialect.from_engine(engine)]
-    assert_db_types(df=df, series_expected_db_type=expected_db_dtypes)
+    expected_db_type_overrides = {DBDialect.ATHENA: {'string': 'varchar(11)'}}
+    assert_series_db_types(
+        df=df,
+        expected_series=expected_series,
+        expected_db_type_overrides=expected_db_type_overrides
+    )
