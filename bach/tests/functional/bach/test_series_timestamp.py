@@ -9,9 +9,9 @@ import pandas as pd
 import pytest
 from sqlalchemy.engine import Engine
 
+from bach.testing import assert_equals_data
 from sql_models.util import is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data,\
-    get_df_with_food_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_food_data
 
 
 def floor_datetime(engine, dt: datetime.datetime) -> datetime.datetime:

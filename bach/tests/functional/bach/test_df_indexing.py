@@ -4,7 +4,8 @@ import pandas as pd
 import pytest
 
 from bach import Series, DataFrame
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 @pytest.fixture()

@@ -9,8 +9,9 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from bach import SeriesUuid
+from bach.testing import assert_equals_data
 from sql_models.util import is_postgres, is_bigquery, is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, run_query, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import run_query, get_df_with_test_data
 
 
 def test_uuid_value_to_expression(engine):

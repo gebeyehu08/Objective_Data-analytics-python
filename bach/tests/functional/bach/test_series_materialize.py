@@ -5,10 +5,11 @@ Copyright 2022 Objectiv B.V.
 import pytest
 
 from bach.series import Series
+from bach.testing import assert_equals_data
 from sql_models.graph_operations import get_graph_nodes_info
 from sql_models.model import Materialization
 from sql_models.util import is_bigquery, is_postgres, is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 @pytest.mark.skip_athena_todo()  # TODO: Athena
