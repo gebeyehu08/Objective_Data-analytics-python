@@ -251,15 +251,21 @@ class SeriesString(Series):
         if source_dtype == 'string':
             return expression
 
+        cast_expr = Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
         series_type = get_series_type_from_dtype(source_dtype)
-        from bach.series import SeriesJson
-        if is_athena(dialect) and issubclass(series_type, SeriesJson):
+        from bach.series import SeriesJson, SeriesFloat64
+
+        if not (is_athena(dialect) and issubclass(series_type, (SeriesJson, SeriesFloat64))):
+            return cast_expr
+
+        if issubclass(series_type, SeriesJson):
             # casting directly to varchar will "deserialize" the json text, meaning that the string value
             # will be extracted as scalar. For example: "a string" will result into: a string
             # which yields different results compare to Postgres and BigQuery
             # Using json_format will avoid this and double quotes will be kept
             return Expression.construct('json_format({})', expression)
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
+
+        return Expression.construct("rtrim({}, '.0')", cast_expr)
 
     def get_dummies(
         self,

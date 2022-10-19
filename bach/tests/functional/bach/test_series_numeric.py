@@ -367,3 +367,19 @@ def test_exp(engine) -> None:
         decimal=14
     )
 
+
+def test_astype_to_string(engine):
+    df = get_df_with_test_data(engine)[[]]
+    df['float0'] = 123.0
+    df['float1'] = 123
+    df['float2'] = 123.45
+    df = df.astype(str)
+    assert_equals_data(
+        df,
+        expected_columns=['_index_skating_order', 'float0', 'float1', 'float2'],
+        expected_data=[
+            [1, '123', '123', '123.45'],
+            [2, '123', '123', '123.45'],
+            [3, '123', '123', '123.45']
+        ]
+    )
