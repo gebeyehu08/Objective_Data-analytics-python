@@ -1177,10 +1177,22 @@ class DataFrame:
         .. note::
             This function writes to the database.
         """
+        from bach.series import SeriesJson
         if if_exists not in {'fail', 'replace'}:
             raise ValueError(f'Value of if_exists ({if_exists}) must be either "fail" or "replace"')
         dialect = self.engine.dialect
-        model = self.get_current_node(name='database_create_table')
+        df_cp = self.copy()
+
+        # since hive does not support json type, we must cast all JSON series to string.
+        series_to_stringify = {
+            series.name: 'string'
+            for series in self.all_series.values()
+            if isinstance(series, SeriesJson) and is_athena(dialect)
+        }
+        if series_to_stringify:
+            df_cp = df_cp.astype(series_to_stringify)
+
+        model = df_cp.get_current_node(name='database_create_table')
         model = model.copy_set_materialization(Materialization.TABLE)
         model = model.copy_set_materialization_name(materialization_name=table_name)
 
@@ -1200,13 +1212,15 @@ class DataFrame:
                 sql = escape_parameter_characters(conn, sql)
                 conn.execute(sql)
 
-        all_dtypes = {**self.index_dtypes, **self.dtypes}
-        return self.from_table(
+        all_dtypes = {**df_cp.index_dtypes, **df_cp.dtypes}
+        result = self.from_table(
             engine=self.engine,
             table_name=table_name,
             index=self.index_columns,
             all_dtypes=all_dtypes
         )
+        # cast to original dtypes
+        return result.astype(self.dtypes)
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
