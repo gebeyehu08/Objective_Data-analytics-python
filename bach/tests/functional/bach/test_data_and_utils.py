@@ -16,7 +16,6 @@ from bach import DataFrame, Series
 from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, quote_identifier
 from tests.unit.bach.util import get_pandas_df
-from bach.testing import assert_equals_data
 
 # Three data tables for testing are defined here that can be used in tests
 # 1. cities: 3 rows (or 11 for the full dataset) of data on cities

@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 
 from modelhub.pipelines.util import get_objectiv_data
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params

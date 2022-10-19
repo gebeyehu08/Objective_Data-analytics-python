@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from bach import DataFrame
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 
 def test_append_w_aligned_columns(engine) -> None:

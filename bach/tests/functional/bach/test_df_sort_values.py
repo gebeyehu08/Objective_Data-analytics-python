@@ -8,7 +8,8 @@ import pandas as pd
 import pytest
 
 from bach import DataFrame
-from tests.functional.bach.test_data_and_utils import assert_equals_data, df_to_list, get_df_with_test_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import df_to_list, get_df_with_test_data
 
 
 @pytest.fixture

@@ -12,13 +12,13 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
+from bach.testing import assert_equals_data
 from bach.utils import merge_sql_statements
 from sql_models.constants import DBDialect
 from sql_models.model import CustomSqlModelBuilder, SqlModel, Materialization
 from sql_models.sql_generator import to_sql
 from sql_models.util import is_athena
 from tests.conftest import DB_ATHENA_LOCATION
-from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def _create_test_table(engine: Engine, table_name: str, add_data: bool):

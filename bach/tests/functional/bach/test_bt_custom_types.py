@@ -6,9 +6,10 @@ from sqlalchemy.engine import Dialect
 
 from bach import Series
 from bach.expression import Expression
+from bach.testing import assert_equals_data
 from bach.types import TypeRegistry
 from sql_models.constants import DBDialect
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 class ReversedStringType(Series):
