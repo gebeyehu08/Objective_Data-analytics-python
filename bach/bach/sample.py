@@ -79,10 +79,14 @@ def get_sample(df: DataFrame,
     if_exists = 'replace' if overwrite else 'fail'
     created_df = df.database_create_table(table_name=table_name, if_exists=if_exists)
 
-    new_base_node = SampleSqlModel.from_bach_sql_model(
-        bach_sql_model=created_df.base_node,
-        previous=original_node
-    )
+    # created_df might have unmaterialized changes, if there were any casts involved in writing to and
+    # reading from the table.
+    if not created_df.is_materialized:
+        created_df = created_df.materialize('get_sample_sampled_table')
+
+    # Use SampleSqlModel, that way we can keep track of the current_node and undo this sampling
+    # in get_unsampled() by switching this new node for the old node again.
+    new_base_node = SampleSqlModel.from_bach_sql_model(model=created_df.base_node, previous=original_node)
     return df.copy_override_base_node(base_node=new_base_node)
 
 

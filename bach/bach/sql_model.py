@@ -189,15 +189,15 @@ class SampleSqlModel(BachSqlModel):
         )
 
     @classmethod
-    def from_bach_sql_model(cls, bach_sql_model: BachSqlModel, previous: BachSqlModel) -> 'BachSqlModel':
+    def from_bach_sql_model(cls, model: BachSqlModel, previous: BachSqlModel) -> 'BachSqlModel':
         """ From any BachSqlModel create a SampleSqlModel with the given `previous` model. """
         return cls(
-            model_spec=bach_sql_model.model_spec,
-            placeholders=bach_sql_model.placeholders,
-            references=bach_sql_model.references,
-            materialization=bach_sql_model.materialization,
-            materialization_name=bach_sql_model.materialization_name,
-            column_expressions=bach_sql_model.column_expressions,
+            model_spec=model.model_spec,
+            placeholders=model.placeholders,
+            references=model.references,
+            materialization=model.materialization,
+            materialization_name=model.materialization_name,
+            column_expressions=model.column_expressions,
             previous=previous
         )
 
