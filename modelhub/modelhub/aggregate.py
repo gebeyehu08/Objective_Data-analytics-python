@@ -427,13 +427,10 @@ class Aggregate:
         if _end_date is not None:
             data = data[data['moment'] < _end_date]
 
-        # prepare cohort_distance value as a valid column name based on engine
-        # e.g in BigQuery columns cannot start with numbers, and Athena does not allow dots in column names.
         cd_series = data['cohort_distance'].copy_override_type(bach.SeriesFloat64).round()
         formatted_cd_series = (
             cd_series.astype(dtype=bach.SeriesString.dtype).copy_override_type(bach.SeriesString)
         )
-        formatted_cd_series = formatted_cd_series.str.replace('.0', '')
         data['cohort_distance_prefix'] = '_'
         data['cohort_distance'] = data['cohort_distance_prefix'] + formatted_cd_series
 

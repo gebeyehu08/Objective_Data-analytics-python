@@ -268,7 +268,7 @@ class SeriesString(Series):
                 # (if value has no fractional part)
                 # for example, 123.0 will result into '123.0' (this does not happen for PG and BQ),
                 # so for data consistency, we should trim the extra .0
-                return Expression.construct("rtrim({}, '.0')", cast_expr)
+                return Expression.construct(r"regexp_replace({},'\.0+$','')", cast_expr)
 
         return cast_expr
 
