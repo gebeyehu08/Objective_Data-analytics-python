@@ -264,8 +264,9 @@ class SeriesString(Series):
                 return Expression.construct('json_format({})', expression)
 
             if issubclass(series_type, SeriesFloat64):
-                # casting doubles to varchar do not trim decimal points (if value has no fractional part)
-                # for example, 123.0 will result into '123.0' (this does not happend for PG and BQ),
+                # casting doubles to varchar do not trim trailing zeros after decimal point
+                # (if value has no fractional part)
+                # for example, 123.0 will result into '123.0' (this does not happen for PG and BQ),
                 # so for data consistency, we should trim the extra .0
                 return Expression.construct("rtrim({}, '.0')", cast_expr)
 
