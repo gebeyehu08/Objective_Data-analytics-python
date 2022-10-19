@@ -7,7 +7,7 @@
 */
 export interface AbstractContext {
   /**
-  * An internal unique identifier used to compare instances of the same type.
+  * An internal unique identifier used to compare instances with the same _type & id.
   */
   __instance_id: string;
   /**
@@ -22,7 +22,27 @@ export interface AbstractContext {
   /**
   * A string literal used during serialization. Hardcoded to the Context name.
   */
-  _type: 'AbstractGlobalContext' | 'AbstractLocationContext';
+  _type: 
+    | 'AbstractGlobalContext'
+    | 'AbstractLocationContext'
+    | 'ApplicationContext'
+    | 'CookieIdContext'
+    | 'HttpContext'
+    | 'IdentityContext'
+    | 'InputValueContext'
+    | 'LocaleContext'
+    | 'MarketingContext'
+    | 'PathContext'
+    | 'SessionContext'
+    | 'ContentContext'
+    | 'ExpandableContext'
+    | 'InputContext'
+    | 'MediaPlayerContext'
+    | 'NavigationContext'
+    | 'OverlayContext'
+    | 'PressableContext'
+    | 'RootLocationContext'
+    | 'LinkContext';
 }
 
 /**
@@ -51,7 +71,21 @@ export interface AbstractEvent {
   /**
   * A string literal used during serialization. Hardcoded to the Event name.
   */
-  _type: 'InteractiveEvent' | 'NonInteractiveEvent';
+  _type: 
+    | 'InteractiveEvent'
+    | 'NonInteractiveEvent'
+    | 'InputChangeEvent'
+    | 'PressEvent'
+    | 'ApplicationLoadedEvent'
+    | 'FailureEvent'
+    | 'HiddenEvent'
+    | 'MediaEvent'
+    | 'SuccessEvent'
+    | 'VisibleEvent'
+    | 'MediaLoadEvent'
+    | 'MediaPauseEvent'
+    | 'MediaStartEvent'
+    | 'MediaStopEvent';
   /**
   * Unique identifier for a specific instance of an event.
   */

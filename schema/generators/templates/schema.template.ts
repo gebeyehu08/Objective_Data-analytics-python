@@ -5,12 +5,12 @@
 import { NameUtility, TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { TypeScriptWriter } from '../writers/TypescriptWriter';
-import { getEntities } from './parser';
+import { getEntities, getEvents } from './parser';
 
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
 
-Generator.generateFromModel({ outputFile: '../generated/schema/abstracts.ts' }, (writer: TextWriter) => {
+Generator.generate({ outputFile: '../generated/schema/abstracts.ts' }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
   getEntities({ isAbstract: true, sortBy: 'name' }).forEach((entity) => {
@@ -26,7 +26,7 @@ Generator.generateFromModel({ outputFile: '../generated/schema/abstracts.ts' }, 
           tsWriter.writeProperty({
             name: '__instance_id',
             typeName: 'string',
-            description: ['An internal unique identifier used to compare instances of the same type.']
+            description: ['An internal unique identifier used to compare instances with the same _type & id.'],
           });
         }
 
@@ -34,12 +34,12 @@ Generator.generateFromModel({ outputFile: '../generated/schema/abstracts.ts' }, 
           tsWriter.writeProperty({
             name: `__${NameUtility.camelToKebabCase(entity.name).replace(/-/g, '_').replace('abstract_', '')}`,
             typeName: 'true',
-            description: ['An internal discriminator relating entities of the same hierarchical branch.']
+            description: ['An internal discriminator relating entities of the same hierarchical branch.'],
           });
         }
 
         entity.ownProperties.forEach((property) =>
-          tsWriter.writeProperty(schemaToTypeScriptProperty(entity, property))
+          tsWriter.writeProperty(schemaToTypeScriptProperty(tsWriter, entity, property))
         );
       }
     );
@@ -47,7 +47,46 @@ Generator.generateFromModel({ outputFile: '../generated/schema/abstracts.ts' }, 
   });
 });
 
-const schemaToTypeScriptProperty = (entity, property) => {
+Generator.generate({ outputFile: '../generated/schema/events.ts' }, (writer: TextWriter) => {
+  const tsWriter = new TypeScriptWriter(writer);
+
+  tsWriter.writeImports('./abstracts', ['AbstractEvent', 'AbstractLocationContext']);
+
+  getEvents({ isAbstract: false, sortBy: 'name' }).forEach((entity) => {
+    tsWriter.writeInterfaceBlock(
+      {
+        export: true,
+        description: entity.getDescription({ type: descriptionsType, target: descriptionsTarget }).split('\n'),
+        name: entity.name,
+        extends: entity._parent ? [entity._parent] : undefined,
+      },
+      (tsWriter: TypeScriptWriter) => {
+        tsWriter.writeProperty(
+          schemaToTypeScriptProperty(tsWriter, entity, {
+            name: `_type`,
+            type: 'discriminator',
+            description: 'A string literal used during serialization. Hardcoded to the Event name.',
+          })
+        );
+
+        if (entity._parent && entity.isParent) {
+          tsWriter.writeProperty({
+            name: `__${NameUtility.camelToKebabCase(entity.name).replace(/-/g, '_').replace('abstract_', '')}`,
+            typeName: 'true',
+            description: ['An internal discriminator relating entities of the same hierarchical branch.'],
+          });
+        }
+
+        entity.ownProperties.forEach((property) =>
+          tsWriter.writeProperty(schemaToTypeScriptProperty(tsWriter, entity, property))
+        );
+      }
+    );
+    tsWriter.writeEndOfLine();
+  });
+});
+
+const schemaToTypeScriptProperty = (tsWriter, entity, property) => {
   const typesMap = {
     integer: 'number',
     string: 'string',
@@ -60,8 +99,13 @@ const schemaToTypeScriptProperty = (entity, property) => {
   let mappedType;
   switch (property.type) {
     case 'discriminator':
-      if (entity.isAbstract) {
-        mappedType = `${entity.children.map(({ name }) => `'${name}'`).join(' | ')}`;
+      if (entity.isParent) {
+        const entityNames = entity.children.map(({ name }) => `'${name}'`);
+        const indent = tsWriter.indentString.repeat(2);
+        if (!entity.isAbstract) {
+          entityNames.unshift(`'${entity.name}'`);
+        }
+        mappedType = `\n${indent}| ${entityNames.join(`\n${indent}| `)}`;
       } else {
         mappedType = `'${entity.name}'`;
       }

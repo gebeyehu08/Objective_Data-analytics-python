@@ -91,7 +91,7 @@ entityNames.forEach((entityName) => {
       /**
        * Gets a list of children of this entity. E.g. entities with `parent` set to this entity.
        */
-      get children() {
+      get ownChildren() {
         let children = [];
         for (let [childName, { _parent }] of entitiesMap) {
           if (_parent === this.name) {
@@ -99,6 +99,29 @@ entityNames.forEach((entityName) => {
           }
         }
         return children;
+      }
+
+      /**
+       * Gets a list of all children of this entity. E.g. also children of children, recursively.
+       */
+      get children() {
+        const getEntityChildren = (entity, children = []) => {
+          const ownChildren = entity.ownChildren;
+
+          if (!ownChildren.length) {
+            return children;
+          }
+
+          children.push(...ownChildren);
+
+          ownChildren.forEach((ownChild) => {
+            getEntityChildren(ownChild, children);
+          });
+
+          return children;
+        };
+
+        return getEntityChildren(this);
       }
 
       /**

@@ -11,7 +11,7 @@ import { getContexts, getEvents } from './parser';
 //const destinationFolder = '../../../tracker/core/tracker/src/generated/';
 const destinationFolder = '../generated/';
 
-Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
   const abstractContexts = getContexts({ isAbstract: true, sortBy: 'name' });
   const globalContexts = getContexts({ isGlobalContext: true, sortBy: 'name' });
@@ -77,7 +77,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
   ]);
 });
 
-Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
   const abstractEvents = getEvents({ isAbstract: true, sortBy: 'name' });
   const events = getEvents({ isAbstract: false, sortBy: 'name' });

@@ -35,7 +35,7 @@ export type PropertyDefinition = {
   value?: string;
 };
 
-Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
   tsWriter.writeMultiLineImports(
@@ -113,7 +113,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
   writeEntityFactory(tsWriter, 'makeContext', nonAbstractContexts);
 });
 
-Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.ts` }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}/EventFactories.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
   tsWriter.writeMultiLineImports(
