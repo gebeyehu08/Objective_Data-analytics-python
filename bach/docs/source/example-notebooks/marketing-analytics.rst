@@ -125,7 +125,8 @@ Users from marketing
 	:skipif: engine is None
 
 	>>> users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
-	>>> users_from_marketing_daily.head()
+	>>> users_from_marketing_daily_pdf = users_from_marketing_daily.to_pandas()
+	>>> users_from_marketing_daily_pdf.head()
 	time_aggregation
 	2022-08-20    13
 	2022-08-19    12
@@ -136,10 +137,10 @@ Users from marketing
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
+	:options: +ELLIPSIS
 
-	>>> users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
-	>>> users_from_marketing_daily.sort_index(ascending=True).to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #users from marketing', xlabel='Day', ylabel='#Users')
-	<AxesSubplot: title={'center': 'Daily #users from marketing'}, xlabel='Day', ylabel='#Users'>
+	>>> users_from_marketing_daily_pdf.sort_index(ascending=True).plot(kind='bar', figsize=[15,5], title='Daily #users from marketing', xlabel='Day')
+	<AxesSubplot: title={'center': 'Daily #users from marketing'}, xlabel='Day'...>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-users-from-marketing.png
   :alt: Daily #users from marketing
@@ -152,8 +153,9 @@ Users from marketing _source_ per day
 
 	>>> # users by marketing _source_, per day
 	>>> source_users_daily = modelhub.agg.unique_users(df_marketing_selection, groupby=['day', 'utm_source'])
-	>>> source_users_daily = source_users_daily.reset_index()
-	>>> source_users_daily.sort_values('day', ascending=False).head(20)
+	>>> source_users_daily = source_users_daily.reset_index().sort_values('day', ascending=False)
+	>>> source_users_daily_pdf = source_users_daily.to_pandas()
+	>>> source_users_daily_pdf.head(20)
 	           day utm_source  unique_users
 	0   2022-08-20    twitter             7
 	1   2022-08-20     reddit             6
@@ -179,7 +181,7 @@ Users from marketing _source_ per day
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> sud = source_users_daily.to_pandas().pivot(index='day', columns='utm_source')
+	>>> sud = source_users_daily_pdf.pivot(index='day', columns='utm_source')
 	>>> sud.plot.bar(stacked=True)
 	<AxesSubplot: xlabel='day'>
 
@@ -296,7 +298,8 @@ Daily conversions from marketing
 	>>> # calculate daily conversions from marketing (based on UTM data)
 	>>> conversions_from_marketing = df_marketing_selection[df_marketing_selection.is_conversion_event].dropna(axis=0, how='any', subset='utm_source')
 	>>> conversions_from_marketing_daily = modelhub.aggregate.unique_users(conversions_from_marketing).sort_index(ascending=False)
-	>>> conversions_from_marketing_daily.head()
+	>>> conversions_from_marketing_daily_pdf = conversions_from_marketing_daily.to_pandas()
+	>>> conversions_from_marketing_daily_pdf.head()
 	time_aggregation
 	2022-08-20    1
 	2022-08-16    1
@@ -308,7 +311,7 @@ Daily conversions from marketing
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> conversions_from_marketing_daily.sort_index(ascending=True).to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #conversions from marketing', xlabel='Day')
+	>>> conversions_from_marketing_daily_pdf.sort_index(ascending=True).plot(kind='bar', figsize=[15,5], title='Daily #conversions from marketing', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily #conversions from marketing'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-number-conversions-from-marketing.png
@@ -323,8 +326,8 @@ Daily conversion rate from marketing
 	>>> # calculate daily conversion rate from marketing campaigns overall
 	>>> # divide conversions from campaigns by total daily number of people coming from campaigns 
 	>>> conversion_rate_from_marketing = ((conversions_from_marketing_daily / users_from_marketing_daily) * 100).fillna(0.0)
-	>>> conversion_rate_from_marketing.sort_index(ascending=False).head(10)
-
+	>>> conversion_rate_from_marketing_pdf = conversion_rate_from_marketing.sort_index(ascending=False).to_pandas()
+	>>> conversion_rate_from_marketing_pdf.head(10)
 	time_aggregation
 	2022-08-20     7.692308
 	2022-08-19     0.000000
@@ -341,7 +344,7 @@ Daily conversion rate from marketing
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> conversion_rate_from_marketing.sort_index(ascending=True).to_pandas().plot(kind='line', figsize=[15,5], title='Daily conversion rate from marketing', xlabel='Day')
+	>>> conversion_rate_from_marketing_pdf.sort_index(ascending=True).plot(kind='line', figsize=[15,5], title='Daily conversion rate from marketing', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily conversion rate from marketing'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversion-rate-from-marketing.png
@@ -370,7 +373,8 @@ Daily conversions overall
 
 	>>> # calculate daily conversions overall (including from marketing campaigns)
 	>>> conversions_overall = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event])
-	>>> conversions_overall.sort_index(ascending=False).head()
+	>>> conversions_overall_pdf = conversions_overall.sort_index(ascending=False).to_pandas()
+	>>> conversions_overall_pdf.head()
 	time_aggregation
 	2022-08-20    1
 	2022-08-18    2
@@ -380,7 +384,7 @@ Daily conversions overall
 	Name: unique_users, dtype: int64
 
 	>>> # plot daily conversions overall (including from marketing campaigns)
-	>>> conversions_overall.to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #conversions overall', xlabel='Day')
+	>>> conversions_overall_pdf.sort_index(ascending=True).plot(kind='bar', figsize=[15,5], title='Daily #conversions overall', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily #conversions overall'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversions-overall.png
@@ -395,10 +399,11 @@ Daily conversion rate overall
 	>>> # calculate daily conversion rate overall (including from marketing campaigns)
 	>>> daily_users = modelhub.aggregate.unique_users(df_acquisition).sort_index(ascending=False)
 	>>> conversion_rate_overall = (conversions_overall / daily_users) * 100
-	>>> conversion_rate_overall.sort_index(ascending=False).head(10)
+	>>> conversion_rate_overall_pdf = conversion_rate_overall.sort_index(ascending=False).fillna(0.0).to_pandas()
+	>>> conversion_rate_overall_pdf.head(10)
 	time_aggregation
 	2022-08-20     3.703704
-	2022-08-19          NaN
+	2022-08-19     0.000000
 	2022-08-18     8.000000
 	2022-08-17    11.428571
 	2022-08-16     8.108108
@@ -409,7 +414,7 @@ Daily conversion rate overall
 	2022-08-11     5.660377
 	Name: unique_users, dtype: float64
 
-	>>> conversion_rate_overall.sort_index(ascending=True).fillna(0.0).to_pandas().plot(kind='line', figsize=[15,5], title='Daily conversion rate overall', xlabel='Day')
+	>>> conversion_rate_overall_pdf.sort_index(ascending=True).plot(kind='line', figsize=[15,5], title='Daily conversion rate overall', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily conversion rate overall'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversion-rate-overall.png
@@ -717,7 +722,7 @@ Funnel Discovery: drop-off for users from marketing
 	>>> # get the last used feature in the location_stack before dropping off
 	>>> modelhub.aggregate.drop_off_locations(df_funnel_non_converted, groupby='user_id', percentage=True).head(10)
 	                                                                                               percentage
-	__location
+	location
 	Root Location: home                                                                             50.691244
 	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...   46.543779
 	Root Location: blog                                                                              1.843318
