@@ -37,9 +37,13 @@ export type Enumeration = {
 export type PropertyDefinition = {
   name: string;
   typeName: string;
+  isNullable?: boolean;
   isOptional?: boolean;
   value?: string;
   description?: string;
+  items?: {
+    type: string;
+  };
 };
 
 export type ParameterDefinition = {
@@ -80,6 +84,7 @@ const SchemaToZodPropertyTypeMap = {
   string: 'string',
   discriminator: 'literal',
   uuid: 'string().uuid',
+  array: 'array',
 };
 
 export class ZodWriter extends JavaScriptWriter {
@@ -89,8 +94,6 @@ export class ZodWriter extends JavaScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
     this.indentString = '  ';
-    this.writeFile('./validator.template.static.ts');
-    this.writeLine();
   }
 
   public writeEnumeration(enumeration: Enumeration): void {
@@ -121,7 +124,15 @@ export class ZodWriter extends JavaScriptWriter {
     this.writeIndent();
 
     const mappedType = SchemaToZodPropertyTypeMap[property.typeName];
-    this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${property.value ?? ''})` : property.typeName}`);
+    let propertyValue = property.value ?? '';
+    if (property.typeName === 'array') {
+      propertyValue = `z.${SchemaToZodPropertyTypeMap[propertyValue]}()`;
+    }
+    this.write(`${property.name}: ${mappedType ? `z.${mappedType}(${propertyValue})` : property.typeName}`);
+
+    if (property.isNullable) {
+      this.write('.nullable()');
+    }
 
     if (property.isOptional) {
       this.write('.optional()');

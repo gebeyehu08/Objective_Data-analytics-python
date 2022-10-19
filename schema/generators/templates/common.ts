@@ -51,7 +51,7 @@ export const getEntityParents = (entity, parents = []) => {
     return parents;
   }
 
-  parents.push(parentEntityName);
+  parents.unshift(parentEntityName);
 
   return getEntityParents(getEntityByName(parentEntityName), parents);
 };
@@ -170,4 +170,16 @@ export const getPropertyDescription = (entity, propertyName, type, target) => {
   const typeEntity = getEntityByName(property.type);
   const entityDescriptions = getEntityDescriptionsFromDocumentation(typeEntity, type, target);
   return entityDescriptions.length ? entityDescriptions[0] : null;
+};
+
+/**
+ * Gets the value of complex properties, like discriminators or arrays
+ */
+export const getPropertyValue = (entityName, property) => {
+  if (property.type === 'discriminator') {
+    return `${entityName.endsWith('Event') ? 'Event' : 'Context'}Types.enum.${entityName}`;
+  }
+  if (property.type === 'array') {
+    return property.items.type;
+  }
 };
