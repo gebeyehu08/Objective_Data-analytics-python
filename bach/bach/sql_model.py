@@ -188,24 +188,16 @@ class SampleSqlModel(BachSqlModel):
             previous=self.previous if previous is None else previous
         )
 
-    @staticmethod
-    def get_instance(
-        *,
-        dialect: Dialect,
-        table_name: str,
-        previous: BachSqlModel,
-        column_expressions: Dict[str, Expression],
-        name: str = 'sample_node',
-    ) -> 'SampleSqlModel':
-        """ Helper function to instantiate a SampleSqlModel """
-        sql = 'SELECT * FROM {table_name}'
-        return SampleSqlModel(
-            model_spec=CustomSqlModelBuilder(sql=sql, name=name),
-            placeholders={'table_name': quote_identifier(dialect, table_name)},
-            references={},
-            materialization=Materialization.CTE,
-            materialization_name=None,
-            column_expressions=column_expressions,
+    @classmethod
+    def from_bach_sql_model(cls, bach_sql_model: BachSqlModel, previous: BachSqlModel) -> 'BachSqlModel':
+        """ From any BachSqlModel create a SampleSqlModel with the given `previous` model. """
+        return cls(
+            model_spec=bach_sql_model.model_spec,
+            placeholders=bach_sql_model.placeholders,
+            references=bach_sql_model.references,
+            materialization=bach_sql_model.materialization,
+            materialization_name=bach_sql_model.materialization_name,
+            column_expressions=bach_sql_model.column_expressions,
             previous=previous
         )
 

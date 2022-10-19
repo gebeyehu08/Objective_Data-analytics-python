@@ -38,18 +38,6 @@ def get_sample(df: DataFrame,
         message_override = f'The `seed` parameter is not supported for database dialect "{dialect.name}".'
         raise DatabaseNotSupportedException(dialect, message_override=message_override)
 
-    from bach.series import SeriesJson
-
-    original_df = df.copy()
-    # since hive does not support json type, we must cast all JSON series to string.
-    series_to_stringify = {
-        series.name: 'string'
-        for series in original_df.all_series.values()
-        if isinstance(series, SeriesJson) and is_athena(dialect)
-    }
-    if series_to_stringify:
-        df = df.astype(series_to_stringify)
-
     if not df.is_materialized:
         df = df.materialize('get_sample')
 
@@ -89,18 +77,13 @@ def get_sample(df: DataFrame,
             sample_cutoff = sample_percentage / 100
             df = df[SeriesFloat64.random(base=df) < sample_cutoff]
     if_exists = 'replace' if overwrite else 'fail'
-    df.database_create_table(table_name=table_name, if_exists=if_exists)
+    created_df = df.database_create_table(table_name=table_name, if_exists=if_exists)
 
-    # Use SampleSqlModel, that way we can keep track of the current_node and undo this sampling
-    # in get_unsampled() by switching this new node for the old node again.
-    new_base_node = SampleSqlModel.get_instance(
-        dialect=dialect,
-        table_name=table_name,
-        previous=original_node,
-        column_expressions=original_node.column_expressions,
+    new_base_node = SampleSqlModel.from_bach_sql_model(
+        bach_sql_model=created_df.base_node,
+        previous=original_node
     )
-    df = df.copy_override_base_node(base_node=new_base_node)
-    return df.astype(original_df.dtypes)
+    return df.copy_override_base_node(base_node=new_base_node)
 
 
 def get_unsampled(df: DataFrame) -> 'DataFrame':
