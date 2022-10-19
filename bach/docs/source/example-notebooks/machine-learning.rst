@@ -64,22 +64,22 @@ We'll create a dataset of all the root locations that a user clicked on, per use
 .. doctest:: machine-learning
 	:skipif: engine is None
 
-	>>> df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
-	>>> # root series is later unstacked and its values might contain dashes
+	>>> df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+	>>> # root_location series is later unstacked and its values might contain dashes
 	>>> # which are not allowed in BigQuery column names, lets replace them
-	>>> df['root'] = df['root'].str.replace('-', '_')
+	>>> df['root_location'] = df['root_location'].str.replace('-', '_')
 
 .. doctest:: machine-learning
 	:skipif: engine is None
 
-	>>> features = df[(df.event_type=='PressEvent')].groupby('user_id').root.value_counts()
+	>>> features = df[(df.event_type=='PressEvent')].groupby('user_id').root_location.value_counts()
 	>>> features.head()
-	user_id                               root
-	8d3f2b11-bbc6-46ef-ae71-00b7d6cccf02  modeling    195
-	                                      home        150
-	995701a7-a950-4100-b0b8-4382b45544c9  modeling    128
-	925b7b60-dba0-4b9a-a5ee-8837924e7fc5  tracking     93
-	b4b5ce02-7215-4193-9417-2df2faae4b03  modeling     74
+	user_id                               root_location
+	8d3f2b11-bbc6-46ef-ae71-00b7d6cccf02  modeling       195
+	                                      home           150
+	995701a7-a950-4100-b0b8-4382b45544c9  modeling       128
+	925b7b60-dba0-4b9a-a5ee-8837924e7fc5  tracking        93
+	b4b5ce02-7215-4193-9417-2df2faae4b03  modeling        74
 	Name: value_counts, dtype: int64
 
 .. doctest:: machine-learning
@@ -176,13 +176,13 @@ is simple, as Bach and pandas work together nicely. Your original Objectiv data 
 
 .. code-block:: jupyter-notebook-out
 
-	                                             day                  moment                               user_id                                                                                location_stack      event_type                                                 stack_event_types  session_id  session_hit_number   root  cluster
+	                                             day                  moment                               user_id                                                                                location_stack      event_type                                                 stack_event_types  session_id  session_hit_number   root_location  cluster
 	event_id
-	a6629a25-54ec-4cc5-a84a-2440164a0779  2022-06-22 2022-06-22 20:23:24.607  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...    VisibleEvent                [AbstractEvent, NonInteractiveEvent, VisibleEvent]        4056                   1   home        2
-	94fa97a3-5623-4b7c-b953-79c9971f4e53  2022-06-22 2022-06-22 20:23:26.001  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...     HiddenEvent                 [AbstractEvent, HiddenEvent, NonInteractiveEvent]        4056                   2   home        2
-	0041d6c0-af21-4a30-9374-09056b535cfc  2022-06-22 2022-06-22 20:24:00.747  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...      PressEvent                     [AbstractEvent, InteractiveEvent, PressEvent]        4056                   3   home        2
-	4a957bb2-1b2c-4130-a14f-4f2c11532633  2022-06-22 2022-06-22 20:24:04.599  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...      PressEvent                     [AbstractEvent, InteractiveEvent, PressEvent]        4056                   4  about        2
-	592c232e-5ce4-4ae7-a22a-91daf2d61264  2022-06-22 2022-06-22 20:24:05.339  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, NonInteractiveEvent]        4056                   5   home        2
+	a6629a25-54ec-4cc5-a84a-2440164a0779  2022-06-22 2022-06-22 20:23:24.607  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...    VisibleEvent                [AbstractEvent, NonInteractiveEvent, VisibleEvent]        4056                   1   home                 2
+	94fa97a3-5623-4b7c-b953-79c9971f4e53  2022-06-22 2022-06-22 20:23:26.001  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...     HiddenEvent                 [AbstractEvent, HiddenEvent, NonInteractiveEvent]        4056                   2   home                 2
+	0041d6c0-af21-4a30-9374-09056b535cfc  2022-06-22 2022-06-22 20:24:00.747  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...      PressEvent                     [AbstractEvent, InteractiveEvent, PressEvent]        4056                   3   home                 2
+	4a957bb2-1b2c-4130-a14f-4f2c11532633  2022-06-22 2022-06-22 20:24:04.599  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...      PressEvent                     [AbstractEvent, InteractiveEvent, PressEvent]        4056                   4  about                 2
+	592c232e-5ce4-4ae7-a22a-91daf2d61264  2022-06-22 2022-06-22 20:24:05.339  0000bb2f-66e9-4e48-8e2f-7d0a82446ef4  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  MediaLoadEvent  [AbstractEvent, MediaEvent, MediaLoadEvent, NonInteractiveEvent]        4056                   5   home                 2
 
 You can use this column just like any other. For example, you can now use your created clusters to group 
 models from the model hub:
@@ -216,114 +216,23 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-.. doctest:: machine-learning
-	:hide:
 
-	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
 
-.. doctest:: machine-learning
-	:skipif: engine is None
-
-	>>> # show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
-	>>> display_sql_as_markdown(features)
-	sql
-	WITH "manual_materialize___69a0c34935f44c51532b4d6011fb9118" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "cookie_id" AS "user_id",
-	               "value"->>'_type' AS "event_type",
-	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time"
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___e23ff23e53aabea817514c7ec9b842f0" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "location_stack" AS "location_stack",
-	               "time" AS "time"
-	          FROM "manual_materialize___69a0c34935f44c51532b4d6011fb9118"
-	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-06-30' AS date))))
-	       ),
-	       "context_data___457055a190ae4b5d101b8b81ef9a682d" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types"
-	          FROM "getitem_where_boolean___e23ff23e53aabea817514c7ec9b842f0"
-	       ),
-	       "session_starts___ed61a7a74f63eccf5f66de09c2f46b78" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                    ELSE cast(TRUE AS boolean)
-	                     END AS "is_start_of_session"
-	          FROM "context_data___457055a190ae4b5d101b8b81ef9a682d"
-	       ),
-	       "session_id_and_count___a4a712e42ece50e5846f84e4aa99f981" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                    ELSE cast(NULL AS bigint)
-	                     END AS "session_start_id",
-	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___ed61a7a74f63eccf5f66de09c2f46b78"
-	       ),
-	       "objectiv_sessionized_data___35e440d72c941de548e6a8af397e8c76" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "is_start_of_session" AS "is_start_of_session",
-	               "session_start_id" AS "session_start_id",
-	               "is_one_session" AS "is_one_session",
-	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___a4a712e42ece50e5846f84e4aa99f981"
-	       ),
-	       "getitem_where_boolean___7266549eddda372e4585e53004302dfd" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               REPLACE(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id', '-', '_') AS "root"
-	          FROM "objectiv_sessionized_data___35e440d72c941de548e6a8af397e8c76"
-	         WHERE ("event_type" = 'PressEvent')
-	       ) SELECT "user_id" AS "user_id",
-	       "root" AS "root",
-	       cast(sum(cast(1 AS bigint)) AS bigint) AS "value_counts"
-	  FROM "getitem_where_boolean___7266549eddda372e4585e53004302dfd"
-	 GROUP BY "user_id",
-	          "root"
-	 ORDER BY cast(sum(cast(1 AS bigint)) AS bigint) DESC NULLS LAST
-	<BLANKLINE>
+	# --- hide: start ---
+	import os
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-03-01', end_date='2022-06-30')
+	df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id').str.replace('-', '_')
+	features = df[(df.event_type=='PressEvent')].groupby('user_id').root_location.value_counts()
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(features)
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 
