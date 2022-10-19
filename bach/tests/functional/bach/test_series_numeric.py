@@ -385,7 +385,7 @@ def test_astype_to_string(engine):
     df = df.astype(str)
     assert_equals_data(
         df,
-        expected_columns=['_index_0', 'value_0', 'value_1', 'value_2', 'value_3'],
+        expected_columns=['_index_0', 'value_0', 'value_1', 'value_2', 'value_3', 'value_4'],
         expected_data=[
             [0, '123',        '123', '123.123', '123', '0'],
             [1, '123.123456', '123', '123.123', '123', '0'],
