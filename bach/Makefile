@@ -21,7 +21,7 @@ tests-bigquery:
 # against Postgres
 	mypy bach sql_models
 	pycodestyle bach sql_models
-	pytest -n 8 --dist loadgroup --big-query tests/unit tests/functional tests/
+	pytest -n 8 --dist loadgroup --bigquery tests/unit tests/functional tests/
 
 
 tests-all:
