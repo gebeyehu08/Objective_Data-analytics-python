@@ -8,6 +8,45 @@ on:
       - '.github/**'
 
 jobs:
+  bach-typecheck:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10.6']
+        # See https://docs.github.com/en/actions/learn-github-actions/contexts#github-context on why we use endsWith
+        isMain:
+          - ${{ endsWith(github.ref,'/main') }}
+        exclude:
+          - isMain: false
+            python-version: '3.8'
+          - isMain: false
+            python-version: '3.9'
+          - isMain: false
+            python-version: '3.10.6'
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'bach/setup.cfg'
+      - name: Install Base/PG dependencies
+        run: |
+          pip install -e bach[dev]
+      - name: Typecheck with mypy
+        run: |
+          cd bach
+          mypy bach sql_models
+      - name: Stylecheck with pycodestyle
+        run: |
+          cd bach
+          pycodestyle bach sql_models
+
+
+
   bach-typecheck-and-run-tests:
     runs-on: ubuntu-latest
     strategy:
@@ -52,6 +91,7 @@ jobs:
       OBJ_DB_BQ_CREDENTIALS_PATH: './sa.json'
       OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID: ${{ secrets.OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID }}
       OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY: ${{ secrets.OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY }}
+    needs: 'bach-typecheck (${{ matrix.python-version }}, ${{ matrix.isMain }}'
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
