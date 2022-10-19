@@ -5,10 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const templating_1 = require("@yellicode/templating");
 const base_schema_json_1 = __importDefault(require("../../base_schema.json"));
-const TypescriptWriter_1 = require("../writers/TypescriptWriter");
+const TypeScriptWriter_1 = require("../writers/TypeScriptWriter");
 const common_1 = require("./common");
 templating_1.Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer, model) => {
-    const schemaWriter = new TypescriptWriter_1.TypescriptWriter(writer);
+    const schemaWriter = new TypeScriptWriter_1.TypeScriptWriter(writer);
     schemaWriter.writeEnumeration({
         export: true,
         name: 'ContextTypes',

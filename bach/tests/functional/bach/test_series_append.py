@@ -48,7 +48,7 @@ def test_series_append_column_name_special_chars(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: remove '.0' from stringified float
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1379')
 def test_series_append_different_dtype(engine) -> None:
     bt = get_df_with_test_data(engine, full_data_set=False)[['city', 'inhabitants', 'founding']]
     bt['founding'] = bt['founding'].astype('float64')
