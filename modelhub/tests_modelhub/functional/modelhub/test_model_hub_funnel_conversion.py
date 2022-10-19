@@ -26,10 +26,10 @@ def test_funnel_conversion(db_params):
             ['link: c', 3, 2, Decimal('0.667'), Decimal('0.667'), Decimal('0.333')],
             ['link: a', 2, 1, Decimal('0.500'), Decimal('0.333'), Decimal('0.333')],
             ['link: g', 1, 0, Decimal('0.000'), Decimal('0.000'), Decimal('0.333')],
-            ['link: l', 1, 1, Decimal('1.000'), Decimal('0.333'), 0.0],
-            ['link: n', 1, 1, Decimal('1.000'), Decimal('0.333'), 0.0],
+            ['link: l', 1, 1, Decimal('1.000'), Decimal('0.333'), Decimal('0.000')],
+            ['link: n', 1, 1, Decimal('1.000'), Decimal('0.333'), Decimal('0.000')],
             ['link: d', 1, 0, Decimal('0.000'), Decimal('0.000'), Decimal('0.333')],
-            ['expanda', 1, 1, Decimal('1.000'), Decimal('0.333'), 0.0],
+            ['expanda', 1, 1, Decimal('1.000'), Decimal('0.333'), Decimal('0.000')],
         ],
     )
 

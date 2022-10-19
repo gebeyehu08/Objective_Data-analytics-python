@@ -537,11 +537,12 @@ class Aggregate:
                           location_stack: LocationStackType = None) -> bach.DataFrame:
         """
         Calculates conversion numbers for all locations stacks in the `data`.
-        N.B. Filter the dataframe beforehand if you don't want to include all location stacks .
+        N.B. Filter the dataframe beforehand to filter down to the funnel locations.
+
 
         For each step in a funnel, calculates the number of unique users who started it,
-        the number of unique users who completed the step (the step is considered
-        completed if the user went to any other step of the funnel),
+        the number of unique users who completed the step (defined as whether the user
+        went to any other step in the funnel),
         the conversion rate to completing the step, the conversion rate to completing the step
         when looking at all users who started the funnel (= the 'full' conversion rate),
         and the fraction of the users in the funnel dropping out at the given step.
@@ -569,6 +570,11 @@ class Aggregate:
         """
 
         data = data.copy()
+
+        from modelhub.util import check_objectiv_dataframe
+        columns_to_check = ['location_stack', 'user_id', 'session_id',
+                            'session_hit_number', 'moment']
+        check_objectiv_dataframe(df=data, columns_to_check=columns_to_check)
 
         column = location_stack or data['location_stack']
         if type(column) == str:
