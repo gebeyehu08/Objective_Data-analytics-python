@@ -333,9 +333,12 @@ export function getEntities(options?: {
       (isParent === undefined || isParent === entity.isParent) &&
       (isLocationContext === undefined || isLocationContext === entity.isLocationContext) &&
       (isGlobalContext === undefined || isGlobalContext === entity.isGlobalContext) &&
-      (exclude === undefined || !exclude.includes(entity.name)) &&
-      (include === undefined || include.includes(entity.name))
+      (exclude === undefined || !exclude.includes(entity.name))
     ) {
+      entities.push(entity);
+    }
+
+    if (include !== undefined && include.includes(entity.name)) {
       entities.push(entity);
     }
   }
