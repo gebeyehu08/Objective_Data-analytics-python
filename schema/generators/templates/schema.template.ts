@@ -5,7 +5,7 @@
 import { NameUtility, TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { TypeScriptWriter } from '../writers/TypescriptWriter';
-import { getEntities, getEvents } from './parser';
+import { getContexts, getEntities, getEvents } from './parser';
 
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
@@ -66,6 +66,45 @@ Generator.generate({ outputFile: '../generated/schema/events.ts' }, (writer: Tex
             name: `_type`,
             type: 'discriminator',
             description: 'A string literal used during serialization. Hardcoded to the Event name.',
+          })
+        );
+
+        if (entity._parent && entity.isParent) {
+          tsWriter.writeProperty({
+            name: `__${NameUtility.camelToKebabCase(entity.name).replace(/-/g, '_').replace('abstract_', '')}`,
+            typeName: 'true',
+            description: ['An internal discriminator relating entities of the same hierarchical branch.'],
+          });
+        }
+
+        entity.ownProperties.forEach((property) =>
+          tsWriter.writeProperty(schemaToTypeScriptProperty(tsWriter, entity, property))
+        );
+      }
+    );
+    tsWriter.writeEndOfLine();
+  });
+});
+
+Generator.generate({ outputFile: '../generated/schema/contexts.ts' }, (writer: TextWriter) => {
+  const tsWriter = new TypeScriptWriter(writer);
+
+  tsWriter.writeImports('./abstracts', ['AbstractGlobalContext', 'AbstractLocationContext']);
+
+  getContexts({ isAbstract: false, sortBy: 'name' }).forEach((entity) => {
+    tsWriter.writeInterfaceBlock(
+      {
+        export: true,
+        description: entity.getDescription({ type: descriptionsType, target: descriptionsTarget }).split('\n'),
+        name: entity.name,
+        extends: entity._parent ? [entity._parent] : undefined,
+      },
+      (tsWriter: TypeScriptWriter) => {
+        tsWriter.writeProperty(
+          schemaToTypeScriptProperty(tsWriter, entity, {
+            name: `_type`,
+            type: 'discriminator',
+            description: 'A string literal used during serialization. Hardcoded to the Context name.',
           })
         );
 
