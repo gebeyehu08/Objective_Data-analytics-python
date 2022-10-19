@@ -4,8 +4,9 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from bach.savepoints import CreatedObject
+from bach.testing import assert_equals_data
 from sql_models.model import Materialization
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from tests.functional.bach.test_savepoints import remove_created_db_objects
 
 

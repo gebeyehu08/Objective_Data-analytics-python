@@ -6,7 +6,8 @@ The test below are to prevent regressions in the escaping logic.
 We use(d) format() in multiple places, which means `{` and `}` need to be escaped at times.
 The pandas.read_sql_query() function that uses '%' for placeholders, which means all `%` need to be escaped.
 """
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 def test_format_injection_simple(engine):

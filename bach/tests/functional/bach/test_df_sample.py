@@ -7,12 +7,11 @@ from typing import Optional
 import pytest
 
 from bach import SeriesJson
+from bach.testing import assert_equals_data
 from sql_models.graph_operations import get_graph_nodes_info
 from sql_models.util import is_bigquery, is_postgres, is_athena
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_json_data, \
     JSON_COLUMNS, TEST_DATA_JSON
-
-from bach.testing import assert_equals_data
 
 
 def test_get_sample(engine, unique_table_test_name):

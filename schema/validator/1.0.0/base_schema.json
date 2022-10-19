@@ -37,7 +37,7 @@
             "type": "AbstractLocationContext"
           },
           "position": {
-            "description": "[Optional] The position the given `context` should be at. Zero-based.",
+            "description": "The position the given `context` should be at. Zero-based.",
             "type": "integer",
             "optional": true
           }
@@ -70,7 +70,7 @@
     ],
     "properties": {
       "scope": {
-        "description": "[Optional] Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
+        "description": "Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
         "type": "array",
         "items": {
           "includeContext": {
@@ -202,10 +202,19 @@
         { "description": "This is the abstract parent of all Events.", "type": "text", "target": "primary" }
       ],
       "properties":{
-        "schema_version": {
+        "_schema_version": {
           "description": "The version of the Objectiv Taxonomy Schema used to generate this event.",
           "type": "string",
-          "optional": "true"
+          "internal": true,
+          "optional": true
+        },
+        "_types": {
+          "description": "An ordered list of the parents of this Event, itself included as the last element.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "internal": true
         },
         "location_stack": {
           "type": "LocationStack"
@@ -214,8 +223,9 @@
           "type": "GlobalContexts"
         },
         "_type": {
-          "description": "A string literal used during serialization. Should always match the Event interface name.",
-          "type": "discriminator"
+          "description": "A string literal used during serialization. Hardcoded to the Event name.",
+          "type": "discriminator",
+          "internal": true
         },
         "id": {
           "description": "Unique identifier for a specific instance of an event.",
@@ -438,13 +448,22 @@
         { "description": "AbstractContext defines the bare minimum properties for every Context. All Contexts inherit from it.", "type": "text", "target": "primary" }
       ],
       "properties": {
+        "_types": {
+          "description": "An ordered list of the parents of this Context, itself included as the last element.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "internal": true
+        },
         "id": {
           "description":"A unique string identifier to be combined with the Context Type (`_type`) \nfor Context instance uniqueness.",
           "type": "string"
         },
         "_type": {
-          "description": "A string literal used during serialization. Should always match the Context interface name.",
-          "type": "discriminator"
+          "description": "A string literal used during serialization. Hardcoded to the Context name.",
+          "type": "discriminator",
+          "internal": true
         }
       }
     },
@@ -517,7 +536,7 @@
         "remote_address": {
           "description": "(public) IP address of the agent that sent the event.",
           "type": "string",
-          "optional": true
+          "nullable": true
         }
       }
     },
@@ -583,12 +602,12 @@
         "language_code": {
           "description": "Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "country_code": {
           "description": "Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.",
           "type": "string",
-          "optional": true
+          "nullable": true
         }
       }
     },
@@ -613,29 +632,29 @@
           "type": "string"
         },
         "term": {
-          "description": "[Optional] Search keywords.",
+          "description": "Search keywords.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "content": {
-          "description": "[Optional] Used to differentiate similar content, or links within the same ad.",
+          "description": "Used to differentiate similar content, or links within the same ad.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "source_platform": {
-          "description": "[Optional] To differentiate similar content, or links within the same ad.",
+          "description": "To differentiate similar content, or links within the same ad.",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "creative_format": {
-          "description": "[Optional] Identifies the creative used (e.g., skyscraper, banner, etc).",
+          "description": "Identifies the creative used (e.g., skyscraper, banner, etc).",
           "type": "string",
-          "optional": true
+          "nullable": true
         },
         "marketing_tactic": {
-          "description": "[Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).",
+          "description": "Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).",
           "type": "string",
-          "optional": true
+          "nullable": true
         }
       }
     },

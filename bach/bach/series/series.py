@@ -1230,7 +1230,18 @@ class Series(ABC):
         return self._arithmetic_operation(other, 'div', '{} / {}')
 
     def __floordiv__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
-        return self._arithmetic_operation(other, 'floordiv', 'floor({} / {})', dtype='int64')
+        result = self._arithmetic_operation(other, 'floordiv', 'floor({} / {})', dtype='int64')
+        if is_athena(self.engine):
+            # need to explicitly cast as integer, since PrestoDB's floor function
+            # returns the same type as the input
+            # https://prestodb.io/docs/current/functions/math.html?highlight=floor#floor
+            from bach.series import SeriesInt64
+            result = result.copy_override(
+                expression=SeriesInt64.dtype_to_expression(
+                    self.engine.dialect, source_dtype='float64', expression=result.expression,
+                )
+            )
+        return result
 
     def __mul__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         return self._arithmetic_operation(other, 'mul', '{} * {}')

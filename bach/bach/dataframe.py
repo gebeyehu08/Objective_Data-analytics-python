@@ -606,8 +606,9 @@ class DataFrame:
         """
         Instantiate a new DataFrame based on the result of the query defined in `model`.
 
-        If all_dtypes is not specified, then a transaction scoped temporary table will be created with
-        0 result rows from the model. The meta data of this table will be used to deduce the dtypes.
+        If all_dtypes is not specified, then the model is compiled to sql and executed as a query on the
+        database. The result-set's meta data is used to determine the columns and dtypes. This might not work
+        with custom data types. If the all_dtypes data is available, it's advised to provide it.
 
         :param engine: a sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
@@ -622,8 +623,7 @@ class DataFrame:
         :returns: A DataFrame based on an SqlModel
 
         .. note::
-            If all_dtypes is not set, then this will query the database and create and remove a temporary
-            table.
+            If all_dtypes is not set, then this will query the database
         """
         name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
         if all_dtypes is not None:

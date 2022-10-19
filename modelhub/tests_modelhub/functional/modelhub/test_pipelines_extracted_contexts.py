@@ -7,8 +7,8 @@ from typing import List
 import bach
 import pandas as pd
 import pytest
+from bach.testing import assert_equals_data
 from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 from modelhub.pipelines.extracted_contexts import BaseExtractedContextsPipeline, get_extracted_context_pipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, DBParams
