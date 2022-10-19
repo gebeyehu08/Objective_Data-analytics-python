@@ -9,10 +9,11 @@ import pytest
 
 from bach import DataFrame, SeriesString, SeriesInt64
 from bach.expression import Expression
+from bach.testing import assert_equals_data
 from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import (
-    get_df_with_test_data, assert_equals_data, df_to_list,
-    get_df_with_railway_data, get_df_with_food_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
+    get_df_with_test_data, get_df_with_railway_data, get_df_with_food_data, df_to_list,
+    TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
 )
 from tests.unit.bach.util import get_pandas_df
 

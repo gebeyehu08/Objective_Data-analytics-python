@@ -4,9 +4,10 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from bach import DataFrame, SeriesFloat64, SeriesInt64, SeriesBoolean, SeriesTimestamp, SeriesString
+from bach.testing import assert_equals_data
 from sql_models.constants import DBDialect
 from tests.functional.bach.test_data_and_utils import TEST_DATA_CITIES, CITIES_COLUMNS, \
-    assert_equals_data, convert_expected_data_timestamps, assert_series_db_types
+    convert_expected_data_timestamps, assert_series_db_types
 import datetime
 from uuid import UUID
 import pandas as pd

@@ -1,7 +1,8 @@
 import pytest
 
 from bach import Series
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 def test_series_append_same_dtype(engine) -> None:

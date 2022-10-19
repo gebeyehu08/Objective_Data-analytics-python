@@ -4,10 +4,10 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from bach.dataframe import DtypeNamePair, DefinedVariable, DataFrame
+from bach.testing import assert_equals_data
 from sql_models.model import CustomSqlModelBuilder
 from sql_models.util import is_bigquery, is_postgres, is_athena
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data, \
-    get_df_with_food_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_food_data
 
 
 def test_variable_happy_path(engine):
