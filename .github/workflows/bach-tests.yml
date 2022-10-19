@@ -29,7 +29,6 @@ jobs:
     services:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
       postgres:
-        if: matrix.task == 'postgres'
         image: postgres
         env:
           POSTGRES_USER: 'objectiv'
