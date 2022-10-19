@@ -79,8 +79,8 @@ def get_sample(df: DataFrame,
     if_exists = 'replace' if overwrite else 'fail'
     created_df = df.database_create_table(table_name=table_name, if_exists=if_exists)
 
-    # created_df might have unmaterialized changes, if there were any casts involved in writing to and
-    # reading from the table.
+    # created_df might have unmaterialized changes. This happens if there were any casts involved in writing
+    # to and reading from the table. We need to base SampleSqlModel below on a materialized node.
     if not created_df.is_materialized:
         created_df = created_df.materialize('get_sample_sampled_table')
 
