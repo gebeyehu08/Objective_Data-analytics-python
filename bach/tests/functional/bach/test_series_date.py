@@ -7,8 +7,8 @@ import pandas as pd
 import pytest
 
 from bach import DataFrame
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data,\
-    get_df_with_food_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES, \

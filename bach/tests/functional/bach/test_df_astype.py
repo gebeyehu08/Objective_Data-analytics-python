@@ -7,9 +7,10 @@ import pytest
 
 from bach import SeriesFloat64, SeriesString, SeriesInt64, SeriesBoolean, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesJson
+from bach.testing import assert_equals_data
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_json_data, \
+from tests.functional.bach.test_data_and_utils import get_df_with_json_data, \
     CITIES_INDEX_AND_COLUMNS, get_df_with_test_data, assert_series_db_types
 
 
