@@ -197,7 +197,6 @@ def test_merge_variable_different_types(engine):
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1375')
 def test_get_all_variable_usage(engine):
     df1 = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'inhabitants']]
     assert df1.get_all_variable_usage() == []
@@ -233,11 +232,6 @@ def test_get_all_variable_usage(engine):
         DefinedVariable(name='second', dtype='string', value='test', ref_path=(), old_value=str_old_value),
         DefinedVariable(name='first', dtype='int64', value=1234, ref_path=('prev',), old_value='1234')
     ]
-
-    if is_bigquery(df1.engine):
-        # TODO remove this check after in 'https://github.com/objectiv/objectiv-analytics/issues/1375'
-        # DataFrame.from_model is not supported for big query
-        return
 
     sql_model = CustomSqlModelBuilder(sql='select * from {{model}}')(model=df1.base_node)
     df2 = DataFrame.from_model(engine=df1.engine, model=sql_model, index=list(df1.index.keys()))
