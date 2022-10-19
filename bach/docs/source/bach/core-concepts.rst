@@ -5,8 +5,17 @@
 =============
 Core Concepts
 =============
-Bach aims to make life for the DS as simple and powerful as possible by using a very familiar interface. We
-use two main concepts to achieve that, see below.
+Bach aims to make life for the DS as simple and powerful as possible by using a pandas-compatible API.
+
+There are some differences between Bach's API and pandas's API:
+We haven't yet implemented all pandas functions, we have some functions that pandas doesn't have, and some
+of our functions have slightly different parameters.
+Having said that, anyone that already knows pandas can get started with Bach in mere minutes.
+
+The fundamental difference between pandas and Bach is how data is stored: in-memory versus in-database.
+Storing all data in databases is what allows Bach to work on huge datasets. But as a result, one sometimes
+has to use Bach slightly different than one would use pandas. This page explains the Bach core design ideas
+and their consequences in using Bach.
 
 Delayed database operations
 ---------------------------
@@ -31,25 +40,67 @@ Additionally there are operations that write to the database:
 * :py:meth:`DataFrame.from_pandas()`, when called with `materialization='table'`
 * :py:meth:`DataFrame.get_sample()`
 
-Compatibility with pandas
--------------------------
-We are striving for a pandas-compatible API, such that everyone that already knows pandas can get started
-with Bach in mere minutes.
-
-However, there are differences between Bach's API and pandas's API. Pandas is a big product, and it has a lot
-of functionality that we have not yet implemented. Additionally we have some functions that pandas doesn't
-have, and some of our functions have slightly different parameters.
-
-Of course the fundamental difference is in how data is stored and processed: in local memory vs in the
-database. This also results in a few differences in how DataFrames from both libraries work in certain
-situations:
+Differences with pandas
+---------------------------
 
 * The order of rows in a Bach DataFrame can be non-deterministic. If there is no deterministic
-  :py:meth:`DataFrame.sort_values()` or :py:meth:`DataFrame.fillna()` call, then the order of the rows that 
-  the data-transfer functions return can be unpredictable. In case for :py:meth:`DataFrame.fillna()`, 
-  methods `ffill` and `bfill` might fill gaps with different values since rows containing `NULL`/`None` can 
+  :py:meth:`DataFrame.sort_values()` or :py:meth:`DataFrame.fillna()` call, then the order of the rows that
+  the data-transfer functions return can be unpredictable. In case for :py:meth:`DataFrame.fillna()`,
+  methods `ffill` and `bfill` might fill gaps with different values since rows containing `NULL`/`None` can
   yield a different order of rows.
-* Bach DataFrames can distinguish between `NULL`/`None` and Not-a-Number (`NaN`). Pandas generally doesn't
-  and mainly uses NaN. When outputting data from a Bach DataFrame to a pandas DataFrame, most of this
-  distinction is lost again.
-* In a Bach DataFrame column names must be unique, in pandas this is not the case.
+* Bach DataFrames can distinguish between missing values (`NULL`/`None`) and Not-a-Number (`NaN`). Pandas
+  generally doesn't, and uses `NaN` to represent missing values. When outputting data from a Bach DataFrame
+  to a pandas DataFrame, most of this distinction is lost again.
+* All Bach Series map directly to database columns in either a table, view, or table expression. As a result
+  all series names within a DataFrame must be non-empty, unique, and the length is limited (generally 63
+  characters). Pandas does not have these limitations.
+
+
+Bach usage tips
+------------------
+
+Use simple Series names for cleaner SQL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+All Series in a Bach DataFrame map directly to database columns with the same name. However, some databases
+limit the characters than can be used in column names. To accommodate this, Bach will transparently
+map Series names with 'special' characters to different column names.
+
+This does mean that the columns names in the generated SQL query can be different from the names in a
+DataFrame. If that's undesired, then stick to Series names only containing the characters `a-z`, `0-9`,
+and `\_`, that start with `a-z`, and a maximum length of 63 characters.
+
+
+Use a data sample to limit the data queried
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Querying big datasets can be slow on less scalable databases, and on cloud databases it can be very expensive.
+To get a smaller sample of the current DataFrame, use :py:meth:`DataFrame.get_sample()`:
+
+.. code-block:: console
+
+    table_name = 'example-project.writable_dataset.table_name'
+    df.get_sample(table_name, sample_percentage=10)
+
+This creates a permanent table, so make sure you have a write access.
+
+Use temporary tables to limit query complexity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Very complex queries can lead to problems with databases. Sometimes the performance degrades and sometimes
+databases might not even be able to execute a query at all.
+
+One solution is to materialize the state of you DataFrame into a temporary table, in between complex
+operations.
+
+.. code-block:: console
+
+    df = df.materialize(materialization='temp_table')
+
+Calling :ref:py:`DataFrame.materialize()` does not cause a direct call to the database, but rather changes the SQL
+that will be generated later on. That SQL will be split in parts: first the query to create a temporary table
+with the current state of the DataFrame, and then the SQL for the following operations. In some cases this
+can help the database a lot.
+
+One way of checking SQL complexity is to print the resulting query:
+
+.. code-block:: console
+
+    display_sql_as_markdown(df)
