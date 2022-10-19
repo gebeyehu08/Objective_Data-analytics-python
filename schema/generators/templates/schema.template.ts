@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TextWriter } from '@yellicode/core';
+import { NameUtility, TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { TypeScriptWriter } from '../writers/TypescriptWriter';
 import { getEntities } from './parser';
@@ -10,10 +10,10 @@ import { getEntities } from './parser';
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
 
-Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: TextWriter) => {
+Generator.generateFromModel({ outputFile: '../generated/schema/abstracts.ts' }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
-  getEntities({ isAbstract: true, sortBy: 'name', include: ['LocationStack', 'GlobalContexts'] }).forEach((entity) => {
+  getEntities({ isAbstract: true, sortBy: 'name' }).forEach((entity) => {
     tsWriter.writeInterfaceBlock(
       {
         export: true,
@@ -22,6 +22,22 @@ Generator.generateFromModel({ outputFile: '../generated/schema.ts' }, (writer: T
         extends: entity._parent ? [entity._parent] : undefined,
       },
       (tsWriter: TypeScriptWriter) => {
+        if (!entity._parent && entity.isContext) {
+          tsWriter.writeProperty({
+            name: '__instance_id',
+            typeName: 'string',
+            description: ['An internal unique identifier used to compare instances of the same type.']
+          });
+        }
+
+        if (entity._parent && entity.isParent && entity.isContext) {
+          tsWriter.writeProperty({
+            name: `__${NameUtility.camelToKebabCase(entity.name).replace(/-/g, '_').replace('abstract_', '')}`,
+            typeName: 'true',
+            description: ['An internal discriminator relating entities of the same hierarchical branch.']
+          });
+        }
+
         entity.ownProperties.forEach((property) =>
           tsWriter.writeProperty(schemaToTypeScriptProperty(entity, property))
         );
@@ -37,8 +53,8 @@ const schemaToTypeScriptProperty = (entity, property) => {
     string: 'string',
     uuid: 'string',
     array: 'Array',
-    LocationStack: 'LocationStack',
-    GlobalContexts: 'GlobalContexts',
+    LocationStack: 'Array<AbstractLocationContext>',
+    GlobalContexts: 'Array<AbstractGlobalContext>',
   };
 
   let mappedType;

@@ -7,6 +7,10 @@
 */
 export interface AbstractContext {
   /**
+  * An internal unique identifier used to compare instances of the same type.
+  */
+  __instance_id: string;
+  /**
   * An ordered list of the parents of this Context, itself included as the last element.
   */
   _types: Array<string>;
@@ -38,12 +42,12 @@ export interface AbstractEvent {
   * deterministically describes where an event took place from global to specific. 
   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
   */
-  location_stack: LocationStack;
+  location_stack: Array<AbstractLocationContext>;
   /**
   * Global contexts add global / general information about the event. They carry information that is not
   * related to where the Event originated (location), such as device, platform or business data.
   */
-  global_contexts: GlobalContexts;
+  global_contexts: Array<AbstractGlobalContext>;
   /**
   * A string literal used during serialization. Hardcoded to the Event name.
   */
@@ -63,6 +67,10 @@ export interface AbstractEvent {
 * Event.
 */
 export interface AbstractGlobalContext extends AbstractContext {
+  /**
+  * An internal discriminator relating entities of the same hierarchical branch.
+  */
+  __global_context: true;
 }
 
 /**
@@ -70,20 +78,9 @@ export interface AbstractGlobalContext extends AbstractContext {
 * Location Contexts are meant to describe where an event originated from in the visual UI.
 */
 export interface AbstractLocationContext extends AbstractContext {
-}
-
-/**
-* Global contexts add global / general information about the event. They carry information that is not
-* related to where the Event originated (location), such as device, platform or business data.
-*/
-export interface GlobalContexts {
-}
-
-/**
-* The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-* deterministically describes where an event took place from global to specific. 
-* The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-*/
-export interface LocationStack {
+  /**
+  * An internal discriminator relating entities of the same hierarchical branch.
+  */
+  __location_context: true;
 }
 
