@@ -323,7 +323,8 @@ Daily conversion rate from marketing
 	>>> # calculate daily conversion rate from marketing campaigns overall
 	>>> # divide conversions from campaigns by total daily number of people coming from campaigns 
 	>>> conversion_rate_from_marketing = ((conversions_from_marketing_daily / users_from_marketing_daily) * 100).fillna(0.0)
-	>>> conversion_rate_from_marketing.sort_index(ascending=False).fillna(0.0).head(10)
+	>>> conversion_rate_from_marketing.sort_index(ascending=False).head(10)
+
 	time_aggregation
 	2022-08-20     7.692308
 	2022-08-19     0.000000
