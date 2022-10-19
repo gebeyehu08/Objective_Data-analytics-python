@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import datetime
 from abc import ABC
 from enum import Enum
-from typing import Union, cast, List, Tuple, Optional, Any
+from typing import Union, cast, List, Tuple, Optional, Any, Type
 
 import numpy
 import pandas
@@ -16,7 +16,7 @@ from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code, parse_c_code_to_athena_code, warn_non_supported_format_codes
-from bach.types import DtypeOrAlias, StructuredDtype
+from bach.types import DtypeOrAlias, StructuredDtype, value_to_series_type, get_series_type_from_dtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
 
@@ -99,19 +99,28 @@ class DateTimeOperation:
             )
         elif is_athena(engine):
             parsed_format_str = parse_c_code_to_athena_code(format_str)
+            if isinstance(series, SeriesTime):
+                # for time series, we should convert the float values into a timestamp,
+                # otherwise date_format won't work
+                series = SeriesTimestamp.from_total_seconds(series.copy_override_type(SeriesFloat64))
+
             expression = Expression.construct(
                 'date_format({}, {})', series, Expression.string_value(parsed_format_str)
             )
         elif is_bigquery(engine):
-            # BigQuery will ignore some formatting codes when applied to a date.
-            # For example, rather than returning '00' as value for '%H' (hour) it will return '%H'.
-            # To avoid this problem, we convert to timestamp.
-            series = cast(SeriesTimestamp, series.astype('timestamp'))
+            if isinstance(series, SeriesTime):
+                # BigQuery provides a different function for formatting time, parsing a time to timestamp
+                # is not an option as the casting is not supported.
+                fmt_str = 'format_time({}, {})'
+            else:
+                # BigQuery will ignore some formatting codes when applied to a date.
+                # For example, rather than returning '00' as value for '%H' (hour) it will return '%H'.
+                # To avoid this problem, we convert to timestamp.
+                series = cast(SeriesTimestamp, series.astype('timestamp'))
+                fmt_str = 'format_date({}, {})'
 
             parsed_format_str = parse_c_code_to_bigquery_code(format_str)
-            expression = Expression.construct(
-                'format_date({}, {})', Expression.string_value(parsed_format_str), series
-            )
+            expression = Expression.construct(fmt_str, Expression.string_value(parsed_format_str), series)
         else:
             raise DatabaseNotSupportedException(engine)
 
@@ -348,10 +357,26 @@ class SeriesAbstractDateTime(Series, ABC):
         if source_dtype not in cls.supported_source_dtypes:
             raise ValueError(f'cannot convert {source_dtype} to {cls.dtype}')
 
-        if expression.is_constant and source_dtype == 'string':
-            return cls._constant_expression_to_dtype_expression(dialect, expression)
+        if source_dtype == 'string':
+            if expression.is_constant:
+                return cls._constant_expression_to_dtype_expression(dialect, expression)
+            if is_athena(dialect) and cls.dtype == 'time':
+                # casting varchar to time is a bit tricky, since the string value might not contain
+                # fractional part of the seconds, this breaks date_parse function
+                expression = Expression.construct(
+                    "COALESCE(try(date_parse({}, '%H:%i:%S.%f')), try(date_parse({}, '%H:%i:%S')))",
+                    expression,
+                    expression,
+                )
+                expression = Expression.construct('to_unixtime({})', expression)
 
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
+
+    def astype(self, dtype: Union[str, Type]) -> Series:
+        if get_series_type_from_dtype(dtype) is not SeriesString:
+            return super().astype(dtype=dtype)
+
+        return self.dt.strftime(self._FINAL_DATE_TIME_FORMAT)
 
     def _comparator_operation(self, other, comparator,
                               other_dtypes=('timestamp', 'date', 'time', 'string'),
@@ -518,19 +543,17 @@ class SeriesTimestamp(SeriesAbstractDateTime):
 
         fmt_str = '({}) - ({})'
         if is_athena(self.engine):
-            # since we represent intervals with float values, we should consider unix time values instead
-            _self = self.copy_override(
-                expression=Expression.construct('to_unixtime({})', self)
-            )
-            fmt_str = f'round({fmt_str}, 3)'
-            if other.dtype == 'timestamp':
-                _other = _other.copy_override(
-                    expression=Expression.construct('to_unixtime({})', _other)
-                )
+            other_series_type = value_to_series_type(other)
+            # for athena, we represent timedeltas with floats, therefore is required to cast the operands
+            # based on the case been evaluated.
 
+            # timestamp - timestamp will result into a timedelta, so final result must be in terms of unixtime
+            if other_series_type.dtype == SeriesTimestamp.dtype:
+                fmt_str = 'round(to_unixtime({}) - to_unixtime({}), 3)'
             else:
-                # need to cast back to timestamp if we are subtracting by a timedelta
-                fmt_str = f'from_unixtime({fmt_str})'
+                # timestamp - timedelta will result into a timestamp,
+                # then we need to cast the unixtime to timestamp
+                fmt_str = 'from_unixtime(to_unixtime({}) - {})'
 
         return _self._arithmetic_operation(
             _other,
@@ -663,7 +686,6 @@ class SeriesTime(SeriesAbstractDateTime):
         if is_postgres(dialect) or is_bigquery(dialect):
             return super().supported_literal_to_expression(dialect=dialect, literal=literal)
         if is_athena(dialect):
-            from bach import SeriesString
             return SeriesFloat64.supported_literal_to_expression(dialect=dialect, literal=literal)
         raise DatabaseNotSupportedException(dialect)
 
@@ -764,6 +786,21 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         if is_athena(dialect):
             return SeriesFloat64.get_db_dtype(dialect)
         return super().get_db_dtype(dialect)
+
+    def astype(self, dtype: Union[str, Type]) -> Series:
+        if get_series_type_from_dtype(dtype) is not SeriesString:
+            return super().astype(dtype=dtype)
+
+        days_series = (self.dt.total_seconds // _TOTAL_SECONDS_PER_DATE_PART[DatePart.DAY]).astype('int64')
+
+        norm_time_ts = (
+            self.dt.total_seconds - days_series * _TOTAL_SECONDS_PER_DATE_PART[DatePart.DAY]
+        ).copy_override_type(SeriesFloat64)
+
+        time_fmt_str = SeriesTimestamp.from_total_seconds(norm_time_ts).dt.strftime('%H:%M:%S.%f')
+
+        expression = Expression.construct("{} || ' days, ' || {}", days_series.astype('string'), time_fmt_str)
+        return self.copy_override(expression=expression, dtype='string')
 
     @classmethod
     def supported_value_to_literal(
