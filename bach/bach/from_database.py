@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict, Tuple, Mapping, Optional, List, Union
+from typing import Dict, Tuple, Mapping, Optional, List, Union, NamedTuple
 
 from sqlalchemy.engine import Engine, Dialect
 
@@ -40,6 +40,11 @@ _DB_TYPE_CODE_TO_DB_TYPE: Mapping[DBDialect, Mapping[Union[int, str], str]] = {
 }
 
 
+class _NameType(NamedTuple):
+    column_name: str
+    db_dtype: str
+
+
 def get_dtypes_from_model(
         engine: Engine,
         node: SqlModel,
@@ -67,7 +72,7 @@ def get_dtypes_from_model(
         description = res.cursor.description
 
     rows = [
-        (row[0], type_code_mapping.get(row[1], row[1]))
+        _NameType(column_name=row[0], db_dtype=type_code_mapping.get(row[1], row[1]))
         for row in description
     ]
     result = _get_dtype_from_db_type(
@@ -159,7 +164,7 @@ def _get_dtypes_from_information_schema_query(
     with engine.connect() as conn:
         sql = escape_parameter_characters(conn, query)
         res = conn.execute(sql)
-        rows = [(row[0], row[1]) for row in res.fetchall()]
+        rows = [_NameType(column_name=row[0], db_dtype=row[1]) for row in res.fetchall()]
 
     return _get_dtype_from_db_type(
         dialect=engine.dialect,
@@ -170,7 +175,7 @@ def _get_dtypes_from_information_schema_query(
 
 def _get_dtype_from_db_type(
         dialect: Dialect,
-        rows: List[Tuple[str, str]],
+        rows: List[_NameType],
         name_to_column_mapping: Mapping[str, str]
 ) -> Dict[str, StructuredDtype]:
     """
@@ -183,7 +188,6 @@ def _get_dtype_from_db_type(
     column_to_name_mapping = {column: name for name, column in name_to_column_mapping.items()}
     result = {}
     for row in rows:
-        column_name, db_dtype = row
-        series_name = column_to_name_mapping.get(column_name, column_name)
-        result[series_name] = get_dtype_from_db_dtype(db_dialect, db_dtype)
+        series_name = column_to_name_mapping.get(row.column_name, row.column_name)
+        result[series_name] = get_dtype_from_db_dtype(db_dialect, row.db_dtype)
     return result
