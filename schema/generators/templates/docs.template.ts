@@ -44,8 +44,10 @@ getEntityNames().forEach((entityName) => {
 
     // TODO implement writeTable in docsWriter, e.g. writeTable({title, rows:[cell1, cell2, ...cellN]})
     getObjectKeys(entityProperties).forEach((entityPropertyName) => {
-      const { type, description } = entityProperties[entityPropertyName];
-      docsWriter.writeLine(`\`${type}\` ${entityPropertyName.toString()}: ${description}`);
+      const { type, description, internal } = entityProperties[entityPropertyName];
+      if (!internal) {
+        docsWriter.writeLine(`\`${type}\` ${entityPropertyName.toString()}: ${description}`);
+      }
     });
 
     docsWriter.writeEndOfLine();
