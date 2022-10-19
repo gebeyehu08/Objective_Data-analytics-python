@@ -20,7 +20,7 @@ def test_funnel_conversion(db_params):
 
     bts = modelhub.agg.funnel_conversion(df, location_stack='feature_nice_name')
     assert_equals_data(
-        bts[columns],
+        bts,
         expected_columns=columns,
         expected_data=[
             ['expanda', 1, 1, 1.0, 0.333, 0.0],
@@ -37,60 +37,26 @@ def test_funnel_conversion(db_params):
 
     # location_stack - default
     bts = modelhub.agg.funnel_conversion(df, location_stack=None)
-    print(bts.to_pandas())
-
+    bts['sort_str'] = bts['location'].astype(dtype=str).str[15:19].str.lower()
+    columns = ['sort_str', 'n_users', 'n_users_completed_step',
+               'step_conversion_rate', 'full_conversion_rate', 'dropoff_share']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
         expected_data=[
-            [
-                'Expandable Section: The Project located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                1, 1, 1.0, 1.0, 0.0
-            ],
-            [
-                'Link: About Us located at Web Document: #document => Section: navbar-top',
-                1, 0, 0.0, 0.0, 1.0
-            ],
-            [
-                'Link: About Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                1, 1, 1.0, 1.0, 0.0
-            ],
-            [
-                'Link: Contact Us located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                1, 0, 0.0, 0.0, 1.0
-            ],
-            [
-                'Link: Cookies located at Web Document: #document => Section: footer',
-                1, 1, 1.0, 1.0, 0.0
-            ],
-            [
-                'Link: cta-docs-location-stack located at Web Document: #document => Section: main => Section: location-stack',
-                1, 1, 1.0, 1.0, 0.0
-            ],
-            [
-                'Link: cta-docs-taxonomy located at Web Document: #document => Section: main => Section: taxonomy',
-                1, 1, 1.0, 1.0, 0.0
-            ],
-            [
-                'Link: cta-repo-button located at Web Document: #document => Section: header',
-                1, 0, 0.0, 0.0, 1.0
-            ],
-            [
-                'Link: Docs located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                1, 0, 0.0, 0.0, 1.0
-            ],
-            [
-                'Link: GitHub located at Web Document: #document => Section: navbar-top => Overlay: hamburger-menu',
-                1, 1, 1.0, 1.0, 0.0
-            ],
-            [
-                'Link: logo located at Web Document: #document => Section: navbar-top',
-                1, 1, 1.0, 1.0, 0.0
-            ],
-            [
-                'Link: notebook-product-analytics located at Web Document: #document',
-                1, 1, 1.0, 1.0, 0.0
-            ],
+            ['butt', 1, 0, 0.0, 0.0, 1.0],
+            ['cate', 1, 1, 1.0, 1.0, 0.0],
+            ['ion:', 1, 1, 1.0, 1.0, 0.0],
+            ['loca', 1, 0, 0.0, 0.0, 1.0],
+            ['loca', 1, 1, 1.0, 1.0, 0.0],
+            ['loca', 1, 1, 1.0, 1.0, 0.0],
+            ['ocat', 1, 1, 1.0, 1.0, 0.0],
+            ['prod', 1, 1, 1.0, 1.0, 0.0],
+            ['s lo', 1, 0, 0.0, 0.0, 1.0],
+            ['taxo', 1, 1, 1.0, 1.0, 0.0],
+            ['ted ', 1, 0, 0.0, 0.0, 1.0],
+            ['ted ', 1, 1, 1.0, 1.0, 0.0],
         ],
         use_to_pandas=True,
+        order_by=['sort_str', 'step_conversion_rate'],
     )

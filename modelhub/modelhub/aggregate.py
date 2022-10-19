@@ -565,8 +565,8 @@ class Aggregate:
             step, e.g. a feature or root location), `n_users` (number of unique users starting the step),
             `n_users_completed_step` (number of unique users completing the step),
             `step_conversion_rate` (number of users completing the step / `n_users`), `full_conversion_rate`
-            (number of users completing the step / number of users starting the funnel), and
-            `dropoff_share` (fraction of the users dropping out at the given step).
+            (number of users completing the step / number of users starting the funnel), and `dropoff_share`
+            (ratio between the users dropping out at a given step and users at the begging at the funnel).
         """
 
         data = data.copy()
