@@ -51,6 +51,8 @@ def get_properties_for_context(schema: Dict[str, Any], context_type: str, hierar
                 "type": property_type,
                 "description": clean(context['properties'][property_name]['description'])
             }
+            if context_property_type == 'array' and 'items' in context['properties'][property_name]:
+                properties[property_name]['items'] = context['properties'][property_name]['items']
 
     return properties, required_properties
 
