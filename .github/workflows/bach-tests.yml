@@ -17,7 +17,7 @@ jobs:
         # See https://docs.github.com/en/actions/learn-github-actions/contexts#github-context on why we use endsWith
         isMain:
           - ${{ endsWith(github.ref,'/main') }}
-	task: ['code', 'postgres', 'bigquery', 'athena']
+        task: ['code', 'postgres', 'bigquery', 'athena']
         exclude:
           - isMain: false
             python-version: '3.8'
