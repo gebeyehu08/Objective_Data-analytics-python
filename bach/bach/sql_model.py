@@ -132,8 +132,7 @@ class BachSqlModel(SqlModel[T]):
 
 class SampleSqlModel(BachSqlModel):
     """
-    A custom SqlModel that simply does select * from a table. In addition to that, this class stores an
-    extra property: previous.
+    A custom SqlModel that simply adds an extra property to the BachSqlModel: previous.
 
     The previous property is not used in the generated sql at all, but can be used to track a previous
     SqlModel. This is useful for how we implemented sampling, as that effectively inserts a sql-model in the
