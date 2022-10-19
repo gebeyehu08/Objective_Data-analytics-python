@@ -3,7 +3,6 @@
  */
 
 import { TextWriter } from '@yellicode/core';
-import { getObjectKeys } from '../templates/common';
 import { JavaScriptWriter } from './JavaScriptWriter';
 
 export enum ValidationRuleTypes {
@@ -145,7 +144,7 @@ export class ZodWriter extends JavaScriptWriter {
   public writeInlineObject(object: object): void {
     this.writeLine('{');
     this.increaseIndent();
-    getObjectKeys(object).forEach((key) => {
+    Object.keys(object).forEach((key) => {
       if (object[key] !== undefined) {
         this.writeLine(`${key}: ${object[key]},`);
       }

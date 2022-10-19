@@ -6,7 +6,6 @@ import { NameUtility, TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
 import { TypeScriptWriter } from '../writers/TypeScriptWriter';
-import { getPropertyValue } from './common';
 import { getContexts, getEvents } from './parser';
 
 // TODO temporarily generate this in the /generated folder, as we need TS to be finished before we can use it
@@ -99,7 +98,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextFactories
           .map((property) => ({
             name: property.name,
             isOptional: property.optional,
-            value: getPropertyValue(context.name, property),
+            value: property.value,
           }))
           .forEach((property) => writeObjectProperty(tsWriter, context, property));
 
@@ -163,7 +162,7 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/EventFactories.t
           .map((property) => ({
             name: property.name,
             isOptional: property.optional,
-            value: getPropertyValue(event.name, property),
+            value: property.value,
           }))
           .forEach((property) => writeObjectProperty(tsWriter, event, property));
 
@@ -188,7 +187,7 @@ const getParametersFromProperties = (entity) =>
       description: property.description,
       typeName: getTypeForProperty(property),
       isOptional: property.optional,
-      value: getPropertyValue(entity.name, property),
+      value: property.value,
     });
 
     return parameters;

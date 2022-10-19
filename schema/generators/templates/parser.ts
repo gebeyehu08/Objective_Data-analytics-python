@@ -224,10 +224,11 @@ entityNames.forEach((entityName) => {
       }
 
       /**
-       * Hydrates some known types (LocationStack, GlobalContexts) to their definition
+       * Hydrates some known types (LocationStack, GlobalContexts) to their definition and processes values.
        */
       private _hydrateTypes(properties: Array<any>) {
         return properties.map((property) => {
+          property.value = this._getPropertyValue(property);
           switch (property.type) {
             case 'LocationStack':
             case 'GlobalContexts':
@@ -244,7 +245,7 @@ entityNames.forEach((entityName) => {
       }
 
       /**
-       * Converts a named object, e.g. each key corresponds to an entity, to an array where the key is set to its `name`.
+       * Converts a named object, e.g. key:name > entity, to an array where the key is set to its `name`.
        */
       private _namedObjectToArray(object) {
         if (object === undefined) {
@@ -255,6 +256,18 @@ entityNames.forEach((entityName) => {
           name: key,
           ...object[key],
         }));
+      }
+
+      /**
+       * Gets the value of complex properties, like discriminators or arrays.
+       */
+      private _getPropertyValue(property) {
+        if (property.type === 'discriminator') {
+          return `${this.name.endsWith('Event') ? 'Event' : 'Context'}Types.enum.${this.name}`;
+        }
+        if (property.type === 'array') {
+          return property.items.type;
+        }
       }
 
       /**
@@ -304,8 +317,12 @@ export function getEntities(options?: {
   isParent?: boolean;
   isLocationContext?: boolean;
   isGlobalContext?: boolean;
+  exclude?: Array<string>;
+  include?: Array<string>;
+  sortBy?: string;
 }) {
-  const { isContext, isEvent, isAbstract, isParent, isLocationContext, isGlobalContext } = options ?? {};
+  const { isContext, isEvent, isAbstract, isParent, isLocationContext, isGlobalContext, exclude, include, sortBy } =
+    options ?? {};
   const entities = [];
 
   for (let [_, entity] of entitiesMap) {
@@ -315,10 +332,16 @@ export function getEntities(options?: {
       (isAbstract === undefined || isAbstract === entity.isAbstract) &&
       (isParent === undefined || isParent === entity.isParent) &&
       (isLocationContext === undefined || isLocationContext === entity.isLocationContext) &&
-      (isGlobalContext === undefined || isGlobalContext === entity.isGlobalContext)
+      (isGlobalContext === undefined || isGlobalContext === entity.isGlobalContext) &&
+      (exclude === undefined || !exclude.includes(entity.name)) &&
+      (include === undefined || include.includes(entity.name))
     ) {
       entities.push(entity);
     }
+  }
+
+  if (sortBy) {
+    return entities.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
   }
 
   return entities;
@@ -333,6 +356,9 @@ export function getContexts(options?: {
   isParent?: boolean;
   isLocationContext?: boolean;
   isGlobalContext?: boolean;
+  exclude?: Array<string>;
+  include?: Array<string>;
+  sortBy?: string;
 }) {
   return getEntities({ ...options, isContext: true });
 }
@@ -341,6 +367,12 @@ export function getContexts(options?: {
  * Shorthand to get a list of enriched Event entities from the BaseSchema. By default, returns all Events.
  * Optionally supports filtering by: isAbstract and isParent.
  */
-export function getEvents(options?: { isAbstract?: boolean; isParent?: boolean }) {
+export function getEvents(options?: {
+  isAbstract?: boolean;
+  isParent?: boolean;
+  exclude?: Array<string>;
+  include?: Array<string>;
+  sortBy?: string;
+}) {
   return getEntities({ ...options, isEvent: true });
 }

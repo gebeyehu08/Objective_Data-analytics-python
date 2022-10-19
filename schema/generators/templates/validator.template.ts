@@ -9,7 +9,6 @@ import glob from 'glob';
 import Objectiv from '../../base_schema.json';
 import { JavaScriptWriter } from '../writers/JavaScriptWriter';
 import { ZodWriter } from '../writers/ZodWriter';
-import { getPropertyValue } from './common';
 import { getContexts, getEntity, getEvents } from './parser';
 
 const validatorFolder = '../../validator/';
@@ -50,7 +49,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         typeName: property.type,
         isNullable: property.nullable,
         isOptional: property.optional,
-        value: getPropertyValue(context.name, property),
+        value: property.value,
       })),
     });
     zodWriter.writeLine(';');
@@ -67,7 +66,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         typeName: property.type,
         isNullable: property.nullable,
         isOptional: property.optional,
-        value: getPropertyValue(context.name, property),
+        value: property.value,
       })),
     });
     zodWriter.writeLine(';');
@@ -85,7 +84,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
             typeName: property.type,
             isNullable: property.nullable,
             isOptional: property.optional,
-            value: getPropertyValue(context.name, property),
+            value: property.value,
           })),
         },
         ...context.children.map(({ name }) => name),
@@ -126,7 +125,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
         typeName: property.type,
         isNullable: property.nullable,
         isOptional: property.optional,
-        value: getPropertyValue(event.name, property),
+        value: property.value,
       })),
       rules: event.validation?.rules,
     });

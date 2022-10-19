@@ -5,8 +5,7 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { TypeScriptWriter } from '../writers/TypeScriptWriter';
-import { sortBy } from './common';
-import { getContexts, getEvents } from "./parser";
+import { getContexts, getEvents } from './parser';
 
 // TODO temporarily generate this in the /generated folder, as we need TS to be finished before we can use it
 //const destinationFolder = '../../../tracker/core/tracker/src/generated/';
@@ -14,15 +13,15 @@ const destinationFolder = '../generated/';
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
-  const abstractContexts = sortBy(getContexts({ isAbstract: true }), 'name');
-  const globalContexts = sortBy(getContexts({ isGlobalContext: true }), 'name');
-  const locationContexts = sortBy(getContexts({ isLocationContext: true }), 'name');
+  const abstractContexts = getContexts({ isAbstract: true, sortBy: 'name' });
+  const globalContexts = getContexts({ isGlobalContext: true, sortBy: 'name' });
+  const locationContexts = getContexts({ isLocationContext: true, sortBy: 'name' });
 
   // AbstractContextName enum
   tsWriter.writeEnumeration({
     export: true,
     name: 'AbstractContextName',
-    members: abstractContexts.map(({name}) => ({ name, value: name })),
+    members: abstractContexts.map(({ name }) => ({ name, value: name })),
   });
 
   tsWriter.writeEndOfLine();
@@ -30,7 +29,9 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
   // AnyAbstractContextName type
   tsWriter.writeLine('export type AnyAbstractContextName =');
   abstractContexts.forEach((context, index) => {
-    tsWriter.writeLine(`${tsWriter.indentString}| '${context.name}'${index === abstractContexts.length - 1 ? ';' : ''}`);
+    tsWriter.writeLine(
+      `${tsWriter.indentString}| '${context.name}'${index === abstractContexts.length - 1 ? ';' : ''}`
+    );
   });
 
   tsWriter.writeEndOfLine();
@@ -64,7 +65,9 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
   // AnyLocationContextName type
   tsWriter.writeLine('export type AnyLocationContextName =');
   locationContexts.forEach((context, index) => {
-    tsWriter.writeLine(`${tsWriter.indentString}| '${context.name}'${index === locationContexts.length - 1 ? ';' : ''}`);
+    tsWriter.writeLine(
+      `${tsWriter.indentString}| '${context.name}'${index === locationContexts.length - 1 ? ';' : ''}`
+    );
   });
 
   tsWriter.writeEndOfLine();
@@ -76,8 +79,8 @@ Generator.generateFromModel({ outputFile: `${destinationFolder}/ContextNames.ts`
 
 Generator.generateFromModel({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
-  const abstractEvents = sortBy(getEvents({ isAbstract: true }), 'name');
-  const events = sortBy(getEvents({ isAbstract: false }), 'name');
+  const abstractEvents = getEvents({ isAbstract: true, sortBy: 'name' });
+  const events = getEvents({ isAbstract: false, sortBy: 'name' });
 
   // AbstractEventName enum
   tsWriter.writeEnumeration({
