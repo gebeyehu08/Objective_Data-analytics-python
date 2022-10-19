@@ -61,8 +61,8 @@ jobs:
       - name: Cache pip
         # Configure cache for the files that pip downloads. At the end of the steps the path gets cached
         # (if the cache keys doesn't exist yet). If the cache key exists it gets restored in this step.
-	# Note: the first job with the same key that makes it to the end gets to cache its data. Make 
-	# sure that there are no conflicts. Caches will not be updated.
+        # Note: the first job with the same key that makes it to the end gets to cache its data. Make 
+        # sure that there are no conflicts. Caches will not be updated.
         uses: actions/cache@v2
         with:
           # This path is specific to Ubuntu
@@ -74,40 +74,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e bach[dev]
       - name: Typecheck with mypy
-	if: matrix.task == 'code'
+        if: matrix.task == 'code'
         run: |
           cd bach
           mypy bach sql_models
       - name: Stylecheck with pycodestyle
-	if: matrix.task == 'code'
+        if: matrix.task == 'code'
         run: |
           cd bach
           pycodestyle bach sql_models
       - name: Unit tests Postgres
-	if: matrix.task == 'postgres'
+        if: matrix.task == 'postgres'
         run: |
           cd bach
           pytest --postgres tests/unit
       - name: Functional tests Postgres
-	if: matrix.task == 'postgres'
+        if: matrix.task == 'postgres'
         run: |
           cd bach
           pytest -n 4 --dist loadgroup --postgres tests/functional
       - name: Setup GCP Credentials
-	if: matrix.task == 'bigquery'
+        if: matrix.task == 'bigquery'
         run: |
           cd bach
           echo $GCP_SERVICE_ACCOUNT > $OBJ_DB_BQ_CREDENTIALS_PATH
       - name: Install BigQuery dependencies
-	if: matrix.task == 'bigquery'
+        if: matrix.task == 'bigquery'
         run: |
           pip install -e bach[bigquery]
       - name: Unit tests BigQuery
+        if: matrix.task == 'bigquery'
         run: |
           cd bach
           pytest --big-query tests/unit
       - name: Functional tests BigQuery
-	if: matrix.task == 'bigquery'
+        if: matrix.task == 'bigquery'
         run: |
           cd bach
           pytest -n 4 --dist loadgroup --big-query tests/functional
@@ -115,16 +116,16 @@ jobs:
       # `bach[dev]`, but the time it takes to setup these environments is also a consideration, so we don't
       # start with a clean environment here and just build on top of the environment we used for BigQuery.
       - name: Install Athena dependencies
-	if: matrix.task == 'athena'
+        if: matrix.task == 'athena'
         run: |
           pip install -e bach[athena]
       - name: Unit tests Athena
-	if: matrix.task == 'athena'
+        if: matrix.task == 'athena'
         run: |
           cd bach
           pytest --athena tests/unit
       - name: Functional tests Athena
-	if: matrix.task == 'athena'
+        if: matrix.task == 'athena'
         run: |
           cd bach
           pytest -n 4 --dist loadgroup --athena tests/functional
