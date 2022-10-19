@@ -87,13 +87,13 @@ Now let's look some more into our dataset to see what it contains.
 	:skipif: engine is None
 
 	>>> df.describe(include='all').head()
-	               day                   moment user_id location_stack              event_type stack_event_types  session_id  session_hit_number
+	               day                      moment user_id location_stack              event_type stack_event_types  session_id  session_hit_number
 	__stat
-	count         3619                     3619    3619           3619                    3619              3619     3619.00             3619.00
-	mean          None                     None    None           None                    None              None      253.49               15.44
-	std           None                     None    None           None                    None              None      134.99               23.70
-	min     2022-03-01  2022-03-01 02:38:04.495    None           None  ApplicationLoadedEvent              None        1.00                1.00
-	max     2022-03-31  2022-03-31 22:53:15.035    None           None            VisibleEvent              None      493.00              165.00
+	count         3619                        3619    3619           3619                    3619              3619     3619.00             3619.00
+	mean          None                        None    None           None                    None              None      253.49               15.44
+	std           None                        None    None           None                    None              None      134.99               23.70
+	min     2022-03-01  2022-03-01 02:38:04.495000    None           None  ApplicationLoadedEvent              None        1.00                1.00
+	max     2022-03-31  2022-03-31 22:53:15.035000    None           None            VisibleEvent              None      493.00              165.00
 
 .. admonition:: Reference
 	:class: api-reference
@@ -279,11 +279,11 @@ using `fillna` to fill missing values.
 
 	>>> features_unstacked.session_duration.describe().head()
 	__stat
-	count                 162
-	mean       00:03:22.62127
-	min              00:00:00
-	max            00:29:16.8
-	nunique               144
+	count                          162
+	mean       0 days, 00:03:22.621270
+	min        0 days, 00:00:00.000000
+	max        0 days, 00:29:16.800000
+	nunique                        144
 	Name: session_duration, dtype: object
 
 .. admonition:: Reference
