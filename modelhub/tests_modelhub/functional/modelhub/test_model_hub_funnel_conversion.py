@@ -23,14 +23,16 @@ def test_funnel_conversion(db_params):
         bts[columns],
         expected_columns=columns,
         expected_data=[
-            ['link: c', 3, 2, Decimal('0.667'), Decimal('0.667'), Decimal('0.333')],
-            ['link: a', 2, 1, Decimal('0.500'), Decimal('0.333'), Decimal('0.333')],
-            ['link: g', 1, 0, Decimal('0.000'), Decimal('0.000'), Decimal('0.333')],
-            ['link: l', 1, 1, Decimal('1.000'), Decimal('0.333'), Decimal('0.000')],
-            ['link: n', 1, 1, Decimal('1.000'), Decimal('0.333'), Decimal('0.000')],
-            ['link: d', 1, 0, Decimal('0.000'), Decimal('0.000'), Decimal('0.333')],
-            ['expanda', 1, 1, Decimal('1.000'), Decimal('0.333'), Decimal('0.000')],
+            ['expanda', 1, 1, 1.0, 0.333, 0.0],
+            ['link: a', 2, 1, 0.5, 0.333, 0.333],
+            ['link: c', 3, 2, 0.667, 0.667, 0.333],
+            ['link: d', 1, 0, 0.0, 0.0, 0.333],
+            ['link: g', 1, 0, 0.0, 0.0, 0.333],
+            ['link: l', 1, 1, 1.0, 0.333, 0.0],
+            ['link: n', 1, 1, 1.0, 0.333, 0.0],
         ],
+        use_to_pandas=True,
+        order_by=['location'],
     )
 
     # location_stack - default
@@ -90,4 +92,5 @@ def test_funnel_conversion(db_params):
                 1, 1, 1.0, 1.0, 0.0
             ],
         ],
+        use_to_pandas=True,
     )
