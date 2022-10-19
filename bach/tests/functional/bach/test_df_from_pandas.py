@@ -49,7 +49,7 @@ TYPES_COLUMNS = ['int_column', 'float_column', 'bool_column', 'datetime_column',
                  'dict_column', 'timedelta_column', 'mixed_column']
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1376')
 def test_from_pandas_table(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     bt = DataFrame.from_pandas(
@@ -63,7 +63,7 @@ def test_from_pandas_table(engine, unique_table_test_name):
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS, expected_data=EXPECTED_DATA)
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1376')
 def test_from_pandas_table_injection(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
     bt = DataFrame.from_pandas(
@@ -116,7 +116,7 @@ def test_from_pandas_ephemeral_injection(engine):
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1376')
 def test_from_pandas_non_happy_path(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     with pytest.raises(TypeError):
@@ -149,8 +149,8 @@ def test_from_pandas_non_happy_path(engine, unique_table_test_name):
         )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
-@pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1376')
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1377')
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_index(materialization: str, engine, unique_table_test_name):
     # test multilevel index
@@ -195,8 +195,8 @@ def test_from_pandas_index(materialization: str, engine, unique_table_test_name)
         expected_data=[[idx] + x[1:] for idx, x in enumerate(EXPECTED_DATA)])
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
-@pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1376')
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1377')
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_types(materialization: str, engine, unique_table_test_name):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)

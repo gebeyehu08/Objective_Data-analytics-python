@@ -175,12 +175,16 @@ const EventTypes = z.enum([
  */
 const ApplicationContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.ApplicationContext),
 }).strict();
@@ -191,12 +195,16 @@ const ApplicationContext = z.object({
  */
 const ContentContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.ContentContext),
 }).strict();
@@ -210,12 +218,16 @@ const CookieIdContext = z.object({
    */
   cookie_id: z.string(),
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.CookieIdContext),
 }).strict();
@@ -225,12 +237,16 @@ const CookieIdContext = z.object({
  */
 const ExpandableContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.ExpandableContext),
 }).strict();
@@ -250,14 +266,18 @@ const HttpContext = z.object({
   /**
    * (public) IP address of the agent that sent the event.
    */
-  remote_address: z.string().optional(),
+  remote_address: z.string().nullable(),
+  /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.HttpContext),
 }).strict();
@@ -273,12 +293,16 @@ const IdentityContext = z.object({
    */
   value: z.string(),
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.IdentityContext),
 }).strict();
@@ -288,12 +312,16 @@ const IdentityContext = z.object({
  */
 const InputContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.InputContext),
 }).strict();
@@ -307,12 +335,16 @@ const InputValueContext = z.object({
    */
   value: z.string(),
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.InputValueContext),
 }).strict();
@@ -326,12 +358,16 @@ const LinkContext = z.object({
    */
   href: z.string(),
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.LinkContext),
 }).strict();
@@ -343,18 +379,22 @@ const LocaleContext = z.object({
   /**
    * Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.
    */
-  language_code: z.string().optional(),
+  language_code: z.string().nullable(),
   /**
    * Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.
    */
-  country_code: z.string().optional(),
+  country_code: z.string().nullable(),
+  /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.LocaleContext),
 }).strict();
@@ -377,32 +417,36 @@ const MarketingContext = z.object({
    */
   campaign: z.string(),
   /**
-   * [Optional] Search keywords.
+   * Search keywords.
    */
-  term: z.string().optional(),
+  term: z.string().nullable(),
   /**
-   * [Optional] Used to differentiate similar content, or links within the same ad.
+   * Used to differentiate similar content, or links within the same ad.
    */
-  content: z.string().optional(),
+  content: z.string().nullable(),
   /**
-   * [Optional] To differentiate similar content, or links within the same ad.
+   * To differentiate similar content, or links within the same ad.
    */
-  source_platform: z.string().optional(),
+  source_platform: z.string().nullable(),
   /**
-   * [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
+   * Identifies the creative used (e.g., skyscraper, banner, etc).
    */
-  creative_format: z.string().optional(),
+  creative_format: z.string().nullable(),
   /**
-   * [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
+   * Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
    */
-  marketing_tactic: z.string().optional(),
+  marketing_tactic: z.string().nullable(),
+  /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.MarketingContext),
 }).strict();
@@ -412,12 +456,16 @@ const MarketingContext = z.object({
  */
 const MediaPlayerContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.MediaPlayerContext),
 }).strict();
@@ -427,12 +475,16 @@ const MediaPlayerContext = z.object({
  */
 const NavigationContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.NavigationContext),
 }).strict();
@@ -442,12 +494,16 @@ const NavigationContext = z.object({
  */
 const OverlayContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.OverlayContext),
 }).strict();
@@ -457,12 +513,16 @@ const OverlayContext = z.object({
  */
 const PathContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.PathContext),
 }).strict();
@@ -472,12 +532,16 @@ const PathContext = z.object({
  */
 const RootLocationContext = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.RootLocationContext),
 }).strict();
@@ -491,12 +555,16 @@ const SessionContext = z.object({
    */
   hit_number: z.number(),
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.SessionContext),
 }).strict();
@@ -507,12 +575,16 @@ const SessionContext = z.object({
  */
 const PressableContextEntity = z.object({
   /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * A unique string identifier to be combined with the Context Type (`_type`)
    * for Context instance uniqueness.
    */
   id: z.string(),
   /**
-   * A string literal used during serialization. Should always match the Context interface name.
+   * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.PressableContext),
 }).strict();
@@ -524,12 +596,16 @@ const PressableContextEntity = z.object({
 const PressableContext = z.discriminatedUnion('_type', [
   z.object({
     /**
+     * An ordered list of the parents of this Context, itself included as the last element.
+     */
+    _types: z.array(z.string()),
+    /**
      * A unique string identifier to be combined with the Context Type (`_type`)
      * for Context instance uniqueness.
      */
     id: z.string(),
     /**
-     * A string literal used during serialization. Should always match the Context interface name.
+     * A string literal used during serialization. Hardcoded to the Context name.
      */
     _type: z.literal(ContextTypes.enum.PressableContext),
   }).strict(),
@@ -614,7 +690,11 @@ const ApplicationLoadedEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -627,7 +707,7 @@ const ApplicationLoadedEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.ApplicationLoadedEvent),
   /**
@@ -652,7 +732,11 @@ const FailureEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -665,7 +749,7 @@ const FailureEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.FailureEvent),
   /**
@@ -685,7 +769,11 @@ const HiddenEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -698,7 +786,7 @@ const HiddenEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.HiddenEvent),
   /**
@@ -716,22 +804,26 @@ const HiddenEvent = z.object({
  */
 const InputChangeEvent = z.object({
   /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
   location_stack: LocationStack,
   /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.InputChangeEvent),
   /**
@@ -777,14 +869,18 @@ const InteractiveEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.InteractiveEvent),
   /**
@@ -824,7 +920,11 @@ const MediaEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -837,7 +937,7 @@ const MediaEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaEvent),
   /**
@@ -866,7 +966,11 @@ const MediaLoadEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -879,7 +983,7 @@ const MediaLoadEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaLoadEvent),
   /**
@@ -899,7 +1003,11 @@ const MediaPauseEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -912,7 +1020,7 @@ const MediaPauseEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaPauseEvent),
   /**
@@ -932,7 +1040,11 @@ const MediaStartEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -945,7 +1057,7 @@ const MediaStartEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaStartEvent),
   /**
@@ -965,7 +1077,11 @@ const MediaStopEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -978,7 +1094,7 @@ const MediaStopEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.MediaStopEvent),
   /**
@@ -998,7 +1114,11 @@ const NonInteractiveEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1011,7 +1131,7 @@ const NonInteractiveEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.NonInteractiveEvent),
   /**
@@ -1030,22 +1150,26 @@ const NonInteractiveEvent = z.object({
  */
 const PressEvent = z.object({
   /**
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
+   */
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
+  /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
    * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
    */
   location_stack: LocationStack,
   /**
-   * The version of the Objectiv Taxonomy Schema used to generate this event.
-   */
-  schema_version: z.string().optional(),
-  /**
    * Global contexts add global / general information about the event. They carry information that is not
    * related to where the Event originated (location), such as device, platform or business data.
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.PressEvent),
   /**
@@ -1079,7 +1203,11 @@ const SuccessEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1092,7 +1220,7 @@ const SuccessEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.SuccessEvent),
   /**
@@ -1112,7 +1240,11 @@ const VisibleEvent = z.object({
   /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  schema_version: z.string().optional(),
+  _schema_version: z.string().optional(),
+  /**
+   * An ordered list of the parents of this Event, itself included as the last element.
+   */
+  _types: z.array(z.string()),
   /**
    * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
    * deterministically describes where an event took place from global to specific.
@@ -1125,7 +1257,7 @@ const VisibleEvent = z.object({
    */
   global_contexts: GlobalContexts,
   /**
-   * A string literal used during serialization. Should always match the Event interface name.
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: z.literal(EventTypes.enum.VisibleEvent),
   /**

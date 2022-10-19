@@ -2,7 +2,8 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
-from bach.series import Series, SeriesString, SeriesInt64
+from bach.series import Series, SeriesString, SeriesInt64, SeriesFloat64
+
 from sql_models.constants import NotSet, not_set
 from typing import cast, List, Union, TYPE_CHECKING
 
@@ -530,3 +531,98 @@ class Aggregate:
             result['percentage'] *= 100
             result = result.sort_values(by='percentage', ascending=False)
         return result
+
+    def funnel_conversion(self,
+                          data: bach.DataFrame,
+                          location_stack: LocationStackType = None) -> bach.DataFrame:
+        """
+        Calculates conversion numbers for all locations stacks in the `data`.
+        N.B. Filter the dataframe beforehand to filter down to the funnel locations.
+
+
+        For each step in a funnel, calculates the number of unique users who started it,
+        the number of unique users who completed the step (defined as whether the user
+        went to any other step in the funnel),
+        the conversion rate to completing the step, the conversion rate to completing the step
+        when looking at all users who started the funnel (= the 'full' conversion rate),
+        and the fraction of the users in the funnel dropping out at the given step.
+
+        N.B. We assumed that the funnel direction is always the same.
+        The implementation of VisibleEvents makes for the most accurate calculation
+        of the conversion numbers, as the number of users as well as the conversion rate
+        is based on events on each location stack.
+
+        :param data: The :py:class:`bach.DataFrame` to apply the operation on.
+        :param location_stack: The column that holds the steps in the funnel. Can be:
+
+            - A string of the name of the column in `data`.
+            - Any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
+            - A Series with the same base node as `data`.
+
+            If its value is `None`, the whole location stack is taken.
+
+        :returns: :py:class:`bach.DataFrame` with the following columns: `step` (the location considered as a
+            step, e.g. a feature or root location), `n_users` (number of unique users starting the step),
+            `n_users_completed_step` (number of unique users completing the step),
+            `step_conversion_rate` (number of users completing the step / `n_users`), `full_conversion_rate`
+            (number of users completing the step / number of users starting the funnel), and `dropoff_share`
+            (ratio between the users dropping out at a given step and users at the begging at the funnel).
+        """
+
+        data = data.copy()
+
+        from modelhub.util import check_objectiv_dataframe
+        columns_to_check = ['location_stack', 'user_id', 'session_id',
+                            'session_hit_number', 'moment']
+        check_objectiv_dataframe(df=data, columns_to_check=columns_to_check)
+
+        column = location_stack or data['location_stack']
+        if type(column) == str:
+            column = data[column]
+        data['location'] = column
+        if type(column) == SeriesLocationStack:
+            # extract the nice name per event
+            data['location'] = column.ls.nice_name
+        location = 'location'
+
+        df_root_user = data.sort_values(['session_id', 'session_hit_number']).\
+            drop_duplicates(subset=[location, 'user_id'], keep='first')
+
+        funnel = self._mh.get_funnel_discovery()
+        df_steps = funnel.get_navigation_paths(df_root_user, location_stack=location,
+                                               steps=2, by='user_id', sort_by='moment')
+
+        # n_users
+        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique().to_frame().\
+            reset_index().rename(columns={'user_id': 'n_users'})
+
+        # n_users_completed_step
+        # remove rows where 2nd step is NaN (it means the user left the funnel)
+        step_completed_df = df_steps.dropna().reset_index()[['user_id', f'{location}_step_1']]
+        step_completed_df = step_completed_df.groupby([f'{location}_step_1']).count()\
+            .rename(columns={'user_id_count': 'n_users_completed_step'}).sort_index()
+
+        # merging n_users with n_users completed_step and n_users for drop-offs
+        result = step_visitors_df.merge(step_completed_df,
+                                        left_on=location,
+                                        right_on=f'{location}_step_1',
+                                        how='left').reset_index(drop=True)
+        result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
+
+        n_users_start = result['n_users'].max()
+
+        # n_users drop-offs
+        result['dropoff_share'] = result['n_users'] - result['n_users_completed_step']
+        result['dropoff_share'] = cast(SeriesFloat64, (result['dropoff_share'] / n_users_start)).round(3)
+
+        # step_conversion_rate
+        result['step_conversion_rate'] = result['n_users_completed_step'] / result['n_users']
+        result['step_conversion_rate'] = cast(SeriesFloat64, result['step_conversion_rate']).round(3)
+
+        # full_conversion_rate
+        result['full_conversion_rate'] = result['n_users_completed_step'] / n_users_start
+        result['full_conversion_rate'] = cast(SeriesFloat64, result['full_conversion_rate']).round(3)
+
+        columns = [location, 'n_users', 'n_users_completed_step', 'step_conversion_rate',
+                   'full_conversion_rate', 'dropoff_share']
+        return result[columns].sort_values('n_users', ascending=False)
