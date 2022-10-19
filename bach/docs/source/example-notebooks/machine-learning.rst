@@ -216,7 +216,6 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-
 .. exec_code::
 	:language: jupyter-notebook
 	:language_output: jupyter-notebook-out
