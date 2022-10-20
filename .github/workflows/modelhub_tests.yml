@@ -73,12 +73,12 @@ jobs:
         if: matrix.task == 'code'
         run: |
           cd modelhub
-          mypy modelhub sql_models
+          mypy modelhub
       - name: Stylecheck with pycodestyle
         if: matrix.task == 'code'
         run: |
           cd modelhub
-          pycodestyle modelhub sql_models
+          pycodestyle modelhub
 
       - name: Setup GCP Credentials
         if: matrix.task == 'bigquery'
