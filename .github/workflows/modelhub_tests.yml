@@ -60,8 +60,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
           cache-dependency-path: |
-            'bach/setup.cfg'
-            'modelhub/setup.cfg'
+            bach/setup.cfg
+            modelhub/setup.cfg
       - name: Install dependencies
         run: |
           python -m pip install pip==20.0.2
