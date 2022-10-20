@@ -784,235 +784,36 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-.. the testsetup below is a workaround to show the actual SQL output
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
 
-.. doctest:: marketing-analytics
-	:hide:
-	
-	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # show SQL for analysis; this is just one example, and works for any Objectiv model/analysis
-	>>> display_sql_as_markdown(users_from_marketing_daily)
-	sql
-	CREATE
-	TEMPORARY TABLE "manual_materialize___2ba260e03ef23adeb29173018257afd8"
-	    ON COMMIT DROP AS WITH "loaded_data___f55033d1a2c6bc0844c0ded4ab5a824e" AS (
-	        SELECT *
-	          FROM (VALUES (cast(0 AS bigint), 'twitter'), (cast(1 AS bigint), 'reddit')) AS t("_index_0", "sources")
-	       ),
-	       "manual_materialize___d07b39cbe5f723cd8a1a9949800bccf6" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "cookie_id" AS "user_id",
-	               "value"->>'_type' AS "event_type",
-	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"HttpContext"}') AS "http",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application"
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___f4ef1914b26f3bb69afb3e788f5314da" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "location_stack" AS "location_stack",
-	               "time" AS "time",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application"
-	          FROM "manual_materialize___d07b39cbe5f723cd8a1a9949800bccf6"
-	         WHERE ((("day" >= cast('2022-08-01' AS date))) AND (("day" <= cast('2022-08-20' AS date))))
-	       ),
-	       "context_data___90beb424c53da70345c7b0c2877b8683" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application"
-	          FROM "getitem_where_boolean___f4ef1914b26f3bb69afb3e788f5314da"
-	       ),
-	       "session_starts___42d1da39818b989fb9b18f5d0eb8edd0" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                    ELSE cast(TRUE AS boolean)
-	                     END AS "is_start_of_session"
-	          FROM "context_data___90beb424c53da70345c7b0c2877b8683"
-	       ),
-	       "session_id_and_count___a5e101de16a4d4e0c5a0cf9f64e013c2" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application",
-	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                    ELSE cast(NULL AS bigint)
-	                     END AS "session_start_id",
-	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___42d1da39818b989fb9b18f5d0eb8edd0"
-	       ),
-	       "objectiv_sessionized_data___88068a115a61d170878748144b131106" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application",
-	               "is_start_of_session" AS "is_start_of_session",
-	               "session_start_id" AS "session_start_id",
-	               "is_one_session" AS "is_one_session",
-	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___a5e101de16a4d4e0c5a0cf9f64e013c2"
-	       ),
-	       "getitem_where_boolean___c50b22959543e19605b18622f8457a8e" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application",
-	               (
-	                SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ')
-	                  FROM jsonb_array_elements("location_stack") WITH
-	            ORDINALITY
-	                 WHERE
-	            ORDINALITY = jsonb_array_length("location_stack")
-	               ) || (CASE WHEN jsonb_array_length("location_stack") > 1 THEN ' located at ' || (SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ') FROM jsonb_array_elements("location_stack") WITH ORDINALITY WHERE ORDINALITY < jsonb_array_length("location_stack") ) ELSE '' END) AS "feature_nice_name",
-	               coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id' AS "root_location",
-	               "http"->0->>'referrer' AS "referrer",
-	               "marketing"->0->>'source' AS "utm_source",
-	               "marketing"->0->>'medium' AS "utm_medium",
-	               "marketing"->0->>'campaign' AS "utm_campaign"
-	          FROM "objectiv_sessionized_data___88068a115a61d170878748144b131106"
-	         WHERE NOT (("marketing"->0->>'source' IS NULL))
-	       ),
-	       "getitem_where_boolean___9c53a0b4626ec25bcc5e52ac88f462f7" AS (
-	        SELECT "session_id" AS "session_id"
-	          FROM "getitem_where_boolean___c50b22959543e19605b18622f8457a8e"
-	         WHERE NOT (((("session_id" IS NULL)) OR (("session_id" = cast('nan' AS double precision)))))
-	       ),
-	       "manual_materialize___40870fc0212554b51050caa5251285a2" AS (
-	        SELECT DISTINCT "session_id" AS "session_id"
-	          FROM "getitem_where_boolean___9c53a0b4626ec25bcc5e52ac88f462f7"
-	       ),
-	       "getitem_where_boolean___06584cd9c7201cbc2292c25a5b5a76e9" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application",
-	               (
-	                SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ')
-	                  FROM jsonb_array_elements("location_stack") WITH
-	            ORDINALITY
-	                 WHERE
-	            ORDINALITY = jsonb_array_length("location_stack")
-	               ) || (CASE WHEN jsonb_array_length("location_stack") > 1 THEN ' located at ' || (SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ') FROM jsonb_array_elements("location_stack") WITH ORDINALITY WHERE ORDINALITY < jsonb_array_length("location_stack") ) ELSE '' END) AS "feature_nice_name",
-	               coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id' AS "root_location",
-	               "http"->0->>'referrer' AS "referrer",
-	               "marketing"->0->>'source' AS "utm_source",
-	               "marketing"->0->>'medium' AS "utm_medium",
-	               "marketing"->0->>'campaign' AS "utm_campaign"
-	          FROM "objectiv_sessionized_data___88068a115a61d170878748144b131106"
-	         WHERE "session_id" in (
-	                SELECT "session_id" AS "session_id_unique"
-	                  FROM "manual_materialize___40870fc0212554b51050caa5251285a2"
-	               )
-	       ),
-	       "getitem_where_boolean___8598d729e446213ed59d1d1074b90662" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               "http" AS "http",
-	               "marketing" AS "marketing",
-	               "application" AS "application",
-	               "feature_nice_name" AS "feature_nice_name",
-	               "root_location" AS "root_location",
-	               "referrer" AS "referrer",
-	               "utm_source" AS "utm_source",
-	               "utm_medium" AS "utm_medium",
-	               "utm_campaign" AS "utm_campaign"
-	          FROM "getitem_where_boolean___06584cd9c7201cbc2292c25a5b5a76e9"
-	         WHERE "utm_source" in (
-	                SELECT "sources" AS "sources"
-	                  FROM "loaded_data___f55033d1a2c6bc0844c0ded4ab5a824e"
-	               )
-	       ) SELECT "event_id" AS "event_id",
-	       "day" AS "day",
-	       "moment" AS "moment",
-	       "user_id" AS "user_id",
-	       "location_stack" AS "location_stack",
-	       "event_type" AS "event_type",
-	       "stack_event_types" AS "stack_event_types",
-	       "session_id" AS "session_id",
-	       "session_hit_number" AS "session_hit_number",
-	       "http" AS "http",
-	       "marketing" AS "marketing",
-	       "application" AS "application",
-	       "feature_nice_name" AS "feature_nice_name",
-	       "root_location" AS "root_location",
-	       "referrer" AS "referrer",
-	       "utm_source" AS "utm_source",
-	       "utm_medium" AS "utm_medium",
-	       "utm_campaign" AS "utm_campaign"
-	  FROM "getitem_where_boolean___8598d729e446213ed59d1d1074b90662" ;SELECT to_char("moment", 'YYYY"-"MM"-"DD') AS "time_aggregation",
-	       count(DISTINCT "user_id") AS "unique_users"
-	  FROM "manual_materialize___2ba260e03ef23adeb29173018257afd8"
-	 GROUP BY to_char("moment", 'YYYY"-"MM"-"DD')
-	 ORDER BY to_char("moment", 'YYYY"-"MM"-"DD') DESC NULLS LAST
-	<BLANKLINE>
+	# --- hide: start ---
+	import os
+	import pandas as pd
+	from bach import DataFrame
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['http', 'marketing', 'application'])
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-08-01', end_date='2022-08-20')
+	df['feature_nice_name'] = df.location_stack.ls.nice_name
+	df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+	df_acquisition = df.copy()
+	df_acquisition['referrer'] = df_acquisition.http.context.referrer
+	df_acquisition['utm_source'] = df_acquisition.marketing.context.source
+	df_acquisition['utm_medium'] = df_acquisition.marketing.context.medium
+	df_acquisition['utm_campaign'] = df_acquisition.marketing.context.campaign
+	campaign_sessions = df_acquisition[~df_acquisition['utm_source'].isnull()]['session_id'].unique()
+	df_marketing_only = df_acquisition[df_acquisition['session_id'].isin(campaign_sessions)]
+	source_selection = ['twitter', 'reddit']
+	sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}), convert_objects=True).sources
+	df_marketing_selection = df_marketing_only[(df_marketing_only.utm_source.isin(sources))]
+	df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
+	users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(users_from_marketing_daily)
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 

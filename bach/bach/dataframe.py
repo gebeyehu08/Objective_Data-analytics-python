@@ -606,8 +606,9 @@ class DataFrame:
         """
         Instantiate a new DataFrame based on the result of the query defined in `model`.
 
-        If all_dtypes is not specified, then a transaction scoped temporary table will be created with
-        0 result rows from the model. The meta data of this table will be used to deduce the dtypes.
+        If all_dtypes is not specified, then the model is compiled to sql and executed as a query on the
+        database. The result-set's meta data is used to determine the columns and dtypes. This might not work
+        with custom data types. If the all_dtypes data is available, it's advised to provide it.
 
         :param engine: a sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
@@ -622,8 +623,7 @@ class DataFrame:
         :returns: A DataFrame based on an SqlModel
 
         .. note::
-            If all_dtypes is not set, then this will query the database and create and remove a temporary
-            table.
+            If all_dtypes is not set, then this will query the database
         """
         name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
         if all_dtypes is not None:
@@ -1177,10 +1177,22 @@ class DataFrame:
         .. note::
             This function writes to the database.
         """
+        from bach.series import SeriesJson
         if if_exists not in {'fail', 'replace'}:
             raise ValueError(f'Value of if_exists ({if_exists}) must be either "fail" or "replace"')
         dialect = self.engine.dialect
-        model = self.get_current_node(name='database_create_table')
+        df_cp = self.copy()
+
+        # since hive does not support json type, we must cast all JSON series to string.
+        series_to_stringify = {
+            series.name: 'string'
+            for series in self.all_series.values()
+            if isinstance(series, SeriesJson) and is_athena(dialect)
+        }
+        if series_to_stringify:
+            df_cp = df_cp.astype(series_to_stringify)
+
+        model = df_cp.get_current_node(name='database_create_table')
         model = model.copy_set_materialization(Materialization.TABLE)
         model = model.copy_set_materialization_name(materialization_name=table_name)
 
@@ -1200,13 +1212,15 @@ class DataFrame:
                 sql = escape_parameter_characters(conn, sql)
                 conn.execute(sql)
 
-        all_dtypes = {**self.index_dtypes, **self.dtypes}
-        return self.from_table(
+        all_dtypes = {**df_cp.index_dtypes, **df_cp.dtypes}
+        result = self.from_table(
             engine=self.engine,
             table_name=table_name,
             index=self.index_columns,
             all_dtypes=all_dtypes
         )
+        # cast to original dtypes
+        return result.astype(self.dtypes)
 
     @overload
     def __getitem__(self, key: str) -> 'Series':

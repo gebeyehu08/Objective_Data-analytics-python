@@ -58,3 +58,9 @@ sphinx-build -M doctest source build [PATH_TO_FILE]
 
 Note that this will probably require copying some of the global doctest config currently defined in `conf.py` 
 to the respective file.
+
+To just run the Sphinx build (without doctests) for one file, use:
+
+```
+sphinx-build source build [PATH_TO_FILE]
+```
