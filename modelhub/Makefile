@@ -11,7 +11,7 @@ tests-bigquery:
 # against Postgres
 	mypy modelhub
 	pycodestyle modelhub
-	pytest --all -n 8 --dist loadgroup --big-query tests_modelhub
+	pytest --all -n 8 --dist loadgroup --bigquery tests_modelhub
 
 tests-athena:
 # Similar to `tests`, but tests that can run against multiple databases will be run against Athena instead

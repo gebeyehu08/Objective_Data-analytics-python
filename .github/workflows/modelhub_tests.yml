@@ -18,6 +18,7 @@ jobs:
         # See https://docs.github.com/en/actions/learn-github-actions/contexts#github-context on why we use endsWith
         isMain:
           - ${{ endsWith(github.ref,'/main') }}
+        task: ['code', 'postgres', 'bigquery', 'athena']
         exclude:
           - isMain: false
             python-version: '3.8'
@@ -52,58 +53,46 @@ jobs:
       OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID: ${{ secrets.OBJ_DB_ATHENA_AWS_ACCESS_KEY_ID }}
       OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY: ${{ secrets.OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache pip
-        # Configure cache for the files that pip downloads. At the end of the steps the path gets cached
-        # (if the cache keys doesn't exist yet). If the cache key exists it gets restored in this step.
-        uses: actions/cache@v2
-        with:
-          # This path is specific to Ubuntu
-          path: ~/.cache/pip
-          key: pip-${{ matrix.python-version }}-${{ hashFiles('bach/setup.cfg', 'modelhub/setup.cfg') }}
+          cache: 'pip'
+          cache-dependency-path: |
+            'bach/setup.cfg'
+            'modelhub/setup.cfg'
       - name: Install dependencies
         run: |
           python -m pip install pip==20.0.2
           # These need to be seperate commands else pip confuses the bach flavours.
           pip install -e bach 
           pip install -e modelhub[dev]
+
       - name: Typecheck with mypy
+        if: matrix.task == 'code'
         run: |
           cd modelhub
-          mypy modelhub
+          mypy bach sql_models
       - name: Stylecheck with pycodestyle
+        if: matrix.task == 'code'
         run: |
           cd modelhub
-          pycodestyle modelhub
-      - name: Unit tests postgres
-        run: |
-          cd modelhub
-          pytest --postgres tests_modelhub/unit/
-      - name: Functional tests postgres
-        run: |
-          cd modelhub
-          pytest -n 4 --dist loadgroup --postgres tests_modelhub/functional/
+          pycodestyle bach sql_models
+
       - name: Setup GCP Credentials
+        if: matrix.task == 'bigquery'
         run: |
           cd modelhub
           echo $GCP_SERVICE_ACCOUNT > $OBJ_DB_BQ_CREDENTIALS_PATH
-      - name: Unit tests big-query
+
+      - name: Unit tests ${{ matrix.task }}
+        if: matrix.task != 'code'
         run: |
           cd modelhub
-          pytest --big-query tests_modelhub/unit/
-      - name: Functional tests big-query
+          pytest --${{matrix.task}} tests/unit
+      - name: Functional tests ${{ matrix.task }}
+        if: matrix.task != 'code'
         run: |
           cd modelhub
-          pytest -n 4 --dist loadgroup --big-query tests_modelhub/functional/
-      - name: Unit tests Athena
-        run: |
-          cd modelhub
-          pytest --athena tests_modelhub/unit
-      - name: Functional tests Athena
-        run: |
-          cd modelhub
-          pytest -n 4 --dist loadgroup --athena tests_modelhub/functional/
+          pytest -n 4 --dist loadgroup --${{ matrix.task }} tests/functional
