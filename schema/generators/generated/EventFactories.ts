@@ -374,7 +374,7 @@ export const makeVisibleEvent = (props: {
   time: props.time,
 });
 
-export function makeApplicationLoadedEvent (props: {
+export function Event (props: {
   _type: 'ApplicationLoadedEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -382,7 +382,7 @@ export function makeApplicationLoadedEvent (props: {
   time: number,
 }): ApplicationLoadedEvent;
 
-export function makeFailureEvent (props: {
+export function Event (props: {
   _type: 'FailureEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -391,7 +391,7 @@ export function makeFailureEvent (props: {
   message: string,
 }): FailureEvent;
 
-export function makeHiddenEvent (props: {
+export function Event (props: {
   _type: 'HiddenEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -399,7 +399,7 @@ export function makeHiddenEvent (props: {
   time: number,
 }): HiddenEvent;
 
-export function makeInputChangeEvent (props: {
+export function Event (props: {
   _type: 'InputChangeEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -407,7 +407,7 @@ export function makeInputChangeEvent (props: {
   time: number,
 }): InputChangeEvent;
 
-export function makeInteractiveEvent (props: {
+export function Event (props: {
   _type: 'InteractiveEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -415,7 +415,7 @@ export function makeInteractiveEvent (props: {
   time: number,
 }): InteractiveEvent;
 
-export function makeMediaEvent (props: {
+export function Event (props: {
   _type: 'MediaEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -423,7 +423,7 @@ export function makeMediaEvent (props: {
   time: number,
 }): MediaEvent;
 
-export function makeMediaLoadEvent (props: {
+export function Event (props: {
   _type: 'MediaLoadEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -431,7 +431,7 @@ export function makeMediaLoadEvent (props: {
   time: number,
 }): MediaLoadEvent;
 
-export function makeMediaPauseEvent (props: {
+export function Event (props: {
   _type: 'MediaPauseEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -439,7 +439,7 @@ export function makeMediaPauseEvent (props: {
   time: number,
 }): MediaPauseEvent;
 
-export function makeMediaStartEvent (props: {
+export function Event (props: {
   _type: 'MediaStartEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -447,7 +447,7 @@ export function makeMediaStartEvent (props: {
   time: number,
 }): MediaStartEvent;
 
-export function makeMediaStopEvent (props: {
+export function Event (props: {
   _type: 'MediaStopEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -455,7 +455,7 @@ export function makeMediaStopEvent (props: {
   time: number,
 }): MediaStopEvent;
 
-export function makeNonInteractiveEvent (props: {
+export function Event (props: {
   _type: 'NonInteractiveEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -463,7 +463,7 @@ export function makeNonInteractiveEvent (props: {
   time: number,
 }): NonInteractiveEvent;
 
-export function makePressEvent (props: {
+export function Event (props: {
   _type: 'PressEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -471,7 +471,7 @@ export function makePressEvent (props: {
   time: number,
 }): PressEvent;
 
-export function makeSuccessEvent (props: {
+export function Event (props: {
   _type: 'SuccessEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,
@@ -480,7 +480,7 @@ export function makeSuccessEvent (props: {
   message: string,
 }): SuccessEvent;
 
-export function makeVisibleEvent (props: {
+export function Event (props: {
   _type: 'VisibleEvent',
   location_stack: LocationStack,
   global_contexts: GlobalContexts,

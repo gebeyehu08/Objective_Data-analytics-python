@@ -381,28 +381,28 @@ export const makeSessionContext = (props: {
 /**
 * A factory to generate any Context.
 */
-export function makeApplicationContext (props: {
+export function makeContext (props: {
   _type: 'ApplicationContext',
   id: string,
 }): ApplicationContext;
 
-export function makeContentContext (props: {
+export function makeContext (props: {
   _type: 'ContentContext',
   id: string,
 }): ContentContext;
 
-export function makeCookieIdContext (props: {
+export function makeContext (props: {
   _type: 'CookieIdContext',
   id: string,
   cookie_id: string,
 }): CookieIdContext;
 
-export function makeExpandableContext (props: {
+export function makeContext (props: {
   _type: 'ExpandableContext',
   id: string,
 }): ExpandableContext;
 
-export function makeHttpContext (props: {
+export function makeContext (props: {
   _type: 'HttpContext',
   id: string,
   referrer: string,
@@ -410,37 +410,37 @@ export function makeHttpContext (props: {
   remote_address: string,
 }): HttpContext;
 
-export function makeIdentityContext (props: {
+export function makeContext (props: {
   _type: 'IdentityContext',
   id: string,
   value: string,
 }): IdentityContext;
 
-export function makeInputContext (props: {
+export function makeContext (props: {
   _type: 'InputContext',
   id: string,
 }): InputContext;
 
-export function makeInputValueContext (props: {
+export function makeContext (props: {
   _type: 'InputValueContext',
   id: string,
   value: string,
 }): InputValueContext;
 
-export function makeLinkContext (props: {
+export function makeContext (props: {
   _type: 'LinkContext',
   id: string,
   href: string,
 }): LinkContext;
 
-export function makeLocaleContext (props: {
+export function makeContext (props: {
   _type: 'LocaleContext',
   id: string,
   language_code: string,
   country_code: string,
 }): LocaleContext;
 
-export function makeMarketingContext (props: {
+export function makeContext (props: {
   _type: 'MarketingContext',
   id: string,
   source: string,
@@ -453,37 +453,37 @@ export function makeMarketingContext (props: {
   marketing_tactic: string,
 }): MarketingContext;
 
-export function makeMediaPlayerContext (props: {
+export function makeContext (props: {
   _type: 'MediaPlayerContext',
   id: string,
 }): MediaPlayerContext;
 
-export function makeNavigationContext (props: {
+export function makeContext (props: {
   _type: 'NavigationContext',
   id: string,
 }): NavigationContext;
 
-export function makeOverlayContext (props: {
+export function makeContext (props: {
   _type: 'OverlayContext',
   id: string,
 }): OverlayContext;
 
-export function makePathContext (props: {
+export function makeContext (props: {
   _type: 'PathContext',
   id: string,
 }): PathContext;
 
-export function makePressableContext (props: {
+export function makeContext (props: {
   _type: 'PressableContext',
   id: string,
 }): PressableContext;
 
-export function makeRootLocationContext (props: {
+export function makeContext (props: {
   _type: 'RootLocationContext',
   id: string,
 }): RootLocationContext;
 
-export function makeSessionContext (props: {
+export function makeContext (props: {
   _type: 'SessionContext',
   id: string,
   hit_number: number,

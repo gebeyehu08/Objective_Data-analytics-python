@@ -195,7 +195,7 @@ const getParametersFromProperties = (entity) =>
 
 const writeEntityFactory = (tsWriter: TypeScriptWriter, factoryName, entities) => {
   entities.forEach((entity) => {
-    tsWriter.write(`export function make${entity.name} (`);
+    tsWriter.write(`export function ${factoryName} (`);
     tsWriter.writeProps({
       propsName: 'props',
       parameters: [
