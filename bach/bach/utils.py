@@ -177,3 +177,14 @@ def validate_node_column_references_in_sorting_expressions(
                     ' sorting and try again.'
                 )
             )
+
+
+def merge_sql_statements(dialect: Dialect, sql_statements: List[str]) -> List[str]:
+    """
+    Merge multiple sql statements into one statement with separating semicolons, if the dialect supports
+    executing multiple statements in once call to conn.execute(). Otherwise return the original list.
+    """
+    if is_athena(dialect) or not sql_statements:
+        return sql_statements
+    combined = '; '.join(sql_statements)
+    return [combined]

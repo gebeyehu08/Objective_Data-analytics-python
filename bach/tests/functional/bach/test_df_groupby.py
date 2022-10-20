@@ -124,7 +124,6 @@ def test_group_by_multiple_syntax(engine):
         }
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_group_by_expression(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     btg = bt.groupby(bt['city'].str[:1])

@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
-import pytest
 
 from bach import Series, DataFrame
 
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
+
+from bach.testing import assert_equals_data
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_categorical_describe(engine) -> None:
     series = get_df_with_test_data(engine, full_data_set=True)['municipality']
     result = series.describe()
@@ -28,7 +28,6 @@ def test_categorical_describe(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena  (does not support float as column name)
 def test_numerical_describe(engine) -> None:
     p_series = pd.Series(data=[1, 2, 3, 4, 5, 6, 7, 8, 1], name='numbers')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).numbers
@@ -48,10 +47,7 @@ def test_numerical_describe(engine) -> None:
     pd.testing.assert_series_equal(expected, result.to_pandas(), check_dtype=False)
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_describe_datetime(engine) -> None:
-    # TODO: Athena and BigQuery. All engines have different string datetime formats
     p_series = pd.Series(
         data=[np.datetime64("2000-01-01"), np.datetime64("2010-01-01"), np.datetime64("2010-01-01")],
         name='dt',
@@ -62,8 +58,43 @@ def test_describe_datetime(engine) -> None:
 
     expected = pd.Series(
         index=pd.Index(['count', 'min', 'max', 'nunique', 'mode'], name='__stat'),
-        data=['3', '2000-01-01 00:00:00', '2010-01-01 00:00:00', '2', '2010-01-01 00:00:00'],
+        data=[
+            '3',
+            '2000-01-01 00:00:00.000000',
+            '2010-01-01 00:00:00.000000',
+            '2',
+            '2010-01-01 00:00:00.000000',
+        ],
         name='dt',
     )
     pd.testing.assert_series_equal(expected, result.to_pandas())
 
+
+def test_describe_timedelta(engine) -> None:
+    p_series = pd.Series(
+        data=[np.datetime64("2000-01-01"), np.datetime64("2010-01-01"), np.datetime64("2010-01-01")],
+        name='dt',
+    )
+    df = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True)
+    df['dt'] = df['dt'] - np.datetime64("2022-01-01")
+    result = df.dt.describe()
+
+    expected = pd.Series(
+        index=pd.Index(
+            ['count', 'mean', 'min', 'max', 'nunique', 'mode', '0.25', '0.5', '0.75'],
+            name='__stat'
+        ),
+        data=[
+            '3',
+            '-5601 days, 08:00:00.000000',
+            '-8036 days, 00:00:00.000000',
+            '-4383 days, 00:00:00.000000',
+            '2',
+            '-4383 days, 00:00:00.000000',
+            '-6210 days, 12:00:00.000000',
+            '-4383 days, 00:00:00.000000',
+            '-4383 days, 00:00:00.000000',
+        ],
+        name='dt',
+    )
+    pd.testing.assert_series_equal(expected, result.to_pandas())

@@ -9,9 +9,10 @@ import pytest
 
 from bach import DataFrame, SeriesTimedelta
 from sql_models.util import is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-    get_df_with_test_data, get_df_with_food_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
+
+from bach.testing import assert_equals_data
 
 
 def test_timedelta_arithmetic(engine):
@@ -92,10 +93,6 @@ def test_timedelta(engine):
         ],
         use_to_pandas=True,
     )
-
-    if is_athena(engine):
-        # TODO: Support mode aggregation for athena
-        return None
 
     r4 = gb[['delta']].groupby().mode()
     assert_equals_data(
@@ -296,4 +293,37 @@ def test_from_total_seconds(engine) -> None:
             [4, datetime.timedelta(seconds=-127503.22)],
         ],
         use_to_pandas=True,
+    )
+
+
+def test_timedelta_to_str(engine):
+    pdf = pd.DataFrame(
+        {
+            'timedelta': [
+                datetime.timedelta(seconds=127503.22),
+                datetime.timedelta(seconds=81374.33),
+                datetime.timedelta(seconds=0.64654),
+                datetime.timedelta(seconds=-694742400),
+                datetime.timedelta(seconds=-127503.22),
+            ]
+        }
+    )
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    result = df['timedelta'].astype('string')
+
+    row_3 = "0 days, 00:00:00.646540"
+    # value gets rounded do to precision
+    if is_athena(engine):
+        row_3 = "0 days, 00:00:00.647000"
+
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'timedelta'],
+        expected_data=[
+            [0, "1 days, 11:25:03.220000"],
+            [1, "0 days, 22:36:14.330000"],
+            [2, row_3],
+            [3, "-8041 days, 00:00:00.000000"],
+            [4, "-2 days, 12:34:56.780000"],
+        ]
     )

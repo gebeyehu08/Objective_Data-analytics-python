@@ -2,12 +2,10 @@
 Copyright 2022 Objectiv B.V.
 """
 
-import pytest
-
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
+from bach.testing import assert_equals_data
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
-from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def test_drop_off_locations_basic(db_params):
@@ -18,9 +16,9 @@ def test_drop_off_locations_basic(db_params):
 
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__location'].astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['location'].astype(dtype=str).str[8:10]
     bts = bts.sort_values(by='sort_str')
-    columns = ['__location', 'value_counts', 'sort_str']
+    columns = ['location', 'value_counts', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -58,9 +56,9 @@ def test_drop_off_locations_w_groupby(db_params):
 
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__location'].astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['location'].astype(dtype=str).str[8:10]
     bts = bts.sort_values(by='sort_str')
-    columns = ['__location', 'value_counts', 'sort_str']
+    columns = ['location', 'value_counts', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -102,9 +100,9 @@ def test_drop_off_locations_w_percentage(db_params):
     bts = modelhub.agg.drop_off_locations(df, percentage=True)
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__location'].astype(dtype=str).str[8:10]
+    bts['sort_str'] = bts['location'].astype(dtype=str).str[8:10]
     bts = bts.sort_values(by='sort_str')
-    columns = ['__location', 'percentage', 'sort_str']
+    columns = ['location', 'percentage', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -138,9 +136,9 @@ def test_drop_off_locations_w_location_stack(db_params):
 
     # adding sorting column
     bts = bts.reset_index()
-    bts['sort_str'] = bts['__location'].astype(dtype=str).str[-2]
+    bts['sort_str'] = bts['location'].astype(dtype=str).str[-2]
 
-    columns = ['__location', 'value_counts', 'sort_str']
+    columns = ['location', 'value_counts', 'sort_str']
     assert_equals_data(
         bts[columns],
         expected_columns=columns,
@@ -170,7 +168,7 @@ def test_drop_off_locations_w_location_stack(db_params):
 
     assert_equals_data(
         bts,
-        expected_columns=['__location', 'value_counts'],
+        expected_columns=['location', 'value_counts'],
         expected_data=[
             [
                 'about us', 1
@@ -186,5 +184,5 @@ def test_drop_off_locations_w_location_stack(db_params):
             ],
         ],
         use_to_pandas=True,
-        order_by=['__location'],
+        order_by=['location'],
     )

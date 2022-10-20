@@ -1,15 +1,18 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import json
 from typing import Optional
 
 import pytest
 
+from bach import SeriesJson
+from bach.testing import assert_equals_data
 from sql_models.graph_operations import get_graph_nodes_info
-from sql_models.util import is_bigquery, is_postgres
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from sql_models.util import is_bigquery, is_postgres, is_athena
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_json_data, \
+    JSON_COLUMNS, TEST_DATA_JSON
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def test_get_sample(engine, unique_table_test_name):
     # For reliable asserts (see below) we need more rows than the standard dataset of 11 rows has.
@@ -35,6 +38,48 @@ def test_get_sample(engine, unique_table_test_name):
                                   sample_percentage=50)
 
 
+def test_get_sample_w_json_series(engine, unique_table_test_name):
+    # Test sampling json data. This is an interesting case as for Athena we cannot store the json type, it
+    # requires a cast to varchar.
+    df = get_df_with_json_data(engine)
+
+    # Expected data
+    # TEST_DATA_JSON are strings, convert them to the json we expect to get from the database
+    expected_columns = ['_index_row'] + JSON_COLUMNS
+    json_loads = lambda c: json.loads(c) if c is not None else None
+    expected_data = [
+        [row[0], row[0], json_loads(row[1]), json_loads(row[2]), json_loads(row[3])]
+        for row in TEST_DATA_JSON
+    ]
+
+    assert isinstance(df['dict_column'], SeriesJson)
+    assert isinstance(df['list_column'], SeriesJson)
+    assert isinstance(df['mixed_column'], SeriesJson)
+
+    df_sample = df.get_sample(table_name=unique_table_test_name,
+                              sample_percentage=50,
+                              overwrite=True)
+    df_unsampled = df_sample.get_unsampled()
+    assert isinstance(df_sample['mixed_column'], SeriesJson)
+    assert isinstance(df_unsampled['mixed_column'], SeriesJson)
+
+    # Get Pandas DataFrame to make sure engine supports storing json values, and ensure that the sampled
+    # and unsampled DataFrames are functional.
+    assert_equals_data(
+        df_unsampled,
+        use_to_pandas=True,
+        expected_columns=expected_columns,
+        expected_data=expected_data
+    )
+    # We cannot assert_equals_data on df_sample, as we don't know which rows it will have.
+    # Make sure it doesn't give an error, and the types are as we expect
+    pdf_sample = df_sample.to_pandas()
+    for column_name in ['dict_column', 'list_column', 'mixed_column']:
+        for cell in pdf_sample[column_name]:
+            assert cell is None or isinstance(cell, (dict, list))
+
+
+@pytest.mark.skip_athena('We do not support the seed parameter for athena')
 @pytest.mark.skip_bigquery('We do not support the seed parameter for bigquery')
 def test_get_sample_seed(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
@@ -213,6 +258,7 @@ def test_get_unsampled_multiple_nodes(engine, unique_table_test_name):
     )
 
 
+@pytest.mark.skip_athena_todo('TODO: final decision on supporting temporary table or not')
 def test_sample_w_temp_tables(engine, unique_table_test_name):
     # Test to prevent regression: get_sample() should work after materialize(materialization='temp_table')
     df = get_df_with_test_data(engine, True)
@@ -333,7 +379,7 @@ def test_sample_operations_variable(engine, unique_table_test_name):
 
 def _get_seed(engine) -> Optional[int]:
     """ Return 200 if the database supports seeding. """
-    if is_bigquery(engine):
+    if is_bigquery(engine) or is_athena(engine):
         return None
     if is_postgres(engine):
         return 200

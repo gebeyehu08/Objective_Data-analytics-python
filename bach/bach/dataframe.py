@@ -19,15 +19,15 @@ from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_value
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
 from bach.utils import (
     escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn,
-    get_name_to_column_mapping, get_sql_column_name
+    get_name_to_column_mapping, get_sql_column_name, merge_sql_statements
 )
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, RefPath, SourceTableModelBuilder
 
 from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres, \
-    is_athena
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_postgres, is_athena,\
+    ddl_quote_identifier
 
 if TYPE_CHECKING:
     from bach.partitioning import Window, GroupBy
@@ -606,8 +606,9 @@ class DataFrame:
         """
         Instantiate a new DataFrame based on the result of the query defined in `model`.
 
-        If all_dtypes is not specified, then a transaction scoped temporary table will be created with
-        0 result rows from the model. The meta data of this table will be used to deduce the dtypes.
+        If all_dtypes is not specified, then the model is compiled to sql and executed as a query on the
+        database. The result-set's meta data is used to determine the columns and dtypes. This might not work
+        with custom data types. If the all_dtypes data is available, it's advised to provide it.
 
         :param engine: a sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
@@ -622,8 +623,7 @@ class DataFrame:
         :returns: A DataFrame based on an SqlModel
 
         .. note::
-            If all_dtypes is not set, then this will query the database and create and remove a temporary
-            table.
+            If all_dtypes is not set, then this will query the database
         """
         name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
         if all_dtypes is not None:
@@ -1165,7 +1165,7 @@ class DataFrame:
             sure that `table_name` does not contain any valuable information. Additionally, make sure \
             that it is not a source table of this DataFrame.
 
-        :raises Exception: If if_exists='fail'' and the table already exists. The exact exception depends on
+        :raises Exception: If if_exists='fail' and the table already exists. The exact exception depends on
             the underlying database.
         :return: New DataFrame; the base_node consists of a query on the newly created table.
 
@@ -1177,31 +1177,50 @@ class DataFrame:
         .. note::
             This function writes to the database.
         """
+        from bach.series import SeriesJson
         if if_exists not in {'fail', 'replace'}:
             raise ValueError(f'Value of if_exists ({if_exists}) must be either "fail" or "replace"')
         dialect = self.engine.dialect
-        model = self.get_current_node(name='database_create_table')
+        df_cp = self.copy()
+
+        # since hive does not support json type, we must cast all JSON series to string.
+        series_to_stringify = {
+            series.name: 'string'
+            for series in self.all_series.values()
+            if isinstance(series, SeriesJson) and is_athena(dialect)
+        }
+        if series_to_stringify:
+            df_cp = df_cp.astype(series_to_stringify)
+
+        model = df_cp.get_current_node(name='database_create_table')
         model = model.copy_set_materialization(Materialization.TABLE)
         model = model.copy_set_materialization_name(materialization_name=table_name)
 
         placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
 
-        sql = to_sql(dialect=dialect, model=model)
+        sql_statements = []
+        if if_exists == 'replace':
+            sql_drop = f'DROP TABLE IF EXISTS {ddl_quote_identifier(dialect, table_name)}'
+            sql_statements.append(sql_drop)
+        sql_create = to_sql(dialect=dialect, model=model)
+        sql_statements.append(sql_create)
+
+        sql_statements = merge_sql_statements(dialect, sql_statements)
         with self.engine.connect() as conn:
-            if if_exists == 'replace':
-                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}; {sql}'
+            for sql in sql_statements:
+                sql = escape_parameter_characters(conn, sql)
+                conn.execute(sql)
 
-            sql = escape_parameter_characters(conn, sql)
-            conn.execute(sql)
-
-        all_dtypes = {**self.index_dtypes, **self.dtypes}
-        return self.from_table(
+        all_dtypes = {**df_cp.index_dtypes, **df_cp.dtypes}
+        result = self.from_table(
             engine=self.engine,
             table_name=table_name,
             index=self.index_columns,
             all_dtypes=all_dtypes
         )
+        # cast to original dtypes
+        return result.astype(self.dtypes)
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
@@ -2120,6 +2139,13 @@ class DataFrame:
         exprs = []
         fmtstr = []
 
+        # flag indicating that an alias from the select clause can be used
+        # directly in the order by clause. Meaning that we should avoid using the series'
+        # expression as it will be evaluated to the actual output column
+        # BigQuery: https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#order_by_clause
+        # PrestoDB: https://prestodb.io/docs/current/sql/select.html#order-by-clause
+        alias_allowed_in_order_by = is_bigquery(self.engine) or is_athena(self.engine)
+
         for sc in self.order_by:
             # pandas sorts by default all nulls last
             fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
@@ -2132,8 +2158,16 @@ class DataFrame:
                 continue
 
             expr = sc.expression
-            if self.group_by and is_bigquery(self.engine):
-                expr = Expression.column_reference(all_series_expr[expr.to_sql(dialect)])
+            sql_expr = expr.to_sql(dialect)
+
+            if sql_expr in all_series_expr:
+                if (
+                    alias_allowed_in_order_by or (self.group_by and is_bigquery(self.engine))
+                ):
+                    expr = Expression.column_reference(
+                        get_sql_column_name(dialect, all_series_expr[sql_expr])
+                    )
+
             exprs.append(expr)
             fmtstr.append(fmt)
 
