@@ -367,3 +367,29 @@ def test_exp(engine) -> None:
         decimal=14
     )
 
+
+def test_astype_to_string(engine):
+    pdf = pd.DataFrame(
+        data={
+            'value_0': [123.0, 123.123456, 123.01, 123.0000],
+            'value_1': [123] * 4,
+            'value_2': [123.123] * 4,
+            'value_3': [123.0] * 4,
+            'value_4': [0] * 4,
+        }
+    )
+    df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
+    df['value_1'] = df['value_1'].astype('float64')
+    df['value_4'] = df['value_4'].astype('float64')
+
+    df = df.astype(str)
+    assert_equals_data(
+        df,
+        expected_columns=['_index_0', 'value_0', 'value_1', 'value_2', 'value_3', 'value_4'],
+        expected_data=[
+            [0, '123',        '123', '123.123', '123', '0'],
+            [1, '123.123456', '123', '123.123', '123', '0'],
+            [2, '123.01',     '123', '123.123', '123', '0'],
+            [3, '123',        '123', '123.123', '123', '0']
+        ]
+    )
