@@ -3,16 +3,16 @@ Copyright 2022 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__
+from modelhub import __version__, ModelHub
 from bach.testing import assert_equals_data
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 
 
-def test_drop_off_locations_basic(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_drop_off_locations_basic(objectiv_df):
+    modelhub = ModelHub()
 
     # default values
-    bts = modelhub.agg.drop_off_locations(df)
+    bts = modelhub.agg.drop_off_locations(objectiv_df)
 
     # adding sorting column
     bts = bts.reset_index()
@@ -45,12 +45,12 @@ def test_drop_off_locations_basic(db_params):
     )
 
 
-def test_drop_off_locations_w_groupby(db_params):
+def test_drop_off_locations_w_groupby(objectiv_df):
 
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+    modelhub = ModelHub()
 
     # groupby
-    bts = modelhub.agg.drop_off_locations(df,
+    bts = modelhub.agg.drop_off_locations(objectiv_df,
                                           groupby=['user_id', 'day'],
                                           percentage=False)
 
@@ -93,11 +93,11 @@ def test_drop_off_locations_w_groupby(db_params):
     )
 
 
-def test_drop_off_locations_w_percentage(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_drop_off_locations_w_percentage(objectiv_df):
+    modelhub = ModelHub()
 
     # percentage
-    bts = modelhub.agg.drop_off_locations(df, percentage=True)
+    bts = modelhub.agg.drop_off_locations(objectiv_df, percentage=True)
     # adding sorting column
     bts = bts.reset_index()
     bts['sort_str'] = bts['location'].astype(dtype=str).str[8:10]
@@ -127,12 +127,12 @@ def test_drop_off_locations_w_percentage(db_params):
     )
 
 
-def test_drop_off_locations_w_location_stack(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_drop_off_locations_w_location_stack(objectiv_df):
+    modelhub = ModelHub()
 
     # location_stack - SeriesLocationStack
-    location_stack = df.location_stack.json[{'url': 'https://objectiv.io/'}:]
-    bts = modelhub.agg.drop_off_locations(df, location_stack=location_stack)
+    location_stack = objectiv_df.location_stack.json[{'url': 'https://objectiv.io/'}:]
+    bts = modelhub.agg.drop_off_locations(objectiv_df, location_stack=location_stack)
 
     # adding sorting column
     bts = bts.reset_index()
@@ -161,10 +161,10 @@ def test_drop_off_locations_w_location_stack(db_params):
     )
 
     # location_stack - some other column
-    df['link_id'] = df.location_stack.ls.get_from_context_with_type_series(
+    objectiv_df['link_id'] = objectiv_df.location_stack.ls.get_from_context_with_type_series(
         type='LinkContext', key='id').str.lower()
 
-    bts = modelhub.agg.drop_off_locations(df, location_stack='link_id')
+    bts = modelhub.agg.drop_off_locations(objectiv_df, location_stack='link_id')
 
     assert_equals_data(
         bts,

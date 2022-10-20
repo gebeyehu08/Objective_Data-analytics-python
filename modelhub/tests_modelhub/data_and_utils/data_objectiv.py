@@ -71,3 +71,7 @@ TEST_DATA_OBJECTIV = [
     )
     for base_data, identity_data in zip(_BASE_TEST_DATA_OBJECTIVE, IDENTITY_CONTEXTS_PER_EVENT)
 ]
+
+GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA = (
+    'application', 'http', 'cookie_id', 'identity'
+)
