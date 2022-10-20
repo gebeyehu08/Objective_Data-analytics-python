@@ -29,6 +29,13 @@
           "description": "String containing the name of the event type. (eg. ClickEvent).",
           "type": "string"
         },
+        "_types": {
+          "description": "An ordered list of the parents of this Event, itself included as the last element.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "id": {
           "description": "Unique identifier for a specific instance of an event. Typically UUID's are a good way of \n\
             implementing this. On the collector side, events should be unique, this means duplicate id's result \n\
@@ -143,6 +150,13 @@
         "_type": {
           "description": "A string literal used during serialization. Should always match the Context interface name.",
           "type": "string"
+        },
+        "_types": {
+          "description": "An ordered list of the parents of this Event, itself included as the last element.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

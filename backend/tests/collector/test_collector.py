@@ -1,11 +1,12 @@
 import json
 
+from copy import deepcopy
 import pytest
 import flask
 from objectiv_backend.app import create_app
 
 from objectiv_backend.end_points.collector import add_http_context_to_event, add_marketing_context_to_event, \
-    get_cookie_id_context, anonymize_events, hash_property
+    get_cookie_id_context, anonymize_events, hash_property, add_types_to_event
 from objectiv_backend.end_points.common import get_json_response
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
 from objectiv_backend.common.config import AnonymousModeConfig
@@ -28,6 +29,7 @@ def _get_http_context():
     headers = HTTP_REQUEST.headers
     return {
         '_type': 'HttpContext',
+        '_types': ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
         'id': 'http_context',
         'remote_address': headers['X-Real-IP'],
         'referrer': headers['Referer'],
@@ -67,6 +69,7 @@ def test_enrich_http_context():
     headers = HTTP_REQUEST.headers
     http_context = {
         '_type': 'HttpContext',
+        '_types': ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
         'id': 'http_context',
         'remote_address': '127.0.0.1',
         'referrer': headers['Referer'],
@@ -133,6 +136,7 @@ def test_enrich_marketing_context():
     # dictionary representation of context
     marketing_context = {
         '_type': 'MarketingContext',
+        "_types": ["AbstractContext", "AbstractGlobalContext", "MarketingContext"],
         'campaign': 'test-campaign',
         'content': None,
         'creative_format': 'test-creative-format',
@@ -147,6 +151,7 @@ def test_enrich_marketing_context():
     # (ordered) json representation of dict
     marketing_context_json = '{' \
                              '"_type": "MarketingContext", ' \
+                             '"_types": ["AbstractContext", "AbstractGlobalContext", "MarketingContext"], ' \
                              '"campaign": "test-campaign", ' \
                              '"content": null, ' \
                              '"creative_format": "test-creative-format", ' \
@@ -260,6 +265,7 @@ def test_anonymous_mode_anonymization():
     # add created context to event
     event_list = json.loads(CLICK_EVENT_JSON)
     event = make_event_from_dict(event_list['events'][0])
+
     add_global_context_to_event(event, context)
 
     events = [event]
@@ -275,3 +281,18 @@ def test_anonymous_mode_anonymization():
     # check if we have indeed properly hashed the vars
     assert http_context['user_agent'] == '49901a043486b776d3e9e0aa2b6bf1c1'
     assert hash_property(context_vars['user_agent']) == '49901a043486b776d3e9e0aa2b6bf1c1'
+
+
+def test_enrich_types_map():
+    event_list = json.loads(CLICK_EVENT_JSON)
+    event = event_list['events'][0]
+
+    # remove types from test data to force enrichment
+    del event['_types']
+    assert '_types' not in event
+
+    # as _types is already there, this shouldn't change any thing
+    add_types_to_event(event)
+    assert '_types' in event
+
+    assert event['_types'] == ["AbstractEvent", "InteractiveEvent", "PressEvent"]
