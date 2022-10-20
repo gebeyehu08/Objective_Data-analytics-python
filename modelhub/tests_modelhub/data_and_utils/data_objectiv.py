@@ -75,3 +75,11 @@ TEST_DATA_OBJECTIV = [
 GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA = (
     'application', 'http', 'cookie_id', 'identity'
 )
+
+BQ_STRUCT_DEF_PER_CONTEXT = {
+    'application': ('id', ),
+    'http': ('id', 'referrer', 'user_agent', 'remote_address', ),
+    'cookie_id': ('id', 'cookie_id'),
+    'identity': ('id', 'value'),
+    'location_stack': ('location_stack',),
+}

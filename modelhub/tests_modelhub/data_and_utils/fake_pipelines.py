@@ -11,7 +11,7 @@ from modelhub.pipelines.extracted_contexts import (
     BigQueryExtractedContextsPipeline,
     AthenaQueryExtractedContextsPipeline,
 )
-from tests_modelhub.data_and_utils.data_objectiv import GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA
+from tests_modelhub.data_and_utils.data_objectiv import GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA, BQ_STRUCT_DEF_PER_CONTEXT
 
 from tests_modelhub.data_and_utils.data_parsers import get_parsed_objectiv_data
 from tests_modelhub.data_and_utils.utils import DBParams, create_engine_from_db_params
@@ -31,38 +31,45 @@ class FakeBigQueryExtractedContextsPipeline(BigQueryExtractedContextsPipeline):
         from tests_modelhub.data_and_utils.data_parsers import get_parsed_objectiv_data
         from tests_modelhub.data_and_utils.utils import DBParams
         pdf = pandas.DataFrame(get_parsed_objectiv_data(data_format=DBParams.Format.FLATTENED_SNOWPLOW))
-        series_json_types = [
-            f'contexts_io_objectiv_context_{gc}_context_1_0_0'
+
+        series_json_types = {
+            gc: f'contexts_io_objectiv_context_{gc}_context_1_0_0'
             for gc in GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA
-        ]
-        series_json_types.append('contexts_io_objectiv_location_stack_1_0_0')
-        pdf[series_json_types] = pdf[series_json_types].applymap(json.dumps)
+        }
+        series_json_types['location_stack'] = 'contexts_io_objectiv_location_stack_1_0_0'
+
+        colnames = list(series_json_types.values())
+        pdf[colnames] = pdf[colnames].applymap(json.dumps)
         df = bach.DataFrame.from_pandas(
             engine=self._engine,
             df=pdf,
             convert_objects=True
         ).reset_index(drop=True)
+
         # BigQueryExtractedContextsPipeline expects a RECORD type structure
         # and currently casting from JSON String to List is not supported by Bach,
         # therefore we should define the expression
-        json_string_to_list_expr = bach.expression.Expression.construct(
-            """
-            ARRAY(
-                SELECT STRUCT(JSON_EXTRACT_SCALAR(element, '$.location_stack') as location_stack)
-                FROM UNNEST(JSON_EXTRACT_ARRAY({})) as element
+        for context, series_name in series_json_types.items():
+            extracted_scalars_expr = [
+                bach.expression.Expression.construct(
+                    f"JSON_EXTRACT_SCALAR(element, '$.{scalar}') as {scalar}"
+                )
+                for scalar in BQ_STRUCT_DEF_PER_CONTEXT[context]
+            ]
+            json_string_to_list_expr = bach.expression.Expression.construct(
+                """
+                ARRAY(
+                    SELECT STRUCT({})
+                    FROM UNNEST(JSON_EXTRACT_ARRAY({})) as element
+                )
+                """,
+                bach.expression.join_expressions(extracted_scalars_expr),
+                df[series_name]
             )
-            """,
-            df['contexts_io_objectiv_location_stack_1_0_0']
-        )
-        df['contexts_io_objectiv_location_stack_1_0_0'] = (
-            df['contexts_io_objectiv_location_stack_1_0_0'].copy_override(expression=json_string_to_list_expr)
-        ).copy_override_dtype(dtype='list', instance_dtype=[{'location_stack': 'string'}])
-
-        for gc in GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA:
-            gc_col_name = f'contexts_io_objectiv_context_{gc}_context_1_0_0'
-            df[gc_col_name] = df[gc_col_name].copy_override(
-                expression=bach.expression.Expression.construct('JSON_EXTRACT_ARRAY({})', df[gc_col_name])
-            ).copy_override_dtype(dtype='list', instance_dtype=[{}])
+            df[series_name] = (
+                df[series_name].copy_override(expression=json_string_to_list_expr)
+                .copy_override_dtype(dtype='list', instance_dtype=[{}])
+            )
         return df
 
 
