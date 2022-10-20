@@ -3,9 +3,9 @@ import pytest
 
 from bach import DataFrame
 from bach.partitioning import WindowFrameMode, WindowFrameBoundary
+from bach.testing import assert_equals_data
 from tests.functional.bach.test_data_and_utils import (
-    assert_equals_data, get_df_with_test_data,
-    TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
+    get_df_with_test_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
 )
 from tests.unit.bach.util import get_pandas_df
 

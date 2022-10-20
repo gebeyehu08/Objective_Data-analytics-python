@@ -289,160 +289,32 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-.. code-block:: jupyter-notebook
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
 
-	>>> display_sql_as_markdown(features_set_full)
-
-.. code-block:: jupyter-notebook-out
-
-	sql
-	WITH "manual_materialize___838177521bf796a623d4ce1f65603743" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "cookie_id" AS "user_id",
-	               "value"->>'_type' AS "event_type",
-	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') AS "root_location"     
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___d72cfab7b9e13fe22d6c03499bd8ee1e" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "location_stack" AS "location_stack",
-	               "time" AS "time",
-	               "root_location" AS "root_location"
-	          FROM "manual_materialize___838177521bf796a623d4ce1f65603743"
-	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-06-30' AS date))))
-	       ),
-	       "context_data___d6cd5852437c69770a32e10d034714f3" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "root_location" AS "root_location"
-	          FROM "getitem_where_boolean___d72cfab7b9e13fe22d6c03499bd8ee1e"
-	       ),
-	       "session_starts___9a41aac61dbac386ec7432e9a2e8cbd5" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "root_location" AS "root_location",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS TIMESTAMP WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                    ELSE cast(TRUE AS boolean)
-	                     END AS "is_start_of_session"
-	          FROM "context_data___d6cd5852437c69770a32e10d034714f3"
-	       ),
-	       "session_id_and_count___7dd9dc328562fe800db9fd2e1a258920" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "root_location" AS "root_location",
-	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                    ELSE cast(NULL AS bigint)
-	                     END AS "session_start_id",
-	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___9a41aac61dbac386ec7432e9a2e8cbd5"
-	       ),
-	       "objectiv_sessionized_data___29564c48b1680f8ffd7c9ed7f2758c9f" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "root_location" AS "root_location",
-	               "is_start_of_session" AS "is_start_of_session",
-	               "session_start_id" AS "session_start_id",
-	               "is_one_session" AS "is_one_session",
-	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___7dd9dc328562fe800db9fd2e1a258920"
-	       ),
-	       "getitem_where_boolean___d061388d14488fc466232362433c3342" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               REPLACE(jsonb_path_query_first("location_stack", '$[*] ? (@._type == $type)', '{"type":"RootLocationContext"}') ->> 'id', '-', '_') AS "root_location"   
-	          FROM "objectiv_sessionized_data___29564c48b1680f8ffd7c9ed7f2758c9f"
-	         WHERE ("event_type" = 'PressEvent')
-	       ),
-	       "reset_index___972cc57a43f0c8d330f0492300cd0d5a" AS (
-	        SELECT "user_id" AS "user_id",
-	               "root_location" AS "root_location",
-	               cast(sum(cast(1 AS bigint)) AS bigint) AS "value_counts"
-	          FROM "getitem_where_boolean___d061388d14488fc466232362433c3342"
-	         GROUP BY "user_id",
-	                  "root_location"
-	         ORDER BY cast(sum(cast(1 AS bigint)) AS bigint) DESC NULLS LAST
-	       ),
-	       "unstack___16e171e36da849df8d8cb56cbd0255d4" AS (
-	        SELECT "user_id" AS "user_id",
-	               max("value_counts") AS "value_counts",
-	               max("root_location") AS "root_location",
-	               max(CASE WHEN ("root_location" = 'about') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "about__value_counts",
-	               max(CASE WHEN ("root_location" = 'blog') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "blog__value_counts",
-	               max(CASE WHEN ("root_location" = 'home') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "home__value_counts",
-	               max(CASE WHEN ("root_location" = 'jobs') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "jobs__value_counts",
-	               max(CASE WHEN ("root_location" = 'join_slack') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "join_slack__value_counts",
-	               max(CASE WHEN ("root_location" = 'modeling') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "modeling__value_counts",
-	               max(CASE WHEN ("root_location" = 'privacy') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "privacy__value_counts",
-	               max(CASE WHEN ("root_location" = 'taxonomy') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "taxonomy__value_counts",
-	               max(CASE WHEN ("root_location" = 'tracking') THEN "value_counts" ELSE cast(NULL AS bigint) END) AS "tracking__value_counts"
-	          FROM "reset_index___972cc57a43f0c8d330f0492300cd0d5a"
-	         GROUP BY "user_id"
-	       ),
-	       "get_sample___01a2af82e1e42baef3a9d9517947e18e" AS (
-	        SELECT "user_id" AS "user_id",
-	               (COALESCE("about__value_counts", cast(0 AS bigint))) AS "about",
-	               (COALESCE("blog__value_counts", cast(0 AS bigint))) AS "blog",
-	               (COALESCE("home__value_counts", cast(0 AS bigint))) AS "home",
-	               (COALESCE("jobs__value_counts", cast(0 AS bigint))) AS "jobs",
-	               (COALESCE("join_slack__value_counts", cast(0 AS bigint))) AS "join_slack",
-	               (COALESCE("modeling__value_counts", cast(0 AS bigint))) AS "modeling",
-	               (COALESCE("privacy__value_counts", cast(0 AS bigint))) AS "privacy",
-	               (COALESCE("taxonomy__value_counts", cast(0 AS bigint))) AS "taxonomy",
-	               (COALESCE("tracking__value_counts", cast(0 AS bigint))) AS "tracking"
-	          FROM "unstack___16e171e36da849df8d8cb56cbd0255d4"
-	       ) SELECT "user_id" AS "user_id",
-	       "about" AS "about",
-	       "blog" AS "blog",
-	       "home" AS "home",
-	       "jobs" AS "jobs",
-	       "join_slack" AS "join_slack",
-	       "modeling" AS "modeling",
-	       "privacy" AS "privacy",
-	       "taxonomy" AS "taxonomy",
-	       "tracking" AS "tracking",
-	       (exp(((((((((cast('0.0' AS double precision) + ("about" * cast('-0.31219497498394483' AS double precision))) + ("blog" * cast('0.22228040616051234' AS double precision))) + ("home" * cast('-0.11154649575582293' AS double precision))) + ("jobs" * cast('-0.4260563367706121' AS double precision))) + ("join_slack" * cast('0.0' AS double precision))) + ("privacy" * cast('-0.11148833442806198' AS double precision))) + ("taxonomy" * cast('0.023646187968453754' AS double precision))) + ("tracking" * cast('0.861909715759519' AS double precision)))) / (exp(((((((((cast('0.0' AS double precision) + ("about" * cast('-0.31219497498394483' AS double precision))) + ("blog" * cast('0.22228040616051234' AS double precision))) + ("home" * cast('-0.11154649575582293' AS double precision))) + ("jobs" * cast('-0.4260563367706121' AS double precision))) + ("join_slack" * cast('0.0' AS double precision))) + ("privacy" * cast('-0.11148833442806198' AS double precision))) + ("taxonomy" * cast('0.023646187968453754' AS double precision))) + ("tracking" * cast('0.861909715759519' AS double precision)))) + cast('1.0' AS double precision))) AS "predicted_values",
-	       ((exp(((((((((cast('0.0' AS double precision) + ("about" * cast('-0.31219497498394483' AS double precision))) + ("blog" * cast('0.22228040616051234' AS double precision))) + ("home" * cast('-0.11154649575582293' AS double precision))) + ("jobs" * cast('-0.4260563367706121' AS double precision))) + ("join_slack" * cast('0.0' AS double precision))) + ("privacy" * cast('-0.11148833442806198' AS double precision))) + ("taxonomy" * cast('0.023646187968453754' AS double precision))) + ("tracking" * cast('0.861909715759519' AS double precision)))) / (exp(((((((((cast('0.0' AS double precision) + ("about" * cast('-0.31219497498394483' AS double precision))) + ("blog" * cast('0.22228040616051234' AS double precision))) + ("home" * cast('-0.11154649575582293' AS double precision))) + ("jobs" * cast('-0.4260563367706121' AS double precision))) + ("join_slack" * cast('0.0' AS double precision))) + ("privacy" * cast('-0.11148833442806198' AS double precision))) + ("taxonomy" * cast('0.023646187968453754' AS double precision))) + ("tracking" * cast('0.861909715759519' AS double precision)))) + cast('1.0' AS double precision))) > cast('0.5' AS double precision)) AS "predicted_labels"      
-	  FROM "get_sample___01a2af82e1e42baef3a9d9517947e18e"
-	<BLANKLINE>
+	# --- hide: start ---
+	import os
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-03-01', end_date='2022-06-30')
+	df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id').str.replace('-', '_')
+	features = df[(df.event_type=='PressEvent')].groupby('user_id').root_location.value_counts()
+	features_unstacked = features.unstack(fill_value=0)
+	features_set_sample = features_unstacked.get_sample('test_lr_sample', sample_percentage=10, overwrite=True)
+	y_column = 'modeling'
+	y = features_set_sample[y_column] > 0
+	X = features_set_sample.drop(columns=[y_column])
+	lr = modelhub.get_logistic_regression(fit_intercept=False)
+	lr.fit(X, y)
+	features_set_sample['predicted_values'] = lr.predict_proba(X)
+	features_set_sample['predicted_labels'] = lr.predict(X)
+	features_set_full = features_set_sample.get_unsampled()
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(features_set_full)
 
 That's it! Stay tuned for more metrics to assess model fit, as well as simplifying splitting the data into 
 training and testing datasets.

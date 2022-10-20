@@ -1,16 +1,19 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from typing import List
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from bach import DataFrame, SeriesString, SeriesInt64
 from bach.expression import Expression
+from bach.testing import assert_equals_data
 from sql_models.util import is_postgres, is_bigquery, is_athena
 from tests.functional.bach.test_data_and_utils import (
-    get_df_with_test_data, assert_equals_data, df_to_list,
-    get_df_with_railway_data, get_df_with_food_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
+    get_df_with_test_data, get_df_with_railway_data, get_df_with_food_data, df_to_list,
+    TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
 )
 from tests.unit.bach.util import get_pandas_df
 
@@ -41,12 +44,11 @@ def test_series__getitem__(engine):
         non_existing_value_ref.value
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_positional_slicing(engine):
     # TODO: make work with BigQuery and Athena.
     # See for inspiration: tests.functional.bach.test_df_getitem.test_positional_slicing
-    bt = get_df_with_test_data(engine=engine, full_data_set=True)['inhabitants'].sort_values()
+    bts = get_df_with_test_data(engine=engine, full_data_set=True)['inhabitants'].sort_values()
+    base_expected_data = sorted([row[3] for row in TEST_DATA_CITIES_FULL])
 
     class ReturnSlice:
         def __getitem__(self, key):
@@ -62,21 +64,30 @@ def test_positional_slicing(engine):
                   return_slice[:1]
                   ]
 
-    pbt = bt.to_pandas()
-    for s in slice_list:
-        bt_slice = bt[s]
+    all_dfs: List[DataFrame] = []
+    all_expected_data = []
+    for i, s in enumerate(slice_list):
+        bts_slice = bts[s]
 
-        assert isinstance(bt_slice, SeriesInt64)
+        assert isinstance(bts_slice, SeriesInt64)
 
         # if the slice length == 1, all Series need to have a single value expression
-        assert (len('slice_me_now'.__getitem__(s)) == 1) == bt_slice.expression.is_single_value
+        assert (len('slice_me_now'.__getitem__(s)) == 1) == bts_slice.expression.is_single_value
 
-        assert_equals_data(
-            bt_slice,
-            expected_columns=['_index_skating_order', 'inhabitants'],
-            expected_data=df_to_list(pbt[s]),
-            order_by=['inhabitants'],
-        )
+        df_slice = bts_slice.to_frame()
+        df_slice['slice'] = i
+        all_dfs.append(df_slice)
+        expected_data = [[row] + [i] for row in base_expected_data][s]
+        all_expected_data.extend(expected_data)
+
+    df = all_dfs[0].append(all_dfs[1:])
+    df = df.reset_index(drop=True)
+    df = df.sort_values(by=['slice', 'inhabitants'])
+    assert_equals_data(
+        df,
+        expected_columns=['inhabitants', 'slice'],
+        expected_data=all_expected_data,
+    )
 
 
 def test_series_value(engine):
@@ -240,8 +251,8 @@ def test_aggregation(engine):
         s.agg(['sum','sum'])
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1042')
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1042')
 def test_type_agnostic_aggregation_functions(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
     btg = bt.groupby()
@@ -372,7 +383,7 @@ def test_series_inherit_flag(engine):
     assert not bts_derived.expression.has_aggregate_function
 
 
-@pytest.mark.skip_bigquery_todo()
+@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1043')
 def test_series_independant_subquery_any_value_all_values(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
     s = bt.inhabitants.max() // 4
@@ -495,12 +506,10 @@ def test_series_dropna(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_series_unstack(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
 
-    stacked_bt = bt.groupby(['city','municipality']).inhabitants.sum()
+    stacked_bt = bt.groupby(['city', 'municipality']).inhabitants.sum()
     unstacked_bt = stacked_bt.unstack()
 
     expected_columns = [
@@ -511,6 +520,7 @@ def test_series_unstack(engine):
 
     assert_equals_data(
         unstacked_bt_sorted,
+        use_to_pandas=True,
         expected_columns=['city'] + expected_columns,
         expected_data=[
             ['Boalsert', None, None, None, None, 10120, None],
@@ -537,6 +547,7 @@ def test_series_unstack(engine):
 
     assert_equals_data(
         unstacked_bt_sorted,
+        use_to_pandas=True,
         expected_columns=['municipality'] + expected_columns,
         expected_data=[
             ['De Friese Meren', 'buh', 'buh', 'buh', 'buh', 'buh', 'Sleat', 'buh', 'buh', 'buh', 'buh', 'buh'],
@@ -561,6 +572,7 @@ def test_series_unstack(engine):
 
     assert_equals_data(
         unstacked_bt_sorted,
+        use_to_pandas=True,
         expected_columns=['skating_order'] + expected_columns,
         expected_data=[
             [1, None, 93485., None],

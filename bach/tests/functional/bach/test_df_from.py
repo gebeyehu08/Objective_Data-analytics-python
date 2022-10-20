@@ -12,13 +12,13 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
+from bach.testing import assert_equals_data
 from bach.utils import merge_sql_statements
 from sql_models.constants import DBDialect
 from sql_models.model import CustomSqlModelBuilder, SqlModel, Materialization
 from sql_models.sql_generator import to_sql
 from sql_models.util import is_athena
 from tests.conftest import DB_ATHENA_LOCATION
-from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def _create_test_table(engine: Engine, table_name: str, add_data: bool):
@@ -87,8 +87,8 @@ def _create_test_table(engine: Engine, table_name: str, add_data: bool):
 @pytest.mark.skip_postgres
 @pytest.mark.skip_athena
 def test_from_table_structural_big_query(engine, unique_table_test_name):
-    # Test specifically for structural types on BigQuery. We don't support that on Postgres, so we skip
-    # postgres for this test
+    # Test specifically for structural types on BigQuery. We don't support that on Postgres or Athena, so we
+    # skip those for this test
     table_name = unique_table_test_name
     sql = f'drop table if exists {table_name}; ' \
           f'create table {table_name}(' \
@@ -174,8 +174,6 @@ def _assert_df_supports_basic_operations(df: DataFrame):
     )
 
 
-@pytest.mark.skip_bigquery_todo()
-@pytest.mark.skip_athena_todo()
 def test_from_model_basic(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
@@ -184,10 +182,16 @@ def test_from_model_basic(engine, unique_table_test_name):
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['a'])
+    expected_dtypes = {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    expected_base_node_columns = ('a', 'b', 'c', 'd', 'e', 'F')
+    if is_athena(engine):  # Athena automatically lower-cases capital letters in column-names of tables.
+        expected_dtypes = {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
+        expected_base_node_columns = ('a', 'b', 'c', 'd', 'e', 'f')
+
     assert df.index_dtypes == {'a': 'int64'}
-    assert df.dtypes == {'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    assert df.dtypes == expected_dtypes
     assert df.is_materialized
-    assert df.base_node.series_names == ('a', 'b', 'c', 'd', 'e', 'F')
+    assert df.base_node.series_names == expected_base_node_columns
     # there should only be a single model that selects from the table, not a whole tree
     assert df.base_node.references == {}
     # Now do some basic operations to establish that the DataFrame instance we got is fully functional.
@@ -196,9 +200,12 @@ def test_from_model_basic(engine, unique_table_test_name):
     _assert_df_supports_basic_operations(df)
 
     # now create same DataFrame, but specify all_dtypes.
+    all_dtypes = {'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    if is_athena(engine):
+        all_dtypes = {k.lower(): v for k, v in all_dtypes.items()}
     df_all_dtypes = DataFrame.from_model(
         engine=engine, model=sql_model, index=['a'],
-        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+        all_dtypes=all_dtypes
     )
     assert df == df_all_dtypes
 
@@ -236,8 +243,6 @@ def test_from_table_column_ordering(engine, unique_table_test_name):
     assert df == df_all_dtypes
 
 
-@pytest.mark.skip_bigquery_todo()
-@pytest.mark.skip_athena_todo()
 def test_from_model_column_ordering(engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_model_ordering(), but tests creating the dataframe with
     # from_model instead of from_table
@@ -248,19 +253,29 @@ def test_from_model_column_ordering(engine, unique_table_test_name):
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
     df = DataFrame.from_model(engine=engine, model=sql_model, index=['b'])
+
+    expected_dtypes = {'a': 'int64', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    expected_base_node_columns = ('b', 'a', 'c', 'd', 'e', 'F')
+    if is_athena(engine):  # Athena automatically lower-cases capital letters in column-names of tables.
+        expected_dtypes = {k.lower(): v for k, v in expected_dtypes.items()}
+        expected_base_node_columns = tuple(n.lower() for n in expected_base_node_columns)
+
     assert df.index_dtypes == {'b': 'string'}
-    assert df.dtypes == {'a': 'int64', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    assert df.dtypes == expected_dtypes
     assert df.is_materialized
     # We should have an extra model in the sql-model graph, because 'b' is the index and should thus be the
     # first column.
-    assert df.base_node.series_names == ('b', 'a', 'c', 'd', 'e', 'F')
+    assert df.base_node.series_names == expected_base_node_columns
     assert 'prev' in df.base_node.references
     assert df.base_node.references['prev'].references == {}
     df.to_pandas()  # test that the main function works on the created DataFrame
 
+    all_dtypes = {'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+    if is_athena(engine):
+        all_dtypes = {k.lower(): v for k, v in all_dtypes.items()}
     df_all_dtypes = DataFrame.from_model(
         engine=engine, model=sql_model, index=['b'],
-        all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'F': 'bool'}
+        all_dtypes=all_dtypes
     )
     assert df == df_all_dtypes
 

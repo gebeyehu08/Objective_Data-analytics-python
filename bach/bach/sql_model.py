@@ -132,8 +132,7 @@ class BachSqlModel(SqlModel[T]):
 
 class SampleSqlModel(BachSqlModel):
     """
-    A custom SqlModel that simply does select * from a table. In addition to that, this class stores an
-    extra property: previous.
+    A custom SqlModel that simply adds an extra property to the BachSqlModel: previous.
 
     The previous property is not used in the generated sql at all, but can be used to track a previous
     SqlModel. This is useful for how we implemented sampling, as that effectively inserts a sql-model in the
@@ -188,24 +187,16 @@ class SampleSqlModel(BachSqlModel):
             previous=self.previous if previous is None else previous
         )
 
-    @staticmethod
-    def get_instance(
-        *,
-        dialect: Dialect,
-        table_name: str,
-        previous: BachSqlModel,
-        column_expressions: Dict[str, Expression],
-        name: str = 'sample_node',
-    ) -> 'SampleSqlModel':
-        """ Helper function to instantiate a SampleSqlModel """
-        sql = 'SELECT * FROM {table_name}'
-        return SampleSqlModel(
-            model_spec=CustomSqlModelBuilder(sql=sql, name=name),
-            placeholders={'table_name': quote_identifier(dialect, table_name)},
-            references={},
-            materialization=Materialization.CTE,
-            materialization_name=None,
-            column_expressions=column_expressions,
+    @classmethod
+    def from_bach_sql_model(cls, model: BachSqlModel, previous: BachSqlModel) -> 'BachSqlModel':
+        """ From any BachSqlModel create a SampleSqlModel with the given `previous` model. """
+        return cls(
+            model_spec=model.model_spec,
+            placeholders=model.placeholders,
+            references=model.references,
+            materialization=model.materialization,
+            materialization_name=model.materialization_name,
+            column_expressions=model.column_expressions,
             previous=previous
         )
 

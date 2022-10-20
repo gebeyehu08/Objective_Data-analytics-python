@@ -4,12 +4,10 @@ Copyright 2021 Objectiv B.V.
 from typing import TYPE_CHECKING
 
 from bach import DataFrame
-from bach.dataframe import escape_parameter_characters
 from bach.sql_model import SampleSqlModel
 from sql_models.graph_operations import find_node, replace_node_in_graph
 from sql_models.model import CustomSqlModelBuilder, Materialization
-from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier, is_postgres, is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_postgres, is_athena, DatabaseNotSupportedException
 
 if TYPE_CHECKING:
     from bach import SeriesBoolean
@@ -79,16 +77,16 @@ def get_sample(df: DataFrame,
             sample_cutoff = sample_percentage / 100
             df = df[SeriesFloat64.random(base=df) < sample_cutoff]
     if_exists = 'replace' if overwrite else 'fail'
-    df.database_create_table(table_name=table_name, if_exists=if_exists)
+    created_df = df.database_create_table(table_name=table_name, if_exists=if_exists)
+
+    # created_df might have unmaterialized changes. This happens if there were any casts involved in writing
+    # to and reading from the table. We need to base SampleSqlModel below on a materialized node.
+    if not created_df.is_materialized:
+        created_df = created_df.materialize('get_sample_sampled_table')
 
     # Use SampleSqlModel, that way we can keep track of the current_node and undo this sampling
     # in get_unsampled() by switching this new node for the old node again.
-    new_base_node = SampleSqlModel.get_instance(
-        dialect=dialect,
-        table_name=table_name,
-        previous=original_node,
-        column_expressions=original_node.column_expressions,
-    )
+    new_base_node = SampleSqlModel.from_bach_sql_model(model=created_df.base_node, previous=original_node)
     return df.copy_override_base_node(base_node=new_base_node)
 
 

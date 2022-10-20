@@ -11,9 +11,10 @@ from pandas.core.indexes.numeric import Int64Index
 
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesTimedelta, Series, SeriesJson, SeriesBoolean
+from bach.testing import assert_equals_data
 from sql_models.constants import DBDialect
-from tests.functional.bach.test_data_and_utils import assert_equals_data, CITIES_INDEX_AND_COLUMNS,\
-    get_df_with_test_data, get_df_with_railway_data, assert_series_db_types
+from tests.functional.bach.test_data_and_utils import CITIES_INDEX_AND_COLUMNS, get_df_with_test_data,\
+    get_df_with_railway_data, assert_series_db_types
 
 
 def check_set_const(

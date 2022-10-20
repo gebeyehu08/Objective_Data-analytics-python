@@ -477,138 +477,23 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-.. doctest:: open-taxonomy
-	:hide:
-	
-	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
 
-.. doctest:: open-taxonomy
-	:skipif: engine is None
-
-	>>> # show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
-	>>> press_events = df[df.event_type == 'PressEvent'].sort_values('moment', ascending=False)
-	>>> display_sql_as_markdown(press_events)
-	sql
-	WITH "manual_materialize___98e5bd0cc63a3e9a9e1a6f1bdd82bc66" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "cookie_id" AS "user_id",
-	               "value"->>'_type' AS "event_type",
-	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing"
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___768fbdb13d7b38e079ec1e41080ba9b1" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "location_stack" AS "location_stack",
-	               "time" AS "time",
-	               "application" AS "application",
-	               "marketing" AS "marketing"
-	          FROM "manual_materialize___98e5bd0cc63a3e9a9e1a6f1bdd82bc66"
-	         WHERE ((("day" >= cast('2022-06-01' AS date))) AND (("day" <= cast('2022-06-30' AS date))))
-	       ),
-	       "context_data___a62e3289513a784aef75ce1ac4dbc956" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing"
-	          FROM "getitem_where_boolean___768fbdb13d7b38e079ec1e41080ba9b1"
-	       ),
-	       "session_starts___0bc3d1e2e45011368877c101d0ba2973" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                    ELSE cast(TRUE AS boolean)
-	                     END AS "is_start_of_session"
-	          FROM "context_data___a62e3289513a784aef75ce1ac4dbc956"
-	       ),
-	       "session_id_and_count___95fc1ae8cb8bfc15d777e1c8add96c62" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                    ELSE cast(NULL AS bigint)
-	                     END AS "session_start_id",
-	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___0bc3d1e2e45011368877c101d0ba2973"
-	       ),
-	       "objectiv_sessionized_data___b763545d021fba9a5dcde4b6cc17cadc" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               "is_start_of_session" AS "is_start_of_session",
-	               "session_start_id" AS "session_start_id",
-	               "is_one_session" AS "is_one_session",
-	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___95fc1ae8cb8bfc15d777e1c8add96c62"
-	       ),
-	       "getitem_where_boolean___030da093a492e9f38d62489200716824" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               "application"->0->>'id' AS "application_id",
-	               "marketing"->0->>'source' AS "marketing_source"
-	          FROM "objectiv_sessionized_data___b763545d021fba9a5dcde4b6cc17cadc"
-	         WHERE ("event_type" = 'PressEvent')
-	       ) SELECT "event_id" AS "event_id",
-	       "day" AS "day",
-	       "moment" AS "moment",
-	       "user_id" AS "user_id",
-	       "location_stack" AS "location_stack",
-	       "event_type" AS "event_type",
-	       "stack_event_types" AS "stack_event_types",
-	       "session_id" AS "session_id",
-	       "session_hit_number" AS "session_hit_number",
-	       "application" AS "application",
-	       "marketing" AS "marketing",
-	       "application_id" AS "application_id",
-	       "marketing_source" AS "marketing_source"
-	  FROM "getitem_where_boolean___030da093a492e9f38d62489200716824"
-	 ORDER BY "moment" DESC NULLS LAST
-	<BLANKLINE>
+	# --- hide: start ---
+	import os
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application', 'marketing'])
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-03-01', end_date='2022-06-30')
+	df['application_id'] = df.application.context.id
+	df['marketing_source'] = df.marketing.context.source
+	press_events = df[df.event_type == 'PressEvent'].sort_values('moment', ascending=False)
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(press_events)
 
 That's it! To dive further into working with the open taxonomy, 
 :doc:`see the Bach API reference <../bach/api-reference/index>`.
