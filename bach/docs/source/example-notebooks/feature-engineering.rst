@@ -87,13 +87,13 @@ Now let's look some more into our dataset to see what it contains.
 	:skipif: engine is None
 
 	>>> df.describe(include='all').head()
-	               day                   moment user_id location_stack              event_type stack_event_types  session_id  session_hit_number
+	               day                      moment user_id location_stack              event_type stack_event_types  session_id  session_hit_number
 	__stat
-	count         3619                     3619    3619           3619                    3619              3619     3619.00             3619.00
-	mean          None                     None    None           None                    None              None      253.49               15.44
-	std           None                     None    None           None                    None              None      134.99               23.70
-	min     2022-03-01  2022-03-01 02:38:04.495    None           None  ApplicationLoadedEvent              None        1.00                1.00
-	max     2022-03-31  2022-03-31 22:53:15.035    None           None            VisibleEvent              None      493.00              165.00
+	count         3619                        3619    3619           3619                    3619              3619     3619.00             3619.00
+	mean          None                        None    None           None                    None              None      253.49               15.44
+	std           None                        None    None           None                    None              None      134.99               23.70
+	min     2022-03-01  2022-03-01 02:38:04.495000    None           None  ApplicationLoadedEvent              None        1.00                1.00
+	max     2022-03-31  2022-03-31 22:53:15.035000    None           None            VisibleEvent              None      493.00              165.00
 
 .. admonition:: Reference
 	:class: api-reference
@@ -279,11 +279,11 @@ using `fillna` to fill missing values.
 
 	>>> features_unstacked.session_duration.describe().head()
 	__stat
-	count                 162
-	mean       00:03:22.62127
-	min              00:00:00
-	max            00:29:16.8
-	nunique               144
+	count                          162
+	mean       0 days, 00:03:22.621270
+	min        0 days, 00:00:00.000000
+	max        0 days, 00:29:16.800000
+	nunique                        144
 	Name: session_duration, dtype: object
 
 .. admonition:: Reference
@@ -342,174 +342,25 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-.. doctest:: feature-engineering
-	:hide:
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
 
-	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
-
-.. doctest:: feature-engineering
-	:skipif: engine is None
-
-	>>> # show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
-	>>> display_sql_as_markdown(features_unstacked)
-	sql
-	WITH "manual_materialize___69a0c34935f44c51532b4d6011fb9118" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "cookie_id" AS "user_id",
-	               "value"->>'_type' AS "event_type",
-	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time"
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___62453d7ddd8acd01006f2da065b569c3" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "location_stack" AS "location_stack",
-	               "time" AS "time"
-	          FROM "manual_materialize___69a0c34935f44c51532b4d6011fb9118"
-	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-03-31' AS date))))
-	       ),
-	       "context_data___d6845511b784682d2030cb9537520ebf" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types"
-	          FROM "getitem_where_boolean___62453d7ddd8acd01006f2da065b569c3"
-	       ),
-	       "session_starts___0f0c28f3abb916b094c428fa74ba0cd1" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                    ELSE cast(TRUE AS boolean)
-	                     END AS "is_start_of_session"
-	          FROM "context_data___d6845511b784682d2030cb9537520ebf"
-	       ),
-	       "session_id_and_count___766015b8f4afe35c2a46f582f7f7f7e7" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                    ELSE cast(NULL AS bigint)
-	                     END AS "session_start_id",
-	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___0f0c28f3abb916b094c428fa74ba0cd1"
-	       ),
-	       "objectiv_sessionized_data___bd69174ccede8591d3839d22ec8f0a00" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "is_start_of_session" AS "is_start_of_session",
-	               "session_start_id" AS "session_start_id",
-	               "is_one_session" AS "is_one_session",
-	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___766015b8f4afe35c2a46f582f7f7f7e7"
-	       ),
-	       "getitem_where_boolean___097fe114cf091f3c40fd3a274ea7ac96" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               REPLACE(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"_type": "RootLocationContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("location_stack") WITH ORDINALITY)), '[]'::JSONB)->0->>'id', '-', '_') AS "root_location"
-	          FROM "objectiv_sessionized_data___bd69174ccede8591d3839d22ec8f0a00"
-	         WHERE ("event_type" = 'PressEvent')
-	       ),
-	       "reset_index___47c7da161f0c5318dc0dffd23313ded0" AS (
-	        SELECT "user_id" AS "user_id",
-	               "root_location" AS "root_location",
-	               count("session_hit_number") AS "session_hit_number"
-	          FROM "getitem_where_boolean___097fe114cf091f3c40fd3a274ea7ac96"
-	         GROUP BY "user_id",
-	                  "root_location"
-	       ),
-	       "unstack___db12cce5c452bda4c38a5aca6389a30b" AS (
-	        SELECT "user_id" AS "user_id",
-	               max("session_hit_number") AS "session_hit_number",
-	               max("root_location") AS "root_location",
-	               max(CASE WHEN ("root_location" = 'about') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "about__session_hit_number",
-	               max(CASE WHEN ("root_location" = 'blog') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "blog__session_hit_number",
-	               max(CASE WHEN ("root_location" = 'home') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "home__session_hit_number",
-	               max(CASE WHEN ("root_location" = 'jobs') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "jobs__session_hit_number",
-	               max(CASE WHEN ("root_location" = 'modeling') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "modeling__session_hit_number",
-	               max(CASE WHEN ("root_location" = 'privacy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "privacy__session_hit_number",
-	               max(CASE WHEN ("root_location" = 'taxonomy') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "taxonomy__session_hit_number",
-	               max(CASE WHEN ("root_location" = 'tracking') THEN "session_hit_number" ELSE cast(NULL AS bigint) END) AS "tracking__session_hit_number"
-	          FROM "reset_index___47c7da161f0c5318dc0dffd23313ded0"
-	         GROUP BY "user_id"
-	       ),
-	       "getitem_having_boolean___bb91956150f694a8673ab91ca8069ce4" AS (
-	        SELECT "user_id" AS "user_id",
-	               "session_id" AS "__session_id",
-	               min("moment") AS "moment_min",
-	               max("moment") AS "moment_max",
-	               ((max("moment")) - (min("moment"))) AS "session_duration"
-	          FROM "objectiv_sessionized_data___bd69174ccede8591d3839d22ec8f0a00"
-	         GROUP BY "user_id",
-	                  "session_id"
-	        HAVING (extract(epoch FROM ((max("moment")) - (min("moment")))) > cast(0 AS bigint))
-	       ),
-	       "merge_right___1c30913fb6ff459358acacf19290c224" AS (
-	        SELECT "user_id" AS "user_id",
-	               avg("session_duration") AS "session_duration"
-	          FROM "getitem_having_boolean___bb91956150f694a8673ab91ca8069ce4"
-	         GROUP BY "user_id"
-	       ),
-	       "merge_sql___13bc402a6186f2efbe529cf4eb4646b4" AS (
-	        SELECT COALESCE("l"."user_id", "r"."user_id") AS "user_id",
-	               (COALESCE("l"."about__session_hit_number", cast(0 AS bigint))) AS "about",
-	               (COALESCE("l"."blog__session_hit_number", cast(0 AS bigint))) AS "blog",
-	               (COALESCE("l"."home__session_hit_number", cast(0 AS bigint))) AS "home",
-	               (COALESCE("l"."jobs__session_hit_number", cast(0 AS bigint))) AS "jobs",
-	               (COALESCE("l"."modeling__session_hit_number", cast(0 AS bigint))) AS "modeling",
-	               (COALESCE("l"."privacy__session_hit_number", cast(0 AS bigint))) AS "privacy",
-	               (COALESCE("l"."taxonomy__session_hit_number", cast(0 AS bigint))) AS "taxonomy",
-	               (COALESCE("l"."tracking__session_hit_number", cast(0 AS bigint))) AS "tracking",
-	               "r"."session_duration" AS "session_duration"
-	          FROM "unstack___db12cce5c452bda4c38a5aca6389a30b" AS l
-	          LEFT
-	            JOIN "merge_right___1c30913fb6ff459358acacf19290c224" AS r
-	            ON ("l"."user_id" = "r"."user_id")
-	       ) SELECT "user_id" AS "user_id",
-	       "about" AS "about",
-	       "blog" AS "blog",
-	       "home" AS "home",
-	       "jobs" AS "jobs",
-	       "modeling" AS "modeling",
-	       "privacy" AS "privacy",
-	       "taxonomy" AS "taxonomy",
-	       "tracking" AS "tracking",
-	       (COALESCE("session_duration", cast('P0DT0H0M0S' AS interval))) AS "session_duration"
-	  FROM "merge_sql___13bc402a6186f2efbe529cf4eb4646b4"
-	<BLANKLINE>
+	# --- hide: start ---
+	import os
+	import datetime
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-03-01', end_date='2022-03-31')
+	df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id').str.replace('-', '_')
+	features = df[(df.event_type=='PressEvent')].groupby(['user_id','root_location']).session_hit_number.count()
+	features_unstacked = features.unstack(fill_value=0)
+	features_unstacked['session_duration'] = modelhub.aggregate.session_duration(df, groupby='user_id').fillna(datetime.timedelta(0))
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(features_unstacked)
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 

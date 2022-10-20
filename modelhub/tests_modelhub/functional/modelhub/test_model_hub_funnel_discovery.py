@@ -4,7 +4,6 @@ from bach import SortColumn
 from bach.testing import assert_equals_data
 
 from modelhub import ModelHub
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 
 
 def _add_root_offset_sorting(objectiv_df: bach.DataFrame, asc: bool = True) -> bach.DataFrame:
@@ -307,8 +306,9 @@ def test_get_navigation_paths_filtered(objectiv_df) -> None:
     )
 
 
+@pytest.mark.parametrize("objectiv_df", ([['application']]), indirect=True)
 def test_filter_navigation_paths_conversion(objectiv_df) -> None:
-    objectiv_df, modelhub = get_objectiv_dataframe_test(db_params, global_contexts=['application'])
+    modelhub = ModelHub(global_contexts=['application'])
     funnel = modelhub.get_funnel_discovery()
 
     objectiv_df = objectiv_df[['moment', 'location_stack', 'application']]
@@ -462,12 +462,12 @@ def test_get_navigation_paths_start_from_end(objectiv_df):
     )
 
 
-def test_construct_source_target_objectiv_df(objectiv_df) -> None:
+def test_construct_source_target_df(objectiv_df) -> None:
     modelhub = ModelHub()
     funnel = modelhub.get_funnel_discovery()
 
     steps_objectiv_df = funnel.get_navigation_paths(data=objectiv_df, steps=4, n_examples=3)
-    bts = funnel._construct_source_target_objectiv_df(steps_objectiv_df, n_top_examples=None)
+    bts = funnel._construct_source_target_df(steps_objectiv_df, n_top_examples=None)
 
     assert_equals_data(
             bts,
@@ -510,7 +510,7 @@ def test_construct_source_target_objectiv_df(objectiv_df) -> None:
     for i in range(1, steps + 1):
         steps_objectiv_df[f'location_stack_step_{i}'] = steps_objectiv_df[f'location_stack_step_{i}'].str[:4]
 
-    bts = funnel._construct_source_target_objectiv_df(steps_objectiv_df, n_top_examples=3)
+    bts = funnel._construct_source_target_df(steps_objectiv_df, n_top_examples=3)
 
     assert_equals_data(
         bts,
@@ -526,9 +526,9 @@ def test_construct_source_target_objectiv_df(objectiv_df) -> None:
     # test exceptions
     steps_objectiv_df['some_column'] = steps_objectiv_df['location_stack_step_1']
     with pytest.raises(ValueError, match='Couldn\'t find any navigation path.'):
-        funnel._construct_source_target_objectiv_df(steps_objectiv_df[['some_column']])
+        funnel._construct_source_target_df(steps_objectiv_df[['some_column']])
 
     steps_objectiv_df['some_step_1'] = steps_objectiv_df['location_stack_step_1']
     with pytest.raises(ValueError, match='Provided DataFrame contains navigation paths from multiple base series,'
                                          ' e.g. x_step_1, y_step_1, ... x_step_n, y_step_n'):
-        funnel._construct_source_target_objectiv_df(steps_objectiv_df)
+        funnel._construct_source_target_df(steps_objectiv_df)

@@ -110,7 +110,8 @@ def pytest_generate_tests(metafunc: Metafunc):
 
 
 @pytest.fixture()
-def objectiv_df(monkeypatch, db_params, global_contexts=None) -> bach.DataFrame:
+def objectiv_df(monkeypatch, db_params, request) -> bach.DataFrame:
+    global_contexts = request.param if hasattr(request, 'param') else []
     return get_fake_objectiv_df(monkeypatch, db_params, global_contexts)
 
 
