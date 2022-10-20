@@ -256,7 +256,7 @@
     "FailureEvent": {
       "documentation": [
         { "description": "A NonInteractiveEvent that is sent when a user action results in an error, \nlike an invalid email when sending a form.", "type": "text", "target": "primary" },
-        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action results in a error, like an invalid email when sending a form.", "type": "markdown", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action results in an error, like an invalid email when sending a form.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all the properties. The message is an error code or short message captured from the occurring error. This is purely for descriptive purposes.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "NonInteractiveEvent",
