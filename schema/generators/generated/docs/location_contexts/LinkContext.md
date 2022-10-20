@@ -1,7 +1,20 @@
 # LinkContext
 A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains a href.
 
-### Properties
+### Parent
+PressableContext
+
+### All Parents
+AbstractContext > AbstractLocationContext > PressableContext
+
+### Own Properties
+`string` href: URL (href) the link points to.
+
+### Inherited Properties
+`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+for Context instance uniqueness.
+
+### All Properties
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 `string` href: URL (href) the link points to.

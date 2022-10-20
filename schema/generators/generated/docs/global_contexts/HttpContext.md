@@ -1,7 +1,22 @@
 # HttpContext
 A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing meta information about the agent that sent the event.
 
-### Properties
+### Parent
+AbstractGlobalContext
+
+### All Parents
+AbstractContext > AbstractGlobalContext
+
+### Own Properties
+`string` referrer: Full URL to HTTP referrer of the current page.
+`string` user_agent: User-agent of the agent that sent the event.
+`string` remote_address: (public) IP address of the agent that sent the event.
+
+### Inherited Properties
+`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+for Context instance uniqueness.
+
+### All Properties
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 `string` referrer: Full URL to HTTP referrer of the current page.

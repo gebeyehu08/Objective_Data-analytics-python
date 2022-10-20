@@ -29,18 +29,70 @@ const destination = '../generated/docs/';
     docsWriter.writeLine();
 
     // TODO implement writeMermaid in docsWriter, e.g. writeMermaid({chart, caption, links})
-
-    docsWriter.writeH3('Properties');
-
     // TODO implement writeTable in docsWriter, e.g. writeTable({title, rows:[cell1, cell2, ...cellN]})
-    entity.properties.forEach((entityProperty) => {
-      const { name, type, description, internal } = entityProperty;
-      if (!internal) {
-        docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-      }
-    });
 
-    docsWriter.writeEndOfLine();
+    if(entity.parent) {
+      docsWriter.writeH3('Parent');
+      docsWriter.writeLine(entity.parent.name);
+      docsWriter.writeEndOfLine();
+    }
+
+    if(entity.parents.length) {
+      docsWriter.writeH3('All Parents');
+      docsWriter.writeLine(entity.parents.map(({ name }) => name).join(' > '));
+      docsWriter.writeEndOfLine();
+    }
+
+    if(entity.ownChildren.length) {
+      docsWriter.writeH3('Own Children');
+      docsWriter.writeLine(entity.ownChildren.map(({ name }) => name).join(', '));
+      docsWriter.writeEndOfLine();
+    }
+
+    if(entity.children.length) {
+      docsWriter.writeH3('All Children');
+      docsWriter.writeLine(entity.children.map(({ name }) => name).join(', '));
+      docsWriter.writeEndOfLine();
+    }
+
+    if(entity.ownProperties.length) {
+      docsWriter.writeH3('Own Properties');
+
+      entity.ownProperties.forEach((entityProperty) => {
+        const { name, type, description, internal } = entityProperty;
+        if (!internal) {
+          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+        }
+      });
+
+      docsWriter.writeEndOfLine();
+    }
+
+    if(entity.inheritedProperties.length) {
+      docsWriter.writeH3('Inherited Properties');
+
+      entity.inheritedProperties.forEach((entityProperty) => {
+        const { name, type, description, internal } = entityProperty;
+        if (!internal) {
+          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+        }
+      });
+
+      docsWriter.writeEndOfLine();
+    }
+
+    if(entity.properties.length) {
+      docsWriter.writeH3('All Properties');
+
+      entity.properties.forEach((entityProperty) => {
+        const { name, type, description, internal } = entityProperty;
+        if (!internal) {
+          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+        }
+      });
+
+      docsWriter.writeEndOfLine();
+    }
 
     docsWriter.writeLine(admonitionDescription);
   });
