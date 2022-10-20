@@ -565,10 +565,10 @@ class DocusaurusTranslator(Translator):
                     if((line[0:3] == ">>>") or (node['language'] == 'jupyter-notebook')):
                         if (i != 0): 
                             node_input += "\n"
-                        if (node['language'] == 'jupyter-notebook'):
-                            node_input += line
-                        else:
+                        if (line[0:3] == '>>>'):
                             node_input += line[3:]
+                        else:
+                            node_input += line
                         output_index = i+1
                     else:
                         break
