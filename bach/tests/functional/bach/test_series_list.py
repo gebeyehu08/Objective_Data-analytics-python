@@ -4,7 +4,8 @@ Copyright 2022 Objectiv B.V.
 import pytest
 
 from bach.series import SeriesList
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 pytestmark = [

@@ -8,7 +8,7 @@ import pytest
 from datetime import datetime
 
 from bach import DataFrame
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
 
 DATA = [

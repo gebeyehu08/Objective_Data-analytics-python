@@ -9,6 +9,7 @@ class CellTags(Enum):
     COMMENTED = 'commented'
     SQL_MARKDOWN = 'sql-markdown'
     GET_OBJECTIV_DATAFRAME = 'get_objectiv_dataframe_call'
+    DATAFRAME_DESCRIBE = 'describe_call'
 
     NO_OUTPUT = 'no_output'
 
@@ -25,6 +26,9 @@ class CellTags(Enum):
 
         if 'display_sql_as_markdown' in stmts[-1]:
             tags.append(cls.SQL_MARKDOWN)
+
+        if 'describe()' in stmts[-1]:
+            tags.append(cls.DATAFRAME_DESCRIBE)
 
         if 'get_objectiv_dataframe' in source:
             tags.append(cls.GET_OBJECTIV_DATAFRAME)
