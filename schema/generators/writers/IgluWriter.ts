@@ -6,15 +6,15 @@ import { CodeWriter, TextWriter } from '@yellicode/core';
 import Objectiv from '../../base_schema.json';
 
 const version = Objectiv.version.base_schema.replace(/\./g, '-');
-const vendor = 'io.objectiv';
 const format = 'jsonschema';
 
 export type SelfDescribingEntityDefinition = {
+  vendor: string;
   name: string;
   description: string;
   properties: {
     [key: string]: {
-      [key: string]: string | number | boolean;
+      [key: string]: any;
       type: string;
       description: string;
       isRequired?: boolean;
@@ -22,7 +22,8 @@ export type SelfDescribingEntityDefinition = {
   };
 };
 
-const internalProperties = ['isRequired'];
+const skipProperties = ['_type'];
+const skipAttributes = ['isRequired'];
 
 export class IgluWriter extends CodeWriter {
   constructor(writer: TextWriter) {
@@ -35,26 +36,43 @@ export class IgluWriter extends CodeWriter {
   }
 
   public writeSelfDescribingEntity(entity: SelfDescribingEntityDefinition) {
-    const sanitizedProperties = JSON.parse(JSON.stringify(entity.properties));
-    Object.keys(entity.properties).forEach((property) => {
-      internalProperties.forEach((internalProperty) => delete sanitizedProperties[property][internalProperty]);
-    });
+    const properties = mapSchemaPropertiesToIglu(entity.properties);
 
     this.writeJSON({
       $schema: `http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/${format}/${version}#`,
       description: entity.description,
       self: {
-        vendor,
+        vendor: entity.vendor,
         name: entity.name,
         format,
         version,
       },
       type: 'object',
-      properties: sanitizedProperties,
+      properties,
       additionalProperties: false,
-      required: Object.entries(entity.properties)
-        .filter(([_, property]) => property.isRequired)
-        .map(([key]) => key),
+      required: Object.values(entity.properties)
+        .filter(({ name, optional }) => !optional && !skipProperties.includes(name))
+        .map(({ name }) => name),
     });
   }
 }
+
+const mapSchemaPropertiesToIglu = (properties) => {
+  let igluProperties = {};
+
+  if (!properties.length) {
+    return igluProperties;
+  }
+
+  properties
+    .filter(({ name }) => !skipProperties.includes(name))
+    .forEach((property) => {
+      igluProperties[property.name] = {
+        type: property.nullable ? [property.type, "null"] : [property.type],
+        description: property.description.replace(/\n/g, ''),
+        items: property.items,
+      };
+    });
+
+  return igluProperties;
+};
