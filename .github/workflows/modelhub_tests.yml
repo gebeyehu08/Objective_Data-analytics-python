@@ -96,4 +96,4 @@ jobs:
         if: matrix.task != 'code'
         run: |
           cd modelhub
-          pytest -n 4 --dist loadgroup --${{ matrix.task }} tests_modelhub/functional
+          pytest -n 16 --dist loadgroup --${{ matrix.task }} tests_modelhub/functional

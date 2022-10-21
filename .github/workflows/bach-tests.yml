@@ -95,4 +95,4 @@ jobs:
         if: matrix.task != 'code'
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --${{ matrix.task }} tests/functional
+          pytest -n 16 --dist loadgroup --${{ matrix.task }} tests/functional
