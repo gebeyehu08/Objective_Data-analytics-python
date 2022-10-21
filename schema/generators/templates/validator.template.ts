@@ -5,22 +5,11 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import * as fs from 'fs';
+import glob from 'glob';
 import Objectiv from '../../base_schema.json';
 import { JavaScriptWriter } from '../writers/JavaScriptWriter';
 import { ZodWriter } from '../writers/ZodWriter';
-import glob from 'glob';
-import {
-  filterAbstractNames,
-  getChildren,
-  getContextNames,
-  getEntityDescription,
-  getEntityProperties,
-  getEventNames,
-  getObjectKeys,
-  getPropertyDescription,
-  getPropertyValue,
-  sortArrayByName,
-} from './common';
+import { getContexts, getEntity, getEvents } from './parser';
 
 const validatorFolder = '../../validator/';
 const schemaVersion = Objectiv.version.base_schema;
@@ -38,119 +27,105 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
   // ContextTypes enum
   zodWriter.writeEnumeration({
     name: 'ContextTypes',
-    members: sortArrayByName(getObjectKeys(Objectiv.contexts).map((_type) => ({ name: _type }))),
+    members: getContexts(),
     description: `Context's _type discriminator attribute values`,
   });
 
   // EventTypes enum
   zodWriter.writeEnumeration({
     name: 'EventTypes',
-    members: sortArrayByName(getObjectKeys(Objectiv.events).map((_type) => ({ name: _type }))),
+    members: getEvents(),
     description: `Event's _type discriminator attribute values`,
   });
 
   // Context definitions
-  const allContexts = filterAbstractNames(getContextNames());
-  const childContexts = allContexts.filter((context) => getChildren(context).length === 0);
-  childContexts.forEach((contextName) => {
-    const context = Objectiv.contexts[contextName];
-    const properties = getEntityProperties(context);
-
+  getContexts({ isAbstract: false, isParent: false }).forEach((context) => {
     zodWriter.writeObject({
-      name: contextName,
-      description: getEntityDescription(context, descriptionsType, descriptionsTarget),
-      properties: getObjectKeys(properties).map((propertyName) => ({
-        name: String(propertyName),
-        description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
-        typeName: properties[propertyName].type,
-        isNullable: properties[propertyName].nullable,
-        isOptional: properties[propertyName].optional,
-        value: getPropertyValue(contextName, properties[propertyName]),
+      name: context.name,
+      description: context.getDescription({ type: descriptionsType, target: descriptionsTarget }),
+      properties: context.properties.map((property) => ({
+        name: property.name,
+        description: property.description,
+        typeName: property.type,
+        isNullable: property.nullable,
+        isOptional: property.optional,
+        value: property.value,
       })),
     });
     zodWriter.writeLine(';');
     zodWriter.writeLine();
   });
-  const parentContexts = allContexts.filter((context) => getChildren(context).length > 0);
-  parentContexts.forEach((contextName) => {
-    const context = Objectiv.contexts[contextName];
-    const properties = getEntityProperties(context);
-    const childrenNames = getChildren(contextName);
 
+  getContexts({ isAbstract: false, isParent: true }).forEach((context) => {
     zodWriter.writeObject({
-      name: `${contextName}Entity`,
-      description: getEntityDescription(context, descriptionsType, descriptionsTarget),
-      properties: getObjectKeys(properties).map((propertyName) => ({
-        name: String(propertyName),
-        description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
-        typeName: properties[propertyName].type,
-        isNullable: properties[propertyName].nullable,
-        isOptional: properties[propertyName].optional,
-        value: getPropertyValue(contextName, properties[propertyName]),
+      name: `${context.name}Entity`,
+      description: context.getDescription({ type: descriptionsType, target: descriptionsTarget }),
+      properties: context.properties.map((property) => ({
+        name: property.name,
+        description: property.description,
+        typeName: property.type,
+        isNullable: property.nullable,
+        isOptional: property.optional,
+        value: property.value,
       })),
     });
     zodWriter.writeLine(';');
     zodWriter.writeLine();
 
     zodWriter.writeDiscriminatedUnion({
-      name: contextName,
-      description: getEntityDescription(context, descriptionsType, descriptionsTarget),
+      name: context.name,
+      description: context.getDescription({ type: descriptionsType, target: descriptionsTarget }),
       discriminator: '_type',
       items: [
         {
-          properties: getObjectKeys(properties).map((propertyName) => ({
-            name: String(propertyName),
-            description: getPropertyDescription(context, propertyName, descriptionsType, descriptionsTarget),
-            typeName: properties[propertyName].type,
-            isNullable: properties[propertyName].nullable,
-            isOptional: properties[propertyName].optional,
-            value: getPropertyValue(contextName, properties[propertyName]),
+          properties: context.properties.map((property) => ({
+            name: property.name,
+            description: property.description,
+            typeName: property.type,
+            isNullable: property.nullable,
+            isOptional: property.optional,
+            value: property.value,
           })),
         },
-        ...childrenNames,
+        ...context.children.map(({ name }) => name),
       ],
     });
   });
 
   // LocationStack array definition
-  const allLocationContexts = getChildren(Objectiv.LocationStack.items.type).sort();
-  const ChildLocationContexts = allLocationContexts.filter((context) => getChildren(context).length === 0);
-  const ParentLocationContexts = allLocationContexts.filter((context) => getChildren(context).length > 0);
+  const childLocationContextNames = getContexts({ isLocationContext: true, isParent: false }).map(({ name }) => name);
+  const parentLocationContextNames = getContexts({ isLocationContext: true, isParent: true }).map(({ name }) => name);
   zodWriter.writeArray({
     name: 'LocationStack',
-    items: [...ChildLocationContexts, ...ParentLocationContexts.map((contextName) => `${contextName}Entity`)],
+    items: [...childLocationContextNames, ...parentLocationContextNames.map((contextName) => `${contextName}Entity`)],
     discriminator: Objectiv.LocationStack.items.discriminator,
-    description: getEntityDescription(Objectiv.LocationStack, descriptionsType, descriptionsTarget),
+    description: getEntity('LocationStack').getDescription({ type: descriptionsType, target: descriptionsTarget }),
     rules: Objectiv.LocationStack.validation.rules,
   });
 
   // GlobalContexts array definition
-  const allGlobalContexts = getChildren(Objectiv.GlobalContexts.items.type).sort();
-  const ChildGlobalContexts = allGlobalContexts.filter((context) => getChildren(context).length === 0);
-  const ParentGlobalContexts = allGlobalContexts.filter((context) => getChildren(context).length > 0);
+  const childGlobalContextNames = getContexts({ isGlobalContext: true, isParent: false }).map(({ name }) => name);
+  const parentGlobalContextNames = getContexts({ isGlobalContext: true, isParent: true }).map(({ name }) => name);
   zodWriter.writeArray({
     name: 'GlobalContexts',
-    items: [...ChildGlobalContexts, ...ParentGlobalContexts.map((contextName) => `${contextName}Entity`)],
+    items: [...childGlobalContextNames, ...parentGlobalContextNames.map((contextName) => `${contextName}Entity`)],
     discriminator: Objectiv.GlobalContexts.items.discriminator,
-    description: getEntityDescription(Objectiv.GlobalContexts, descriptionsType, descriptionsTarget),
+    description: getEntity('GlobalContexts').getDescription({ type: descriptionsType, target: descriptionsTarget }),
     rules: Objectiv.GlobalContexts.validation.rules,
   });
 
   // Events
-  filterAbstractNames(getEventNames()).forEach((eventName) => {
-    const event = Objectiv.events[eventName];
-    const properties = getEntityProperties(event);
-
+  getEvents({ isAbstract: false }).forEach((event) => {
     zodWriter.writeObject({
-      name: eventName,
-      description: getEntityDescription(event, descriptionsType, descriptionsTarget),
-      properties: getObjectKeys(properties).map((propertyName) => ({
-        name: String(propertyName),
-        description: getPropertyDescription(event, propertyName, descriptionsType, descriptionsTarget),
-        typeName: properties[propertyName].type,
-        isNullable: properties[propertyName].nullable,
-        isOptional: properties[propertyName].optional,
-        value: getPropertyValue(eventName, properties[propertyName]),
+      name: event.name,
+      description: event.getDescription({ type: descriptionsType, target: descriptionsTarget }),
+      properties: event.properties.map((property) => ({
+        name: property.name,
+        description: property.description,
+        typeName: property.type,
+        isNullable: property.nullable,
+        isOptional: property.optional,
+        value: property.value,
       })),
       rules: event.validation?.rules,
     });
@@ -163,8 +138,8 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
   zodWriter.writeLine(`entityMap = {`);
   zodWriter.exportList.push('entityMap');
   zodWriter.increaseIndent();
-  allContexts.forEach((context) => {
-    zodWriter.writeLine(`'${context}': ${context},`);
+  getContexts({ isAbstract: false }).forEach((context) => {
+    zodWriter.writeLine(`'${context.name}': ${context.name},`);
   });
   zodWriter.decreaseIndent();
   zodWriter.writeLine(`};\n`);
@@ -179,7 +154,7 @@ Generator.generate({ outputFile: `${validatorFolder}${schemaVersion}/validator.j
   zodWriter.writeLine(`const validate = z.union([`);
   zodWriter.exportList.push('validate');
   zodWriter.increaseIndent();
-  filterAbstractNames(getEventNames()).forEach((eventName) => zodWriter.writeLine(`${eventName},`));
+  getEvents({ isAbstract: false }).forEach((event) => zodWriter.writeLine(`${event.name},`));
   zodWriter.decreaseIndent();
   zodWriter.writeLine(`]).safeParse;`);
   zodWriter.writeLine();

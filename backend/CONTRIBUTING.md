@@ -25,17 +25,25 @@ cd backend; python objectiv_backend/tools/db_init/db_init.py
 **SECURITY WARNING:** The above docker-compose command starts a postgres container that allows connections
 without verifying passwords. Do not use this in production or on a shared system!
 
+## Start validation service
+Using stable docker image:
 
-## Make sure we have the base schema in place:
 ```bash
-make base_schema
+docker run -d -p 8082:8082 --rm  --name objectiv_validator objectiv/validator
 ```
+
+If you have local schema changes, use local version of the validator:
+```bash
+docker run  -d --rm --name objectiv_validator -p 8082:8082 -v $PWD/../schema/validator:/schema node:16-alpine \
+  sh -c 'cd /schema && yarn install && yarn serve'
+```
+
 ## Run Collector
 After setting up the python env, simply run:
 ```bash
 flask run -p 8081
 ```
- 
+
 
 ## Run Tests and Checks
 ```bash
@@ -47,7 +55,7 @@ mypy objectiv_backend
 ## Build Container Image
 Only requires docker, no python.
 ```
-make docker-image
+make docker-image-local
 ```
 
 ## Build Python Package

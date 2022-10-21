@@ -1,7 +1,23 @@
 # PressableContext
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes an interactive element (like a link, button, icon), that the user can press.
 
-### Properties
+### Parent
+AbstractLocationContext
+
+### All Parents
+AbstractContext > AbstractLocationContext
+
+### Own Children
+LinkContext
+
+### All Children
+LinkContext
+
+### Inherited Properties
+`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+for Context instance uniqueness.
+
+### All Properties
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 
