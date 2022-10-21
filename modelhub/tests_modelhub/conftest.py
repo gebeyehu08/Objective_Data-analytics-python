@@ -29,13 +29,10 @@ Category 4, 5 and 6 are the exception, these need to be marked with the `skip_po
 import os
 from urllib.parse import quote_plus
 
-import bach
-import pytest
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
 from dotenv import dotenv_values
 
-from tests_modelhub.data_and_utils.fake_pipelines import get_fake_objectiv_df
 from tests_modelhub.data_and_utils.utils import DBParams
 
 # Load settings from .test_env file, but allow overrides from Environment variables
@@ -107,12 +104,6 @@ def pytest_generate_tests(metafunc: Metafunc):
 
     if 'db_params' in metafunc.fixturenames:
         metafunc.parametrize("db_params", db_params)
-
-
-@pytest.fixture()
-def objectiv_df(monkeypatch, db_params, request) -> bach.DataFrame:
-    global_contexts = request.param if hasattr(request, 'param') else []
-    return get_fake_objectiv_df(monkeypatch, db_params, global_contexts)
 
 
 def get_postgres_db_params() -> DBParams:
