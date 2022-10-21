@@ -17,31 +17,28 @@ Generator.generate({ outputFile: `${destination}location_stack/jsonschema/${vers
 
   const locationStack = getEntity('LocationStack');
   const name = "location_stack";
-  const description = locationStack.getDescription({ type: 'text', target: 'primary' });
+  const description = locationStack.getDescription({ type: 'text', target: 'primary' }).replace(/\n/g, '');
 
-  jsonWriter.writeObject({
-    properties: {
-      $schema: `http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/${version}#`,
-      description,
-      self: {
-        vendor,
-        name,
-        format: 'jsonschema',
-        version,
-      },
-      type: 'object',
-      properties: {
-        [name]: {
-          type: 'array',
-          description,
-          minItems: 1,
-        }
-      },
-      additionalProperties: false,
-      required: [
-        name
-      ]
+  jsonWriter.writeJSON({
+    $schema: `http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/${version}#`,
+    description,
+    self: {
+      vendor,
+      name,
+      format: 'jsonschema',
+      version,
     },
-    closeWithComma: false
+    type: 'object',
+    properties: {
+      [name]: {
+        type: 'array',
+        description,
+        minItems: 1,
+      }
+    },
+    additionalProperties: false,
+    required: [
+      name
+    ]
   })
 });
