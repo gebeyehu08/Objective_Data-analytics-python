@@ -1,7 +1,17 @@
 # MediaPlayerContext
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes a section of the UI containing a media player.
 
-### Properties
+### Parent
+AbstractLocationContext
+
+### All Parents
+AbstractContext > AbstractLocationContext
+
+### Inherited Properties
+`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+for Context instance uniqueness.
+
+### All Properties
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 

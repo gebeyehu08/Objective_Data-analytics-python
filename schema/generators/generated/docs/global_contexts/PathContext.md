@@ -1,7 +1,17 @@
 # PathContext
 A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing the path where the user is when an event is sent.
 
-### Properties
+### Parent
+AbstractGlobalContext
+
+### All Parents
+AbstractContext > AbstractGlobalContext
+
+### Inherited Properties
+`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+for Context instance uniqueness.
+
+### All Properties
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 

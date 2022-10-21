@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the db parameters for
 test functions that require an engine.
-By default such a test function will get a Postgres db parameters. But if --big-query or --all is
+By default such a test function will get a Postgres db parameters. But if --bigquery or --all is
 specified on the commandline, then it will (also) get a BigQuery db parameters. For specific
 tests, it is possible to disable postgres, bigquery or athena testing, see 'marks' section below.
 ### Marks and Test Categorization
@@ -71,7 +71,7 @@ def pytest_addoption(parser: Parser):
     # This function will automatically be called by pytest at the start of a test run, see:
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
     parser.addoption('--postgres', action='store_true', help='run the functional tests for Postgres')
-    parser.addoption('--big-query', action='store_true', help='run the functional tests for BigQuery')
+    parser.addoption('--bigquery', action='store_true', help='run the functional tests for BigQuery')
     parser.addoption('--athena', action='store_true', help='run the functional tests for Athena')
 
     parser.addoption('--all', action='store_true', help='run the functional tests for Postgres, BigQuery and Athena.')
@@ -89,7 +89,7 @@ def pytest_generate_tests(metafunc: Metafunc):
     skip_athena = any(mark.name == MARK_SKIP_ATHENA for mark in markers)
     db_params = []
 
-    testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("big_query")
+    testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("bigquery")
     testing_athena = metafunc.config.getoption("all") or metafunc.config.getoption("athena")
     testing_pg = metafunc.config.getoption("all") or not (testing_bq or testing_athena)
 

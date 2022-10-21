@@ -47,7 +47,7 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
     get created only once.
     """
     # use same logic as tests_modelhub.conftest.pytest_generate_tests()
-    testing_pg = not request.session.config.getoption("big_query")
+    testing_pg = not request.session.config.getoption("bigquery")
     if not testing_pg:
         return
 
