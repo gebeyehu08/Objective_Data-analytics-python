@@ -5,41 +5,30 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import Objectiv from '../../base_schema.json';
-import { JSONWriter } from "../writers/JSONWriter";
-import { getEntity } from "./parser";
+import { IgluWriter } from '../writers/IgluWriter';
+import { getEntity } from './parser';
 
-const destination = '../generated/snowplow/'
+const destination = '../generated/snowplow/';
+const format = 'jsonschema';
 const version = Objectiv.version.base_schema.replace(/\./g, '-');
-const vendor = "io.objectiv";
-const format = "jsonschema";
 
 Generator.generate({ outputFile: `${destination}location_stack/${format}/${version}` }, (writer: TextWriter) => {
-  const jsonWriter = new JSONWriter(writer);
+  const igluWriter = new IgluWriter(writer);
 
   const locationStack = getEntity('LocationStack');
-  const name = "location_stack";
-  const description = locationStack.getDescription({ type: 'text', target: 'primary' }).replace(/\n/g, '');
+  const name = 'location_stack';
+  const description = locationStack.getDescription({ type: 'text', target: 'primary' });
 
-  jsonWriter.writeJSON({
-    $schema: `http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/${format}/${version}#`,
-    description,
-    self: {
-      vendor,
-      name,
-      format,
-      version,
-    },
-    type: 'object',
+  igluWriter.writeSelfDescribingEntity({
+    name,
+    description: description,
     properties: {
       [name]: {
         type: 'array',
         description,
+        isRequired: true,
         minItems: 1,
-      }
+      },
     },
-    additionalProperties: false,
-    required: [
-      name
-    ]
-  })
+  });
 });
