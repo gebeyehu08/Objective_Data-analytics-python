@@ -196,7 +196,6 @@ def test_from_pandas_index(materialization: str, engine, unique_table_test_name)
 
 
 @pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1376')
-@pytest.mark.skip_bigquery_todo('https://github.com/objectiv/objectiv-analytics/issues/1377')
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_types(materialization: str, engine, unique_table_test_name):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
