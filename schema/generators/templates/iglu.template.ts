@@ -17,7 +17,7 @@ Generator.generate({ outputFile: `${destination}location_stack/${format}/${versi
 
   const locationStack = getEntity('LocationStack');
   const name = 'location_stack';
-  const description = locationStack.getDescription({ type: 'text', target: 'primary' });
+  const description = locationStack.getDescription({ type: 'text', target: 'primary' }).replace(/\n/g, '');
 
   igluWriter.writeSelfDescribingEntity({
     name,

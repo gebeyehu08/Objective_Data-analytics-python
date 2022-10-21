@@ -31,11 +31,10 @@ export class IgluWriter extends CodeWriter {
   }
 
   public writeJSON(content: any) {
-    this.writeLine(JSON.stringify(content, null, 4));
+    this.write(JSON.stringify(content, null, 4));
   }
 
   public writeSelfDescribingEntity(entity: SelfDescribingEntityDefinition) {
-    const sanitizedDescription = entity.description.replace(/\n/g, '');
     const sanitizedProperties = JSON.parse(JSON.stringify(entity.properties));
     Object.keys(entity.properties).forEach((property) => {
       internalProperties.forEach((internalProperty) => delete sanitizedProperties[property][internalProperty]);
@@ -43,7 +42,7 @@ export class IgluWriter extends CodeWriter {
 
     this.writeJSON({
       $schema: `http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/${format}/${version}#`,
-      description: sanitizedDescription,
+      description: entity.description,
       self: {
         vendor,
         name: entity.name,
