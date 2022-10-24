@@ -57,18 +57,31 @@ const destination = '../generated/docs/';
 			}
 			docsWriter.writeLine();
 		}
+		
+		// create plain content rows from the given entity's properties
+		function getPropertiesRows(properties) {
+			let rows = Array() as [string[]];
+			properties.forEach((p) => {
+				let name = '**' + p.name.replaceAll('_', '\\_') + ((p.optional || p.nullable) ? ' _[optional]_' : '') 
+					+ '**';
+				rows.push([name, p.type, p.description.replace(/(\r\n|\n|\r)/gm, ""), p.value]);
+			});
+			return rows;
+		}
 
-		// table of properties
-		docsWriter.writeH3('Properties');
+		// table of own properties, if any
+		if (entity.ownProperties.length > 0) {
+			docsWriter.writeH3('Properties');
+			docsWriter.writeLine();
+			docsWriter.writeTable(['', 'type', 'description', 'contains'], 
+				getPropertiesRows(entity.ownProperties));
+		}
+
+		// table of inherited properties
+		docsWriter.writeH3('Inherited Properties');
 		docsWriter.writeLine();
-		// create plain content rows from the entity's properties
-		let rows = Array() as [string[]];
-		entity.properties.forEach((p) => {
-			let name = '**' + p.name.replace('_', '\\_') + ((p.optional || p.nullable) ? ' _[optional]_' : '') 
-				+ '**';
-			rows.push([name, p.type, p.description.replace(/(\r\n|\n|\r)/gm, ""), p.value]);
-		});
-		docsWriter.writeTable(['', 'type', 'description', 'contains'], rows);
+		docsWriter.writeTable(['', 'type', 'description', 'contains'], 
+			getPropertiesRows(entity.inheritedProperties));
 
 		docsWriter.writeEndOfLine();
 		
