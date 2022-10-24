@@ -7,7 +7,7 @@
 =====================
 Supported data stores
 =====================
-Currently Bach supports PostgreSQL, AWS Athena, and Google BigQuery. Our aim is to support all popular data
+Currently Bach supports AWS Athena, Google BigQuery, and PostgreSQL. Our aim is to support all popular data
 stores, and our roadmap includes Databricks, Redshift, ClickHouse, Snowflake, etcetera.
 
 For information on how to setup Objectiv with each of these data stores see the collector sections for
