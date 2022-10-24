@@ -562,10 +562,13 @@ class DocusaurusTranslator(Translator):
 
             if node['language'] != 'jupyter-notebook-out':
                 for i, line in enumerate(node_lines):
-                    if(line[0:3] == ">>>"):
+                    if((line[0:3] == ">>>") or (node['language'] == 'jupyter-notebook')):
                         if (i != 0): 
                             node_input += "\n"
-                        node_input += line[3:]
+                        if (line[0:3] == '>>>'):
+                            node_input += line[3:]
+                        else:
+                            node_input += line
                         output_index = i+1
                     else:
                         break
@@ -575,7 +578,7 @@ class DocusaurusTranslator(Translator):
             for i, line in enumerate(node_lines[output_index:]):
                 # if first line is a known language, add it before the backticks, else start on a new line
                 if (i==0 and line in known_output_languages):
-                    node_output += line + "\n"
+                    node_output += line
                 else:
                     node_output += "\n" + line
 

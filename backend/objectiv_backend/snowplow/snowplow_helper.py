@@ -50,7 +50,7 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
     self_describing_contexts = []
 
     # first add global contexts
-    blocked = ['_type', '_types']
+    blocked = ['_type']
     version = config.schema_objectiv_contexts_version
     schema_base = config.schema_objectiv_contexts_base
     for context in event['global_contexts']:
@@ -61,7 +61,7 @@ def make_snowplow_custom_contexts(event: EventData, config: SnowplowConfig) -> s
 
     # add location_stack, but only if there's at least 1 item in it
     schema = f'{config.schema_objectiv_location_stack}/jsonschema/{version}'
-    location_stack = {'location_stack': [filter_dict(v, ['_types']) for i, v in enumerate(event['location_stack'])]}
+    location_stack = {'location_stack': event['location_stack']}
     if len(location_stack['location_stack']) > 0:
         self_describing_contexts.append(make_snowplow_context(schema, location_stack))
 

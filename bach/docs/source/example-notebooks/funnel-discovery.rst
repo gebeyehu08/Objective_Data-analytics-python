@@ -462,156 +462,29 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-.. the testsetup below is a workaround to show the actual SQL output
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
 
-.. doctest:: funnel-discovery
-	:hide:
-	
-	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
-
-.. doctest:: funnel-discovery
-	:skipif: engine is None
-
-	>>> # show SQL for analysis; this is just one example, and works for any Objectiv model/analysis
-	>>> display_sql_as_markdown(top_conversion_locations)
-	sql
-	WITH "manual_materialize___98e5bd0cc63a3e9a9e1a6f1bdd82bc66" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "cookie_id" AS "user_id",
-	               "value"->>'_type' AS "event_type",
-	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"MarketingContext"}') AS "marketing"
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___42d18c0adbda6132192f04dc6edc093d" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "location_stack" AS "location_stack",
-	               "time" AS "time",
-	               "application" AS "application",
-	               "marketing" AS "marketing"
-	          FROM "manual_materialize___98e5bd0cc63a3e9a9e1a6f1bdd82bc66"
-	         WHERE ((("day" >= cast('2022-07-01' AS date))) AND (("day" <= cast('2022-07-30' AS date))))
-	       ),
-	       "context_data___b6304a21d1cec3ea74aead5f9fd24763" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing"
-	          FROM "getitem_where_boolean___42d18c0adbda6132192f04dc6edc093d"
-	       ),
-	       "session_starts___f37d339d0499a0627979022e0be83346" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                    ELSE cast(TRUE AS boolean)
-	                     END AS "is_start_of_session"
-	          FROM "context_data___b6304a21d1cec3ea74aead5f9fd24763"
-	       ),
-	       "session_id_and_count___df2ba5861d4f7cc09ced4b5d67402709" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                    ELSE cast(NULL AS bigint)
-	                     END AS "session_start_id",
-	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___f37d339d0499a0627979022e0be83346"
-	       ),
-	       "objectiv_sessionized_data___63ee2423979f66fdbaa07b7649d405e5" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               "is_start_of_session" AS "is_start_of_session",
-	               "session_start_id" AS "session_start_id",
-	               "is_one_session" AS "is_one_session",
-	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___df2ba5861d4f7cc09ced4b5d67402709"
-	       ),
-	       "getitem_where_boolean___9f2f4a7f77e6f3e9c4d1c29ded740be6" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               "application"->0->>'id' AS "application_id",
-	               (
-	                SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ')
-	                  FROM jsonb_array_elements("location_stack") WITH
-	            ORDINALITY
-	                 WHERE
-	            ORDINALITY = jsonb_array_length("location_stack")
-	               ) || (CASE WHEN jsonb_array_length("location_stack") > 1 THEN ' located at ' || (SELECT string_agg(replace(regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\1 \2', 'g'), ' Context', '') || ': ' || (value ->> 'id'), ' => ') FROM jsonb_array_elements("location_stack") WITH ORDINALITY WHERE ORDINALITY < jsonb_array_length("location_stack") ) ELSE '' END) AS "feature_nice_name"
-	          FROM "objectiv_sessionized_data___63ee2423979f66fdbaa07b7649d405e5"
-	         WHERE ("event_type" = 'PressEvent')
-	       ),
-	       "getitem_where_boolean___d98c227f5218ab2cf9f638c13b625469" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               "application" AS "application",
-	               "marketing" AS "marketing",
-	               "application_id" AS "application_id",
-	               "feature_nice_name" AS "feature_nice_name",
-	               CASE WHEN ("application_id" = 'objectiv-docs') THEN cast(TRUE AS boolean)
-	                    ELSE cast(FALSE AS boolean)
-	                     END AS "is_conversion_event"
-	          FROM "getitem_where_boolean___9f2f4a7f77e6f3e9c4d1c29ded740be6"
-	         WHERE CASE WHEN ("application_id" = 'objectiv-docs') THEN cast(TRUE AS boolean)
-	                    ELSE cast(FALSE AS boolean)
-	                     END
-	       ) SELECT "feature_nice_name" AS "feature_nice_name",
-	       ((cast(count(DISTINCT "user_id") AS double precision) / cast(138 AS bigint)) * cast(100 AS bigint)) AS "converted_users_percentage"
-	  FROM "getitem_where_boolean___d98c227f5218ab2cf9f638c13b625469"
-	 GROUP BY "feature_nice_name"
-	<BLANKLINE>
+	# --- hide: start ---
+	import os
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application'])
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-04-01', end_date='2022-07-30')
+	df['application_id'] = df.application.context.id
+	df['feature_nice_name'] = df.location_stack.ls.nice_name
+	df = df[df['event_type'] == 'PressEvent']
+	df['is_conversion_event'] = False
+	df.loc[df['application_id'] == 'objectiv-docs', 'is_conversion_event'] = True
+	total_converted_users = df[df['is_conversion_event']]['user_id'].unique().count().value
+	top_conversion_locations = modelhub.agg.unique_users(df[df['is_conversion_event']], groupby='feature_nice_name')
+	top_conversion_locations = (top_conversion_locations / total_converted_users) * 100
+	top_conversion_locations = top_conversion_locations.to_frame().rename(columns={'unique_users': 'converted_users_percentage'})
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(top_conversion_locations)
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 
