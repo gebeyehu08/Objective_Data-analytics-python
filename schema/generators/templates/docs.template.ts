@@ -18,12 +18,12 @@ const destination = '../generated/docs/';
 	const isLocationContext = entity.isLocationContext;
 	const isGlobalContext = entity.isGlobalContext;
 
-	const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location_' : isGlobalContext ? 'global_' : '';
+	const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location-' : isGlobalContext ? 'global-' : '';
 	const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
 
 	Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entity.name}.md` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
-
+		
 		docsWriter.writeH1(entity.name);
 		docsWriter.writeLine();
 		docsWriter.writeLine(primaryDescription);
@@ -36,70 +36,106 @@ const destination = '../generated/docs/';
 		// docsWriter.writeMermaidChartForEntity(entityName, entityOwnProperties, requiredContexts, 
 		// entityParentsWithProperties, entityChildren, "Diagram: " + entityName);
 		docsWriter.writeLine();
-
-		if(entity.parent) {
-			docsWriter.writeH3('Parent');
-			docsWriter.writeLine(entity.parent.name);
-			docsWriter.writeEndOfLine();
-		}
-
-		if(entity.parents.length) {
-			docsWriter.writeH3('All Parents');
-			docsWriter.writeLine(entity.parents.map(({ name }) => name).join(' > '));
-			docsWriter.writeEndOfLine();
-		}
-
-		if(entity.ownChildren.length) {
-			docsWriter.writeH3('Own Children');
-			docsWriter.writeLine(entity.ownChildren.map(({ name }) => name).join(', '));
-			docsWriter.writeEndOfLine();
-		}
-
-		if(entity.children.length) {
-			docsWriter.writeH3('All Children');
-			docsWriter.writeLine(entity.children.map(({ name }) => name).join(', '));
-			docsWriter.writeEndOfLine();
-		}
-
-		if(entity.ownProperties.length) {
-			docsWriter.writeH3('Own Properties');
-
-			entity.ownProperties.forEach((entityProperty) => {
-				const { name, type, description, internal } = entityProperty;
-				if (!internal) {
-					docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+		
+		// for Events: write list of required contexts
+		const rules = entity.validation?.rules;
+		if (rules) {
+			docsWriter.writeH3('Requires');
+			docsWriter.writeLine();
+			if (rules.length > 0) {
+				for (let i = 0; i < rules.length; i++) {
+					let rule = rules[i];
+					if (['RequiresLocationContext', 'RequiresGlobalContext'].includes(rule.type)) {
+						const requiredName = rule.scope[0].context;
+						const type = rule.type.replace('Requires', '');
+						const url = '../' + type.replace('Context', '-contexts/').toLowerCase() + requiredName + '.md';
+						docsWriter.writeRequiredContext(requiredName, url, type);
+					}
 				}
-			});
-
-			docsWriter.writeEndOfLine();
+			} else {
+				docsWriter.writeLine('None.');
+			}
+			docsWriter.writeLine();
 		}
 
-		if(entity.inheritedProperties.length) {
-			docsWriter.writeH3('Inherited Properties');
+		// table of properties
+		docsWriter.writeH3('Properties');
+		docsWriter.writeLine();
+		// create plain content rows from the entity's properties
+		let rows = Array() as [string[]];
+		entity.properties.forEach((p) => {
+			let name = '**' + p.name.replace('_', '\\_') + ((p.optional || p.nullable) ? ' _[optional]_' : '') 
+				+ '**';
+			rows.push([name, p.type, p.description.replace(/(\r\n|\n|\r)/gm, ""), p.value]);
+		});
+		docsWriter.writeTable(['', 'type', 'description', 'contains'], rows);
 
-			entity.inheritedProperties.forEach((entityProperty) => {
-				const { name, type, description, internal } = entityProperty;
-				if (!internal) {
-					docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-				}
-			});
+		docsWriter.writeEndOfLine();
+		
+		// if(entity.parent) {
+		// 	docsWriter.writeH3('Parent');
+		// 	docsWriter.writeLine(entity.parent.name);
+		// 	docsWriter.writeEndOfLine();
+		// }
 
-			docsWriter.writeEndOfLine();
-		}
+		// if(entity.parents.length) {
+		// 	docsWriter.writeH3('All Parents');
+		// 	docsWriter.writeLine(entity.parents.map(({ name }) => name).join(' > '));
+		// 	docsWriter.writeEndOfLine();
+		// }
 
-		if(entity.properties.length) {
-			docsWriter.writeH3('All Properties');
+		// if(entity.ownChildren.length) {
+		// 	docsWriter.writeH3('Own Children');
+		// 	docsWriter.writeLine(entity.ownChildren.map(({ name }) => name).join(', '));
+		// 	docsWriter.writeEndOfLine();
+		// }
 
-			entity.properties.forEach((entityProperty) => {
-				const { name, type, description, internal } = entityProperty;
-				if (!internal) {
-					docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-				}
-			});
+		// if(entity.children.length) {
+		// 	docsWriter.writeH3('All Children');
+		// 	docsWriter.writeLine(entity.children.map(({ name }) => name).join(', '));
+		// 	docsWriter.writeEndOfLine();
+		// }
 
-			docsWriter.writeEndOfLine();
-		}
+		// if(entity.ownProperties.length) {
+		// 	docsWriter.writeH3('Own Properties');
 
+		// 	entity.ownProperties.forEach((entityProperty) => {
+		// 		const { name, type, description, internal } = entityProperty;
+		// 		if (!internal) {
+		// 			docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+		// 		}
+		// 	});
+
+		// 	docsWriter.writeEndOfLine();
+		// }
+
+		// if(entity.inheritedProperties.length) {
+		// 	docsWriter.writeH3('Inherited Properties');
+
+		// 	entity.inheritedProperties.forEach((entityProperty) => {
+		// 		const { name, type, description, internal } = entityProperty;
+		// 		if (!internal) {
+		// 			docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+		// 		}
+		// 	});
+
+		// 	docsWriter.writeEndOfLine();
+		// }
+
+		// if(entity.properties.length) {
+		// 	docsWriter.writeH3('All Properties');
+
+		// 	entity.properties.forEach((entityProperty) => {
+		// 		const { name, type, description, internal } = entityProperty;
+		// 		if (!internal) {
+		// 			docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+		// 		}
+		// 	});
+
+		// 	docsWriter.writeEndOfLine();
+		// }
+
+		// final notes
 		docsWriter.writeLine(admonitionDescription);
 	});
 });
