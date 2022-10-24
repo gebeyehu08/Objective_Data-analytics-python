@@ -6,10 +6,14 @@ import { CodeWriter, TextWriter } from '@yellicode/core';
 
 export type EntityDefinition = {
   name: string;
-  parents: EntityDefinition[];
+  isAbstract: boolean;
+  isContext: boolean;
+  isEvent: boolean;
+	parents: EntityDefinition[];
 	children: EntityDefinition[];
 	ownProperties: [
 		{
+			name: string;
 			type: string;
 		}
 	];
@@ -208,7 +212,7 @@ export class DocusaurusWriter extends CodeWriter {
         if (requiredContexts && requiredContexts.length > 0) {
           cap += ("<span class='requires_context'>requires:<br />");
           requiredContexts.forEach((requiredContext) => {
-            cap += (requiredContext.contextName + '<br />');
+            cap += (requiredContext[0] + '<br />');
           });
           cap += ('</span>');
         }
@@ -217,7 +221,7 @@ export class DocusaurusWriter extends CodeWriter {
         if (properties) {
           cap += ("<span class='properties'>");
           for (const [key, value] of Object.entries(properties)) {
-            cap += (key.toString() + ': ' + value.type + '<br />');
+            cap += (value.name + ': ' + value.type + '<br />');
           }
           cap += ('</span>');
         }
@@ -236,7 +240,10 @@ export class DocusaurusWriter extends CodeWriter {
 		this.writeLine('graph LR');
 
 		// first, get its parents in reverse order
-		const parents = entity.parents.reverse();
+		if (entity.name == "MediaEvent") {
+			console.log("parents:", entity.parents);
+		}
+		const parents = entity.parents;
 		this.increaseIndent();
 		this.writeIndent();
 		for (let i = 0; i < parents.length; i++) {
@@ -271,7 +278,7 @@ export class DocusaurusWriter extends CodeWriter {
 		if (entity.children && entity.children.length > 0) {
 			for (let i = 0; i < entity.children.length; i++) {
 				let child = entity.children[i];
-				this.writeLine(entity.name + ' --> ' + child + ';');
+				this.writeLine(entity.name + ' --> ' + child.name + ';');
 			}
 		}
 
@@ -292,16 +299,17 @@ export class DocusaurusWriter extends CodeWriter {
 			// write the links to parents
 			const parent = parents[i];
 			let path = '/taxonomy/reference/'
-			// if (parent.subCategory == "Abstract") {
-			// 	path += 'abstracts/';
-			// }
-			// else if (parent.subCategory == "Event") {
-			// 	path += 'events/';
-			// }
-			// else if (parent.subCategory == "GlobalContext") {
+			if (parent.isAbstract) {
+				path += 'abstracts/';
+			}
+			else if (parent.isEvent) {
+				path += 'events/';
+			}
+			// TODO: get whether it's a GlobalContext or LocationContext
+			// else if (parent.isContext && TODO == "GlobalContext") {
 			// 	path += 'global-contexts/';
 			// }
-			// else if (parent.subCategory == "LocationContext") {
+			// else if (parent.isContext && TODO == "LocationContext") {
 			// 	path += 'location-contexts/';
 			// }
 			this.writeLine('{ name: \'' + parent.name + '\', to: \'' + path + parent.name + '\' },');
