@@ -2,8 +2,8 @@ import pandas as pd
 import pytest
 
 from bach import DataFrame
+from bach.testing import assert_equals_data
 from sql_models.util import is_postgres
-from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def test_basic_get_dummies(engine) -> None:

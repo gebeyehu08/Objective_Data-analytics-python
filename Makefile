@@ -24,6 +24,14 @@ build-docker-notebook-image:
 	cd notebooks && docker buildx build --pull --rm --no-cache --output type=image,push=true \
 		--platform=linux/arm64,linux/amd64 --tag objectiv/notebook:${TAG} -f docker/Dockerfile .
 
+build-docker-validation-image-local:
+	cd schema && docker build -t objectiv/validator:${TAG} -f docker/validator/Dockerfile .
+
+build-docker-validation-image:
+	cd schema && docker buildx build --pull --rm --no-cache --output type=image,push=true \
+		--platform=linux/arm64,linux/amd64 --tag objectiv/validator:${TAG} -f docker/validator/Dockerfile .
+
+
 
 publish-tracker:
 	cd tracker && make publish

@@ -300,13 +300,14 @@ the open model hub and Bach work seamlessly together.
 	>>> df_selection = df[(df.event_type == 'PressEvent') & (df.user_id.isin(converted_users))]
 	>>> # calculate the number of PressEvents before conversion per session
 	>>> presses_per_session = df_selection[df_selection.conversion_count == 0].groupby('session_id').session_hit_number.count()
+	>>> presses_per_session_pdf = presses_per_session.to_pandas()
 
 Now let's see the results, at which point the underlying query is actually executed.
 
 .. doctest:: modelhub
 	:skipif: engine is None
 
-	>>> presses_per_session.head()
+	>>> presses_per_session_pdf.head()
 	session_id
 	6     2
 	10    2
@@ -341,9 +342,7 @@ plotting methods.
 	:skipif: engine is None
 	:options: +ELLIPSIS
 
-	>>> # presses_per_session_pd is a pandas Series
-	>>> presses_per_session_pd = presses_per_session.to_pandas()
-	>>> presses_per_session_pd.hist()
+	>>> presses_per_session_pdf.hist()
 	<AxesSubplot:...>
 
 .. image:: ../img/docs/example-notebooks/model-hub-presses-per-session.png
@@ -361,239 +360,26 @@ The SQL for any analysis can be exported with one command, so you can use models
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
 dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-.. doctest:: modelhub
-	:hide:
-	
-	>>> def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
 
-.. doctest:: modelhub
-	:skipif: engine is None
-
-	>>> # show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
-	>>> display_sql_as_markdown(new_user_share)
-	sql
-	WITH "manual_materialize___e627e9bdda472e6a76c583c57c6d37ed" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "cookie_id" AS "user_id",
-	               "value"->>'_type' AS "event_type",
-	               cast("value"->>'_types' AS JSONB) AS "stack_event_types",
-	               cast("value"->>'location_stack' AS JSONB) AS "location_stack",
-	               cast("value"->>'time' AS bigint) AS "time",
-	               jsonb_path_query_array(cast("value"->>'global_contexts' AS JSONB), '$[*] ? (@._type == $type)', '{"type":"ApplicationContext"}') AS "application"
-	          FROM "data"
-	       ),
-	       "getitem_where_boolean___e51b17ce571af21c0c8938ab54fe3856" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "location_stack" AS "location_stack",
-	               "time" AS "time",
-	               "application" AS "application"
-	          FROM "manual_materialize___e627e9bdda472e6a76c583c57c6d37ed"
-	         WHERE ((("day" >= cast('2022-03-01' AS date))) AND (("day" <= cast('2022-03-31' AS date))))
-	       ),
-	       "context_data___567e5226be2a44a0a15de0d391e0030f" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application"
-	          FROM "getitem_where_boolean___e51b17ce571af21c0c8938ab54fe3856"
-	       ),
-	       "session_starts___884079356318809626e0746106525d40" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               CASE WHEN (extract(epoch FROM (("moment") - (lag("moment", 1, cast(NULL AS timestamp WITHOUT TIME ZONE)) OVER (PARTITION BY "user_id" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)))) <= cast(1800 AS bigint)) THEN cast(NULL AS boolean)
-	                    ELSE cast(TRUE AS boolean)
-	                     END AS "is_start_of_session"
-	          FROM "context_data___567e5226be2a44a0a15de0d391e0030f"
-	       ),
-	       "session_id_and_count___df7a2c95d3ccb9f671cd696f1a426d01" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "is_start_of_session" AS "is_start_of_session",
-	               CASE WHEN "is_start_of_session" THEN row_number() OVER (PARTITION BY "is_start_of_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-	                    ELSE cast(NULL AS bigint)
-	                     END AS "session_start_id",
-	               count("is_start_of_session") OVER (ORDER BY "user_id" ASC NULLS LAST, "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "is_one_session"
-	          FROM "session_starts___884079356318809626e0746106525d40"
-	       ),
-	       "objectiv_sessionized_data___bca0e892deb9751d5e8d472f24554cbf" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "application" AS "application",
-	               "is_start_of_session" AS "is_start_of_session",
-	               "session_start_id" AS "session_start_id",
-	               "is_one_session" AS "is_one_session",
-	               first_value("session_start_id") OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_id",
-	               row_number() OVER (PARTITION BY "is_one_session" ORDER BY "moment" ASC NULLS LAST, "event_id" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "session_hit_number"
-	          FROM "session_id_and_count___df7a2c95d3ccb9f671cd696f1a426d01"
-	       ),
-	       "manual_materialize___3fd544d7b50454be3578ceb120b15297" AS (
-	        SELECT "event_id" AS "event_id",
-	               (min("session_id") OVER (PARTITION BY to_char("moment", 'YYYY"-"MM"-"DD'), "user_id" ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) = min("session_id") OVER (PARTITION BY "user_id" ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)) AS "is_new_user"
-	          FROM "objectiv_sessionized_data___bca0e892deb9751d5e8d472f24554cbf"
-	       ),
-	       "merge_sql___78dff41f72cc410f62fb050940d92227" AS (
-	        SELECT COALESCE("l"."event_id", "r"."event_id") AS "event_id",
-	               "l"."day" AS "day",
-	               "l"."moment" AS "moment",
-	               "l"."user_id" AS "user_id",
-	               "l"."location_stack" AS "location_stack",
-	               "l"."event_type" AS "event_type",
-	               "l"."stack_event_types" AS "stack_event_types",
-	               "l"."session_id" AS "session_id",
-	               "l"."session_hit_number" AS "session_hit_number",
-	               "l"."application" AS "application",
-	               "r"."is_new_user" AS "is_new_user"
-	          FROM "objectiv_sessionized_data___bca0e892deb9751d5e8d472f24554cbf" AS l
-	          LEFT
-	            JOIN "manual_materialize___3fd544d7b50454be3578ceb120b15297" AS r
-	            ON ("l"."event_id" = "r"."event_id")
-	       ),
-	       "manual_materialize___587b3775c3c6bf39d8f1fc99f83d165a" AS (
-	        SELECT "event_id" AS "event_id",
-	               (min("session_id") OVER (PARTITION BY to_char("moment", 'YYYY"-"MM'), "user_id" ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) = min("session_id") OVER (PARTITION BY "user_id" ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)) AS "is_new_user"
-	          FROM "merge_sql___78dff41f72cc410f62fb050940d92227"
-	       ),
-	       "merge_sql___d192193d2c2f65eac073bc17860fdd5e" AS (
-	        SELECT COALESCE("l"."event_id", "r"."event_id") AS "event_id",
-	               "l"."day" AS "day",
-	               "l"."moment" AS "moment",
-	               "l"."user_id" AS "user_id",
-	               "l"."location_stack" AS "location_stack",
-	               "l"."event_type" AS "event_type",
-	               "l"."stack_event_types" AS "stack_event_types",
-	               "l"."session_id" AS "session_id",
-	               "l"."session_hit_number" AS "session_hit_number",
-	               "l"."application" AS "application",
-	               "l"."is_new_user" AS "is_new_user",
-	               (((jsonb_array_length(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"id": "Quickstart Guide", "_type": "LinkContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY)), '[]'::JSONB)) > cast(0 AS bigint))) AND (("l"."event_type" = 'PressEvent'))) AS "conversion_events",        
-	               "r"."is_new_user" AS "is_new_user_month"
-	          FROM "merge_sql___78dff41f72cc410f62fb050940d92227" AS l
-	          LEFT
-	            JOIN "manual_materialize___587b3775c3c6bf39d8f1fc99f83d165a" AS r
-	            ON ("l"."event_id" = "r"."event_id")
-	       ),
-	       "merge_sql___d7392a6eae43c464cee58b7ba14ecf6d" AS (
-	        SELECT COALESCE("l"."event_id", "r"."event_id") AS "event_id",
-	               (jsonb_array_length(coalesce((SELECT jsonb_agg(x.value) FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY x WHERE ORDINALITY - 1 >= (SELECT min(CASE WHEN ('{"id": "Quickstart Guide", "_type": "LinkContext"}'::JSONB) <@ value THEN ORDINALITY END) -1 FROM jsonb_array_elements("l"."location_stack") WITH ORDINALITY)), '[]'::JSONB)) > cast(0 AS bigint)) AS "location_stack",
-	               ("r"."event_type" = 'PressEvent') AS "event_type"
-	          FROM "merge_sql___78dff41f72cc410f62fb050940d92227" AS l
-	          FULL OUTER
-	            JOIN "merge_sql___d192193d2c2f65eac073bc17860fdd5e" AS r
-	            ON ("l"."event_id" = "r"."event_id")
-	       ),
-	       "merge_sql___c4fa0da6cc59268e6e2fb5eea84a3582" AS (
-	        SELECT COALESCE("l"."event_id", "r"."event_id") AS "event_id",
-	               "l"."moment" AS "moment",
-	               "l"."event_type" AS "event_type",
-	               "l"."session_id" AS "session_id",
-	               (("r"."location_stack") AND ("r"."event_type")) AS "__is_conversion_event"
-	          FROM "merge_sql___d192193d2c2f65eac073bc17860fdd5e" AS l
-	          LEFT
-	            JOIN "merge_sql___d7392a6eae43c464cee58b7ba14ecf6d" AS r
-	            ON ("l"."event_id" = "r"."event_id")
-	       ),
-	       "conversions_in_time_calculat___15b5332aa832029592b26c92e7f3bca6" AS (
-	        SELECT "event_id" AS "event_id",
-	               "moment" AS "moment",
-	               "event_type" AS "event_type",
-	               "session_id" AS "session_id",
-	               "__is_conversion_event" AS "__is_conversion_event",
-	               CASE WHEN "__is_conversion_event" THEN cast(1 AS bigint)
-	                    ELSE cast(0 AS bigint)
-	                     END AS "__conversion_counter",
-	               cast(sum(CASE WHEN "__is_conversion_event" THEN cast(1 AS bigint) ELSE cast(0 AS bigint) END) OVER (PARTITION BY "session_id" ORDER BY "session_id" ASC NULLS LAST, "moment" ASC NULLS LAST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS bigint) AS "__conversions_in_time"
-	          FROM "merge_sql___c4fa0da6cc59268e6e2fb5eea84a3582"
-	       ),
-	       "merge_sql___9e86da8e8964d9fe530f026ae0f2e685" AS (
-	        SELECT COALESCE("l"."event_id", "r"."event_id") AS "event_id",
-	               "l"."day" AS "day",
-	               "l"."moment" AS "moment",
-	               "l"."user_id" AS "user_id",
-	               "l"."location_stack" AS "location_stack",
-	               "l"."event_type" AS "event_type",
-	               "l"."stack_event_types" AS "stack_event_types",
-	               "l"."session_id" AS "session_id",
-	               "l"."session_hit_number" AS "session_hit_number",
-	               "l"."application" AS "application",
-	               "l"."is_new_user" AS "is_new_user",
-	               "l"."conversion_events" AS "conversion_events",
-	               "l"."is_new_user_month" AS "is_new_user_month",
-	               ("r"."__conversions_in_time" = cast(2 AS bigint)) AS "is_twice_converted"
-	          FROM "merge_sql___d192193d2c2f65eac073bc17860fdd5e" AS l
-	          LEFT
-	            JOIN "conversions_in_time_calculat___15b5332aa832029592b26c92e7f3bca6" AS r
-	            ON ("l"."event_id" = "r"."event_id")
-	       ),
-	       "getitem_where_boolean___07f9a719c4e3f376c486b6128e9cb54c" AS (
-	        SELECT "event_id" AS "event_id",
-	               "day" AS "day",
-	               "moment" AS "moment",
-	               "user_id" AS "user_id",
-	               "location_stack" AS "location_stack",
-	               "event_type" AS "event_type",
-	               "stack_event_types" AS "stack_event_types",
-	               "session_id" AS "session_id",
-	               "session_hit_number" AS "session_hit_number",
-	               "application" AS "application",
-	               "is_new_user" AS "is_new_user",
-	               "conversion_events" AS "conversion_events",
-	               "is_new_user_month" AS "is_new_user_month",
-	               "is_twice_converted" AS "is_twice_converted"
-	          FROM "merge_sql___9e86da8e8964d9fe530f026ae0f2e685"
-	         WHERE "is_new_user"
-	       ),
-	       "merge_left___0abb4cc9b3eee6712dbd8f718b1d42b4" AS (
-	        SELECT to_char("moment", 'YYYY"-"MM"-"DD') AS "time_aggregation",
-	               cast(count(DISTINCT "user_id") AS double precision) AS "unique_users"
-	          FROM "getitem_where_boolean___07f9a719c4e3f376c486b6128e9cb54c"
-	         GROUP BY to_char("moment", 'YYYY"-"MM"-"DD')
-	       ),
-	       "manual_materialize___f9a9d3225cad875915f7218f87b26c6e" AS (
-	        SELECT to_char("moment", 'YYYY"-"MM"-"DD') AS "time_aggregation",
-	               count(DISTINCT "user_id") AS "unique_users"
-	          FROM "merge_sql___9e86da8e8964d9fe530f026ae0f2e685"
-	         GROUP BY to_char("moment", 'YYYY"-"MM"-"DD')
-	       ),
-	       "merge_sql___16668bbd78122a7524c94b0579da1df4" AS (
-	        SELECT COALESCE("l"."time_aggregation", "r"."time_aggregation") AS "time_aggregation",
-	               "l"."unique_users" AS "unique_users",
-	               "r"."unique_users" AS "unique_users__other"
-	          FROM "merge_left___0abb4cc9b3eee6712dbd8f718b1d42b4" AS l
-	          FULL OUTER
-	            JOIN "manual_materialize___f9a9d3225cad875915f7218f87b26c6e" AS r
-	            ON ("l"."time_aggregation" = "r"."time_aggregation")
-	       ) SELECT "time_aggregation" AS "time_aggregation",
-	       ("unique_users" / "unique_users__other") AS "unique_users"
-	  FROM "merge_sql___16668bbd78122a7524c94b0579da1df4"
-	<BLANKLINE>
+	# --- hide: start ---
+	import os
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-03-01', end_date='2022-03-31')
+	df['is_new_user'] = modelhub.map.is_new_user(df)
+	modelhub.add_conversion_event(location_stack=df.location_stack.json[{'id': 'Quickstart Guide', '_type': 'LinkContext'}:], event_type='PressEvent', name='quickstart_presses')
+	df['conversion_events'] = modelhub.map.is_conversion_event(df, 'quickstart_presses')
+	df['is_new_user_month'] = modelhub.map.is_new_user(df, time_aggregation = '%Y-%m')
+	df['is_twice_converted'] = modelhub.map.conversions_in_time(df, name='quickstart_presses')==2
+	new_user_share = modelhub.agg.unique_users(df[df.is_new_user]) / modelhub.agg.unique_users(df)
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(new_user_share)
 
 That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
 

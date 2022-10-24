@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from bach import DataFrame, SeriesBoolean
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 def test_basic(engine):
@@ -166,7 +167,6 @@ def test_round(engine):
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_quantile(engine) -> None:
     pdf = pd.DataFrame(
         data={
@@ -197,7 +197,7 @@ def test_quantile_no_numeric_columns(engine) -> None:
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     bt = bt.reset_index(drop=True)
 
-    with pytest.raises(ValueError, match=r'DataFrame has no series supporting'):
+    with pytest.raises(ValueError, match=r'Cannot calculate quantiles, DataFrame has no numeric'):
         bt.quantile()
 
 

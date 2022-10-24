@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from sql_models.util import extract_format_fields, quote_identifier, quote_string, is_postgres, \
-    is_bigquery, is_athena
+    is_bigquery, is_athena, ddl_quote_identifier
 
 
 @pytest.mark.db_independent
@@ -46,10 +46,39 @@ def test_quote_identifier(dialect):
         raise Exception()
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena research about syntax constants
-def test_quote_string(dialect):
+def test_ddl_quote_identifier(dialect):
     if is_postgres(dialect):
-        # https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
+        # Postgres spec: https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+        assert ddl_quote_identifier(dialect, 'test') == '"test"'
+        assert ddl_quote_identifier(dialect, 'te"st') == '"te""st"'
+        assert ddl_quote_identifier(dialect, '"te""st"') == '"""te""""st"""'
+        assert ddl_quote_identifier(dialect, '`te`st`') == '"`te`st`"'
+        assert ddl_quote_identifier(dialect, 'te%st') == '"te%st"'
+    elif is_athena(dialect):
+        # Athena spec:
+        # https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
+        # https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#:~:text=double%20backticks%20(%60%60)%20to%20represent%20a%20backtick
+        assert ddl_quote_identifier(dialect, 'test') == '`test`'
+        assert ddl_quote_identifier(dialect, 'te"st') == '`te"st`'
+        assert ddl_quote_identifier(dialect, '"te""st"') == r'`"te""st"`'
+        assert ddl_quote_identifier(dialect, '`te`st`') == r'```te``st```'
+        assert ddl_quote_identifier(dialect, 'te%st') == '`te%st`'
+    elif is_bigquery(dialect):
+        # BigQuery: https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#identifiers
+        assert ddl_quote_identifier(dialect, 'test') == '`test`'
+        assert ddl_quote_identifier(dialect, 'te"st') == '`te"st`'
+        assert ddl_quote_identifier(dialect, '"te""st"') == r'`"te""st"`'
+        assert ddl_quote_identifier(dialect, '`te`st`') == r'`\`te\`st\``'
+        assert ddl_quote_identifier(dialect, 'te%st') == '`te%st`'
+    else:
+        # if we add more dialects, we should not forget to extend this test
+        raise Exception()
+
+
+def test_quote_string(dialect):
+    if is_postgres(dialect) or is_athena(dialect):
+        # Postgres: https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
+        # Athena: https://docs.aws.amazon.com/athena/latest/ug/select.html#select-escaping
         assert quote_string(dialect, "test") == "'test'"
         assert quote_string(dialect, "te'st") == "'te''st'"
         assert quote_string(dialect, "'te''st'") == "'''te''''st'''"

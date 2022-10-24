@@ -5,9 +5,13 @@ from datetime import date, datetime, time
 
 import pytest
 
+from bach import SeriesFloat64, SeriesString, SeriesInt64, SeriesBoolean, SeriesDate, SeriesTimestamp, \
+    SeriesTime, SeriesJson
+from bach.testing import assert_equals_data
+from sql_models.constants import DBDialect
 from sql_models.util import is_postgres
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_json_data, \
-    CITIES_INDEX_AND_COLUMNS, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import get_df_with_json_data, \
+    CITIES_INDEX_AND_COLUMNS, get_df_with_test_data, assert_series_db_types
 
 
 def test_astype_dtypes(engine):
@@ -61,6 +65,8 @@ def test_astype_dtypes(engine):
     assert bt.data['inhabitants'] is not bt_astype2.data['inhabitants']
     assert bt.data['municipality'] is bt_astype2.data['municipality']
     assert bt.data['skating_order'] is not bt_astype2.data['skating_order']
+
+    # Verify that the resulting DataFrame is as we expect
     assert_equals_data(
         bt_astype2,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -148,7 +154,6 @@ def test_astype_to_timestamp(engine):
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_astype_to_time(engine):
     bt = get_df_with_test_data(engine)
     bt = bt[[]]
@@ -157,6 +162,7 @@ def test_astype_to_time(engine):
     bt = bt.astype('time')
     assert_equals_data(
         bt,
+        use_to_pandas=True,
         expected_columns=['_index_skating_order', 'a', 'b'],
         expected_data=[
             [1, time(3, 4, 0), time(23, 25, 59)],
@@ -213,4 +219,44 @@ def test_astype_to_json(engine, dtype):
             [4, None]
         ],
         use_to_pandas=True
+    )
+
+
+def test_astype_db_types(engine):
+    # To save on queries, we test all db-types after casting here in one go.
+    df = get_df_with_test_data(engine)
+    df['inhabitants/1000'] = df['inhabitants'] / 1000
+    df['skating_order-1'] = df['skating_order'] - 1
+    df['True_str'] = 'True'
+    df['False_str'] = 'False'
+    df['date_str'] = '1999-12-31'
+    df['timestamp_str'] = '2022-02-15 13:37:00'
+    df['time_str'] = '03:04:00'
+    df['json_str'] = '{"a": "b"}'
+    df['int'] = df['inhabitants/1000'].astype('int64')
+    df['float'] = df['int'].astype('float64')
+    df['bool1'] = df['skating_order-1'].astype('bool')
+    df['bool2'] = df['True_str'].astype('bool')
+    df['bool3'] = df['False_str'].astype('bool')
+    df['string'] = df['int'].astype('string')
+    df['date'] = df['date_str'].astype('date')
+    df['timestamp1'] = df['date'].astype('timestamp')
+    df['timestamp2'] = df['timestamp_str'].astype('timestamp')
+    df['time'] = df['time_str'].astype('time')
+    df['json'] = df['json_str'].astype('json')
+    assert_series_db_types(
+        df=df,
+        expected_series={
+            'int': SeriesInt64,
+            'float': SeriesFloat64,
+            'bool1': SeriesBoolean,
+            'bool2': SeriesBoolean,
+            'bool3': SeriesBoolean,
+            'string': SeriesString,
+            'date': SeriesDate,
+            'timestamp1': SeriesTimestamp,
+            'timestamp2': SeriesTimestamp,
+            'time': SeriesTime,
+            'json': SeriesJson,
+        }
     )

@@ -8,11 +8,11 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from bach import SeriesUuid
+from bach.testing import assert_equals_data
 from sql_models.graph_operations import get_graph_nodes_info
 from sql_models.model import Materialization
 from sql_models.util import is_bigquery, is_postgres, is_athena
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data, \
-    get_df_with_json_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_json_data
 
 
 @pytest.mark.parametrize("inplace", [False, True])

@@ -14,10 +14,20 @@
                 "string"
             ],
             "description": "A unique string identifier to be combined with the Context Type (`_type`) for Context instance uniqueness."
+        },
+        "_types": {
+            "type": [
+                "array"
+            ],
+            "description": "An ordered list of the parents of this Event, itself included as the last element.",
+            "items": {
+                "type": "string"
+            }
         }
     },
     "additionalProperties": true,
     "required": [
-        "id"
+        "id",
+        "_types"
     ]
 }

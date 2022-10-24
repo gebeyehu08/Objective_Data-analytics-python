@@ -1,8 +1,9 @@
 import pytest
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
+from bach.testing import assert_equals_data
 from tests.functional.bach.test_data_and_utils import (
-    get_df_with_test_data, assert_equals_data,
+    get_df_with_test_data,
     TEST_DATA_CITIES_FULL, CITIES_COLUMNS
 )
 import numpy as np

@@ -1,14 +1,13 @@
 import pytest
 from bach.testing import assert_equals_data
 
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
+from modelhub import ModelHub
 
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1264')  # TODO: Athena
 
-def test_visualize_location_stack(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_visualize_location_stack(objectiv_df):
+    modelhub = ModelHub()
 
-    results = modelhub.visualize_location_stack(df, return_df=True)
+    results = modelhub.visualize_location_stack(objectiv_df, return_df=True, show=False)
 
     assert_equals_data(
         results,
@@ -39,10 +38,10 @@ def test_visualize_location_stack(db_params):
     )
 
     # test custom location stack
-    df['ls2'] = df.location_stack.ls[:3]
+    objectiv_df['ls2'] = objectiv_df.location_stack.ls[:3]
     # test as string and series
-    for ls in ['ls2', df.ls2]:
-        results = modelhub.visualize_location_stack(df, location_stack=ls, return_df=True)
+    for ls in ['ls2', objectiv_df.ls2]:
+        results = modelhub.visualize_location_stack(objectiv_df, location_stack=ls, return_df=True, show=False)
 
         assert_equals_data(
             results,

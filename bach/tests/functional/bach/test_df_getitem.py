@@ -7,8 +7,8 @@ from typing import List
 import pytest
 
 from bach import DataFrame, Series, SeriesDict
-from tests.functional.bach.test_data_and_utils import assert_equals_data, df_to_list, \
-    get_df_with_test_data, TEST_DATA_CITIES_FULL
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, TEST_DATA_CITIES_FULL
 
 
 def test_get_item_single(engine):

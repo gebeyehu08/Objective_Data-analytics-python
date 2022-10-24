@@ -26,7 +26,7 @@ from bach.utils import (
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena, is_postgres
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
@@ -1230,7 +1230,18 @@ class Series(ABC):
         return self._arithmetic_operation(other, 'div', '{} / {}')
 
     def __floordiv__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
-        return self._arithmetic_operation(other, 'floordiv', 'floor({} / {})', dtype='int64')
+        result = self._arithmetic_operation(other, 'floordiv', 'floor({} / {})', dtype='int64')
+        if is_athena(self.engine):
+            # need to explicitly cast as integer, since PrestoDB's floor function
+            # returns the same type as the input
+            # https://prestodb.io/docs/current/functions/math.html?highlight=floor#floor
+            from bach.series import SeriesInt64
+            result = result.copy_override(
+                expression=SeriesInt64.dtype_to_expression(
+                    self.engine.dialect, source_dtype='float64', expression=result.expression,
+                )
+            )
+        return result
 
     def __mul__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         return self._arithmetic_operation(other, 'mul', '{} * {}')
@@ -1600,12 +1611,29 @@ class Series(ABC):
             For more information:
             https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_top_count
         """
-        agg_expr = f'mode() within group (order by {{}})'
-        if is_bigquery(self.engine):
+        if is_postgres(self.engine):
+            agg_expr = f'mode() within group (order by {{}})'
+        elif is_athena(self.engine):
+            # PrestoDB currently does not support mode or any approximation to it
+            # Therefore we should calculate manually by building a map with the occurrences
+            # per value (histogram) and get the key with the highest value
+            agg_expr = f"""
+                reduce(
+                    map_entries(histogram({{}})),
+                    CAST(ROW(NULL, 0) AS ROW(field0 {self.get_db_dtype(self.engine.dialect)}, field1 BIGINT)),
+                    (prev, curr) -> IF(prev.field0 IS NULL, curr, IF(prev.field1 < curr.field1, curr, prev)),
+                    val -> val
+                ).field0
+            """
+
+        elif is_bigquery(self.engine):
             # BigQuery has no aggregate function for mode, therefore we use
             # APPROX_TOP_COUNT which return an approximation of the exact result
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions
             agg_expr = f'approx_top_count({{}}, 1)[offset(0)].value'
+
+        else:
+            raise DatabaseNotSupportedException(self.engine)
 
         result = self._derived_agg_func(
             partition=partition,

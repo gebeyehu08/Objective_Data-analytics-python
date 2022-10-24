@@ -1,0 +1,724 @@
+{
+  "name": "base_schema",
+  "version": {
+    "base_schema": "1.0.0"
+  },
+  "description": "This is the Objectiv base schema for the Open Analytics Taxonomy.",
+
+  "Documentation": {
+    "documentation": [
+      { "description": "Documentation blocks are comprised of a `description`, a type (`text` or `markdown`) and an `target`. Targets can be used to identify the importance or position of a documentation block over another. This is mainly useful when generating documentation.", "type": "text", "target": "primary" }
+    ],
+    "type": "array",
+    "items": {
+      "description": {
+        "type": "string"
+      },
+      "type" : {
+        "enum": ["text", "markdown"]
+      },
+      "target" : {
+        "enum": ["primary", "secondary", "admonition"]
+      }
+    }
+  },
+
+  "RequiresLocationContext" : {
+    "documentation": [
+      { "description": "A validation rule that can be applied to the Location Stack. Checks whether the given AbstractLocationContext is present and, optionally, at the required position.", "type": "text", "target": "primary" }
+    ],
+    "properties" : {
+      "scope": {
+        "description": "A list of AbstractLocationContexts, and optionally their positions, to check in the Location Stack.",
+        "type": "array",
+        "items": {
+          "context": {
+            "description": "The AbstractLocationContext to check in the Location Stack.",
+            "type": "AbstractLocationContext"
+          },
+          "position": {
+            "description": "The position the given `context` should be at. Zero-based.",
+            "type": "integer",
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+
+  "RequiresGlobalContext" : {
+    "documentation": [
+      { "description": "A validation rule that can be applied to the Global Contexts. Checks whether the given AbstractGlobalContext is present.", "type": "text", "target": "primary" }
+    ],
+    "properties" : {
+      "scope": {
+        "description": "A list of AbstractGlobalContexts to check in the Global Contexts.",
+        "type": "array",
+        "items": {
+          "context": {
+            "description": "The AbstractGlobalContexts to check in the Global Contexts.",
+            "type": "AbstractGlobalContext"
+          }
+        }
+      }
+    }
+  },
+
+  "UniqueContext" : {
+    "documentation": [
+      { "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Checks whether contexts are uniquely identified by the given `by` properties. Optionally `context` can be specified to restrict the check to a specific AbstractContext only.", "type": "text", "target": "primary" }
+    ],
+    "properties": {
+      "scope": {
+        "description": "Restricts the check to a specific AbstractContext, as opposed to checking all of them.",
+        "type": "array",
+        "items": {
+          "includeContext": {
+            "description": "The AbstractContexts to include in the check.",
+            "type": "array",
+            "items" : {
+              "type": "AbstractContext"
+            },
+            "optional": true
+          },
+          "excludeContext": {
+            "description": "The AbstractContexts to exclude from the check.",
+            "type": "array",
+            "items" : {
+              "type": "AbstractContext"
+            },
+            "optional": true
+          },
+          "by": {
+            "type": "array",
+            "description": "Which Context's properties to look at for comparison. Normally `_type` and `id`.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "MatchContextProperty" : {
+    "documentation": [
+      { "description": "A validation rule that can be applied either to the Location Stack or the Global Contexts. Given two AbstractContexts checks whether the specified property matches.", "type": "text", "target": "primary" }
+    ],
+    "properties" : {
+      "scope": {
+        "description": "A list with items composed of two AbstractContexts and the property to compare between them.",
+        "type": "array",
+        "items": {
+          "contextA": {
+            "description": "The first AbstractContext to check.",
+            "type": "AbstractContext"
+          },
+          "contextB": {
+            "description": "The second AbstractContext to check.",
+            "type": "AbstractContext"
+          },
+          "property": {
+            "description": "The property to compare in the two AbstractContexts.",
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+
+  "LocationStack": {
+    "documentation": [
+      { "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.", "type": "text", "target": "primary" }
+    ],
+    "type": "array",
+    "items": {
+      "type":"AbstractLocationContext",
+      "discriminator": "_type"
+    },
+    "validation": {
+      "description": "TODO explain the basic requirements of a valid Location Stack",
+      "allowed_rules": [
+        "RequiresLocationContext",
+        "UniqueContext"
+      ],
+      "rules": [
+        {
+          "type": "UniqueContext",
+          "scope": [
+            {
+              "by": ["_type", "id"]
+            }
+          ]
+        }
+      ]
+    }
+  },
+
+  "GlobalContexts": {
+    "documentation": [
+      { "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.", "type": "text", "target": "primary" }
+    ],
+    "type": "array",
+    "items": {
+      "type":"AbstractGlobalContext",
+      "discriminator":"_type"
+    },
+    "validation": {
+      "description": "TODO explain the basic requirements of a valid Global Contexts",
+      "allowed_rules": [
+        "RequiresGlobalContext",
+        "UniqueContext"
+      ],
+      "rules": [
+        {
+          "type": "RequiresGlobalContext",
+          "scope": [
+            {
+              "context": "ApplicationContext"
+            }
+          ]
+        },
+        {
+          "type": "UniqueContext",
+          "scope": [
+            {
+              "excludeContexts": ["InputValueContext"],
+              "by": ["_type", "id"]
+            },
+            {
+              "includeContexts": ["InputValueContext"],
+              "by": ["_type", "id", "value"]
+            }
+          ]
+        }
+      ]
+    }
+  },
+
+  "events": {
+    "AbstractEvent": {
+      "documentation": [
+        { "description": "This is the abstract parent of all Events.", "type": "text", "target": "primary" }
+      ],
+      "properties":{
+        "_schema_version": {
+          "description": "The version of the Objectiv Taxonomy Schema used to generate this event.",
+          "type": "string",
+          "internal": true,
+          "optional": true
+        },
+        "_types": {
+          "description": "An ordered list of the parents of this Event, itself included as the last element.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "internal": true
+        },
+        "location_stack": {
+          "type": "LocationStack"
+        },
+        "global_contexts": {
+          "type": "GlobalContexts"
+        },
+        "_type": {
+          "description": "A string literal used during serialization. Hardcoded to the Event name.",
+          "type": "discriminator",
+          "internal": true
+        },
+        "id": {
+          "description": "Unique identifier for a specific instance of an event.",
+          "type": "uuid"
+        },
+        "time": {
+          "description": "Timestamp indicating when the event was generated.",
+          "type": "integer"
+        }
+      },
+      "validation": {
+        "allowed_rules": [
+          "RequiresLocationContext",
+          "RequiresGlobalContext",
+          "UniqueContext",
+          "MatchContextProperty"
+        ]
+      }
+    },
+    "ApplicationLoadedEvent": {
+      "documentation": [
+        { "description": "A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is emitted after an application (eg. SPA) or a website has finished loading.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent"
+    },
+    "FailureEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that is sent when a user action results in an error, \nlike an invalid email when sending a form.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action results in a error, like an invalid email when sending a form.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties. The message is an error code or short message captured from the occurring error. This is purely for descriptive purposes.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent",
+      "properties": {
+        "message": {
+          "description": "Failure message.",
+          "type": "string"
+        }
+      }
+    },
+    "HiddenEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that's emitted after a LocationContext has become invisible.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become invisible.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent"
+    },
+    "InputChangeEvent": {
+      "documentation": [
+        { "description": "Event triggered when user input is modified.", "type": "text", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that's triggered when user input is modified. Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value from the user.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "InteractiveEvent",
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "scope": [
+              {
+                "context": "InputContext"
+              }
+            ]
+          },
+          {
+            "type": "MatchContextProperty",
+            "scope": [
+              {
+                "contextA": "InputContext",
+                "contextB": "InputValueContext",
+                "property": "id"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "InteractiveEvent": {
+      "documentation": [
+        { "description": "The parent of Events that are the direct result of a user interaction, e.g. a button click.", "type": "text", "target": "primary" },
+        { "description": "The parent of [Events](/taxonomy/events) that are the direct result of a user interaction, e.g. a button click.", "type": "markdown", "target": "primary" }
+      ],
+      "parent": "AbstractEvent",
+      "properties": {
+        "location_stack": {
+          "type": "LocationStack",
+          "optional": false
+        }
+      },
+      "validation": {
+        "description": "TODO: explain why PathContext is validated, for example",
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "scope": [
+              {
+                "context": "RootLocationContext",
+                "position": 0
+              }
+            ]
+          },
+          {
+            "type": "RequiresGlobalContext",
+            "scope": [
+              {
+                "context": "PathContext"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "MediaEvent": {
+      "documentation": [
+        { "description": "The parent of non-interactive events that are triggered by a media player. \nIt requires a MediaPlayerContext to detail the origin of the event.", "type": "text", "target": "primary" },
+        { "description": "The parent of [non-interactive events](/taxonomy/reference/events/NonInteractiveEvent.md) that are triggered by a media player. It requires a [MediaPlayerContext](/taxonomy/reference/location-contexts/MediaPlayerContext) to detail the origin of the event.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent",
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "scope": [
+              {
+                "context": "MediaPlayerContext"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "MediaLoadEvent": {
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item completes loading.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item completes loading.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "MediaEvent"
+    },
+    "MediaPauseEvent": {
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item pauses playback.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item pauses playback.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "MediaEvent"
+    },
+    "MediaStartEvent": {
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item starts playback.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item starts playback.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "MediaEvent"
+    },
+    "MediaStopEvent": {
+      "documentation": [
+        { "description": "A MediaEvent that's emitted after a media item stops playback.", "type": "text", "target": "primary" },
+        { "description": "A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item stops playback.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "MediaEvent"
+    },
+    "NonInteractiveEvent": {
+      "documentation": [
+        { "description": "The parent of Events that are not directly triggered by a user action.", "type": "text", "target": "primary" },
+        { "description": "The parent of [Events](/taxonomy/events) that are not directly triggered by a user action.", "type": "markdown", "target": "primary" }
+      ],
+      "parent": "AbstractEvent"
+    },
+    "PressEvent": {
+      "documentation": [
+        { "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).", "type": "text", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is sent when a user presses on a pressable element (like a link, button, icon). Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value(s) from the user.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "InteractiveEvent",
+      "validation": {
+        "rules": [
+          {
+            "type": "RequiresLocationContext",
+            "scope": [
+              {
+                "context": "PressableContext"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "SuccessEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that is sent when a user action is successfully completed, \nlike sending an email form.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action is successfully completed, like sending an email form.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties. The message is an error code or short message captured from the occurring success event. This is purely for descriptive purposes.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent",
+      "properties": {
+        "message": {
+          "description": "Success message.",
+          "type": "string"
+        }
+      }
+    },
+    "VisibleEvent": {
+      "documentation": [
+        { "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.", "type": "text", "target": "primary" },
+        { "description": "A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become visible.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "NonInteractiveEvent"
+    }
+  },
+  "contexts": {
+    "AbstractContext": {
+      "documentation": [
+        { "description": "AbstractContext defines the bare minimum properties for every Context. All Contexts inherit from it.", "type": "text", "target": "primary" }
+      ],
+      "properties": {
+        "_types": {
+          "description": "An ordered list of the parents of this Context, itself included as the last element.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "internal": true
+        },
+        "id": {
+          "description":"A unique string identifier to be combined with the Context Type (`_type`) \nfor Context instance uniqueness.",
+          "type": "string"
+        },
+        "_type": {
+          "description": "A string literal used during serialization. Hardcoded to the Context name.",
+          "type": "discriminator",
+          "internal": true
+        }
+      }
+    },
+    "AbstractGlobalContext": {
+      "documentation": [
+        { "description": "This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.", "type": "text", "target": "primary" }
+      ],
+      "parent": "AbstractContext"
+    },
+    "AbstractLocationContext": {
+      "documentation": [
+        { "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.", "type": "text", "target": "primary" }
+      ],
+      "parent": "AbstractContext"
+    },
+    "ApplicationContext": {
+      "documentation": [
+        { "description": "A GlobalContext describing in which app the event happens, like a website or iOS app.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing in which app the event happens, like a website or iOS app.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all properties and factor this context. On manual creation, `id` must be provided.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext"
+    },
+    "ContentContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a logical section of the UI that contains other Location Contexts. \nEnabling Data Science to analyze this section specifically.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the navigation element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "CookieIdContext": {
+      "documentation": [
+        { "description": "Global context with information needed to reconstruct a user session.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing information needed to reconstruct a user session.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe collector will automatically set all the properties and assign a `cookie_id`.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext",
+      "properties": {
+        "cookie_id": {
+          "description": "Unique identifier from the session cookie.",
+          "type": "string"
+        }
+      }
+    },
+    "ExpandableContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI that can expand & collapse.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes a section of the UI that can expand & collapse.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the expandable element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "HttpContext": {
+      "documentation": [
+        { "description": "A GlobalContext describing meta information about the agent that sent the event.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing meta information about the agent that sent the event.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set the `_type`, `referrer` and `user_agent` properties, while the collector will automatically set the `remote_address`.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext",
+      "properties": {
+        "referrer": {
+          "description": "Full URL to HTTP referrer of the current page.",
+          "type": "string"
+        },
+        "user_agent": {
+          "description": "User-agent of the agent that sent the event.",
+          "type": "string"
+        },
+        "remote_address": {
+          "description": "(public) IP address of the agent that sent the event.",
+          "type": "string",
+          "nullable": true
+        }
+      }
+    },
+    "IdentityContext": {
+      "documentation": [
+        { "description": "A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md)  to track the identity of users across sessions, platforms, devices. Multiple can be present.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all properties when using the official Plugin. On manual creation, `id` and `value` must be provided.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext",
+      "properties": {
+        "value": {
+          "description": "The unique identifier for this user/group/entity within the scope defined by `id`.",
+          "type": "string"
+        }
+      }
+    },
+    "InputContext": {
+      "documentation": [
+        { "description": "A Location Context that describes an element that accepts user input, i.e. a form field.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes an element that accepts user input, i.e. a form field.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the input element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "InputValueContext": {
+      "documentation": [
+        { "description": "A GlobalContext containing the value of a single input element. Multiple can be present.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all properties when using Tracked Components or Taggers. On manual creation `id` and `value` must be provided.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext",
+      "properties": {
+        "value": {
+          "description": "The value of the input element.",
+          "type": "string"
+        }
+      }
+    },
+    "LinkContext": {
+      "documentation": [
+        { "description": "A PressableContext that contains a destination (href).", "type": "text", "target": "primary" },
+        { "description": "A [PressableContext](/taxonomy/reference/location-contexts/PressableContext) that contains a href.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the link element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "PressableContext",
+      "properties": {
+        "href": {
+          "description": "URL (href) the link points to.",
+          "type": "string"
+        }
+      }
+    },
+    "LocaleContext": {
+      "documentation": [
+        { "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing the users' language ([ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)) and country ([ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)).", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker can automatically set the `id` when using the official Plugin. On manual creation, `id` must be provided. \n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "description": "A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).",
+      "parent": "AbstractGlobalContext",
+      "properties": {
+        "language_code": {
+          "description": "Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.",
+          "type": "string",
+          "nullable": true
+        },
+        "country_code": {
+          "description": "Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.",
+          "type": "string",
+          "nullable": true
+        }
+      }
+    },
+    "MarketingContext": {
+      "documentation": [
+        { "description": "a context that captures marketing channel info, so users can do attribution, campaign \neffectiveness and other models.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/global-contexts) describing the marketing channel & campaign from where the user came.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the properties\nThe backend will automatically set all the properties based on the UTM parameters in the PathContext.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext",
+      "properties": {
+        "source": {
+          "description": "Identifies the advertiser, site, publication, etc.",
+          "type": "string"
+        },
+        "medium": {
+          "description": "Advertising or marketing medium: cpc, banner, email newsletter, etc.",
+          "type": "string"
+        },
+        "campaign": {
+          "description": "Individual campaign name, slogan, promo code, etc.",
+          "type": "string"
+        },
+        "term": {
+          "description": "Search keywords.",
+          "type": "string",
+          "nullable": true
+        },
+        "content": {
+          "description": "Used to differentiate similar content, or links within the same ad.",
+          "type": "string",
+          "nullable": true
+        },
+        "source_platform": {
+          "description": "To differentiate similar content, or links within the same ad.",
+          "type": "string",
+          "nullable": true
+        },
+        "creative_format": {
+          "description": "Identifies the creative used (e.g., skyscraper, banner, etc).",
+          "type": "string",
+          "nullable": true
+        },
+        "marketing_tactic": {
+          "description": "Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).",
+          "type": "string",
+          "nullable": true
+        }
+      }
+    },
+    "MediaPlayerContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI containing a media player.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes a section of the UI containing a media player.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the media player element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "NavigationContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI containing navigational elements, for example a menu.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a section of the UI containing navigational elements, for example a menu.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the navigation element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "OverlayContext": {
+      "documentation": [
+        { "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes a section of the UI that represents an overlay, i.e. a Modal.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the overlay element. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "PathContext": {
+      "documentation": [
+        { "description": "A GlobalContext describing the path where the user is when an event is sent.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing the path where the user is when an event is sent.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the `id` and `_type` based on path on web (including URL parameters, hashes) and pathname on native. When this is not possible on a specific platform, it will ask for a manual `id` and `_type` to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext"
+    },
+    "PressableContext": {
+      "documentation": [
+        { "description": "A Location Context that describes an interactive element (like a link, button, icon), \nthat the user can press and will trigger an Interactive Event.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that describes an interactive element (like a link, button, icon), that the user can press.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the `id` and `_type` based on the pressable element. When this is not possible on a specific platform, it will ask for a manual `id` and `_type` to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "RootLocationContext": {
+      "documentation": [
+        { "description": "A Location Context that uniquely represents the top-level UI location of the user.", "type": "text", "target": "primary" },
+        { "description": "A [LocationContext](/taxonomy/reference/location-contexts/overview.md) that uniquely represents the top-level UI location of the user.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of the id & type\nThe tracker will automatically set the id and _type based on the top-level UI location of the user. When this is not possible on a specific platform, it will ask for a manual id and _type to be set.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractLocationContext"
+    },
+    "SessionContext": {
+      "documentation": [
+        { "description": "A GlobalContext describing meta information about the current session.", "type": "text", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md) describing meta information about the current session.", "type": "markdown", "target": "primary" },
+        { "description": ":::info setting of properties\nThe tracker will automatically set all the properties and assign a `hit_number`.\n:::", "type": "markdown", "target": "admonition" }
+      ],
+      "parent": "AbstractGlobalContext",
+      "properties": {
+        "hit_number": {
+          "description": "Hit counter relative to the current session, this event originated in.",
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
