@@ -4,6 +4,33 @@
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
 
+export type EntityDefinition = {
+  name: string;
+  parents: EntityDefinition[];
+	children: EntityDefinition[];
+	ownProperties: [
+		{
+			type: string;
+		}
+	];
+	validation: {
+		rules: [
+			{
+				scope: {
+					context: string;
+				};
+				type: string;
+			}
+		]
+	};
+};
+
+export type RequiredContextsDefinition = {
+  name: string;
+  type: string;
+  url: string;
+};
+
 export class DocusaurusWriter extends CodeWriter {
 	constructor(writer: TextWriter) {
 		super(writer);
@@ -135,77 +162,87 @@ export class DocusaurusWriter extends CodeWriter {
 
 	  /**
    * Write a Mermaid chart definition for a specific entity.
-   * @param {string} entityName - The entity for which to generate the Mermaid graph.
-   * @param {EntityPropertyDefinition[]} entityProperties - The entity's own properties (not inherited).
-   * @param {EntityParentDefinition[]} entityParents - The entity's parents.
-   * @param {RequiredContextsDefinition[]} requiredContexts - The entity's required Contexts.
+   * @param {EntityDefinition} entityName - The entity for which to generate the Mermaid graph.
    * @param {string} [caption] - A caption for the chart.
    */
 	public writeMermaidChartForEntity(
-		entityName: string,
-		entityProperties: EntityPropertyDefinition[],
-		requiredContexts: RequiredContextsDefinition[],
-		entityParents: EntityParentDefinition[],
-		entityChildren: EntityParentDefinition[],
+		entity: EntityDefinition,
 		caption: string
 	) {
-		// get the required contexts and properties for any entity
-		function getRequiredContextsAndProperties(
-			name: string, 
-			requiredContexts: RequiredContextsDefinition[], 
-			properties: EntityPropertyDefinition[]) {
-			let cap = name;
-			const hasContextsOrProperties =
-				(requiredContexts && requiredContexts.length > 0) || 
-				(properties && Object.entries(properties).length > 0);
-			const hasContextsAndProperties =
-				(requiredContexts && requiredContexts.length > 0) && 
-				(properties && Object.entries(properties).length > 0);
-			if (hasContextsOrProperties) {
-				cap += ('["' + name);
-				if (hasContextsAndProperties) {
-					cap += ("<span class='requires_context_and_properties'>");
-				}
-
-				// write the required contexts
-				if (requiredContexts && requiredContexts.length > 0) {
-					cap += ("<span class='requires_context'>requires:<br />");
-					requiredContexts.forEach((requiredContext) => {
-						cap += (requiredContext.contextName + '<br />');
-					});
-					cap += ('</span>');
-				}
-
-				// write the properties
-				if (properties) {
-					cap += ("<span class='properties'>");
-					for (const [key, value] of Object.entries(properties)) {
-						cap += (key.toString() + ': ' + value.type + '<br />');
+		// TODO: description
+    function getRequiredContextsAndProperties(entity: EntityDefinition) {
+			
+			// first, extract required contexts for this entity
+			const rules = entity.validation?.rules;
+			let requiredContexts = Array();
+			if (rules && rules.length > 0) {
+				for (let i = 0; i < rules.length; i++) {
+					let rule = rules[i];
+					if (['RequiresLocationContext', 'RequiresGlobalContext'].includes(rule.type)) {
+						const requiredName = rule.scope[0].context;
+						const type = rule.type.replace('Requires', '');
+						const url = '../' + type.replace('Context', '-contexts/').toLowerCase() + requiredName + '.md';
+						requiredContexts.push([requiredName, type, url])
 					}
-					cap += ('</span>');
 				}
-
-				if (hasContextsAndProperties) {
-					cap += ("</span");
-				}
-				cap += ('"]');
 			}
-			return cap;
-		}
+			
+			// second, get its properties
+			const properties = entity.ownProperties;
 
+			// now, let's start writing the entity's required contexts & properties
+			let cap = entity.name;
+      const hasContextsOrProperties =
+        (requiredContexts && requiredContexts.length > 0) || 
+        (properties && Object.entries(properties).length > 0);
+      const hasContextsAndProperties =
+        (requiredContexts && requiredContexts.length > 0) && 
+        (properties && Object.entries(properties).length > 0);
+      if (hasContextsOrProperties) {
+        cap += ('["' + entity.name);
+        if (hasContextsAndProperties) {
+          cap += ("<span class='requires_context_and_properties'>");
+        }
+
+        // write the required contexts
+        if (requiredContexts && requiredContexts.length > 0) {
+          cap += ("<span class='requires_context'>requires:<br />");
+          requiredContexts.forEach((requiredContext) => {
+            cap += (requiredContext.contextName + '<br />');
+          });
+          cap += ('</span>');
+        }
+
+        // write the properties
+        if (properties) {
+          cap += ("<span class='properties'>");
+          for (const [key, value] of Object.entries(properties)) {
+            cap += (key.toString() + ': ' + value.type + '<br />');
+          }
+          cap += ('</span>');
+        }
+
+        if (hasContextsAndProperties) {
+          cap += ("</span");
+        }
+        cap += ('"]');
+      }
+      return cap;
+    }
+		
 		this.writeLine('<Mermaid chart={`');
 		this.increaseIndent();
 		this.increaseIndent();
 		this.writeLine('graph LR');
 
 		// first, get its parents in reverse order
-		const parents = entityParents.reverse();
+		const parents = entity.parents.reverse();
 		this.increaseIndent();
 		this.writeIndent();
 		for (let i = 0; i < parents.length; i++) {
 			// write the parents' required contexts & properties
 			const p = parents[i];
-			let parentCap = getRequiredContextsAndProperties(p.name, p.requiredContexts, p.properties);
+			let parentCap = getRequiredContextsAndProperties(p);
 			this.write(parentCap);
 
 			// start every relation on a new line
@@ -222,24 +259,24 @@ export class DocusaurusWriter extends CodeWriter {
 		// write this entity and its requirements & properties
 		this.writeIndent();
 		// write relation with any previous parent first, if there's more than 1 parent
-		if (entityParents.length > 1) {
-			this.write(entityParents[entityParents.length - 1].name + ' --> ');
+		if (entity.parents.length > 1) {
+			this.write(entity.parents[entity.parents.length - 1].name + ' --> ');
 		}
-		let entityCap = getRequiredContextsAndProperties(entityName, requiredContexts, entityProperties);
+		let entityCap = getRequiredContextsAndProperties(entity);
 		this.write(entityCap);
 		this.write(';');
 		this.writeEndOfLine();
 
 		// show its children as well, just with their names
-		if (entityChildren && entityChildren.length > 0) {
-			for (let i = 0; i < entityChildren.length; i++) {
-				let child = entityChildren[i];
-				this.writeLine(entityName + ' --> ' + child + ';');
+		if (entity.children && entity.children.length > 0) {
+			for (let i = 0; i < entity.children.length; i++) {
+				let child = entity.children[i];
+				this.writeLine(entity.name + ' --> ' + child + ';');
 			}
 		}
 
 		this.decreaseIndent();
-		this.writeLine('class ' + entityName + ' diagramActive');
+		this.writeLine('class ' + entity.name + ' diagramActive');
 		this.decreaseIndent();
 
 		this.writeLine('`}');
@@ -255,18 +292,18 @@ export class DocusaurusWriter extends CodeWriter {
 			// write the links to parents
 			const parent = parents[i];
 			let path = '/taxonomy/reference/'
-			if (parent.subCategory == "Abstract") {
-				path += 'abstracts/';
-			}
-			else if (parent.subCategory == "Event") {
-				path += 'events/';
-			}
-			else if (parent.subCategory == "GlobalContext") {
-				path += 'global-contexts/';
-			}
-			else if (parent.subCategory == "LocationContext") {
-				path += 'location-contexts/';
-			}
+			// if (parent.subCategory == "Abstract") {
+			// 	path += 'abstracts/';
+			// }
+			// else if (parent.subCategory == "Event") {
+			// 	path += 'events/';
+			// }
+			// else if (parent.subCategory == "GlobalContext") {
+			// 	path += 'global-contexts/';
+			// }
+			// else if (parent.subCategory == "LocationContext") {
+			// 	path += 'location-contexts/';
+			// }
 			this.writeLine('{ name: \'' + parent.name + '\', to: \'' + path + parent.name + '\' },');
 		}
 		this.decreaseIndent();

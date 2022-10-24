@@ -21,6 +21,21 @@ const destination = '../generated/docs/';
 	const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location-' : isGlobalContext ? 'global-' : '';
 	const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
 
+	// extract required contexts for this entity
+	const rules = entity.validation?.rules;
+	let requiredContexts = Array();
+	if (rules && rules.length > 0) {
+		for (let i = 0; i < rules.length; i++) {
+			let rule = rules[i];
+			if (['RequiresLocationContext', 'RequiresGlobalContext'].includes(rule.type)) {
+				const requiredName = rule.scope[0].context;
+				const type = rule.type.replace('Requires', '');
+				const url = '../' + type.replace('Context', '-contexts/').toLowerCase() + requiredName + '.md';
+				requiredContexts.push([requiredName, type, url])
+			}
+		}
+	}
+	
 	Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entity.name}.md` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
 		
@@ -33,30 +48,21 @@ const destination = '../generated/docs/';
 		docsWriter.writeLine();
 
 		// Mermaid chart
-		// docsWriter.writeMermaidChartForEntity(entityName, entityOwnProperties, requiredContexts, 
-		// entityParentsWithProperties, entityChildren, "Diagram: " + entityName);
+		docsWriter.writeMermaidChartForEntity(entity, "Diagram: " + entity.name);
 		docsWriter.writeLine();
 		
 		// for Events: write list of required contexts
-		const rules = entity.validation?.rules;
-		if (rules) {
-			docsWriter.writeH3('Requires');
-			docsWriter.writeLine();
-			if (rules.length > 0) {
-				for (let i = 0; i < rules.length; i++) {
-					let rule = rules[i];
-					if (['RequiresLocationContext', 'RequiresGlobalContext'].includes(rule.type)) {
-						const requiredName = rule.scope[0].context;
-						const type = rule.type.replace('Requires', '');
-						const url = '../' + type.replace('Context', '-contexts/').toLowerCase() + requiredName + '.md';
-						docsWriter.writeRequiredContext(requiredName, url, type);
-					}
-				}
-			} else {
-				docsWriter.writeLine('None.');
+		docsWriter.writeH3('Requires');
+		docsWriter.writeLine();
+		if (requiredContexts.length > 0) {
+			for (let i = 0; i < requiredContexts.length; i++) {
+				let rc = requiredContexts[i];
+				docsWriter.writeRequiredContext(rc[0], rc[2], rc[1]);
 			}
-			docsWriter.writeLine();
+		} else {
+			docsWriter.writeLine('None.');
 		}
+		docsWriter.writeLine();
 		
 		// create plain content rows from the given entity's properties
 		function getPropertiesRows(properties) {
