@@ -15,8 +15,6 @@ def schema() -> Response:
     url = f'{config.schema_config.validation_service_url}/schema/latest'
     response = requests.get(url)
 
-    print(response)
-
     if response.status_code == 200:
         msg = response.text
     else:
