@@ -4,7 +4,7 @@
 
 import { NameUtility, TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
-import { TypeScriptWriter } from '../writers/TypescriptWriter';
+import { TypeScriptWriter } from '../writers/TypeScriptWriter';
 import { getContexts, getEntities, getEvents } from './parser';
 
 const descriptionsType = 'text';

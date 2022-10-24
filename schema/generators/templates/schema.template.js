@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@yellicode/core");
 const templating_1 = require("@yellicode/templating");
-const TypescriptWriter_1 = require("../writers/TypescriptWriter");
+const TypeScriptWriter_1 = require("../writers/TypeScriptWriter");
 const parser_1 = require("./parser");
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
 templating_1.Generator.generate({ outputFile: '../generated/schema/abstracts.ts' }, (writer) => {
-    const tsWriter = new TypescriptWriter_1.TypeScriptWriter(writer);
+    const tsWriter = new TypeScriptWriter_1.TypeScriptWriter(writer);
     parser_1.getEntities({ isAbstract: true, sortBy: 'name' }).forEach((entity) => {
         tsWriter.writeInterfaceBlock({
             export: true,
@@ -35,7 +35,7 @@ templating_1.Generator.generate({ outputFile: '../generated/schema/abstracts.ts'
     });
 });
 templating_1.Generator.generate({ outputFile: '../generated/schema/events.ts' }, (writer) => {
-    const tsWriter = new TypescriptWriter_1.TypeScriptWriter(writer);
+    const tsWriter = new TypeScriptWriter_1.TypeScriptWriter(writer);
     tsWriter.writeImports('./abstracts', ['AbstractEvent', 'AbstractLocationContext']);
     parser_1.getEvents({ isAbstract: false, sortBy: 'name' }).forEach((entity) => {
         tsWriter.writeInterfaceBlock({
@@ -62,7 +62,7 @@ templating_1.Generator.generate({ outputFile: '../generated/schema/events.ts' },
     });
 });
 templating_1.Generator.generate({ outputFile: '../generated/schema/contexts.ts' }, (writer) => {
-    const tsWriter = new TypescriptWriter_1.TypeScriptWriter(writer);
+    const tsWriter = new TypeScriptWriter_1.TypeScriptWriter(writer);
     tsWriter.writeImports('./abstracts', ['AbstractGlobalContext', 'AbstractLocationContext']);
     parser_1.getContexts({ isAbstract: false, sortBy: 'name' }).forEach((entity) => {
         tsWriter.writeInterfaceBlock({
