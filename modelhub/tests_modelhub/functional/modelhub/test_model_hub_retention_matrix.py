@@ -4,18 +4,17 @@ Copyright 2022 Objectiv B.V.
 
 
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__
+from modelhub import __version__, ModelHub
 import pytest
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from bach.testing import assert_equals_data
 
 
 @pytest.mark.parametrize('event_type', ['ClickEvent', None])
-def test_retention_matrix_yearly(db_params, event_type):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_yearly(objectiv_df, event_type):
+    modelhub = ModelHub()
 
     data = modelhub.aggregate.retention_matrix(
-        df,
+        objectiv_df,
         time_period='yearly',
         event_type=event_type,
         percentage=False,
@@ -33,11 +32,11 @@ def test_retention_matrix_yearly(db_params, event_type):
 
 
 @pytest.mark.parametrize('percentage', [True, False])
-def test_retention_matrix_monthly(db_params, percentage):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_monthly(objectiv_df, percentage):
+    modelhub = ModelHub()
     event_type = 'ClickEvent'
 
-    data = modelhub.aggregate.retention_matrix(df,
+    data = modelhub.aggregate.retention_matrix(objectiv_df,
                                                time_period='monthly',
                                                event_type=event_type,
                                                percentage=percentage,
@@ -67,10 +66,10 @@ def test_retention_matrix_monthly(db_params, percentage):
     )
 
 
-def test_retention_matrix_weekly(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_weekly(objectiv_df):
+    modelhub = ModelHub()
     event_type = 'ClickEvent'
-    data = modelhub.aggregate.retention_matrix(df,
+    data = modelhub.aggregate.retention_matrix(objectiv_df,
                                                time_period='weekly',
                                                event_type=event_type,
                                                percentage=False,
@@ -85,10 +84,10 @@ def test_retention_matrix_weekly(db_params):
     )
 
 
-def test_retention_matrix_daily(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_daily(objectiv_df):
+    modelhub = ModelHub()
     event_type = 'ClickEvent'
-    data = modelhub.aggregate.retention_matrix(df,
+    data = modelhub.aggregate.retention_matrix(objectiv_df,
                                                time_period='daily',
                                                event_type=event_type,
                                                percentage=False,
@@ -108,21 +107,21 @@ def test_retention_matrix_daily(db_params):
     )
 
 
-def test_retention_matrix_biweekly(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_biweekly(objectiv_df):
+    modelhub = ModelHub()
     event_type = 'ClickEvent'
     with pytest.raises(ValueError, match='biweekly time_period is not available.'):
-        modelhub.aggregate.retention_matrix(df,
+        modelhub.aggregate.retention_matrix(objectiv_df,
                                             event_type=event_type,
                                             time_period='biweekly',
                                             display=False)
 
 
-def test_retention_matrix_w_start_date(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_w_start_date(objectiv_df):
+    modelhub = ModelHub()
     event_type = 'ClickEvent'
     # start_date
-    data = modelhub.aggregate.retention_matrix(df,
+    data = modelhub.aggregate.retention_matrix(objectiv_df,
                                                time_period='daily',
                                                event_type=event_type,
                                                start_date='2021-11-30',
@@ -142,10 +141,10 @@ def test_retention_matrix_w_start_date(db_params):
     )
 
 
-def test_retention_matrix_w_end_date(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_w_end_date(objectiv_df):
+    modelhub = ModelHub()
     event_type = 'ClickEvent'
-    data = modelhub.aggregate.retention_matrix(df,
+    data = modelhub.aggregate.retention_matrix(objectiv_df,
                                                time_period='daily',
                                                event_type=event_type,
                                                end_date='2021-12-02',
@@ -163,10 +162,10 @@ def test_retention_matrix_w_end_date(db_params):
     )
 
 
-def test_retention_matrix_w_start_n_end_date(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_w_start_n_end_date(objectiv_df):
+    modelhub = ModelHub()
     event_type = 'ClickEvent'
-    data = modelhub.aggregate.retention_matrix(df,
+    data = modelhub.aggregate.retention_matrix(objectiv_df,
                                                time_period='daily',
                                                event_type=event_type,
                                                start_date='2021-11-30',
@@ -184,10 +183,10 @@ def test_retention_matrix_w_start_n_end_date(db_params):
     )
 
 
-def test_retention_matrix_non_existing_event_type(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
+def test_retention_matrix_non_existing_event_type(objectiv_df):
+    modelhub = ModelHub()
     # non-existing event type
-    data = modelhub.aggregate.retention_matrix(df,
+    data = modelhub.aggregate.retention_matrix(objectiv_df,
                                                event_type='some_event',
                                                display=False)
 

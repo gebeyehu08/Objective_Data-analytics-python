@@ -4,16 +4,16 @@ Copyright 2022 Objectiv B.V.
 import pytest
 
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
+from modelhub import __version__, ModelHub
 from bach.testing import assert_equals_data
 
 
-def test_top_product_features(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, global_contexts=['application'])
-    initial_columns = df.data_columns
+@pytest.mark.parametrize("objectiv_df", ([['application']]), indirect=True)
+def test_top_product_features(objectiv_df):
+    modelhub = ModelHub()
+    initial_columns = objectiv_df.data_columns
     # without location_stack
-    tdf = modelhub.aggregate.top_product_features(df)
+    tdf = modelhub.aggregate.top_product_features(objectiv_df)
     assert len(tdf.index) == 3
 
     # index _application
@@ -49,8 +49,8 @@ def test_top_product_features(db_params):
     assert set(tdf['user_id_nunique'].array) == {1}
 
     # with location_stack
-    location_stack = df.location_stack.json[{'_type': 'LinkContext'}:]
-    tdf = modelhub.aggregate.top_product_features(df, location_stack)
+    location_stack = objectiv_df.location_stack.json[{'_type': 'LinkContext'}:]
+    tdf = modelhub.aggregate.top_product_features(objectiv_df, location_stack)
     # make sorting always the same (ignores potential case sensitivity)
     tdf['sort_str'] = tdf.reset_index().feature_nice_name.str[7:]
     assert_equals_data(
@@ -74,4 +74,4 @@ def test_top_product_features(db_params):
     )
 
     # check if any new column is added to the original dataframe
-    assert sorted(initial_columns) == sorted(df.data_columns)
+    assert sorted(initial_columns) == sorted(objectiv_df.data_columns)

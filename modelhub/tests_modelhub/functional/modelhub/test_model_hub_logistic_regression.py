@@ -6,12 +6,11 @@ Copyright 2021 Objectiv B.V.
 
 
 import pytest
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests_modelhub.functional.modelhub.logistic_regression_test_utils import LRTestHelper
 
 
-def test_fitted_model(db_params):
-    bt, modelhub = get_objectiv_dataframe_test(db_params)
+def test_fitted_model(objectiv_df):
+    bt = objectiv_df.copy()
     bt['ts'] = bt['moment'].dt.strftime('%m%d%H%m').astype(dtype=int)
     bt['session'] = bt['session_hit_number'] * 100
     bt['target'] = bt.session_hit_number > 1
@@ -27,8 +26,8 @@ def test_fitted_model(db_params):
     ('predict_proba', True, False),
     ('score', True, True),
 ])
-def test_model_methods(db_params, method_name, X, y):
-    bt, modelhub = get_objectiv_dataframe_test(db_params)
+def test_model_methods(objectiv_df, method_name, X, y):
+    bt = objectiv_df.copy()
     bt['ts'] = bt['moment'].dt.strftime('%m%d%H%m').astype(dtype=int)
     bt['session'] = bt['session_hit_number'] * 100
     bt['target'] = bt.session_hit_number > 1
