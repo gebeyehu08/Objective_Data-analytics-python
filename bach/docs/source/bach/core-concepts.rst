@@ -72,15 +72,18 @@ and `\_`, that start with `a-z`, and a maximum length of 63 characters.
 
 Use a data sample to limit the data queried
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Querying big datasets can be slow on less scalable databases, and on cloud databases it can be very expensive.
+Querying big datasets can be very costly in both time and money.
 To get a smaller sample of the current DataFrame, use :py:meth:`DataFrame.get_sample()`:
 
 .. code-block:: console
 
     table_name = 'example-project.writable_dataset.table_name'
-    df.get_sample(table_name, sample_percentage=10)
+    df = df.get_sample(table_name, sample_percentage=10)
 
-This creates a permanent table, so make sure you have a write access.
+This creates a permanent table with 10% of the current data of the DataFrame. The DataFrame `df` will use
+this new table in all later operations. One can use :py:meth:`DataFrame.get_unsampled()` to switch the
+source table for the DataFrame back to the original table, without undoing any of the operations that have
+been done since the sample was created.
 
 Use temporary tables to limit query complexity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

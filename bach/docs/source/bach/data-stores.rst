@@ -14,11 +14,10 @@ For information on how to setup Objectiv with each of these data stores see the 
 `PostgreSQL </docs/tracking/collector/postgresql>`__, `AWS Athena </docs/tracking/collector/amazon-s3>`__,
 or `Google BigQuery </docs/tracking/collector/google-bigquery>`__
 
-Bach works the same, regardless of the underlying database. Generally, anything that works on one supported
+Bach works the same, regardless of the underlying database. Generally, anything that works on a supported
 database will work on the other databases too; no code changes needed. There are some notable exceptions to
-this, which are caused by limitations in the underlying database platforms. Below we list the major
-platform-specific exceptions, and other things to keep in mind when using Bach with the different supported
-databases.
+this. Below we list the major platform-specific exceptions, and other things to keep in mind when using Bach
+with the different supported databases.
 
 
 AWS Athena
@@ -52,7 +51,7 @@ writing resulting data to a table and inspecting that table.
 **Bach Series names with special characters get encoded.**
 Athena limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See `the tip on using simple series names </docs/modeling/bach/core-concepts/#use-simple-series-names-for-cleaner-sql>`_
+See the `tip on using simple series names </docs/modeling/bach/core-concepts/#use-simple-series-names-for-cleaner-sql>`_
 
 
 Google BigQuery
@@ -65,7 +64,7 @@ When running Bach on BigQuery, one should be aware of the following:
 **Bach Series names with special characters get encoded.**
 Big Query limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See `the tip on using simple series names </docs/modeling/bach/core-concepts/#use-simple-series-names-for-cleaner-sql>`_
+See the `tip on using simple series names </docs/modeling/bach/core-concepts/#use-simple-series-names-for-cleaner-sql>`_
 
 **BigQuery cannot execute very complex queries**
 Sometimes complex operations on Bach cannot be executed on BigQuery and you might get an error:
