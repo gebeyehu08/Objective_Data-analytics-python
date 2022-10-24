@@ -58,7 +58,7 @@ try:
 
         # Query all events since 2022-03-01, we use this cut-off to avoid importing broken/invalid events
         # due to breaking schema changes before this date. (Last one was february)
-        query = f"SELECT value FROM data WHERE day >= '2022-03-01' AND day < '2022-10-24'"
+        query = f"SELECT value FROM data WHERE day >= '2022-03-01' AND day < '2022-10-20'"
         cur.execute(query)
 
         count = 0
