@@ -94,7 +94,7 @@ operations.
 
     df = df.materialize(materialization='temp_table')
 
-Calling :ref:py:`DataFrame.materialize()` does not cause a direct call to the database, but rather changes the SQL
+Calling :py:meth:`DataFrame.materialize()` does not cause a direct call to the database, but rather changes the SQL
 that will be generated later on. That SQL will be split in parts: first the query to create a temporary table
 with the current state of the DataFrame, and then the SQL for the following operations. In some cases this
 can help the database a lot.
