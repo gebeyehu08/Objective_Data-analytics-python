@@ -31,31 +31,31 @@ const destination = '../generated/docs/';
     // TODO implement writeMermaid in docsWriter, e.g. writeMermaid({chart, caption, links})
     // TODO implement writeTable in docsWriter, e.g. writeTable({title, rows:[cell1, cell2, ...cellN]})
 
-    if(entity.parent) {
+    if (entity.parent) {
       docsWriter.writeH3('Parent');
       docsWriter.writeLine(entity.parent.name);
       docsWriter.writeEndOfLine();
     }
 
-    if(entity.parents.length) {
+    if (entity.parents.length) {
       docsWriter.writeH3('All Parents');
       docsWriter.writeLine(entity.parents.map(({ name }) => name).join(' > '));
       docsWriter.writeEndOfLine();
     }
 
-    if(entity.ownChildren.length) {
+    if (entity.ownChildren.length) {
       docsWriter.writeH3('Own Children');
       docsWriter.writeLine(entity.ownChildren.map(({ name }) => name).join(', '));
       docsWriter.writeEndOfLine();
     }
 
-    if(entity.children.length) {
+    if (entity.children.length) {
       docsWriter.writeH3('All Children');
       docsWriter.writeLine(entity.children.map(({ name }) => name).join(', '));
       docsWriter.writeEndOfLine();
     }
 
-    if(entity.ownProperties.length) {
+    if (entity.ownProperties.length) {
       docsWriter.writeH3('Own Properties');
 
       entity.ownProperties.forEach((entityProperty) => {
@@ -68,7 +68,7 @@ const destination = '../generated/docs/';
       docsWriter.writeEndOfLine();
     }
 
-    if(entity.inheritedProperties.length) {
+    if (entity.inheritedProperties.length) {
       docsWriter.writeH3('Inherited Properties');
 
       entity.inheritedProperties.forEach((entityProperty) => {
@@ -81,7 +81,7 @@ const destination = '../generated/docs/';
       docsWriter.writeEndOfLine();
     }
 
-    if(entity.properties.length) {
+    if (entity.properties.length) {
       docsWriter.writeH3('All Properties');
 
       entity.properties.forEach((entityProperty) => {
