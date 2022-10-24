@@ -535,7 +535,7 @@ class Aggregate:
         """
         A simple helper function to calculate the top root locations by unique users. This can be used to
         get a quick overview of what locations are interesting for visualization with
-        :py:meth:`ModelHub.visualize_location_stack`. 
+        :py:meth:`ModelHub.visualize_location_stack`.
         """
 
         s = self._mh.visualize_location_stack(
