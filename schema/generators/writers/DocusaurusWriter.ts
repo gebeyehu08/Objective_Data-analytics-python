@@ -3,6 +3,7 @@
  */
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
+import { link } from 'fs';
 
 export type EntityDefinition = {
 	name: string;
@@ -28,6 +29,7 @@ export type EntityDefinition = {
 			}
 		]
 	};
+	_parent: string;
 };
 
 export type RequiredContextsDefinition = {
@@ -241,9 +243,8 @@ export class DocusaurusWriter extends CodeWriter {
 		this.writeIndent();
 		for (let i = 0; i < parents.length; i++) {
 			// parents' required contexts & properties
-			const p = parents[i];
-			let parentCap = getRequiredContextsAndProperties(p);
-			this.write(parentCap);
+			const parentRcap = getRequiredContextsAndProperties(parents[i]);
+			this.write(parentRcap);
 			// start every relation on a new line
 			if ((i > 0) && (i % 2 == 1)) {
 				this.write(';');
@@ -251,7 +252,7 @@ export class DocusaurusWriter extends CodeWriter {
 				// write this parent's name again if there are more parents
 				if (parents.length > i) {
 					this.writeIndent();
-					this.write(parentCap + ' --> ');
+					this.write(parentRcap + ' --> ');
 				}
 			} else {
 				if (i < parents.length) {
@@ -262,16 +263,18 @@ export class DocusaurusWriter extends CodeWriter {
 
 		// write this entity and its requirements & properties
 		this.writeIndent();
-		let entityCap = getRequiredContextsAndProperties(entity);
-		this.write(entityCap + ';');
+		let entityRcap = getRequiredContextsAndProperties(entity);
+		this.write(entityRcap + ';');
 		this.writeEndOfLine();
 
-		// show its children as well, just with their names
-		if (entity.children && entity.children.length > 0) {
-			for (let i = 0; i < entity.children.length; i++) {
-				// TODO: show proper inheritance instead of just all children
-				let child = entity.children[i];
-				this.writeLine(entity.name + ' --> ' + child.name + ';');
+		// show its children as well
+		const children = entity.children;
+		if (children && children.length > 0) {
+			for (let i = 0; i < children.length; i++) {
+				const child = children[i];
+				let childRcap = getRequiredContextsAndProperties(child);
+				const parent = child._parent;
+				this.writeLine((parent != entity.name ? child._parent : entity.name) + ' --> ' + childRcap + ';');
 			}
 		}
 
@@ -282,32 +285,40 @@ export class DocusaurusWriter extends CodeWriter {
 		this.writeLine('`}');
 		this.writeLine('caption="' + caption + '"');
 		this.writeLine('baseColor="blue"');
+		
+		// get formatted links to given set of entities
+		function getFormattedLinksToEntities(entities) {
+			let links = '';
+			for (let i = 0; i < entities.length; i++) {
+				const entity = entities[i];
+				let path = '/taxonomy/reference/'
+				if (entity.isAbstract) {
+					path += 'abstracts/';
+				}
+				else if (entity.isEvent) {
+					path += 'events/';
+				}
+				// TODO: get whether it's a GlobalContext or LocationContext
+				// else if (entity.isContext && TODO == "GlobalContext") {
+				// 	path += 'global-contexts/';
+				// }
+				// else if (entity.isContext && TODO == "LocationContext") {
+				// 	path += 'location-contexts/';
+				// }
+				links += '{ name: \'' + entity.name + '\', to: \'' + path + entity.name + '\' }, ';
+			}
+			return links;
+		}
 
-		// write links to elements for all parents
-		if (parents.length > 0) {
+		// write links to elements for all parents & children
+		if (parents.length > 0 || children.length > 0) {
 			this.writeLine('links={[');
 		}
 		this.increaseIndent();
-		for (let i = 0; i < parents.length; i++) {
-			const parent = parents[i];
-			let path = '/taxonomy/reference/'
-			if (parent.isAbstract) {
-				path += 'abstracts/';
-			}
-			else if (parent.isEvent) {
-				path += 'events/';
-			}
-			// TODO: get whether it's a GlobalContext or LocationContext
-			// else if (parent.isContext && TODO == "GlobalContext") {
-			// 	path += 'global-contexts/';
-			// }
-			// else if (parent.isContext && TODO == "LocationContext") {
-			// 	path += 'location-contexts/';
-			// }
-			this.writeLine('{ name: \'' + parent.name + '\', to: \'' + path + parent.name + '\' },');
-		}
+		this.write(getFormattedLinksToEntities(parents));
+		this.write(getFormattedLinksToEntities(children));
 		this.decreaseIndent();
-		if (parents.length > 0) {
+		if (parents.length > 0 || children.length > 0) {
 			this.writeLine(']}');
 		}
 

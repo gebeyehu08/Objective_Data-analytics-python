@@ -36,7 +36,7 @@ const destination = '../generated/docs/';
 			}
 		}
 	}
-	
+
 	Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entity.name}.md` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
 
