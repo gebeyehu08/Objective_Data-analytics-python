@@ -7,7 +7,8 @@ from typing import Dict, Optional, Union, cast
 from pydantic import BaseSettings, root_validator
 
 from checklock_holmes.models.env_models import (
-    DEFAULT_METABASE_ENV, BaseDBEnvModel, BigQueryEnvModel, MetaBaseEnvModel
+    DEFAULT_METABASE_ENV, AWSEnvModel, BaseDBEnvModel, BigQueryEnvModel,
+    MetaBaseEnvModel
 )
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
@@ -18,6 +19,8 @@ class Settings(BaseSettings):
     bq_db: Optional[BigQueryEnvModel] = None
 
     metabase: MetaBaseEnvModel = DEFAULT_METABASE_ENV
+
+    aws: Optional[AWSEnvModel] = None
 
     class Config:
         env_file = './.env'

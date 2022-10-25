@@ -39,6 +39,13 @@ class MetaBaseEnvModel(BaseEnvModel):
     collection_id: str
 
 
+class AWSEnvModel(BaseEnvModel):
+    bucket_name: str
+    region_name: str
+    access_key_id: str
+    secret_access_key: str
+
+
 DEFAULT_METABASE_ENV = MetaBaseEnvModel(
     url="http://localhost:3000",
     web_url="http://localhost:3000",

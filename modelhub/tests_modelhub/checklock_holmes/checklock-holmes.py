@@ -28,9 +28,8 @@ BQ_DB__CREDENTIALS_PATH
 
 Copyright 2022 Objectiv B.V.
 """
-import datetime
-
 import asyncio
+import datetime
 import itertools
 from typing import List
 
@@ -43,7 +42,7 @@ from checklock_holmes.models.nb_checker_models import (
 from checklock_holmes.nb_checker import NoteBookChecker
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
-    DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR, DATE_FORMAT
+    DATE_FORMAT, DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR
 )
 from checklock_holmes.utils.helpers import (
     display_check_results, get_github_issue_filename, store_github_issue,
