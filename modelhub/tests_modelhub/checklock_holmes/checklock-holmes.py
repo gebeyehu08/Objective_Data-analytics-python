@@ -40,13 +40,13 @@ from checklock_holmes.models.nb_checker_models import (
     NoteBookCheck, NoteBookCheckSettings, NoteBookMetadata
 )
 from checklock_holmes.nb_checker import NoteBookChecker
+from checklock_holmes.reporting.utils import (
+    display_check_results, get_github_issue_filename, store_github_issue,
+    store_nb_script
+)
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
     DATE_FORMAT, DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR
-)
-from checklock_holmes.utils.helpers import (
-    display_check_results, get_github_issue_filename, store_github_issue,
-    store_nb_script
 )
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
