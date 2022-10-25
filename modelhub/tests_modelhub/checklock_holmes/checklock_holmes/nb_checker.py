@@ -11,15 +11,15 @@ from papermill.clientwrap import PapermillNotebookClient
 from papermill.engines import NBClientEngine, NotebookExecutionManager
 from papermill.iorw import load_notebook_node
 
+from checklock_holmes.errors.exceptions import CuriousIncident
 from checklock_holmes.models.nb_checker_models import (
     CellError, CellTiming, NoteBookCheck, NoteBookMetadata
 )
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.cell_tags import CellTags
 from checklock_holmes.utils.constants import (
-    NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE, DATE_FORMAT
+    DATE_FORMAT, NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE
 )
-from checklock_holmes.utils.helpers import CuriousIncident
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
