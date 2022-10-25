@@ -28,9 +28,8 @@ BQ_DB__CREDENTIALS_PATH
 
 Copyright 2022 Objectiv B.V.
 """
-import datetime
-
 import asyncio
+import datetime
 import itertools
 from typing import List
 
@@ -43,13 +42,13 @@ from checklock_holmes.models.nb_checker_models import (
 from checklock_holmes.nb_checker import NoteBookChecker
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
-    DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR, DATE_FORMAT
+    DATE_FORMAT, DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR
 )
 from checklock_holmes.utils.helpers import (
     display_check_results, get_github_issue_filename, store_github_issue,
     store_nb_script
 )
-from checklock_holmes.utils.supported_engines import SupportedEngine
+from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
 async def _check_notebook_per_engine(
@@ -112,7 +111,7 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
 
 if __name__ == '__main__':
     cli_docstring = __doc__.format(
-        supported_engines=', '.join([engine for engine in SupportedEngine]),
+        supported_engines=', '.join([engine for engine in SupportedDBEngine]),
         default_nb_dir=DEFAULT_NOTEBOOKS_DIR,
         default_github_issues_dir=DEFAULT_GITHUB_ISSUES_DIR,
     )
