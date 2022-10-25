@@ -1,33 +1,41 @@
 # FailureEvent
+
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action results in a error, like an invalid email when sending a form.
 
-### Parent
-NonInteractiveEvent
+import Mermaid from '@theme/Mermaid'
 
-### All Parents
-AbstractEvent > NonInteractiveEvent
+<Mermaid chart={`
+    graph LR
+      AbstractEvent["AbstractEvent<span class='properties'>_schema_version: string<br />_types: array<br />location_stack: LocationStack<br />global_contexts: GlobalContexts<br />_type: discriminator<br />id: uuid<br />time: integer<br /></span>"] --> NonInteractiveEvent;
+      NonInteractiveEvent -->       FailureEvent["FailureEvent<span class='properties'>message: string<br /></span>"];
+    class FailureEvent diagramActive
+  `}
+  caption="Diagram: FailureEvent inheritance"
+  baseColor="blue"
+  links={[
+{ name: 'AbstractEvent', to: '/taxonomy/reference/abstracts/AbstractEvent' },{ name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' },  ]}
+/>
 
-### Own Properties
-`string` message: Failure message.
+### Requires
 
+None.
+
+### Properties
+
+|             | type   | description      | contains |
+|:------------|:-------|:-----------------|:---------|
+| **message** | string | Failure message. |          |
 ### Inherited Properties
-`LocationStack` location_stack: The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-`GlobalContexts` global_contexts: Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-`uuid` id: Unique identifier for a specific instance of an event.
-`integer` time: Timestamp indicating when the event was generated.
 
-### All Properties
-`LocationStack` location_stack: The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-`GlobalContexts` global_contexts: Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-`uuid` id: Unique identifier for a specific instance of an event.
-`integer` time: Timestamp indicating when the event was generated.
-`string` message: Failure message.
+|                                    | type           | description                                                                                                                                                                                                                                                                  | contains                     |
+|:-----------------------------------|:---------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------|
+| **\_schema\_version _[optional]_** | string         | The version of the Objectiv Taxonomy Schema used to generate this event.                                                                                                                                                                                                     |                              |
+| **\_types**                        | array          | An ordered list of the parents of this Event, itself included as the last element.                                                                                                                                                                                           | string                       |
+| **location\_stack**                | LocationStack  | The location stack is an ordered list (stack), that contains a hierarchy of location contexts that deterministically describes where an event took place from global to specific. The whole stack (list) is needed to exactly pinpoint where in the UI the event originated. |                              |
+| **global\_contexts**               | GlobalContexts | Global contexts add global / general information about the event. They carry information that is not related to where the Event originated (location), such as device, platform or business data.                                                                            |                              |
+| **\_type**                         | discriminator  | A string literal used during serialization. Hardcoded to the Event name.                                                                                                                                                                                                     | EventTypes.enum.FailureEvent |
+| **id**                             | uuid           | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                       |                              |
+| **time**                           | integer        | Timestamp indicating when the event was generated.                                                                                                                                                                                                                           |                              |
 
 :::info setting of properties
 The tracker will automatically set all the properties. The message is an error code or short message captured from the occurring error. This is purely for descriptive purposes.
