@@ -39,8 +39,8 @@ class MetaBaseEnvModel(BaseEnvModel):
     collection_id: str
 
 
-class AWSEnvModel(BaseEnvModel):
-    bucket_name: str
+class AWSBucketEnvModel(BaseEnvModel):
+    name: str
     region_name: str
     access_key_id: str
     secret_access_key: str
