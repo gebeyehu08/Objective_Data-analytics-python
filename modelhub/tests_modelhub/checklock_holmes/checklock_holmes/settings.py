@@ -7,7 +7,8 @@ from typing import Dict, Optional, Union, cast
 from pydantic import BaseSettings, root_validator
 
 from checklock_holmes.models.env_models import (
-    DEFAULT_METABASE_ENV, BaseDBEnvModel, BigQueryEnvModel, MetaBaseEnvModel
+    DEFAULT_METABASE_ENV, AWSBucketEnvModel, BaseDBEnvModel, BigQueryEnvModel,
+    MetaBaseEnvModel
 )
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
@@ -18,6 +19,8 @@ class Settings(BaseSettings):
     bq_db: Optional[BigQueryEnvModel] = None
 
     metabase: MetaBaseEnvModel = DEFAULT_METABASE_ENV
+
+    aws_bucket: Optional[AWSBucketEnvModel] = None
 
     class Config:
         env_file = './.env'
@@ -55,7 +58,7 @@ class Settings(BaseSettings):
             if not _env_base_db or not _env_base_db.dsn:
                 warnings.warn(
                     message=(
-                        f'Cannot run checks for Postgres. Please define {base_db.upper()}__DSN '
+                        f'Cannot run checks for {base_db}. Please define {base_db.upper()}__DSN '
                         'variable in .env file'
                     ),
                     category=UserWarning,
