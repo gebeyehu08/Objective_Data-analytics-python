@@ -3,7 +3,6 @@
  */
 
 import { CodeWriter, TextWriter } from '@yellicode/core';
-import { link } from 'fs';
 
 export type EntityDefinition = {
 	name: string;
@@ -15,7 +14,10 @@ export type EntityDefinition = {
 	ownProperties: [
 		{
 			name: string;
+			description: string;
 			type: string;
+			internal: boolean;
+			optional: boolean;
 			nullable: boolean;
 		}
 	];
@@ -149,14 +151,13 @@ export class DocusaurusWriter extends CodeWriter {
 			}
 		});
 
-		// now let's first write the heder
+		// now let's first write the header and then the separator
 		this.writeTableRow(columnNames, columnLengths);
-		// then write the header separator
-		let headerSeperatorColumns = [];
+		let headerSeparatorColumns = [];
 		columnNames.forEach((column) => {
-			headerSeperatorColumns.push('');
+			headerSeparatorColumns.push('');
 		});
-		this.writeTableRow(headerSeperatorColumns, columnLengths, ':', '-', '-');
+		this.writeTableRow(headerSeparatorColumns, columnLengths, ':', '-', '-');
 
 		// finally, write the table content
 		rows.forEach((row) => {
@@ -175,8 +176,11 @@ export class DocusaurusWriter extends CodeWriter {
 		entity: EntityDefinition,
 		caption: string
 	) {
-		
-		// generate the HTML for requiredContexts and properties for a given entity
+		/**
+		 * Generate the HTML for requiredContexts and properties for a given entity.
+		 * @param entity The entity to get its required contexts & properties from.
+		 * @returns {string} - Formatted HTML with contexts & properties.
+		 */
 		function getRequiredContextsAndProperties(entity: EntityDefinition) {
 			// first, extract the requiredContexts for this entity, from the validation rules
 			const rules = entity.validation?.rules;
@@ -222,7 +226,9 @@ export class DocusaurusWriter extends CodeWriter {
 				if (properties) {
 					cap += ("<span class='properties'>");
 					for (const [key, value] of Object.entries(properties)) {
-						cap += (value.name + (value.nullable ? '?' : '') + ': ' + value.type + '<br />');
+						if (!value.internal) {
+							cap += (value.name + (value.nullable ? '?' : '') + ': ' + value.type + '<br />');
+						}
 					}
 					cap += ('</span>');
 				}
@@ -232,6 +238,7 @@ export class DocusaurusWriter extends CodeWriter {
 			return cap;
 		}
 		
+		// now start writing the chart
 		this.writeLine('<Mermaid chart={`');
 		this.increaseIndent();
 		this.increaseIndent();
@@ -242,7 +249,6 @@ export class DocusaurusWriter extends CodeWriter {
 		this.increaseIndent();
 		this.writeIndent();
 		for (let i = 0; i < parents.length; i++) {
-			// parents' required contexts & properties
 			const parentRcap = getRequiredContextsAndProperties(parents[i]);
 			this.write(parentRcap);
 			// start every relation on a new line
@@ -286,7 +292,11 @@ export class DocusaurusWriter extends CodeWriter {
 		this.writeLine('caption="' + caption + '"');
 		this.writeLine('baseColor="blue"');
 		
-		// get formatted links to given set of entities
+		/**
+		 * Get formatted links to a given set of entities.
+		 * @param entities The entities to generate links for.
+		 * @returns {string} A formatted set of links to the given entities.
+		 */
 		function getFormattedLinksToEntities(entities) {
 			let links = '';
 			for (let i = 0; i < entities.length; i++) {

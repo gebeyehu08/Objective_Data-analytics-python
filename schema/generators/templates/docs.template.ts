@@ -9,6 +9,18 @@ import { getContexts, getEvents } from './parser';
 
 const destination = '../generated/docs/';
 
+export type PropertiesDefinition = {
+	name: string;
+	description: string;
+	type: string;
+	internal: boolean;
+	optional: boolean;
+	nullable: boolean;
+	items: {
+		type: string;
+	};
+};
+
 [...getContexts(), ...getEvents()].forEach((entity) => {
 	const entityCategory = entity.isEvent ? 'event' : 'context';
 	const primaryDescription = entity.getDescription({ type: 'markdown', target: 'primary' });
@@ -22,7 +34,6 @@ const destination = '../generated/docs/';
 	const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
 
 	// extract required contexts for this entity
-	// TODO: turn into a proper objectiv with keys instead of an array
 	const rules = entity.validation?.rules;
 	let requiredContexts = Array();
 	if (rules && rules.length > 0) {
@@ -32,7 +43,11 @@ const destination = '../generated/docs/';
 				const requiredName = rule.scope[0].context;
 				const type = rule.type.replace('Requires', '');
 				const url = '../' + type.replace('Context', '-contexts/').toLowerCase() + requiredName + '.md';
-				requiredContexts.push([requiredName, type, url])
+				requiredContexts.push({
+					name: requiredName, 
+					type: type, 
+					url: url
+				})
 			}
 		}
 	}
@@ -59,7 +74,7 @@ const destination = '../generated/docs/';
 			if (requiredContexts.length > 0) {
 				for (let i = 0; i < requiredContexts.length; i++) {
 					let rc = requiredContexts[i];
-					docsWriter.writeRequiredContext(rc[0], rc[2], rc[1]);
+					docsWriter.writeRequiredContext(rc.name, rc.url, rc.type);
 				}
 			} else {
 				docsWriter.writeLine('None.');
@@ -67,13 +82,20 @@ const destination = '../generated/docs/';
 			docsWriter.writeLine();
 		}
 
-		// create plain content rows from the given entity's properties
-		function getPropertiesRows(properties) {
+		/**
+		 * Create plain content rows from the given entity's properties.
+		 * @param properties The entity's properties.
+		 * @returns {Array<string[]>} - Rows of plain, formatted content.
+		 */
+		function getPropertiesRows(properties: Array<PropertiesDefinition>) {
 			let rows = Array() as [string[]];
 			properties.forEach((p) => {
-				let name = '**' + p.name.replaceAll('_', '\\_') + ((p.optional || p.nullable) ? ' _[optional]_' : '') 
-					+ '**';
-				rows.push([name, p.type, p.description.replace(/(\r\n|\n|\r)/gm, ""), p.value]);
+				const type = (p.type == "array") ? (p.type + "<" + p.items.type + ">") : p.type;
+				if(!p.internal) {
+					let name = '**' + p.name.replaceAll('_', '\\_') 
+						+ ((p.optional || p.nullable) ? ' _[optional]_' : '') + '**';
+					rows.push([name, type, p.description.replace(/(\r\n|\n|\r)/gm, "")]);
+				}
 			});
 			return rows;
 		}
@@ -82,15 +104,13 @@ const destination = '../generated/docs/';
 		if (entity.ownProperties.length > 0) {
 			docsWriter.writeH3('Properties');
 			docsWriter.writeLine();
-			docsWriter.writeTable(['', 'type', 'description', 'contains'], 
-				getPropertiesRows(entity.ownProperties));
+			docsWriter.writeTable(['', 'type', 'description'], getPropertiesRows(entity.ownProperties));
 		}
 
 		// table of inherited properties
 		docsWriter.writeH3('Inherited Properties');
 		docsWriter.writeLine();
-		docsWriter.writeTable(['', 'type', 'description', 'contains'], 
-			getPropertiesRows(entity.inheritedProperties));
+		docsWriter.writeTable(['', 'type', 'description'], getPropertiesRows(entity.inheritedProperties));
 
 		docsWriter.writeEndOfLine();
 

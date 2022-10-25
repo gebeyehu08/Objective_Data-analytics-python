@@ -6,7 +6,7 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext["AbstractContext<span class='properties'>_types: array<br />id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br /></span>"] --> AbstractGlobalContext;
       AbstractGlobalContext -->       LocaleContext["LocaleContext<span class='properties'>language_code?: string<br />country_code?: string<br /></span>"];
     class LocaleContext diagramActive
   `}
@@ -18,17 +18,15 @@ import Mermaid from '@theme/Mermaid'
 
 ### Properties
 
-|                                 | type   | description                                                                   | contains |
-|:--------------------------------|:-------|:------------------------------------------------------------------------------|:---------|
-| **language\_code _[optional]_** | string | Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.         |          |
-| **country\_code _[optional]_**  | string | Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc. |          |
+|                                 | type   | description                                                                   |
+|:--------------------------------|:-------|:------------------------------------------------------------------------------|
+| **language\_code _[optional]_** | string | Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.         |
+| **country\_code _[optional]_**  | string | Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc. |
 ### Inherited Properties
 
-|             | type          | description                                                                                                | contains                        |
-|:------------|:--------------|:-----------------------------------------------------------------------------------------------------------|:--------------------------------|
-| **\_types** | array         | An ordered list of the parents of this Context, itself included as the last element.                       | string                          |
-| **id**      | string        | A unique string identifier to be combined with the Context Type (`_type`) for Context instance uniqueness. |                                 |
-| **\_type**  | discriminator | A string literal used during serialization. Hardcoded to the Context name.                                 | ContextTypes.enum.LocaleContext |
+|        | type   | description                                                                                                |
+|:-------|:-------|:-----------------------------------------------------------------------------------------------------------|
+| **id** | string | A unique string identifier to be combined with the Context Type (`_type`) for Context instance uniqueness. |
 
 :::info setting of properties
 The tracker can automatically set the `id` when using the official Plugin. On manual creation, `id` must be provided. 

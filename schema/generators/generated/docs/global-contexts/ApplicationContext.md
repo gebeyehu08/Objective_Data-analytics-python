@@ -6,7 +6,7 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractContext["AbstractContext<span class='properties'>_types: array<br />id: string<br />_type: discriminator<br /></span>"] --> AbstractGlobalContext;
+      AbstractContext["AbstractContext<span class='properties'>id: string<br /></span>"] --> AbstractGlobalContext;
       AbstractGlobalContext -->       ApplicationContext;
     class ApplicationContext diagramActive
   `}
@@ -18,11 +18,9 @@ import Mermaid from '@theme/Mermaid'
 
 ### Inherited Properties
 
-|             | type          | description                                                                                                | contains                             |
-|:------------|:--------------|:-----------------------------------------------------------------------------------------------------------|:-------------------------------------|
-| **\_types** | array         | An ordered list of the parents of this Context, itself included as the last element.                       | string                               |
-| **id**      | string        | A unique string identifier to be combined with the Context Type (`_type`) for Context instance uniqueness. |                                      |
-| **\_type**  | discriminator | A string literal used during serialization. Hardcoded to the Context name.                                 | ContextTypes.enum.ApplicationContext |
+|        | type   | description                                                                                                |
+|:-------|:-------|:-----------------------------------------------------------------------------------------------------------|
+| **id** | string | A unique string identifier to be combined with the Context Type (`_type`) for Context instance uniqueness. |
 
 :::info setting of properties
 The tracker will automatically set all properties and factor this context. On manual creation, `id` must be provided.
