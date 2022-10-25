@@ -22,11 +22,11 @@ from bach.sql_model import BachSqlModel
 from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrAlias,\
     AllSupportedLiteralTypes, value_to_series_type
 from bach.utils import (
-    is_valid_column_name, validate_node_column_references_in_sorting_expressions, SortColumn
+    validate_node_column_references_in_sorting_expressions, SortColumn, get_sql_column_name
 )
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
-from sql_models.util import is_bigquery, DatabaseNotSupportedException
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_athena, is_postgres
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
@@ -196,8 +196,9 @@ class Series(ABC):
             raise ValueError(f'Series and aggregation index do not match: {group_by.index} != {index}')
         if not group_by and expression.has_aggregate_function:
             raise ValueError('Expression has an aggregation function set, but there is no group_by')
-        if not is_valid_column_name(dialect=engine.dialect, name=name):
-            raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
+        # Make sure that name can be converted to a valid sql-column name. get_sql_column_name() will
+        # raise an exception if the name cannot be converted to a valid sql column name
+        get_sql_column_name(dialect=engine.dialect, name=name)
 
         for value in index.values():
             if value.base_node != base_node:
@@ -209,7 +210,11 @@ class Series(ABC):
                 )
 
         if order_by:
-            validate_node_column_references_in_sorting_expressions(node=base_node, order_by=order_by)
+            validate_node_column_references_in_sorting_expressions(
+                dialect=engine.dialect,
+                node=base_node,
+                order_by=order_by
+            )
 
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
@@ -623,7 +628,8 @@ class Series(ABC):
     def get_column_expression(self, table_alias: Optional[str] = None) -> Expression:
         """ INTERNAL: Get the column expression for this Series """
         expression = self.expression.resolve_column_references(self.engine.dialect, table_alias)
-        return Expression.construct_expr_as_name(expression, self.name)
+        dialect = self.engine.dialect
+        return Expression.construct_expr_as_sql_name(dialect=dialect, expr=expression, name=self.name)
 
     def _get_supported(
         self,
@@ -726,7 +732,7 @@ class Series(ABC):
         }
         if (
             other.base_node == left.base_node
-            and not set(self.base_node.columns) >= {other.name, f'{other.name}__other'}
+            and not set(self.base_node.series_names) >= {other.name, f'{other.name}__other'}
             and f'{other.name}__other' in df.all_series
         ):
             # column was referenced before from right node
@@ -1224,7 +1230,18 @@ class Series(ABC):
         return self._arithmetic_operation(other, 'div', '{} / {}')
 
     def __floordiv__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
-        return self._arithmetic_operation(other, 'floordiv', 'floor({} / {})', dtype='int64')
+        result = self._arithmetic_operation(other, 'floordiv', 'floor({} / {})', dtype='int64')
+        if is_athena(self.engine):
+            # need to explicitly cast as integer, since PrestoDB's floor function
+            # returns the same type as the input
+            # https://prestodb.io/docs/current/functions/math.html?highlight=floor#floor
+            from bach.series import SeriesInt64
+            result = result.copy_override(
+                expression=SeriesInt64.dtype_to_expression(
+                    self.engine.dialect, source_dtype='float64', expression=result.expression,
+                )
+            )
+        return result
 
     def __mul__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         return self._arithmetic_operation(other, 'mul', '{} * {}')
@@ -1594,12 +1611,29 @@ class Series(ABC):
             For more information:
             https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_top_count
         """
-        agg_expr = f'mode() within group (order by {{}})'
-        if is_bigquery(self.engine):
+        if is_postgres(self.engine):
+            agg_expr = f'mode() within group (order by {{}})'
+        elif is_athena(self.engine):
+            # PrestoDB currently does not support mode or any approximation to it
+            # Therefore we should calculate manually by building a map with the occurrences
+            # per value (histogram) and get the key with the highest value
+            agg_expr = f"""
+                reduce(
+                    map_entries(histogram({{}})),
+                    CAST(ROW(NULL, 0) AS ROW(field0 {self.get_db_dtype(self.engine.dialect)}, field1 BIGINT)),
+                    (prev, curr) -> IF(prev.field0 IS NULL, curr, IF(prev.field1 < curr.field1, curr, prev)),
+                    val -> val
+                ).field0
+            """
+
+        elif is_bigquery(self.engine):
             # BigQuery has no aggregate function for mode, therefore we use
             # APPROX_TOP_COUNT which return an approximation of the exact result
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions
             agg_expr = f'approx_top_count({{}}, 1)[offset(0)].value'
+
+        else:
+            raise DatabaseNotSupportedException(self.engine)
 
         result = self._derived_agg_func(
             partition=partition,

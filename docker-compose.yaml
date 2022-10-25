@@ -8,7 +8,6 @@
 # image repository, set OBJECTIV_CONTAINER_URL to that repo.
 # To use a specific image tag instead of latest set OBJECTIV_CONTAINER_TAG
 
-# WARNING: The postgres configuration here doesn't actually check passwords! This is for local testing only
 
 x-db_env_variables: &db_env_variables
   # warning: never put production credentials in here!
@@ -35,10 +34,22 @@ services:
       timeout: 2s
       retries: 3
 
+  objectiv_validator:
+    container_name: objectiv_validator
+    image: ${OBJECTIV_CONTAINER_URL-objectiv}/validator:${OBJECTIV_CONTAINER_TAG-latest}
+    networks:
+      - obj
+    healthcheck:
+      test: [ "CMD", "printf",  "\"GET /schema/latest HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8082" ]
+      interval: 30s
+      timeout: 2s
+      retries: 3
+
   objectiv_collector:
     container_name: objectiv_collector
     depends_on:
       - objectiv_postgres
+      - objectiv_validator
     image: ${OBJECTIV_CONTAINER_URL-objectiv}/backend:${OBJECTIV_CONTAINER_TAG-latest}
     working_dir: /services
     entrypoint: bash -c "objectiv-db-init; ./entry_point.sh"
@@ -47,16 +58,14 @@ services:
     networks:
       - obj
     restart: unless-stopped
-    volumes:
-      - ${SCHEMA_EXTENSION_DIRECTORY-./backend/tests/test_data/schemas1}/:/schema-extensions/
     environment:
       <<: *db_env_variables
-      SCHEMA_EXTENSION_DIRECTORY: /schema-extensions/
       COOKIE_SECURE: "True"
       COOKIE_SAMESITE: None
       PORT: 8081
+      SCHEMA_VALIDATION_SERVICE_URL: http://objectiv_validator:8082
     healthcheck:
-      test: ["CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8081"]
+      test: ["CMD", "printf",  "\"GET /schema HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8081"]
       interval: 30s
       timeout: 2s
       retries: 3
@@ -67,8 +76,9 @@ services:
     networks:
       - obj
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:5432:5432"
+    # To enable network access to postgres, enable the 2 lines below
+    #ports:
+    #  - "127.0.0.1:5432:5432"
     environment:
       <<: *db_env_variables
       # WARNING: Disabling authentication here
@@ -95,6 +105,8 @@ services:
       - objectiv_collector
     environment:
       <<: *db_env_variables
+      OBJECTIV_VERSION_CHECK_DISABLE: ${OBJECTIV_VERSION_CHECK_DISABLE-false}
+      OBJECTIV_SKIP_IMPORT: ${OBJECTIV_SKIP_IMPORT-}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
       interval: 30s

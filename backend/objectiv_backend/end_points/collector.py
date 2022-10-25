@@ -10,17 +10,15 @@ import psycopg2
 from flask import Response, Request
 
 from objectiv_backend.common.config import get_collector_config, AnonymousModeConfig
-from objectiv_backend.common.types import EventData, EventDataList, EventList
+from objectiv_backend.common.types import EventData, EventDataList, EventList, ContextData
 from objectiv_backend.common.db import get_db_connection
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_contexts
 from objectiv_backend.end_points.common import get_json_response, get_cookie_id_context
 from objectiv_backend.end_points.extra_output import events_to_json, write_data_to_fs_if_configured, \
     write_data_to_s3_if_configured, write_data_to_snowplow_if_configured
-from objectiv_backend.schema.validate_events import validate_structure_event_list, EventError
-from objectiv_backend.workers.pg_queues import PostgresQueues, ProcessingStage
-from objectiv_backend.workers.pg_storage import insert_events_into_nok_data
+from objectiv_backend.schema.validate_events import EventError
+from objectiv_backend.workers.pg_storage import insert_events_into_data, insert_events_into_nok_data
 from objectiv_backend.workers.worker_entry import process_events_entry
-from objectiv_backend.workers.worker_finalize import insert_events_into_data
 
 from objectiv_backend.schema.schema import HttpContext, MarketingContext
 
@@ -60,7 +58,7 @@ def collect(anonymous_mode: bool = False) -> Response:
         client_session_id = None
 
     # Do all the enrichment steps that can only be done in this phase
-    add_enriched_contexts(events, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
+    enrich_events(events, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
     set_time_in_events(events, current_millis, transport_time)
 
@@ -69,16 +67,11 @@ def collect(anonymous_mode: bool = False) -> Response:
         # in anonymous mode we hash certain properties, as defined in config.anonymous_mode.to_hash
         anonymize_events(events, config.anonymous_mode)
 
-    if not get_collector_config().async_mode:
-        ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
-        print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
-        write_sync_events(ok_events=ok_events, nok_events=nok_events, event_errors=event_errors)
-        return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors,
-                                       anonymous_mode=anonymous_mode, client_session_id=client_session_id)
-    else:
-        write_async_events(events=events)
-        return _get_collector_response(error_count=0, event_count=len(events),
-                                       client_session_id=client_session_id)
+    ok_events, nok_events, event_errors = process_events_entry(events=events, current_millis=current_millis)
+    print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
+    write_sync_events(ok_events=ok_events, nok_events=nok_events, event_errors=event_errors)
+    return _get_collector_response(error_count=len(nok_events), event_count=len(events), event_errors=event_errors,
+                                   anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
 
 def hash_property(property_to_hash: str) -> str:
@@ -127,11 +120,12 @@ def _get_event_data(request: Request) -> EventList:
         raise ValueError('Could not find events key in event_data')
     if not isinstance(event_data['events'], list):
         raise ValueError('events is not a list')
+    if 'transport_time' not in event_data:
+        raise ValueError('Could not find transport_time key in event_data')
+    if not isinstance(event_data['transport_time'], int):
+        raise ValueError('transport_time is not an int')
     if len(event_data['events']) > DATA_MAX_EVENT_COUNT:
         raise ValueError('Events exceeds limit')
-    error_info = validate_structure_event_list(event_data=event_data)
-    if error_info:
-        raise ValueError(f'List of Events not structured well: {error_info[0].info}')
 
     return event_data
 
@@ -166,7 +160,7 @@ def _get_collector_response(error_count: int,
     return get_json_response(status=200, msg=msg, anonymous_mode=anonymous_mode, client_session_id=client_session_id)
 
 
-def add_enriched_contexts(events: EventDataList, anonymous_mode: bool, client_session_id: str):
+def enrich_events(events: EventDataList, anonymous_mode: bool, client_session_id: str):
     """
     Enrich the list of events
     """
@@ -175,6 +169,7 @@ def add_enriched_contexts(events: EventDataList, anonymous_mode: bool, client_se
     for event in events:
         add_http_context_to_event(event=event, request=flask.request)
         add_marketing_context_to_event(event=event)
+        add_types_to_event(event=event)
 
 
 def add_cookie_id_context(events: EventDataList, anonymous_mode: bool, client_session_id: str) -> None:
@@ -190,6 +185,34 @@ def add_cookie_id_context(events: EventDataList, anonymous_mode: bool, client_se
 
     for event in events:
         add_global_context_to_event(event, cookie_id_context)
+
+
+def add_types_to_event(event: EventData) -> None:
+    """
+    Simple enrichment, to encode hierarchy of events and contexts based on the schema into the event. This should only
+    be done in the case it's not already set by the frontend. If event['_types'] exists, we assume it exists for
+    all contexts as well. Furthermore, as the event is valid, we assume all events and contexts exist in the map.
+    :param event: EventData
+    :return:
+    """
+
+    if '_types' not in event:
+        types_map = get_collector_config().schema_config.types_map
+
+        event['_types'] = types_map[event['_type']]
+
+        for ctx in event['location_stack'] + event['global_contexts']:
+            add_types_to_context(ctx)
+
+
+def add_types_to_context(context: ContextData) -> None:
+    """
+    Helper method for add_types_to_event, adds types to single context
+    :param context: ContextData
+    :return:
+    """
+    types_map = get_collector_config().schema_config.types_map
+    context['_types'] = types_map[context['_type']]
 
 
 def set_time_in_events(events: EventDataList, current_millis: int, client_millis: int):
@@ -373,32 +396,3 @@ def write_sync_events(ok_events: EventDataList, nok_events: EventDataList, event
             moment = datetime.utcnow()
             write_data_to_fs_if_configured(data=data, prefix=prefix, moment=moment)
             write_data_to_s3_if_configured(data=data, prefix=prefix, moment=moment)
-
-
-def write_async_events(events: EventDataList):
-    """
-    Write the events to the following sinks, if configured:
-        * postgres - To the entry queue
-        * aws - to the 'RAW' prefix
-        * file system - to the 'RAW' directory
-    """
-    output_config = get_collector_config().output
-    # todo: add exception handling. if one output fails, continue to next if configured.
-    if output_config.postgres:
-        connection = get_db_connection(output_config.postgres)
-        try:
-            with connection:
-                pg_queue = PostgresQueues(connection=connection)
-                pg_queue.put_events(queue=ProcessingStage.ENTRY, events=events)
-        finally:
-            connection.close()
-
-    if not output_config.file_system and not output_config.aws:
-        return
-    prefix = 'RAW'
-    if events:
-        data = events_to_json(events)
-        moment = datetime.utcnow()
-        write_data_to_fs_if_configured(data=data, prefix=prefix, moment=moment)
-        write_data_to_s3_if_configured(data=data, prefix=prefix, moment=moment)
-

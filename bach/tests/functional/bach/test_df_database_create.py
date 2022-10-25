@@ -5,12 +5,11 @@ from random import randrange
 
 import pytest
 
+from bach.testing import assert_equals_data
 from sql_models.model import Materialization
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 def test_database_create_table(engine, unique_table_test_name: str):
     df = get_df_with_test_data(engine)
@@ -65,3 +64,7 @@ def test_database_create_table(engine, unique_table_test_name: str):
         if_exists='replace'
     )
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
+
+
+# TODO: test with DataFrame that has column-names that are not natively supported by the database.
+#  https://github.com/objectiv/objectiv-analytics/issues/1317

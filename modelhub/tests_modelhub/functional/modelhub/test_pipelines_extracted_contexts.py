@@ -2,18 +2,20 @@
 Copyright 2022 Objectiv B.V.
 """
 import datetime
-import json
 from typing import List
 
 import bach
 import pandas as pd
 import pytest
+from bach.testing import assert_equals_data
 from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 from modelhub.pipelines.extracted_contexts import BaseExtractedContextsPipeline, get_extracted_context_pipeline
-from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data, \
-    DBParams
+from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, DBParams
+
+from tests_modelhub.data_and_utils.data_parsers import (
+    get_parsed_objectiv_data, get_extracted_contexts_data_from_parsed_objectiv_data
+)
 
 _EXPECTED_CONTEXT_COLUMNS = [
     'event_id',
@@ -26,114 +28,47 @@ _EXPECTED_CONTEXT_COLUMNS = [
 ]
 
 
-def _get_parsed_test_data_pandas_df(engine, db_format: DBParams.Format) -> pd.DataFrame:
-    parsed_data = get_parsed_objectiv_data(engine)
-    if not is_bigquery(engine):
-        assert db_format == DBParams.Format.OBJECTIV
-        return pd.DataFrame(parsed_data)
-    events_with_domain_sessionid = ['12b55ed5-4295-4fc1-bf1f-88d64d1ac304', '12b55ed5-4295-4fc1-bf1f-88d64d1ac305']
-    bq_data = []
-    for event in parsed_data:
-        if db_format == DBParams.Format.SNOWPLOW :
-            bq_data.append(
-                {
-                    'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
-                    'event_id': str(event['event_id']),
-                    'network_userid': (
-                        str(event['cookie_id']) if str(event['event_id']) not in events_with_domain_sessionid
-                        else None
-                    ),
-                    'domain_sessionid': (
-                        str(event['cookie_id']) if str(event['event_id']) in events_with_domain_sessionid
-                        else None
-                    ),
-                    'se_action': event['value']['_type'],
-                    'se_category': json.dumps(event['value']['_types']),
-                    'true_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
-                    'contexts_io_objectiv_location_stack_1_0_0': [
-                        {'location_stack': json.dumps(event['value']['location_stack'])}
-                    ],
-                }
-            )
-        else:
-            raise TypeError(f"Unsupported db format {db_format}")
-
-    return pd.DataFrame(bq_data)
-
-
 def get_expected_context_pandas_df(
-        engine, db_format: DBParams.Format, global_contexts: List[str] = None,
+    db_format: DBParams.Format, global_contexts: List[str] = None,
 ) -> pd.DataFrame:
-
-    field_name_mapping = {}
-    for context_name in global_contexts or []:
-        capitalized_name = "".join([c.capitalize() for c in context_name.split('_')])+'Context'
-        field_name_mapping[capitalized_name] = context_name
-
-    data = get_parsed_objectiv_data(engine)
-
-    # Append requested global contexts, and remove the all containing one
-    for i, row in enumerate(data):
-        # cookie_id can also be a global context name, make sure it's not overwritten
-        row['user_id'] = row['cookie_id']
-        del(row['cookie_id'])
-
-        # create one column for every requested context, for every row
-        row_context_data = {c: [] for c in field_name_mapping.values()}
-        for row_context_item in row['value']['global_contexts']:
-            if row_context_item['_type'] in field_name_mapping:
-                toplevel_field_name = field_name_mapping[row_context_item['_type']]
-                if db_format == DBParams.Format.SNOWPLOW:
-                    # SP format does not carry types
-                    if '_type' in row_context_item:
-                        del(row_context_item['_type'])
-                    if '_types' in row_context_item:
-                        del(row_context_item['_types'])
-                row_context_data[toplevel_field_name].append(row_context_item)
-        row['value'] = {**row['value'], **row_context_data}
-        del(row['value']['global_contexts'])
-
-    pdf = pd.DataFrame(data)
-    context_pdf = pdf['value'].apply(pd.Series)
-
-    context_pdf['event_id'] = pdf['event_id']
-    context_pdf['day'] = pdf['day']
-    context_pdf['moment'] = pdf['moment']
-    context_pdf['user_id'] = pdf['user_id']
-    context_pdf = context_pdf.rename(
-        columns={
-            '_type': 'event_type',
-            '_types': 'stack_event_types',
-        }
+    context_pdf = pd.DataFrame(
+        get_extracted_contexts_data_from_parsed_objectiv_data(db_format)
     )
 
-    return context_pdf[_EXPECTED_CONTEXT_COLUMNS + (global_contexts or [])]
+    context_pdf = context_pdf[_EXPECTED_CONTEXT_COLUMNS + (global_contexts or [])]
+    if global_contexts:
+        context_pdf[global_contexts] = context_pdf[global_contexts].apply(
+            lambda s: s.fillna({i: [] for i in context_pdf.index})
+        )
+
+    return context_pdf
 
 
 def _get_extracted_contexts_pipeline(db_params, global_contexts=None) -> BaseExtractedContextsPipeline:
     engine = create_engine_from_db_params(db_params)
-    return get_extracted_context_pipeline(engine=engine, table_name=db_params.table_name,
-                                     global_contexts=global_contexts or [])
+    return get_extracted_context_pipeline(
+        engine=engine, table_name=db_params.table_name, global_contexts=global_contexts or [],
+    )
 
 
 def test_get_pipeline_result(db_params) -> None:
     # select cookie_id context since it's gc column overlaps with cookie_id uuid column on pg.
     # cookie_id_context also has a multi-part name, so we test that immediately as well. Exciting :)
     context_pipeline = _get_extracted_contexts_pipeline(db_params, global_contexts=['identity', 'cookie_id'])
-    engine = context_pipeline._engine
-
     result = context_pipeline().sort_values(by='event_id').to_pandas()
 
     expected = get_expected_context_pandas_df(
-        engine, global_contexts=['identity', 'cookie_id'], db_format=db_params.format
+       global_contexts=['identity', 'cookie_id'], db_format=db_params.format
     )
     pd.testing.assert_frame_equal(expected, result)
 
 
 def test_get_initial_data(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
-    engine = context_pipeline._engine
-    expected = _get_parsed_test_data_pandas_df(engine, db_params.format)
+
+    parsed_data = get_parsed_objectiv_data(db_params.format)
+    expected = pd.DataFrame(parsed_data)
+
     result = context_pipeline._get_initial_data()
 
     if db_params.format == DBParams.Format.OBJECTIV:
@@ -148,26 +83,38 @@ def test_get_initial_data(db_params) -> None:
         )
         return
 
-    if db_params.format == DBParams.Format.SNOWPLOW:
+    if db_params.format not in (DBParams.Format.SNOWPLOW, DBParams.Format.FLATTENED_SNOWPLOW):
+        raise Exception()
+
+    expected_columns = [
+        'collector_tstamp', 'event_id', 'network_userid',  'domain_sessionid',
+        'se_action', 'se_category', 'true_tstamp'
+    ]
+    assert 'event_id' in result.data
+
+    if db_params.format == DBParams.Format.FLATTENED_SNOWPLOW:
         location_stack_column = 'contexts_io_objectiv_location_stack_1_0_0'
         assert location_stack_column in result.data
         assert result[location_stack_column].dtype == 'list'
         assert result[location_stack_column].elements[0].elements['location_stack'].dtype == 'string'
-        assert 'event_id' in result.data
+        expected_columns.append(location_stack_column)
 
-        # need to sort the rows since order is non-deterministic
-        result = result.sort_values(by='event_id')
+    if db_params.format == DBParams.Format.SNOWPLOW:
+        contexts_column = 'contexts'
+        assert contexts_column in result.data
+        assert result[contexts_column].dtype == 'string'
+        # won't compare contexts column values as it contains a big stringified json,
+        # order of keys might differ
 
-        assert_equals_data(
-            result,
-            expected_columns=['collector_tstamp', 'event_id', 'network_userid',  'domain_sessionid',
-                              'se_action', 'se_category', 'true_tstamp',
-                              'contexts_io_objectiv_location_stack_1_0_0'],
-            expected_data=expected.to_numpy().tolist(),
-            use_to_pandas=True,
-        )
-    else:
-        raise Exception()
+    # need to sort the rows since order is non-deterministic
+    result = result.sort_values(by='event_id')
+
+    assert_equals_data(
+        result[expected_columns],
+        expected_columns=expected_columns,
+        expected_data=expected[expected_columns].to_numpy().tolist(),
+        use_to_pandas=True,
+    )
 
 
 def test_process_data(db_params) -> None:
@@ -193,7 +140,7 @@ def test_process_data(db_params) -> None:
 
     result = result.sort_values(by='event_id')[expected_series].to_pandas()
     expected = (
-        get_expected_context_pandas_df(engine, db_format=db_params.format)
+        get_expected_context_pandas_df(db_format=db_params.format)
         .sort_values(by='event_id')[expected_series]
     )
 
@@ -248,11 +195,48 @@ def test_apply_filters_duplicated_event_ids(db_params) -> None:
     )
 
 
+@pytest.mark.skip_postgres
+def test_apply_filters_duplicated_event_ids_n_dates(db_params) -> None:
+    context_pipeline = _get_extracted_contexts_pipeline(db_params)
+    engine = context_pipeline._engine
+
+    tstamps = [
+        datetime.datetime(2022, 1, 1, 12, 0, 0),
+        datetime.datetime(2022, 1, 1, 12, 0, 1),
+        datetime.datetime(2022, 1, 2),
+        datetime.datetime(2022, 1, 5),
+        datetime.datetime(2022, 1, 3),
+        datetime.datetime(2022, 1, 4)
+    ]
+    pdf = pd.DataFrame(
+        {
+            'event_id': ['1', '1', '4', '1', '4', '3'],
+            'network_userid': ['1'] * 6,
+            'domain_sessionid': ['1'] * 6,
+            'collector_tstamp': tstamps,
+            'true_tstamp': tstamps,
+            'contexts_io_objectiv_location_stack_1_0_0': ['{}'] * 6,
+        }
+    )
+    df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+    result = context_pipeline._process_data(df)
+    result = context_pipeline._apply_filters(result, start_date='2022-01-02', end_date='2022-01-05')
+    assert_equals_data(
+        result.sort_values(by='event_id')[['event_id', 'moment']],
+        expected_columns=['event_id', 'moment'],
+        expected_data=[
+            ['3', datetime.datetime(2022, 1, 4)],
+            ['4', datetime.datetime(2022, 1, 2)],
+        ],
+        use_to_pandas=True,
+    )
+
+
 def test_apply_filters(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
-    pdf = get_expected_context_pandas_df(engine, db_params.format)[['event_id', 'day']]
+    pdf = get_expected_context_pandas_df(db_params.format)[['event_id', 'day']]
     if is_bigquery(engine):
         pdf['event_id'] = pdf['event_id'].astype(str)
 
@@ -299,7 +283,7 @@ def test_extract_requested_global_contexts(db_params) -> None:
 
     result = result.sort_values(by='event_id')[expected_series].to_pandas()
     expected = (
-        get_expected_context_pandas_df(engine, db_format=db_params.format, global_contexts=global_contexts)
+        get_expected_context_pandas_df(db_format=db_params.format, global_contexts=global_contexts)
         .sort_values(by='event_id')[expected_series]
     )
 

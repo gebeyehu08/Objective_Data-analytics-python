@@ -3,6 +3,7 @@
  */
 
 import { NonEmptyArray } from './helpers';
+import { TrackerInterface } from './Tracker';
 import { TrackerEvent } from './TrackerEvent';
 
 /**
@@ -45,6 +46,11 @@ export interface TrackerTransportInterface {
    * Should return if the TrackerTransport can be used. Most useful in combination with TransportSwitch.
    */
   isUsable(): boolean;
+
+  /**
+   * Executed when the Tracker switches activation or anonymous modes.
+   */
+  initialize?: (tracker: TrackerInterface) => void;
 
   /**
    * Process one or more TransportableEvent. Eg. Send, queue, store, etc

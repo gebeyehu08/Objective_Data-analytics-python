@@ -9,10 +9,10 @@ import pytest
 
 from bach import DataFrame
 from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from unittest.mock import ANY
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
+from bach.testing import assert_equals_data
 
 
 def test_df_categorical_describe(engine) -> None:
@@ -80,7 +80,6 @@ def test_df_numerical_describe(engine) -> None:
     )
 
 
-@pytest.mark.skip_bigquery_todo()
 def test_include_mixed(engine) -> None:
     df = get_df_with_test_data(engine=engine)
     # duplicate last row. This will make the `mode` well-defined for all columns
@@ -95,15 +94,15 @@ def test_include_mixed(engine) -> None:
     expected_df = pd.DataFrame(
         data=[
             ['count', 4.0, '4', '4', 4.0, 4.0, '4'],
-            ['mean', 2.25, None, None, 33278.75, 1319.25, '1 day'],
+            ['mean', 2.25, None, None, 33278.75, 1319.25, '1 days, 00:00:00.000000'],
             ['std', 0.96, None, None, 42629.41, 91.52, None],
-            ['min', 1.0, 'Drylts', 'Leeuwarden', 3055.0, 1268.0, '1 day'],
-            ['max', 3.0, 'Snits', 'Súdwest-Fryslân', 93485.0, 1456.0, '1 day'],
+            ['min', 1.0, 'Drylts', 'Leeuwarden', 3055.0, 1268.0, '1 days, 00:00:00.000000'],
+            ['max', 3.0, 'Snits', 'Súdwest-Fryslân', 93485.0, 1456.0, '1 days, 00:00:00.000000'],
             ['nunique', 3.0, '3', '2', 3.0, 3.0, '1'],
-            ['mode', 3.0, 'Drylts', 'Súdwest-Fryslân', 3055.0, 1268.0, '1 day'],
-            ['0.25', 1.75, None, None, 3055.0, 1268.0, '1 day'],
-            ['0.5', 2.5, None, None, 18287.5, 1276.5, '1 day'],
-            ['0.75', 3.0, None, None, 48511.25, 1327.75, '1 day']],
+            ['mode', 3.0, 'Drylts', 'Súdwest-Fryslân', 3055.0, 1268.0, '1 days, 00:00:00.000000'],
+            ['0.25', 1.75, None, None, 3055.0, 1268.0, '1 days, 00:00:00.000000'],
+            ['0.5', 2.5, None, None, 18287.5, 1276.5, '1 days, 00:00:00.000000'],
+            ['0.75', 3.0, None, None, 48511.25, 1327.75, '1 days, 00:00:00.000000']],
         columns=[
             '__stat', 'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'timedelta'
         ],
@@ -126,10 +125,10 @@ def test_describe_datetime(engine) -> None:
     expected_df = pd.DataFrame(
         data=[
             ['count', '3'],
-            ['min', f'2000-01-01 00:00:00{tz}'],
-            ['max', f'2010-01-01 00:00:00{tz}'],
+            ['min', '2000-01-01 00:00:00.000000'],
+            ['max', '2010-01-01 00:00:00.000000'],
             ['nunique', '2'],
-            ['mode', f'2010-01-01 00:00:00{tz}'],
+            ['mode', '2010-01-01 00:00:00.000000'],
         ],
         columns=['__stat', 'column'],
     )
@@ -178,10 +177,10 @@ def test_describe_time(engine) -> None:
     expected_df = pd.DataFrame(
         data=[
             ['count', '3'],
-            ['min', '11:00:01'],
-            ['max', '13:37:00'],
+            ['min', '11:00:01.000000'],
+            ['max', '13:37:00.000000'],
             ['nunique', '2'],
-            ['mode', '11:00:01'],
+            ['mode', '11:00:01.000000'],
         ],
         columns=['__stat', 'column'],
     )

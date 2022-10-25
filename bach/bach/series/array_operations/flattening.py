@@ -6,6 +6,7 @@ from bach.sql_model import BachSqlModel, construct_references
 from sql_models.model import CustomSqlModelBuilder, Materialization
 
 from bach.series import SeriesJson, SeriesInt64
+from bach.utils import get_name_to_column_mapping
 
 TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
 
@@ -17,8 +18,9 @@ class ArrayFlattening(ABC):
     """
     Abstract class that expands an array-type column into a set of rows.
 
-    Child classes are in charge of specifying the correct expressions for unnesting arrays with
-    the correct offset per each item.
+    Child classes are in charge of
+    1) specifying the correct expressions for unnesting arrays, by overriding `_get_cross_join_expression`.
+    2) giving the correct offset for each item, by setting `_db_offset_is_one_based`.
 
     .. note::
         Final result will always have different base node than provided Series object.
@@ -27,6 +29,13 @@ class ArrayFlattening(ABC):
         - SeriesJson: Representing the element of the array.
         - SeriesInt64: Offset of the element in the array
     """
+
+    """
+    _db_offset_is_one_based can be overridden by child classes to indicate that the offsets from the database
+    are 1-based offsets instead of 0-based offsets.
+    """
+    _db_offset_is_one_based = False
+
     def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object.copy()
 
@@ -38,11 +47,15 @@ class ArrayFlattening(ABC):
     def __call__(self, *args, **kwargs) -> Tuple['TSeriesJson', 'SeriesInt64']:
         from bach import DataFrame, SeriesInt64
 
+        dialect = self._series_object.engine.dialect
+        name_to_column_mapping = get_name_to_column_mapping(dialect=dialect, names=self.all_dtypes.keys())
+
         unnested_array_df = DataFrame.from_model(
             engine=self._series_object.engine,
             model=self._get_unnest_model(),
             index=list(self._series_object.index.keys()),
             all_dtypes=self.all_dtypes,
+            name_to_column_mapping=name_to_column_mapping
         )
         item_series = unnested_array_df[self.item_series_name]
         offset_series = unnested_array_df[self.item_offset_series_name]
@@ -71,9 +84,9 @@ class ArrayFlattening(ABC):
         Mapping of all dtypes of all referenced columns in generated model
         """
         return {
+            **{idx.name: idx.dtype for idx in self._series_object.index.values()},
             self.item_series_name: self._series_object.dtype,
-            self.item_offset_series_name: 'int64',
-            **{idx.name: idx.dtype for idx in self._series_object.index.values()}
+            self.item_offset_series_name: 'int64'
         }
 
     def _get_unnest_model(self) -> BachSqlModel:
@@ -102,15 +115,21 @@ class ArrayFlattening(ABC):
         """
         Final column expressions for the generated model
         """
+        dialect = self._series_object.engine.dialect
+
+        offset_expr = _OFFSET_IDENTIFIER_EXPR
+        if self._db_offset_is_one_based:
+            offset_expr = Expression.construct('{} - 1', offset_expr)  # Normalize to 0-based offset
+
         return {
             **{
                 idx.name: idx.expression for idx in self._series_object.index.values()
             },
-            self.item_series_name: Expression.construct_expr_as_name(
-                expr=_ITEM_IDENTIFIER_EXPR, name=self.item_series_name
+            self.item_series_name: Expression.construct_expr_as_sql_name(
+                dialect=dialect, expr=_ITEM_IDENTIFIER_EXPR, name=self.item_series_name
             ),
-            self.item_offset_series_name: Expression.construct_expr_as_name(
-                expr=_OFFSET_IDENTIFIER_EXPR, name=self.item_offset_series_name,
+            self.item_offset_series_name: Expression.construct_expr_as_sql_name(
+                dialect=dialect, expr=offset_expr, name=self.item_offset_series_name,
             ),
         }
 
@@ -124,6 +143,10 @@ class ArrayFlattening(ABC):
 
 
 class BigQueryArrayFlattening(ArrayFlattening):
+
+    # BigQuery uses 0-based offsets.
+    _db_offset_is_one_based = False
+
     def _get_cross_join_expression(self) -> Expression:
         """ For documentation, see implementation in class :class:`ArrayFlattening` """
         return Expression.construct(
@@ -136,6 +159,10 @@ class BigQueryArrayFlattening(ArrayFlattening):
 
 
 class PostgresArrayFlattening(ArrayFlattening):
+
+    # Postgres uses 1-based ordinality instead of 0-based offsets.
+    _db_offset_is_one_based = True
+
     def _get_cross_join_expression(self) -> Expression:
         """ For documentation, see implementation in class :class:`ArrayFlattening` """
         return Expression.construct(
@@ -146,22 +173,12 @@ class PostgresArrayFlattening(ArrayFlattening):
             _OFFSET_IDENTIFIER_EXPR,
         )
 
-    def _get_column_expressions(self) -> Dict[str, Expression]:
-        """
-            Updates column expression for offset columns, since Postgres uses ordinality instead of offset.
-        """
-        column_expressions = super()._get_column_expressions()
-
-        offset_expr = Expression.construct(
-            '{} - 1 AS {}',
-            _OFFSET_IDENTIFIER_EXPR,
-            Expression.identifier(name=self.item_offset_series_name)
-        )
-        column_expressions[self.item_offset_series_name] = offset_expr
-        return column_expressions
-
 
 class AthenaArrayFlattening(ArrayFlattening):
+
+    # Athena uses 1-based ordinality instead of 0-based offsets.
+    _db_offset_is_one_based = True
+
     def _get_cross_join_expression(self) -> Expression:
         """ For documentation, see implementation in class :class:`ArrayFlattening` """
         return Expression.construct(

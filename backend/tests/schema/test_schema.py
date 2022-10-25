@@ -4,8 +4,8 @@ from typing import Dict, Any
 from objectiv_backend.schema.schema import make_event_from_dict, make_context, \
     ContentContext, HttpContext, MarketingContext
 from objectiv_backend.common.event_utils import add_global_context_to_event, get_context, remove_global_contexts
-from objectiv_backend.schema.validate_events import validate_structure_event_list, validate_event_adheres_to_schema
-from objectiv_backend.common.config import get_collector_config
+from objectiv_backend.schema.validate_events import validate_event_adheres_to_schema
+from objectiv_backend.end_points.collector import add_types_to_context
 
 
 CLICK_EVENT_JSON = '''
@@ -13,32 +13,58 @@ CLICK_EVENT_JSON = '''
     "events":[
         {
             "_type":"PressEvent",
+            "_schema_version": "1.0.0",
             "location_stack":[
                 {
                     "_type":"RootLocationContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractLocationContext",
+                        "RootLocationContext"
+                    ],
                     "id":"home"
                 },{
                     "_type":"NavigationContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractLocationContext",
+                        "NavigationContext"
+                    ],
                     "id":"navigation"
                 },{
                     "_type":"PressableContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractLocationContext",
+                        "PressableContext"
+                    ],
                     "id":"open-drawer"
                 }
             ],
             "global_contexts":[
                 {
                     "_type":"ApplicationContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractGlobalContext",
+                        "ApplicationContext"
+                    ],
                     "id":"rod-web-demo"
                 },
                 {
                     "_type":"PathContext",
+                    "_types": [
+                        "AbstractContext",
+                        "AbstractGlobalContext",
+                        "PathContext"
+                    ],
                     "id":"http://localhost:3000/"
                 }
             ],
             "_types": [
-                "PressEvent",
+                "AbstractEvent",
                 "InteractiveEvent",
-                "AbstractEvent"
+                "PressEvent"
             ],
             "time":1630049334860,
             "transport_time":1630049335313,
@@ -51,8 +77,6 @@ CLICK_EVENT_JSON = '''
     "client_session_id":"d227e473-b177-4cdc-9f49-a96e59dbcf0c"
 }
 '''
-
-EVENT_SCHEMA = get_collector_config().event_schema
 
 
 def order_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
@@ -71,14 +95,13 @@ def test_remove_global_context():
     event_list = json.loads(CLICK_EVENT_JSON)
     event = event_list['events'][0]
 
+    gc = event['global_contexts'][1]
+
     remove_global_contexts(event, 'ApplicationContext')
 
     assert(len(event['global_contexts']) == 1)
 
-    assert(event['global_contexts'] == [{
-        "_type": "PathContext",
-        "id": "http://localhost:3000/"
-    }])
+    assert(event['global_contexts'] == [gc])
 
 
 def test_make_event_from_dict():
@@ -92,28 +115,13 @@ def test_make_event_from_dict():
     # check resulting event is the same as input event
     assert(json.dumps(sorted_event) == json.dumps(sorted_event_json))
 
-    event_schema = get_collector_config().event_schema
-
     # check it still validates, eg, returned list of errors is empty
-    assert(validate_structure_event_list([event]) == [])
-    assert (validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
+    assert (validate_event_adheres_to_schema(event=event) == [])
 
     # check validation actually fails if a required property `time` is not there
     del event['time']
 
-    assert (validate_structure_event_list([event]) == [])
-    assert(validate_event_adheres_to_schema(event_schema=event_schema, event=event) != [])
-
-
-def test_event_list_validates():
-    event_list = json.loads(CLICK_EVENT_JSON)
-
-    assert(validate_structure_event_list(event_list) == [])
-
-    # check validation actually fails if a required property `transport_time` is not there
-    del event_list['transport_time']
-
-    assert(validate_structure_event_list(event_list) != [])
+    assert(validate_event_adheres_to_schema(event=event) != [])
 
 
 def test_make_content_context():
@@ -121,6 +129,7 @@ def test_make_content_context():
         'id': 'content_id',
         '_type': 'ContentContext'
     }
+    add_types_to_context(content_context)
 
     context = ContentContext(**content_context)
     # check dictionaries are the same
@@ -138,6 +147,7 @@ def test_add_global_context():
         'remote_address': 'test-address',
         'user_agent': 'test-user_agent'
     }
+    add_types_to_context(context_vars)
     context = make_context(**context_vars)
 
     # check if we've created a proper HttpContext Object
@@ -149,7 +159,7 @@ def test_add_global_context():
     add_global_context_to_event(event, context)
 
     # check if event is still valid
-    assert(validate_structure_event_list([event]) == [])
+    assert(validate_event_adheres_to_schema(event) == [])
 
     # check if it's there, and holds the proper values
     generated_context = get_context(event, 'HttpContext')
@@ -164,6 +174,7 @@ def test_add_context_to_incorrect_scope():
         'remote_address': 'test-address',
         'user_agent': 'test-user_agent'
     }
+    add_types_to_context(context_vars)
     context = make_context(**context_vars)
 
     # check if we've created a proper HttpContext Object
@@ -174,17 +185,13 @@ def test_add_context_to_incorrect_scope():
     event = make_event_from_dict(event_list['events'][0])
 
     # check event is valid to start with
-    event_schema = get_collector_config().event_schema
-    assert(validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
+    assert(validate_event_adheres_to_schema(event=event) == [])
 
     # manually add it, to circumvent type checking
     event['location_stack'].append(context)
 
-    # check if event is still valid
-    assert(validate_structure_event_list([event]) == [])
-
     # check if event is not valid anymore
-    assert(validate_event_adheres_to_schema(event_schema=event_schema, event=event) != [])
+    assert(validate_event_adheres_to_schema(event=event) != [])
 
 
 def test_add_context_with_optionals_not_set():
@@ -243,13 +250,12 @@ def test_required_context_broken_state():
     event = make_event_from_dict(event_list['events'][0])
 
     # check event is valid to start with
-    event_schema = get_collector_config().event_schema
-    assert(validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
+    assert(validate_event_adheres_to_schema(event=event) == [])
 
     # now we change it to ApplicationLoadedEvent, this doesn't require a location_stack, yet, it has one
     event['_type'] = 'ApplicationLoadedEvent'
-    assert (validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
+    assert (validate_event_adheres_to_schema(event=event) == [])
 
     # now we remove the location_stack, event should still be valid
     event['location_stack'] = []
-    assert (validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
+    assert (validate_event_adheres_to_schema(event=event) == [])

@@ -1,19 +1,14 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-import math
 from unittest.mock import ANY
 
 import pandas as pd
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime
 
 from bach import DataFrame
-from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data
-
-
-pytestmark = pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
+from bach.testing import assert_equals_data
 
 
 DATA = [

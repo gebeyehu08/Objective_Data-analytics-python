@@ -1,13 +1,11 @@
 import numpy as np
 import pandas as pd
-import pytest
 
 from bach import Series, DataFrame
 from bach.operations.cut import CutOperation, QCutOperation
 from sql_models.util import quote_identifier
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 
-pytestmark = pytest.mark.skip_athena_todo()  # TODO: Athena
 
 PD_TESTING_SETTINGS = {
     'check_dtype': False,
@@ -17,7 +15,7 @@ PD_TESTING_SETTINGS = {
 
 
 def compare_boundaries(expected: pd.Series, result: Series) -> None:
-    for exp, res in zip(expected.to_numpy(), result.to_numpy()):
+    for exp, res in zip(expected.to_numpy(), result.sort_index().to_numpy()):
         if not isinstance(exp, pd.Interval):
             assert res is None or np.isnan(res)
             continue

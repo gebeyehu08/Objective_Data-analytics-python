@@ -3,9 +3,9 @@ import pytest
 
 from bach import DataFrame
 from bach.partitioning import WindowFrameMode, WindowFrameBoundary
+from bach.testing import assert_equals_data
 from tests.functional.bach.test_data_and_utils import (
-    assert_equals_data, get_df_with_test_data,
-    TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
+    get_df_with_test_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
 )
 from tests.unit.bach.util import get_pandas_df
 
@@ -594,7 +594,6 @@ def test_window_functions_not_in_where_having_groupby(engine):
         x = bt[bt.founding_min == 4]
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_window_nav_functions_with_nulls(engine):
     pdf = pd.DataFrame(
         data={

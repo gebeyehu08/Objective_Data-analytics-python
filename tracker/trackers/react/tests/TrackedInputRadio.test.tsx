@@ -244,7 +244,6 @@ describe('TrackedInputRadio', () => {
 
     jest.resetAllMocks();
 
-    // NOTE: we trigger click here instead of change, because the latter doesn't actually work
     fireEvent.blur(screen.getByTestId('test-radio-1'));
     fireEvent.blur(screen.getByTestId('test-radio-1'));
     fireEvent.blur(screen.getByTestId('test-radio-1'));

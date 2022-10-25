@@ -6,6 +6,7 @@ from typing import List
 
 
 class SupportedEngine(str, Enum):
+    ATHENA = 'athena'
     POSTGRES = 'postgres'
     BIGQUERY = 'bigquery'
     ALL = 'all'

@@ -4,7 +4,7 @@ Copyright 2022 Objectiv B.V.
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the 'engine' and 'dialect' parameters for
 test functions that have either of those.
-By default such a test function will get a Postgres dialect or engine. But if --big-query, --athena or --all
+By default such a test function will get a Postgres dialect or engine. But if --bigquery, --athena or --all
 is specified on the commandline, then it will (also) get a BigQuery/Athena dialect or engine. For specific
 tests, it is possible to disable testing for certain databases, see 'marks' section below.
 
@@ -50,6 +50,8 @@ from dotenv import dotenv_values
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
+from sql_models.util import is_athena
+
 # Load settings from .test_env file, but allow overrides from Environment variables
 _DOT_ENV_FILE = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/.secrets/.test_env'
 _ENV = {
@@ -69,8 +71,9 @@ _DB_ATHENA_AWS_SECRET_ACCESS_KEY = _ENV.get('OBJ_DB_ATHENA_AWS_SECRET_ACCESS_KEY
 _DB_ATHENA_REGION_NAME = _ENV.get('OBJ_DB_ATHENA_REGION_NAME', 'eu-west-1')
 _DB_ATHENA_CATALOG_NAME = _ENV.get('OBJ_DB_ATHENA_CATALOG_NAME', 'automated_tests')
 _DB_ATHENA_SCHEMA_NAME = _ENV.get('OBJ_DB_ATHENA_SCHEMA_NAME', 'bach_test')
-_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/athena_query_results/')
-DB_ATHENA_LOCATION = _ENV.get('OBJ_DB_ATHENA_LOCATION', 's3://obj-automated-tests/bach_test/')
+_DB_ATHENA_S3_STAGING_DIR = _ENV.get('OBJ_DB_ATHENA_S3_STAGING_DIR', 's3://obj-automated-tests/bach_test/staging/')
+DB_ATHENA_LOCATION = _ENV.get('OBJ_DB_ATHENA_LOCATION', 's3://obj-automated-tests/bach_test/test_data/')
+# DB_ATHENA_LOCATION is the location that functional tests can use to write tables with test data.
 _DB_ATHENA_WORK_GROUP = _ENV.get('OBJ_DB_ATHENA_WORK_GROUP', 'automated_tests_work_group')
 
 
@@ -134,7 +137,7 @@ def pytest_addoption(parser: Parser):
     # This function will automatically be called by pytest at the start of a test run, see:
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
     parser.addoption('--postgres', action='store_true', help='run the tests for Postgres')
-    parser.addoption('--big-query', action='store_true', help='run the tests for BigQuery')
+    parser.addoption('--bigquery', action='store_true', help='run the tests for BigQuery')
     parser.addoption('--athena', action='store_true', help='run the tests for Athena')
     parser.addoption('--all', action='store_true', help='run the tests for all databases.')
 
@@ -155,7 +158,7 @@ def pytest_sessionstart(session: Session):
     else:
         if session.config.getoption("athena"):
             _ENGINE_CACHE[DB.ATHENA] = _get_athena_engine()
-        if session.config.getoption("big_query"):
+        if session.config.getoption("bigquery"):
             _ENGINE_CACHE[DB.BIGQUERY] = _get_bigquery_engine()
         if session.config.getoption("postgres"):
             _ENGINE_CACHE[DB.POSTGRES] = _get_postgres_engine()
@@ -170,11 +173,18 @@ def pytest_sessionfinish() -> None:
     # This way we clean the testing database
     for engine, tables_to_drop in _RECORDED_TEST_TABLES_PER_ENGINE.items():
         with engine.connect() as conn:
-            drop_tables_sql = '\n'.join(
-                f'DROP TABLE IF EXISTS {table_name};'
-                for table_name in tables_to_drop
+            if is_athena(engine):
+                # athena engine does not support executing multiple statements
+                for table_name in tables_to_drop:
+                    conn.execute(f'DROP TABLE IF EXISTS {table_name};')
+                continue
+
+            conn.execute(
+                '\n'.join(
+                    f'DROP TABLE IF EXISTS {table_name};'
+                    for table_name in tables_to_drop
+                )
             )
-            conn.execute(drop_tables_sql)
 
 
 def pytest_generate_tests(metafunc: Metafunc):

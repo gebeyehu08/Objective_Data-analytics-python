@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "generate": "(cd generators && yarn generate)"
+  },
+  "author": {
+    "name": "Surai Di Rosa",
+    "email": "surai.dirosa@gmail.com",
+    "url": "https://github.com/sdirosa"
+  }
+}

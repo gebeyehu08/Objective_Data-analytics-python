@@ -4,10 +4,10 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from bach.dataframe import DtypeNamePair, DefinedVariable, DataFrame
+from bach.testing import assert_equals_data
 from sql_models.model import CustomSqlModelBuilder
 from sql_models.util import is_bigquery, is_postgres, is_athena
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data, \
-    get_df_with_food_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, get_df_with_food_data
 
 
 def test_variable_happy_path(engine):
@@ -197,7 +197,6 @@ def test_merge_variable_different_types(engine):
     )
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_get_all_variable_usage(engine):
     df1 = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'inhabitants']]
     assert df1.get_all_variable_usage() == []
@@ -233,10 +232,6 @@ def test_get_all_variable_usage(engine):
         DefinedVariable(name='second', dtype='string', value='test', ref_path=(), old_value=str_old_value),
         DefinedVariable(name='first', dtype='int64', value=1234, ref_path=('prev',), old_value='1234')
     ]
-
-    if is_bigquery(df1.engine):
-        # DataFrame.from_model is not supported for big query
-        return
 
     sql_model = CustomSqlModelBuilder(sql='select * from {{model}}')(model=df1.base_node)
     df2 = DataFrame.from_model(engine=df1.engine, model=sql_model, index=list(df1.index.keys()))

@@ -4,8 +4,8 @@ import pandas as pd
 import pytest
 
 from bach import Series, DataFrame
-from sql_models.util import is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 @pytest.fixture()
@@ -25,7 +25,6 @@ def indexing_dfs(engine) -> Tuple[pd.DataFrame, DataFrame]:
     return pdf, df
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_basic_indexing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
 
@@ -33,7 +32,7 @@ def test_basic_indexing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     assert isinstance(single_label_result, Series)
     pd.testing.assert_series_equal(
         pdf.loc['b'].astype(str),
-        single_label_result.to_pandas(),
+        single_label_result.sort_index().to_pandas(),
         check_names=False,
     )
 
@@ -54,7 +53,6 @@ def test_basic_indexing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_basic_indexing_column_based(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
 
@@ -76,14 +74,8 @@ def test_basic_indexing_column_based(indexing_dfs: Tuple[pd.DataFrame, DataFrame
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_index_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
-
-    if is_bigquery(df.engine):
-        # TODO: BigQuery
-        # indexing with slicing is still not supported for BigQuery
-        return
 
     df = df.sort_index()
     result_slicing = df.loc['b':'d']
@@ -124,7 +116,6 @@ def test_index_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_basic_set_item_by_label(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
 
@@ -153,7 +144,6 @@ def test_basic_set_item_by_label(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engine) -> None:
     _, df = indexing_dfs
     extra_pdf = pd.DataFrame(
@@ -182,13 +172,8 @@ def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engine) -> None:
     pdf, df = indexing_dfs
-    if is_bigquery(df.engine):
-        # TODO: BigQuery
-        # indexing with slicing is still not supported for BigQuery
-        return
     df = df.sort_index()
 
     df.loc['b':'d'] = 1
@@ -199,6 +184,7 @@ def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engin
 
     assert_equals_data(
         df.sort_index(),
+        use_to_pandas=True,
         expected_columns=['A', 'B', 'C', 'D'],
         expected_data=[
             ['a', 0, 5, 'f'],
@@ -223,6 +209,7 @@ def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engin
     df.loc['b':'d', ['B', 'D']] = extra_df['B']
     assert_equals_data(
         df.sort_index(),
+        use_to_pandas=True,
         expected_columns=['A', 'B', 'C', 'D'],
         expected_data=[
             ['a', 0, 5, 'f'],

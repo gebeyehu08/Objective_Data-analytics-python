@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from tests.functional.bach.test_data_and_utils import assert_equals_data, \
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import \
     get_df_with_railway_data, get_df_with_test_data, TEST_DATA_CITIES, CITIES_COLUMNS, RAILWAYS_COLUMNS, \
     TEST_DATA_RAILWAYS
 from tests.unit.bach.util import get_pandas_df

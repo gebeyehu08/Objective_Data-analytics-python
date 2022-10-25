@@ -2,13 +2,16 @@
 Copyright 2021 Objectiv B.V.
 """
 import pandas
+import pandas as pd
 
-from bach import DataFrame
+from bach import DataFrame, SeriesJson
 from bach.series import SeriesString, SeriesDict, SeriesList
 from sql_models.util import is_postgres, is_bigquery, is_athena
-from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data, \
+from tests.functional.bach.test_data_and_utils import get_df_with_json_data, \
     get_df_with_test_data
 import pytest
+
+from bach.testing import assert_equals_data
 
 # We want to run all tests here for all supported databases, and thus we have the 'engine' argument on all
 # tests.
@@ -246,14 +249,16 @@ def test_json_getitem_slice(engine, dtype):
 
 def test_json_getitem_slice_non_happy_mixed_data(engine, dtype):
     # Slices only work on columns with only lists
-    # But behaviour of Postgres and Athena is different from BigQuery. For now we just accept that's the
-    # way it is.
+    # But behaviour of Postgres is different from Athena and BigQuery.
+    # For Athena, slicing is wrapped by try function for avoiding exceptions,
+    # while BigQuery will not raise an exception by default.
+    # For now we just accept that's the way it is.
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[1:-1]
-    if is_postgres(engine) or is_athena(engine):
+    if is_postgres(engine):
         with pytest.raises(Exception):
             bts.to_pandas()
-    elif is_bigquery(engine):
+    elif is_athena(engine) or is_bigquery(engine):
         assert_equals_data(
             bts,
             use_to_pandas=True,
@@ -331,31 +336,64 @@ def test_json_flatten_array(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
 
     list_column = df['list_column']
+    assert isinstance(list_column, SeriesJson)  # help mypy/pycharm a bit here
 
     result_item, result_offset = list_column.json.flatten_array()
-    result_item = result_item.sort_by_series(
-        by=[result_item.index['_index_row'], result_offset]
-    )
+    result_df = result_item.to_frame()
+    result_df['offset'] = result_offset
+    result_df = result_df.sort_values(['_index_row', 'offset'])
     assert_equals_data(
-        result_item,
-        expected_columns=['_index_row', 'list_column'],
+        result_df,
+        expected_columns=['_index_row', 'list_column', 'offset'],
         expected_data=[
-            [0, {'a': 'b'}],
-            [0, {'c': 'd'}],
-            [1, 'a'],
-            [1, 'b'],
-            [1, 'c'],
-            [1, 'd'],
-            [2, {'id': 'b', '_type': 'a'}],
-            [2, {'id': 'd', '_type': 'c'}],
-            [2, {'id': 'f', '_type': 'e'}],
-            [3, {'id': '#document', '_type': 'WebDocumentContext'}],
-            [3, {'id': 'home', '_type': 'SectionContext'}],
-            [3, {'id': 'top-10', '_type': 'SectionContext'}],
-            [3, {'id': '5o7Wv5Q5ZE', '_type': 'ItemContext'}],
+            [0, {'a': 'b'}, 0],
+            [0, {'c': 'd'}, 1],
+            [1, 'a', 0],
+            [1, 'b', 1],
+            [1, 'c', 2],
+            [1, 'd', 3],
+            [2, {'id': 'b', '_type': 'a'}, 0],
+            [2, {'id': 'd', '_type': 'c'}, 1],
+            [2, {'id': 'f', '_type': 'e'}, 2],
+            [3, {'id': '#document', '_type': 'WebDocumentContext'}, 0],
+            [3, {'id': 'home', '_type': 'SectionContext'}, 1],
+            [3, {'id': 'top-10', '_type': 'SectionContext'}, 2],
+            [3, {'id': '5o7Wv5Q5ZE', '_type': 'ItemContext'}, 3],
         ],
         use_to_pandas=True,
     )
+
+
+def test_json_flatten_array_column_name_special_chars(engine, dtype):
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    df = df.sort_index()[:2]  # two rows should be enough, and keeps the expected data shorter
+
+    df = df.reset_index(drop=False)
+    df = df.rename(columns={'_index_row': '_Index_Row#!', 'list_column': 'List!_COLUMN'})
+    df = df.set_index('_Index_Row#!')
+
+    list_column = df['List!_COLUMN']
+    assert isinstance(list_column, SeriesJson)  # help mypy/pycharm a bit here
+
+    result_item, result_offset = list_column.json.flatten_array()
+    result_df = result_item.to_frame()
+    result_df['offset'] = result_offset
+    result_df = result_df.sort_values(['_Index_Row#!', 'offset'])
+
+    assert_equals_data(
+        result_df,
+        expected_columns=['_Index_Row#!', 'List!_COLUMN', 'offset'],
+        expected_data=[
+            [0, {'a': 'b'}, 0],
+            [0, {'c': 'd'}, 1],
+            [1, 'a', 0],
+            [1, 'b', 1],
+            [1, 'c', 2],
+            [1, 'd', 3],
+        ],
+        use_to_pandas=True,
+    )
+
 
 def test_complex_types_astype_json(engine, dtype):
 
@@ -387,4 +425,22 @@ def test_complex_types_astype_json(engine, dtype):
         expected_data=[[1, 1,
                         {'a': 123, 'b': 'test', 'c': 123.456}, ['a', 'b', 'c'],
                         '{"a":123,"b":"test","c":123.456}', '["a","b","c"]']]
+    )
+
+
+def test_json_str_as_str(engine, dtype) -> None:
+    pdf = pd.DataFrame({'json_strs': ['"hi"', '"ola"', '"hallo"', '"hola"']})
+    df = DataFrame.from_pandas(engine, df=pdf, convert_objects=True)
+    df['json_strs'] = df['json_strs'].astype(dtype)
+
+    result = df['json_strs'].astype('string')
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'json_strs'],
+        expected_data=[
+            [0, '"hi"'],
+            [1, '"ola"'],
+            [2, '"hallo"'],
+            [3, '"hola"'],
+        ],
     )

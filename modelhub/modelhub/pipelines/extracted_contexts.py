@@ -9,7 +9,8 @@ from functools import reduce
 import bach
 from typing import Optional, Dict, List
 
-from sql_models.util import is_postgres, is_bigquery
+from bach.expression import Expression
+from sql_models.util import is_postgres, is_bigquery, is_athena, quote_identifier
 
 import modelhub
 from bach.types import StructuredDtype
@@ -177,20 +178,34 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
         if not df_cp.is_materialized:
             df_cp = df_cp.materialize()
 
-        date_filters = []
-        if start_date:
-            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
-        if end_date:
-            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
-
         all_filters = []
-        if date_filters:
-            all_filters.append(reduce(operator.and_, date_filters))
-
+        if start_date:
+            all_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
+        if end_date:
+            all_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
         if self.IS_DUPLICATED_EVENT_SERIES_NAME in df_cp.data_columns:
             all_filters.append(~df_cp[self.IS_DUPLICATED_EVENT_SERIES_NAME])
 
-        return df_cp[reduce(operator.or_, all_filters)]
+        return df_cp[reduce(operator.and_, all_filters)]
+
+    def _apply_context_flattening(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Helper function for creating a new series per context (if engine supports a different format).
+        Function must only be called if `_extract_context_data` method is implemented.
+        """
+        df_cp = df.copy()
+        for gc in self._global_contexts:
+            context_name = "".join([c.capitalize() for c in gc.split('_')]) + 'Context'
+            df_cp[gc] = self._extract_context_data(df_cp, context_name).astype('objectiv_global_context')
+
+        return df_cp
+
+    def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Helper function that returns a new series that contains data for the required context_name.
+        Child must implement class as data formats can differ between engines.
+        """
+        raise NotImplementedError
 
 
 class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
@@ -202,7 +217,7 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
     TAXONOMY_JSON_FIELD_DTYPES = {
         '_type': bach.SeriesString.dtype,
         '_types': bach.SeriesJson.dtype,
-        'global_contexts': modelhub.series.SeriesGlobalContexts.dtype,
+        'global_contexts': modelhub.series.SeriesJson.dtype,
         'location_stack': modelhub.series.SeriesLocationStack.dtype,
         'time': bach.SeriesInt64.dtype,
     }
@@ -247,23 +262,38 @@ class NativeObjectivExtractedContextsPipeline(BaseExtractedContextsPipeline):
 
     def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
         """ See implementation in parent class :class:`BaseExtractedContextsPipeline` """
-        if ObjectivSupportedColumns.GLOBAL_CONTEXTS.value not in df.data_columns:
+        contexts_series = 'global_contexts'
+        if contexts_series not in df.data_columns:
             raise Exception(
                 f'{self._engine.name} requires flattening for global context extraction, but'
-                f'{ObjectivSupportedColumns.GLOBAL_CONTEXTS.value} is not present in dataframe.'
+                f'{contexts_series} is not present in dataframe.'
             )
+
         df_cp = df.copy()
+        if self._global_contexts:
+            df_cp = self._apply_context_flattening(df_cp)
 
-        gc_series = (
-            df_cp[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value].astype('objectiv_global_contexts')
+        return df_cp.drop(columns=['global_contexts'])
+
+    def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Extracts context data from global_contexts json. Native format is currently only
+        supported for Postgres, therefore an exception will be raised for other dialects.
+        """
+        dialect = df.engine.dialect
+        if not is_postgres(dialect):
+            raise Exception('Extraction of context data for native format is supported only for Postgres.')
+
+        contexts_series = df['global_contexts']
+        expression_str = f'''
+        jsonb_path_query_array({{}},
+        \'$[*] ? (@._type == $type)\',
+        \'{{"type":{quote_identifier(dialect, context_name)}}}\')'''
+        expression = Expression.construct(
+            expression_str,
+            contexts_series,
         )
-        # Extract the requested global contexts
-        for gc in self._global_contexts:
-            if gc in df_cp.data:
-                raise ValueError(f'column {gc} already existing in df, can not extract global context')
-            df_cp[gc] = gc_series.obj.get_contexts(gc).astype('objectiv_global_context')
-
-        return df_cp.drop(columns=[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value])
+        return contexts_series.copy_override(expression=expression).copy_override_type(bach.SeriesJson)
 
 
 class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
@@ -292,6 +322,13 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
                 'se_category': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
             }
         )
+
+        # avoid having empty string in series that fill user_id series, otherwise
+        # there is a risk of raising an exception when trying to parse string values to UUID
+        uuid_series = ['network_userid', 'domain_sessionid']
+        for series in uuid_series:
+            df_cp.loc[df_cp[series] == '', series] = None
+
         # Anonymous users have no network_userid, but their domain_sessionid is useable as user_id as well
         df_cp[ObjectivSupportedColumns.USER_ID.value] = (
             df_cp['network_userid'].fillna(df_cp['domain_sessionid'])
@@ -404,6 +441,44 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         )
 
 
+class AthenaQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
+    def _get_global_contexts_dtypes_from_db_dtypes(
+        self, db_dtypes: Dict[str, StructuredDtype]
+    ) -> Dict[str, StructuredDtype]:
+        return {'contexts': bach.SeriesString.dtype}
+
+    def _extract_requested_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+        df_cp = self._apply_context_flattening(df)
+        location_stack = self._extract_context_data(df, context_name='location_stack')
+        df_cp['location_stack'] = location_stack.json[0].json['location_stack']
+        return df_cp.drop(columns=['contexts'])
+
+    def _extract_context_data(self, df: bach.DataFrame, context_name: str) -> bach.SeriesJson:
+        """
+        Extracts all elements where each element's `schema` value contains the context name as a substr.
+        """
+        data_json_path = 'json_extract(element, \'$["data"]\')'
+        contexts_series = (
+            df['contexts'].copy_override_type(bach.SeriesJson).json['data']
+        )
+
+        expression_str = f'''
+        cast(transform(
+            filter(
+                cast({{}} as array(json)),
+                element -> strpos(cast(json_extract(element, '$["schema"]') as varchar), {{}}) > 0
+            ),
+            element -> {data_json_path}
+        ) as json)'''
+
+        expression = Expression.construct(
+            expression_str,
+            contexts_series,
+            Expression.string_value(context_name)
+        )
+        return contexts_series.copy_override(expression=expression).copy_override_type(bach.SeriesJson)
+
+
 def get_extracted_context_pipeline(
     engine: Engine, table_name: str, global_contexts: List[str]
 ) -> BaseExtractedContextsPipeline:
@@ -416,5 +491,8 @@ def get_extracted_context_pipeline(
 
     if is_bigquery(engine):
         return BigQueryExtractedContextsPipeline(engine, table_name, global_contexts)
+
+    if is_athena(engine):
+        return AthenaQueryExtractedContextsPipeline(engine, table_name, global_contexts)
 
     raise Exception(f'There is no ExtractedContextsPipeline subclass for {engine.name}.')

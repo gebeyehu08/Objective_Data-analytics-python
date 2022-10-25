@@ -41,8 +41,12 @@ class BachSqlModel(SqlModel[T]):
     ) -> None:
         """
         Similar to :py:meth:`SqlModel.__init__()`. With one additional parameter: column_expressions,
-        a mapping between the names of the columns and expressions
-        that this model's query will return in the correct order.
+        a mapping between the names of the Bach Series and expressions that this model's query will return in
+        the correct order.
+
+        Note that they keys in column_expressions are the names as used in Bach, not the names as they appear
+        in the sql query. If a column name contains special characters, then the sql might use an escaped
+        name. See :meth:`columns` for more information.
         """
         self._column_expressions = column_expressions
         super().__init__(
@@ -54,13 +58,28 @@ class BachSqlModel(SqlModel[T]):
         )
 
     @property
-    def columns(self) -> Tuple[str, ...]:
-        """ Columns returned by the query of this model, in order."""
+    def series_names(self) -> Tuple[str, ...]:
+        # TODO: rename this, series_names? columns is confusing
+        """
+        Names of the Series that the query of this model returns, in order.
+
+        Note: These are the names as they would appear in a Bach DataFrame. Columns might have a different
+        name in the sql query of this model than they have in a Bach DataFrame, depending on what characters
+        the database supports in column names. Example: `df['X!@'] = 1` might lead to sql of the form:
+        'select 1 as escaped_column_name from ...' instead of 'select 1 as X!@'. This function will return
+        the name used in the Bach DataFrame, so in the case of the example 'X!@'.
+        """
         return tuple(self._column_expressions.keys())
 
     @property
     def column_expressions(self) -> Dict[str, Expression]:
-        """ Mapping containing the expression used per column."""
+        """
+        Mapping containing the expression used per Bach series-name.
+
+        Note: The series names are as they would appear in a bach DataFrame. Within the sql query of this
+        model the columns might be called differently. See the description of :meth:`columns` for more
+        information.
+        """
         return self._column_expressions
 
     def copy_override(
@@ -113,8 +132,7 @@ class BachSqlModel(SqlModel[T]):
 
 class SampleSqlModel(BachSqlModel):
     """
-    A custom SqlModel that simply does select * from a table. In addition to that, this class stores an
-    extra property: previous.
+    A custom SqlModel that simply adds an extra property to the BachSqlModel: previous.
 
     The previous property is not used in the generated sql at all, but can be used to track a previous
     SqlModel. This is useful for how we implemented sampling, as that effectively inserts a sql-model in the
@@ -169,24 +187,16 @@ class SampleSqlModel(BachSqlModel):
             previous=self.previous if previous is None else previous
         )
 
-    @staticmethod
-    def get_instance(
-        *,
-        dialect: Dialect,
-        table_name: str,
-        previous: BachSqlModel,
-        column_expressions: Dict[str, Expression],
-        name: str = 'sample_node',
-    ) -> 'SampleSqlModel':
-        """ Helper function to instantiate a SampleSqlModel """
-        sql = 'SELECT * FROM {table_name}'
-        return SampleSqlModel(
-            model_spec=CustomSqlModelBuilder(sql=sql, name=name),
-            placeholders={'table_name': quote_identifier(dialect, table_name)},
-            references={},
-            materialization=Materialization.CTE,
-            materialization_name=None,
-            column_expressions=column_expressions,
+    @classmethod
+    def from_bach_sql_model(cls, model: BachSqlModel, previous: BachSqlModel) -> 'BachSqlModel':
+        """ From any BachSqlModel create a SampleSqlModel with the given `previous` model. """
+        return cls(
+            model_spec=model.model_spec,
+            placeholders=model.placeholders,
+            references=model.references,
+            materialization=model.materialization,
+            materialization_name=model.materialization_name,
+            column_expressions=model.column_expressions,
             previous=previous
         )
 

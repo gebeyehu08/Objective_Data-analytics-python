@@ -5,7 +5,6 @@ import base64
 import os
 import re
 from typing import List, Union, Dict, Tuple, Optional, cast, Any
-from typing import TYPE_CHECKING
 
 import bach
 from sqlalchemy import create_engine
@@ -16,11 +15,10 @@ from modelhub.map import Map
 from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.models.funnel_discovery import FunnelDiscovery
 from modelhub.series.series_objectiv import MetaBase
+from modelhub.series import SeriesLocationStack
 from sql_models.constants import NotSet
-from sql_models.util import is_bigquery
+from sql_models.util import is_bigquery, is_athena
 
-if TYPE_CHECKING:
-    from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, bach.Series]], str, bach.Series, NotSet]
 ConversionEventDefinitionType = Tuple[Optional['SeriesLocationStack'], Optional[str]]
@@ -164,7 +162,7 @@ class ModelHub:
         )
         from modelhub.pipelines.util import get_objectiv_data
         if table_name is None:
-            if is_bigquery(engine):
+            if is_athena(engine) or is_bigquery(engine):
                 table_name = 'events'
             else:
                 table_name = 'data'
@@ -298,3 +296,90 @@ class ModelHub:
         """
 
         return FunnelDiscovery()
+
+    def visualize_location_stack(self,
+                                 data: bach.DataFrame,
+                                 root_location: str = None,
+                                 location_stack: Union[str, 'SeriesLocationStack'] = None,
+                                 n_top_examples=40,
+                                 return_df: bool = False,
+                                 show: bool = True):
+        """
+        Shows the location stack as a sankey chart per element for the selected root location. It shows the
+        different elements by type and id as nodes from left to right. The size of the nodes and links
+        indicate the number of events that have this location element or these location element combinations.
+
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param root_location: the name of the root location to use for visualization of the location stack.
+            If None, it will use the most common root location in the data.
+        :param location_stack: the column of which to create the paths. Can be a string of the name of a
+            SeriesLocationStack type column, or a Series with the same base node as `data`. If None the
+            default location stack is taken.
+        :param n_top_examples: number of top examples  from the location stack to plot (if we have
+            too many examples to plot it can slow down the browser).
+        :param return_df: returns a :py:class:`bach.DataFrame` with the data from which the sankey diagram is
+            created.
+        :param show: if True, it shows the plot, if False it only returns the DataFrame with the data that
+            is to be plotted.
+
+        :returns: None or DataFrame
+        """
+
+        from modelhub.util import check_objectiv_dataframe
+
+        columns_to_check = ['user_id', 'event_id']
+        if location_stack is None:
+            columns_to_check = ['location_stack', 'user_id', 'event_id']
+            location_stack = 'location_stack'
+        check_objectiv_dataframe(df=data, columns_to_check=columns_to_check)
+
+        if type(location_stack) == str:
+            location_stack_series = data[location_stack]
+        if type(location_stack) == SeriesLocationStack:
+            location_stack_series = location_stack
+
+        column = cast(SeriesLocationStack, location_stack_series)  # help mypy
+
+        data_cp = data.copy()
+        result_item, result_offset = column.json.flatten_array()
+
+        result_item_df = result_item.sort_by_series(
+            by=[result_offset]
+        ).to_frame()
+
+        result_item_df = result_item_df.rename(columns={result_item.name: '__location_stack_exploded'})
+
+        result_item_df['__result_offset'] = 1
+        result_item_df['__result_offset'] = result_item_df['__result_offset'].copy_override(
+            expression=result_item_df.order_by[0].expression)
+
+        data_merged = data_cp.merge(result_item_df, left_index=True, right_index=True)
+        data_merged['__type'] = data_merged['__location_stack_exploded'].ls[
+            '_type'].astype('string')
+        data_merged['__id'] = data_merged['__location_stack_exploded'].ls[
+            'id'].astype('string')
+        data_merged['__name'] = data_merged['__type'] + ": " + data_merged['__id']
+
+        root_location_type = "RootLocationContext"
+        if root_location is None:
+            root_location_data = data_merged[data_merged['__result_offset'] == 0].groupby(
+                ['__type', '__id']).user_id.count().sort_values(
+                ascending=False).head()
+            root_location_type = root_location_data.index[0][0].strip('"')
+            root_location = root_location_data.index[0][1].strip('"')
+
+        data_merged[
+            'root_location'] = data_merged.location_stack.ls.get_from_context_with_type_series(
+            type=root_location_type, key='id')
+
+        data_merged_cp = data_merged[
+            data_merged.root_location == root_location].copy().reset_index()
+
+        funnel = FunnelDiscovery()
+        funnel_df = funnel.get_navigation_paths(data_merged_cp, steps=2, by='event_id',
+                                                location_stack='__name', sort_by='__result_offset')
+
+        result = funnel.plot_sankey_diagram(funnel_df, n_top_examples=n_top_examples, show=show)
+
+        if return_df:
+            return result

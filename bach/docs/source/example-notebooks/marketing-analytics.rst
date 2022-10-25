@@ -12,8 +12,8 @@ This example notebook shows how you can easily analyze traffic coming from Marke
 via UTM tags. It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/marketing-analytics.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+or you can instead `run Objectiv Up </docs/home/up/>`__ to try it out. The dataset used here is the same as in 
+Up.
 
 Get started
 -----------
@@ -23,7 +23,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # set the timeframe of the analysis
-	>>> start_date = '2022-06-01'
+	>>> start_date = '2022-08-01'
 	>>> end_date = None
 
 .. we override the timeframe for the doctests below
@@ -31,7 +31,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. testsetup:: marketing-analytics
 	:skipif: engine is None
 
-	start_date = '2022-06-01'
+	start_date = '2022-08-01'
 	end_date = '2022-08-20'
 	pd.set_option('display.max_colwidth', 93)
 
@@ -125,56 +125,25 @@ Users from marketing
 	:skipif: engine is None
 
 	>>> users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
-	>>> users_from_marketing_daily.head()
+	>>> users_from_marketing_daily_pdf = users_from_marketing_daily.to_pandas()
+	>>> users_from_marketing_daily_pdf.head()
 	time_aggregation
-	2022-08-09     7
-	2022-08-08    20
-	2022-08-07     6
-	2022-08-06     7
-	2022-08-05     6
+	2022-08-20    13
+	2022-08-19    12
+	2022-08-18     7
+	2022-08-17    10
+	2022-08-16    13
 	Name: unique_users, dtype: int64
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
+	:options: +ELLIPSIS
 
-	>>> users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
-	>>> users_from_marketing_daily.sort_index(ascending=True).to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #users from marketing', xlabel='Day', ylabel='#Users')
-	<AxesSubplot: title={'center': 'Daily #users from marketing'}, xlabel='Day', ylabel='#Users'>
+	>>> users_from_marketing_daily_pdf.sort_index(ascending=True).plot(kind='bar', figsize=[15,5], title='Daily #users from marketing', xlabel='Day')
+	<AxesSubplot: title={'center': 'Daily #users from marketing'}, xlabel='Day'...>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-users-from-marketing.png
   :alt: Daily #users from marketing
-
-Users per source-medium-campaign over full timeframe
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # split users by marketing _campaign_ (based on UTM data)
-	>>> users_per_campaign = modelhub.aggregate.unique_users(df_marketing_selection, ['utm_source', 'utm_medium', 'utm_campaign'])
-	>>> users_per_campaign.reset_index().dropna(axis=0, how='any', subset='utm_source').sort_values(['unique_users'], ascending=False).head(10)
-	  utm_source utm_medium         utm_campaign  unique_users
-	0    twitter       paid             utm_test           213
-	1     reddit       paid                 june            83
-	2    twitter       paid      july_conversion            65
-	3     reddit       paid      july_conversion            38
-	4    twitter     social                 blog            11
-	5    twitter       paid                 july             4
-	6    twitter      paidl                 july             1
-	7    twitter       post  Oktopost-Horizontal             1
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # Stacked graph per campaign
-	>>> upc = users_per_campaign.to_frame().reset_index()[['utm_source', 'utm_campaign', 'unique_users']]
-	>>> upc = upc.to_pandas().groupby(['utm_source', 'utm_campaign'])
-	>>> upc_pivot = upc.sum().reset_index().pivot(index='utm_source', columns='utm_campaign')['unique_users'].reset_index().sort_values(by=['utm_source'], ascending=False)
-	>>> upc_pivot.plot.bar(x='utm_source', stacked=True)
-	<AxesSubplot: xlabel='utm_source'>
-
-.. image:: ../img/docs/example-notebooks/marketing-analytics-users-per-source-campaign.png
-  :alt: Users per source-medium-campaign over full timeframe
 
 Users from marketing _source_ per day
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,29 +153,40 @@ Users from marketing _source_ per day
 
 	>>> # users by marketing _source_, per day
 	>>> source_users_daily = modelhub.agg.unique_users(df_marketing_selection, groupby=['day', 'utm_source'])
-	>>> source_users_daily = source_users_daily.reset_index()
-	>>> source_users_daily.sort_values('day', ascending=False).head(20)
+	>>> source_users_daily = source_users_daily.reset_index().sort_values('day', ascending=False)
+	>>> source_users_daily_pdf = source_users_daily.to_pandas()
+	>>> source_users_daily_pdf.head(20)
 	           day utm_source  unique_users
-	0   2022-08-09    twitter             3
-	1   2022-08-09     reddit             4
-	2   2022-08-08     reddit             5
-	3   2022-08-08    twitter            15
-	4   2022-08-07     reddit             1
-	5   2022-08-07    twitter             5
-	6   2022-08-06    twitter             4
-	7   2022-08-06     reddit             3
-	8   2022-08-05    twitter             5
-	9   2022-08-05     reddit             1
-	10  2022-08-04    twitter            10
-	11  2022-08-04     reddit             2
-	12  2022-08-03    twitter             4
-	13  2022-08-03     reddit             6
-	14  2022-08-02     reddit             8
-	15  2022-08-02    twitter             8
-	16  2022-08-01    twitter            11
-	17  2022-08-01     reddit             5
-	18  2022-07-31    twitter             1
-	19  2022-07-31     reddit             3
+	0   2022-08-20    twitter             7
+	1   2022-08-20     reddit             6
+	2   2022-08-19    twitter             9
+	3   2022-08-19     reddit             3
+	4   2022-08-18     reddit             3
+	5   2022-08-18    twitter             4
+	6   2022-08-17    twitter             6
+	7   2022-08-17     reddit             4
+	8   2022-08-16    twitter            10
+	9   2022-08-16     reddit             3
+	10  2022-08-15    twitter            19
+	11  2022-08-15     reddit             4
+	12  2022-08-14    twitter            10
+	13  2022-08-14     reddit             5
+	14  2022-08-13    twitter             8
+	15  2022-08-13     reddit             7
+	16  2022-08-12    twitter             8
+	17  2022-08-12     reddit             2
+	18  2022-08-11     reddit             3
+	19  2022-08-11    twitter             9
+
+.. doctest:: marketing-analytics
+	:skipif: engine is None
+
+	>>> sud = source_users_daily_pdf.pivot(index='day', columns='utm_source')
+	>>> sud.plot.bar(stacked=True)
+	<AxesSubplot: xlabel='day'>
+
+.. image:: ../img/docs/example-notebooks/marketing-analytics-users-from-marketing-source.png
+  :alt: Daily #users from marketing
 
 Users from marketing _campaign_ per day
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,29 +196,28 @@ Users from marketing _campaign_ per day
 
 	>>> # users by marketing _campaign_ (based on UTM data), per day
 	>>> users_per_campaign_daily = modelhub.aggregate.unique_users(df_marketing_selection, ['day', 'utm_source', 'utm_medium', 'utm_campaign'])
-	>>> users_per_campaign_daily = users_per_campaign_daily.reset_index()
-	>>> users_per_campaign_daily.sort_values('day', ascending=False).head(20)
+	>>> users_per_campaign_daily.reset_index().sort_values('day', ascending=False).head(20)
 	           day utm_source utm_medium     utm_campaign  unique_users
-	0   2022-08-09     reddit       paid  july_conversion             3
-	1   2022-08-09     reddit       paid             june             1
-	2   2022-08-09    twitter     social             blog             1
-	3   2022-08-09    twitter       paid  july_conversion             2
-	4   2022-08-08     reddit       paid  july_conversion             5
-	5   2022-08-08    twitter       paid  july_conversion            15
-	6   2022-08-07     reddit       paid  july_conversion             1
-	7   2022-08-07    twitter       paid  july_conversion             5
-	8   2022-08-06     reddit       paid  july_conversion             3
-	9   2022-08-06    twitter       paid  july_conversion             4
-	10  2022-08-05    twitter       paid  july_conversion             5
-	11  2022-08-05     reddit       paid  july_conversion             1
-	12  2022-08-04    twitter       paid  july_conversion            10
-	13  2022-08-04     reddit       paid  july_conversion             2
-	14  2022-08-03    twitter       paid  july_conversion             4
-	15  2022-08-03     reddit       paid  july_conversion             6
-	16  2022-08-02     reddit       paid  july_conversion             8
-	17  2022-08-02    twitter       paid  july_conversion             8
-	18  2022-08-01     reddit       paid  july_conversion             4
-	19  2022-08-01     reddit       paid             june             1
+	0   2022-08-20     reddit       paid  july_conversion             6
+	1   2022-08-20    twitter       paid  july_conversion             7
+	2   2022-08-19     reddit       paid  july_conversion             3
+	3   2022-08-19    twitter       paid  july_conversion             9
+	4   2022-08-18    twitter     social             blog             1
+	5   2022-08-18    twitter       paid  july_conversion             3
+	6   2022-08-18     reddit       paid  july_conversion             3
+	7   2022-08-17    twitter       paid  july_conversion             6
+	8   2022-08-17     reddit       paid  july_conversion             4
+	9   2022-08-16    twitter       paid  july_conversion            10
+	10  2022-08-16     reddit       paid  july_conversion             3
+	11  2022-08-15    twitter       paid  july_conversion            19
+	12  2022-08-15     reddit       paid  july_conversion             4
+	13  2022-08-14     reddit       paid  july_conversion             5
+	14  2022-08-14    twitter       paid  july_conversion            10
+	15  2022-08-13    twitter       paid  july_conversion             8
+	16  2022-08-13     reddit       paid  july_conversion             7
+	17  2022-08-12     reddit       paid  july_conversion             2
+	18  2022-08-12    twitter       paid  july_conversion             8
+	19  2022-08-11     reddit       paid  july_conversion             3
 
 Referrers overall
 ~~~~~~~~~~~~~~~~~
@@ -250,26 +229,26 @@ Referrers overall
 	>>> referrer_users = modelhub.agg.unique_users(df_acquisition, groupby=['referrer']).sort_values(ascending=False)
 	>>> referrer_users.head(20)
 	referrer
-	                                                           1067
-	https://objectiv.io/                                        151
-	https://www.google.com/                                     147
-	https://www.reddit.com/                                     105
-	https://t.co/                                                59
-	https://www.linkedin.com/                                    46
-	https://github.com/                                          36
-	https://github.com/objectiv/objectiv-analytics               34
-	https://stackshare.io/                                       17
-	https://news.ycombinator.com/                                17
-	https://www.kdnuggets.com/                                   16
-	https://github.com/RunaCapital/awesome-oss-alternatives      11
-	android-app://com.linkedin.android/                          10
-	https://objectiv.io/docs/modeling/open-model-hub/             8
-	android-app://com.slack/                                      8
-	https://www.google.nl/                                        7
-	https://objectiv.io/docs/home/quickstart-guide/               7
-	https://www.curiosityvc.com/                                  7
-	https://www.fly.vc/                                           6
-	https://okt.to/                                               6
+	                                                           392
+	https://www.reddit.com/                                     82
+	https://www.google.com/                                     80
+	https://t.co/                                               27
+	https://github.com/objectiv/objectiv-analytics              21
+	https://www.linkedin.com/                                   19
+	https://www.kdnuggets.com/                                  14
+	https://github.com/RunaCapital/awesome-oss-alternatives     12
+	https://github.com/                                          9
+	https://www.fly.vc/                                          6
+	https://bohr.atomico.com/                                    4
+	https://objectiv.io/docs/modeling/                           4
+	https://news.ycombinator.com/                                4
+	https://stackshare.io/                                       3
+	android-app://com.linkedin.android/                          3
+	https://snowplowanalytics.com/                               3
+	https://okt.to/                                              3
+	https://www.google.nl/                                       3
+	android-app://com.slack/                                     2
+	https://objectiv.io/docs/home/quickstart-guide/              2
 	Name: unique_users, dtype: int64
 
 .. admonition:: Reference
@@ -296,12 +275,12 @@ website or docs to our GitHub repo.
 	>>> # define the conversion event in `df_acquisition` and `df_marketing_selection`
 	>>> # in this example: clicking any link leading to our GitHub repo
 	>>> # create a column that extracts all location stacks that lead to our GitHub repo
-	>>> location_stack_conversion = {'id': 'browse-on-github', '_type': 'LinkContext'}
-	>>> modelhub.add_conversion_event(location_stack=df_acquisition.location_stack.json[location_stack_conversion:], event_type='PressEvent', name='github_press')
-	>>> modelhub.add_conversion_event(location_stack=df_marketing_selection.location_stack.json[location_stack_conversion:], event_type='PressEvent', name='github_press')
+	>>> df_acquisition['ls_conversion'] = df_acquisition[(df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'browse-on-github'}] != []) | (df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'github-stars-button'}] != []) | (df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'github'}] != [])].location_stack
+	>>> modelhub.add_conversion_event(location_stack=df_acquisition['ls_conversion'], event_type='PressEvent', name='github_press')
+	>>> df_marketing_selection['ls_conversion'] = df_marketing_selection[(df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'browse-on-github'}] != []) | (df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'github-stars-button'}] != []) | (df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'github'}] != [])].location_stack
+	>>> modelhub.add_conversion_event(location_stack=df_marketing_selection['ls_conversion'], event_type='PressEvent', name='github_press_marketing')
 	>>> df_acquisition['is_conversion_event'] = modelhub.map.is_conversion_event(df_acquisition, 'github_press')
-	>>> df_marketing_selection['is_conversion_event'] = modelhub.map.is_conversion_event(df_marketing_selection, 'github_press')
-
+	>>> df_marketing_selection['is_conversion_event'] = modelhub.map.is_conversion_event(df_marketing_selection, 'github_press_marketing')
 
 .. admonition:: Reference
 	:class: api-reference
@@ -319,19 +298,20 @@ Daily conversions from marketing
 	>>> # calculate daily conversions from marketing (based on UTM data)
 	>>> conversions_from_marketing = df_marketing_selection[df_marketing_selection.is_conversion_event].dropna(axis=0, how='any', subset='utm_source')
 	>>> conversions_from_marketing_daily = modelhub.aggregate.unique_users(conversions_from_marketing).sort_index(ascending=False)
-	>>> conversions_from_marketing_daily.head()
+	>>> conversions_from_marketing_daily_pdf = conversions_from_marketing_daily.to_pandas()
+	>>> conversions_from_marketing_daily_pdf.head()
 	time_aggregation
+	2022-08-20    1
+	2022-08-16    1
+	2022-08-14    2
+	2022-08-13    2
 	2022-08-04    1
-	2022-07-26    4
-	2022-07-25    1
-	2022-07-23    5
-	2022-07-22    1
 	Name: unique_users, dtype: int64
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> conversions_from_marketing_daily.sort_index(ascending=True).to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #conversions from marketing', xlabel='Day')
+	>>> conversions_from_marketing_daily_pdf.sort_index(ascending=True).plot(kind='bar', figsize=[15,5], title='Daily #conversions from marketing', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily #conversions from marketing'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-number-conversions-from-marketing.png
@@ -345,29 +325,45 @@ Daily conversion rate from marketing
 
 	>>> # calculate daily conversion rate from marketing campaigns overall
 	>>> # divide conversions from campaigns by total daily number of people coming from campaigns 
-	>>> conversion_rate_from_marketing = (conversions_from_marketing_daily / users_from_marketing_daily) * 100
-	>>> conversion_rate_from_marketing.sort_index(ascending=False).fillna(0.0).head(10)
+	>>> conversion_rate_from_marketing = ((conversions_from_marketing_daily / users_from_marketing_daily) * 100).fillna(0.0)
+	>>> conversion_rate_from_marketing_pdf = conversion_rate_from_marketing.sort_index(ascending=False).to_pandas()
+	>>> conversion_rate_from_marketing_pdf.head(10)
 	time_aggregation
-	2022-08-09    0.000000
-	2022-08-08    0.000000
-	2022-08-07    0.000000
-	2022-08-06    0.000000
-	2022-08-05    0.000000
-	2022-08-04    8.333333
-	2022-08-03    0.000000
-	2022-08-02    0.000000
-	2022-08-01    0.000000
-	2022-07-31    0.000000
+	2022-08-20     7.692308
+	2022-08-19     0.000000
+	2022-08-18     0.000000
+	2022-08-17     0.000000
+	2022-08-16     7.692308
+	2022-08-15     0.000000
+	2022-08-14    13.333333
+	2022-08-13    13.333333
+	2022-08-12     0.000000
+	2022-08-11     0.000000
 	Name: unique_users, dtype: float64
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> conversion_rate_from_marketing.fillna(0.0).sort_index(ascending=True).to_pandas().plot(kind='line', figsize=[15,5], title='Daily conversion rate from marketing', xlabel='Day')
+	>>> conversion_rate_from_marketing_pdf.sort_index(ascending=True).plot(kind='line', figsize=[15,5], title='Daily conversion rate from marketing', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily conversion rate from marketing'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversion-rate-from-marketing.png
   :alt: Daily conversion rate from marketing
+
+.. doctest:: marketing-analytics
+	:skipif: engine is None
+
+	>>> # combined DataFrame with #conversions + conversion rate, daily
+	>>> conversions_from_marketing_plus_rate = conversions_from_marketing_daily.to_frame().merge(conversion_rate_from_marketing.to_frame(), on='time_aggregation', how='left').sort_index(ascending=False)
+	>>> conversions_from_marketing_plus_rate = conversions_from_marketing_plus_rate.rename(columns={'unique_users_x': 'converted_users', 'unique_users_y': 'conversion_rate'})
+	>>> conversions_from_marketing_plus_rate.head()
+	                  converted_users  conversion_rate
+	time_aggregation
+	2022-08-20                      1         7.692308
+	2022-08-16                      1         7.692308
+	2022-08-14                      2        13.333333
+	2022-08-13                      2        13.333333
+	2022-08-04                      1         8.333333
 
 Daily conversions overall
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -377,17 +373,18 @@ Daily conversions overall
 
 	>>> # calculate daily conversions overall (including from marketing campaigns)
 	>>> conversions_overall = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event])
-	>>> conversions_overall.sort_index(ascending=False).head()
+	>>> conversions_overall_pdf = conversions_overall.sort_index(ascending=False).to_pandas()
+	>>> conversions_overall_pdf.head()
 	time_aggregation
-	2022-08-04    1
-	2022-07-26    4
-	2022-07-25    1
-	2022-07-23    5
-	2022-07-22    1
+	2022-08-20    1
+	2022-08-18    2
+	2022-08-17    4
+	2022-08-16    3
+	2022-08-15    3
 	Name: unique_users, dtype: int64
 
 	>>> # plot daily conversions overall (including from marketing campaigns)
-	>>> conversions_overall.to_pandas().plot(kind='bar', figsize=[15,5], title='Daily #conversions overall', xlabel='Day')
+	>>> conversions_overall_pdf.sort_index(ascending=True).plot(kind='bar', figsize=[15,5], title='Daily #conversions overall', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily #conversions overall'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversions-overall.png
@@ -402,21 +399,22 @@ Daily conversion rate overall
 	>>> # calculate daily conversion rate overall (including from marketing campaigns)
 	>>> daily_users = modelhub.aggregate.unique_users(df_acquisition).sort_index(ascending=False)
 	>>> conversion_rate_overall = (conversions_overall / daily_users) * 100
-	>>> conversion_rate_overall.sort_index(ascending=False).head(10)
+	>>> conversion_rate_overall_pdf = conversion_rate_overall.sort_index(ascending=False).fillna(0.0).to_pandas()
+	>>> conversion_rate_overall_pdf.head(10)
 	time_aggregation
-	2022-08-09       NaN
-	2022-08-08       NaN
-	2022-08-07       NaN
-	2022-08-06       NaN
-	2022-08-05       NaN
-	2022-08-04    1.5625
-	2022-08-03       NaN
-	2022-08-02       NaN
-	2022-08-01       NaN
-	2022-07-31       NaN
+	2022-08-20     3.703704
+	2022-08-19     0.000000
+	2022-08-18     8.000000
+	2022-08-17    11.428571
+	2022-08-16     8.108108
+	2022-08-15     5.660377
+	2022-08-14     8.108108
+	2022-08-13    10.000000
+	2022-08-12     7.692308
+	2022-08-11     5.660377
 	Name: unique_users, dtype: float64
 
-	>>> conversion_rate_overall.sort_index(ascending=True).fillna(0.0).to_pandas().plot(kind='line', figsize=[15,5], title='Daily conversion rate overall', xlabel='Day')
+	>>> conversion_rate_overall_pdf.sort_index(ascending=True).plot(kind='line', figsize=[15,5], title='Daily conversion rate overall', xlabel='Day')
 	<AxesSubplot: title={'center': 'Daily conversion rate overall'}, xlabel='Day'>
 
 .. image:: ../img/docs/example-notebooks/marketing-analytics-conversion-rate-overall.png
@@ -436,19 +434,6 @@ Daily conversion rate overall
 Conversion split by source & campaign
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Conversions per marketing _source_ over full timeframe
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-	
-	>>> # calculate conversions per marketing _source_ over the full timeframe (based on UTM data)
-	>>> campaign_conversions_source_timeframe = modelhub.aggregate.unique_users(df_marketing_selection[df_marketing_selection.is_conversion_event], ['utm_source'])
-	>>> campaign_conversions_source_timeframe.reset_index().dropna(axis=0, how='any', subset='utm_source').sort_values(['unique_users'], ascending=False).head()
-	  utm_source  unique_users
-	0    twitter             8
-	1     reddit             3
-
 Conversions per marketing _source_ daily
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -457,30 +442,31 @@ Conversions per marketing _source_ daily
 	
 	>>> # split daily conversions by marketing _source_ (based on UTM data)
 	>>> campaign_conversions_source_daily = modelhub.aggregate.unique_users(df_marketing_selection[df_marketing_selection.is_conversion_event], ['day', 'utm_source'])
-	>>> campaign_conversions_source_daily.reset_index().dropna(axis=0, how='any', subset='utm_source').set_index('day').sort_index(ascending=False).head(10)
+	>>> campaign_conversions_source_daily.reset_index().dropna(axis=0, how='any', subset='utm_source').set_index('day').sort_index(ascending=False).head()
 	           utm_source  unique_users
 	day
+	2022-08-20     reddit             1
+	2022-08-16     reddit             1
+	2022-08-14    twitter             2
+	2022-08-13     reddit             2
 	2022-08-04    twitter             1
-	2022-07-26     reddit             1
-	2022-07-26    twitter             3
-	2022-07-25    twitter             1
-	2022-07-23    twitter             3
-	2022-07-23     reddit             2
-	2022-07-22    twitter             1
 
-Conversions per marketing _campaign_ over full timeframe
+Conversions per marketing _campaign_ daily
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 	
-	>>> # split conversions by marketing _campaign_ (based on UTM data)
-	>>> campaign_conversions_campaign = modelhub.aggregate.unique_users(df_marketing_selection[df_marketing_selection.is_conversion_event], ['utm_source', 'utm_medium', 'utm_campaign'])
-	>>> campaign_conversions_campaign.reset_index().dropna(axis=0, how='any', subset='utm_source').sort_values(['utm_source', 'unique_users'], ascending=False).head()
-	  utm_source utm_medium     utm_campaign  unique_users
-	0    twitter       paid         utm_test             8
-	1    twitter       paid  july_conversion             1
-	2     reddit       paid             june             3
+	>>> # split daily conversions by marketing _campaign_ (based on UTM data)
+	>>> campaign_conversions_campaign_daily = modelhub.aggregate.unique_users(df_marketing_selection[df_marketing_selection.is_conversion_event], ['day', 'utm_source', 'utm_campaign'])
+	>>> campaign_conversions_campaign_daily.reset_index().dropna(axis=0, how='any', subset='utm_campaign').set_index('day').sort_index(ascending=False).head(10)
+	           utm_source     utm_campaign  unique_users
+	day
+	2022-08-20     reddit  july_conversion             1
+	2022-08-16     reddit  july_conversion             1
+	2022-08-14    twitter  july_conversion             2
+	2022-08-13     reddit  july_conversion             2
+	2022-08-04    twitter  july_conversion             1
 
 .. admonition:: Reference
 	:class: api-reference
@@ -492,8 +478,8 @@ Conversions per marketing _campaign_ over full timeframe
 	* :doc:`bach.Series.sort_index <../bach/api-reference/Series/bach.Series.sort_index>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
 
-Avg. Duration
--------------
+Duration
+--------
 
 Avg. duration per ad source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -506,8 +492,8 @@ Avg. duration per ad source
 	>>> duration_per_source.sort_values(['utm_source'], ascending=False).head(10)
 	                 session_duration
 	utm_source
-	twitter    0 days 00:02:21.409402
-	reddit     0 days 00:02:05.284562
+	twitter    0 days 00:01:31.449472
+	reddit     0 days 00:01:04.909909
 
 Vs. avg. duration by all users
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -518,66 +504,10 @@ Vs. avg. duration by all users
 	>>> # vs time spent by all users
 	>>> modelhub.aggregate.session_duration(df_acquisition, groupby=None).to_frame().head()
 	        session_duration
-	0 0 days 00:03:37.740488
+	0 0 days 00:03:48.160022
 
-Avg. duration for converted users per _source_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-	
-	>>> # avg. duration for converted users - per source
-	>>> # label sessions with a conversion
-	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='github_press') >= 1
-	>>> # label hits where at that point in time, there are 0 conversions in the session
-	>>> df_marketing_selection['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_marketing_selection, 'github_press') == 0
-	>>> # filter on above created labels to find the users who converted for the very first time
-	>>> converted_users = df_marketing_selection[(df_marketing_selection.converted_users & df_marketing_selection.zero_conversions_at_moment)]
-	>>> modelhub.aggregate.session_duration(converted_users, groupby=['utm_source']).to_frame().sort_values('utm_source', ascending=False).head(20)
-	                 session_duration
-	utm_source
-	twitter    0 days 00:00:23.775200
-	reddit     0 days 00:02:02.262000
-
-Avg. duration per converted user
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # duration before conversion - per source & user
-	>>> # label sessions with a conversion
-	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='github_press', partition='user_id') >= 1
-	>>> # label hits where at that point in time, there are 0 conversions in the session
-	>>> df_marketing_selection['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_marketing_selection, 'github_press', partition='user_id') == 0
-	>>> # materialize the data frame after adding columns as temporary table to reduce the complexity of the underlying queries
-	>>> df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
-	>>> # filter on above created labels to find the users who converted for the very first time
-	>>> converted_users = df_marketing_selection[(df_marketing_selection.converted_users & df_marketing_selection.zero_conversions_at_moment)]
-	>>> modelhub.aggregate.session_duration(converted_users, groupby=['day', 'utm_source', 'user_id']).to_frame().sort_values('day', ascending=False).head(20)
-	                                                                 session_duration
-	day        utm_source user_id
-	2022-07-26 reddit     ed42dc5f-6040-4ddc-b7e5-48162adb7bbc 0 days 00:02:02.262000
-	           twitter    99f741a0-d05e-4688-8bd9-53f66bf926aa 0 days 00:00:41.883000
-	                      b2e983c9-11c2-4a98-bc15-b96cd93e0a23 0 days 00:00:00.014000
-	2022-07-23 twitter    0586a3c6-3316-4e11-99d6-617942d28e28 0 days 00:00:00.352000
-	2022-07-22 twitter    a4883c3d-8aa1-4222-b6ad-e765c6900179 0 days 00:01:02.267000
-
-Avg. duration before first conversion
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Avg. duration for users that converted for the very first time (not including hits or sessions after the 
-moment of conversion).
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # avg duration before conversion - overall
-	>>> modelhub.aggregate.session_duration(converted_users, groupby=None).to_frame().head()
-	        session_duration
-	0 0 days 00:00:45.355600
-
-Avg. duration before first conversion per _source_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Avg. duration _before first conversion_ per _source_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Avg. duration per campaign _source_ for users who converted for the very first time (not including hits or 
 sessions after the moment of conversion).
 
@@ -585,35 +515,41 @@ sessions after the moment of conversion).
 	:skipif: engine is None
 
 	>>> # avg duration before conversion - per source
+	>>> # label sessions with a conversion
+	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='github_press') >= 1
+	>>> # label hits where at that point in time, there are 0 conversions in the session
+	>>> df_marketing_selection['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_marketing_selection, 'github_press') == 0
+	>>> # filter on above created labels to find the users who converted for the very first time
+	>>> converted_users = df_marketing_selection[(df_marketing_selection.converted_users & df_marketing_selection.zero_conversions_at_moment)]
 	>>> modelhub.aggregate.session_duration(converted_users, groupby=['utm_source']).to_frame().head()
 	                 session_duration
 	utm_source
-	reddit     0 days 00:02:02.262000
-	twitter    0 days 00:00:26.129000
+	reddit     0 days 00:00:17.502500
+	twitter    0 days 00:01:44.533667
 
-Avg. duration with bounces filtered out
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. admonition:: Note
+	
+	To filter out bounces, use parameter `exclude_bounces=True` for the `session_duration` model.
+
+
+.. admonition:: Reference
+	:class: api-reference
+
+	* :doc:`modelhub.Aggregate.session_duration <../open-model-hub/models/aggregation/modelhub.Aggregate.session_duration>`
+	* :doc:`bach.Series.to_frame <../bach/api-reference/Series/bach.Series.to_frame>`
+	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
+	* :doc:`modelhub.Map.conversions_counter <../open-model-hub/models/helper-functions/modelhub.Map.conversions_counter>`
+	* :doc:`modelhub.Map.conversions_in_time <../open-model-hub/models/helper-functions/modelhub.Map.conversions_in_time>`
+	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
+
+Duration & conversions
+----------------------
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> # create dataframe for sessions without zero duration (aka bounces)
-	>>> df_marketing_no_bounces = modelhub.aggregate.session_duration(df_marketing_selection, groupby=['utm_source', 'session_id'], exclude_bounces=True).to_frame()
-	>>> # avg duration for non-bounced users that come from an ad campaign in the full timeframe
-	>>> df_marketing_no_bounces = df_marketing_no_bounces.reset_index().groupby(['utm_source'])['session_duration'].mean().to_frame()
-	>>> df_marketing_no_bounces.head(30)
-	                 session_duration
-	utm_source
-	reddit     0 days 00:02:05.284562
-	twitter    0 days 00:02:21.409402
-
-Avg. daily duration per campaign _source_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # calculate time spent per campaign source, daily
+	>>> # see daily duration & conversions per ad _source_
+	>>> # first calculate time spent per campaign source, daily
 	>>> duration_per_source_daily = modelhub.agg.session_duration(df_marketing_selection, groupby=['utm_source', 'day']).to_frame()
 	>>> # calculate the number of users per campaign source, daily
 	>>> source_users_daily = modelhub.agg.unique_users(df_acquisition, groupby=['utm_source', 'day'])
@@ -624,53 +560,40 @@ Avg. daily duration per campaign _source_
 	>>> converted_users = campaign_conversions_source_daily.to_frame().rename(columns={"unique_users": "converted_users"})
 	>>> source_duration_users_daily = source_duration_users_daily.merge(converted_users, how='left', on=['utm_source', 'day'])
 	>>> source_duration_users_daily = source_duration_users_daily.sort_values(['utm_source', 'day'], ascending=False)
-	>>> source_duration_users_daily.head(50)
+	>>> source_duration_users_daily.head(20)
 	                            session_duration  unique_users  converted_users
 	utm_source day
-	twitter    2022-08-08 0 days 00:03:13.881900            15              NaN
+	twitter    2022-08-20 0 days 00:02:54.795125             7              NaN
+	           2022-08-19 0 days 00:08:50.363750             9              NaN
+	           2022-08-18 0 days 00:00:13.853333             4              NaN
+	           2022-08-17 0 days 00:00:17.638400             6              NaN
+	           2022-08-16 0 days 00:01:22.959429            10              NaN
+	           2022-08-15 0 days 00:00:41.717133            19              NaN
+	           2022-08-14 0 days 00:01:23.530200            10              2.0
+	           2022-08-13 0 days 00:01:08.181000             8              NaN
+	           2022-08-12 0 days 00:00:08.564000             8              NaN
+	           2022-08-11 0 days 00:00:15.621500             9              NaN
+	           2022-08-10 0 days 00:00:23.947714             7              NaN
+	           2022-08-08 0 days 00:03:13.881900            15              NaN
 	           2022-08-07 0 days 00:00:16.193333             5              NaN
 	           2022-08-05 0 days 00:00:01.339500             5              NaN
 	           2022-08-04 0 days 00:01:03.227500            10              1.0
 	           2022-08-03 0 days 00:05:55.457000             4              NaN
 	           2022-08-02 0 days 00:00:09.290600             8              NaN
 	           2022-08-01 0 days 00:00:39.053833            11              NaN
-	           2022-07-31 0 days 00:01:10.712000             1              NaN
-	           2022-07-29 0 days 00:13:07.583500             6              NaN
-	           2022-07-28 0 days 00:00:32.512667             3              NaN
-	           2022-07-27 0 days 00:01:12.981000            18              NaN
-	           2022-07-26 0 days 00:01:24.773308            48              3.0
-	           2022-07-25 0 days 00:02:52.283667            44              1.0
-	           2022-07-24 0 days 00:03:46.970400            34              NaN
-	           2022-07-23 0 days 00:02:27.544364            44              3.0
-	           2022-07-22 0 days 00:06:42.148000            35              1.0
-	           2022-07-21 0 days 00:02:14.805500             6              NaN
-	           2022-07-06 0 days 00:00:01.071000             1              NaN
-	           2022-06-09 0 days 00:03:44.867333             1              NaN
-	reddit     2022-08-09 0 days 00:01:02.719333             4              NaN
-	           2022-08-08 0 days 00:01:14.918500             5              NaN
-	           2022-08-04 0 days 00:00:06.454000             2              NaN
-	           2022-08-03 0 days 00:00:28.143000             6              NaN
-	           2022-08-02 0 days 00:00:06.503000             8              NaN
-	           2022-08-01 0 days 00:00:01.911000             5              NaN
-	           2022-07-26 0 days 00:02:12.743000            15              1.0
-	           2022-07-25 0 days 00:00:04.305000            19              NaN
-	           2022-07-24 0 days 00:06:12.431143            18              NaN
-	           2022-07-23 0 days 00:00:25.027167            10              2.0
-	           2022-07-22 0 days 00:00:25.080000            12              NaN
-	           2022-07-19 0 days 00:08:17.317000             4              NaN
+	reddit     2022-08-20 0 days 00:00:17.293333             6              1.0
+	           2022-08-19 0 days 00:00:46.239000             3              NaN
 
 .. admonition:: Reference
 	:class: api-reference
 
 	* :doc:`modelhub.Aggregate.session_duration <../open-model-hub/models/aggregation/modelhub.Aggregate.session_duration>`
-	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
-	* :doc:`modelhub.Map.conversions_counter <../open-model-hub/models/helper-functions/modelhub.Map.conversions_counter>`
-	* :doc:`modelhub.Map.conversions_in_time <../open-model-hub/models/helper-functions/modelhub.Map.conversions_in_time>`
 	* :doc:`bach.Series.to_frame <../bach/api-reference/Series/bach.Series.to_frame>`
-	* :doc:`bach.Series.reset_index <../bach/api-reference/Series/bach.Series.reset_index>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
-	* :doc:`bach.DataFrame.dropna <../bach/api-reference/DataFrame/bach.DataFrame.dropna>`
+	* :doc:`bach.Series.reset_index <../bach/api-reference/Series/bach.Series.reset_index>`
 	* :doc:`bach.DataFrame.merge <../bach/api-reference/DataFrame/bach.DataFrame.merge>`
+	* :doc:`bach.DataFrame.rename <../bach/api-reference/DataFrame/bach.DataFrame.rename>`
+	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
 
 Deep-dive into user behavior from marketing
@@ -685,28 +608,28 @@ Top used product features for users from marketing campaigns
 	>>> # top used product features for users coming from marketing campaigns
 	>>> top_product_features_from_marketing = modelhub.aggregate.top_product_features(df_marketing_selection)
 	>>> top_product_features_from_marketing.head(20)
-	                                                                                user_id_nunique
-	application      feature_nice_name                                  event_type
-	objectiv-website Link: about-us located at Root Location: home =... PressEvent               21
-	                 Link: spin-up-the-demo located at Root Location... PressEvent               20
-	                 Link: browse-on-github located at Root Location... PressEvent               11
-	                 Link: docs located at Root Location: home => Na... PressEvent               11
-	                 Link: logo located at Root Location: home => Na... PressEvent                8
-	                 Link: spin-up-the-demo located at Root Location... PressEvent                6
-	                 Link: logo located at Root Location: blog => Na... PressEvent                6
-	                 Link: blog located at Root Location: home => Na... PressEvent                6
-	                 Link: docs-taxonomy located at Root Location: h... PressEvent                5
-	                 Link: faq located at Root Location: home => Nav... PressEvent                3
-	                 Link: docs-modeling located at Root Location: h... PressEvent                2
-	                 Link: docs-open-model-hub located at Root Locat... PressEvent                2
-	                 Link: slack located at Root Location: home => N... PressEvent                2
-	                 Link: jobs located at Root Location: home => Na... PressEvent                2
-	                 Pressable: hamburger located at Root Location: ... PressEvent                1
-	                 Link: about-us located at Root Location: home =... PressEvent                1
-	                 Link: blog located at Root Location: blog => Na... PressEvent                1
-	                 Link: docs located at Root Location: blog => Na... PressEvent                1
-	                 Link: docs-tracking located at Root Location: h... PressEvent                1
-	                 Link: github located at Root Location: home => ... PressEvent                1
+	                                                                                                                           user_id_nunique
+	application      feature_nice_name                                                                             event_type
+	objectiv-website Link: about-us located at Root Location: home => Navigation: navbar-top                       PressEvent               16
+	                 Link: spin-up-the-demo located at Root Location: home => Content: hero                        PressEvent               11
+	                 Link: docs located at Root Location: home => Navigation: navbar-top                           PressEvent                8
+	                 Link: blog located at Root Location: home => Navigation: navbar-top                           PressEvent                5
+	                 Link: browse-on-github located at Root Location: home => Content: hero                        PressEvent                4
+	                 Link: jobs located at Root Location: home => Navigation: navbar-top                           PressEvent                4
+	                 Link: spin-up-the-demo located at Root Location: home => Content: try-it                      PressEvent                4
+	                 Link: github located at Root Location: home => Navigation: navbar-top                         PressEvent                3
+	                 Link: logo located at Root Location: blog => Navigation: navbar-top                           PressEvent                3
+	                 Link: docs-open-model-hub located at Root Location: home => Content: solution                 PressEvent                2
+	                 Link: logo located at Root Location: home => Navigation: navbar-top                           PressEvent                2
+	                 Link: faq located at Root Location: home => Navigation: navbar-top                            PressEvent                2
+	                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 PressEvent                1
+	                 Link: about-us located at Root Location: home => Navigation: navbar-top => Overlay: hambur... PressEvent                1
+	                 Link: docs located at Root Location: blog => Navigation: navbar-top => Overlay: hamburger-... PressEvent                1
+	                 Link: docs-modeling located at Root Location: home => Content: solution                       PressEvent                1
+	                 Link: docs-taxonomy located at Root Location: home => Content: solution                       PressEvent                1
+	                 Link: docs-taxonomy located at Root Location: home => Content: taxonomy                       PressEvent                1
+	                 Link: open-model-hub located at Root Location: home => Content: data-modeling                 PressEvent                1
+	                 Link: privacy-policy located at Root Location: home => Navigation: footer                     PressEvent                1
 
 Top used product features for users from marketing campaigns, before they convert
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -717,36 +640,15 @@ Top used product features for users from marketing campaigns, before they conver
 	>>> # top used product features for users coming from marketing campaigns, before they convert
 	>>> top_features_before_conversion_from_marketing = modelhub.agg.top_product_features_before_conversion(df_marketing_selection, name='github_press')
 	>>> top_features_before_conversion_from_marketing.head(20)
-	                                                                                                      unique_users
-	application      feature_nice_name                                                        event_type
-	objectiv-website Link: about-us located at Root Location: home => Navigation: navbar-top  PressEvent             2
-	                 Link: docs-modeling located at Root Location: home => Content: solution  PressEvent             1
-	                 Link: docs-taxonomy located at Root Location: home => Content: taxonomy  PressEvent             1
-	                 Link: spin-up-the-demo located at Root Location: home => Content: hero   PressEvent             1
-	                 Link: spin-up-the-demo located at Root Location: home => Content: try-it PressEvent             1
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # calculate the percentage of converted users per feature: (converted users per feature) / (total users converted)
-	>>> total_converted_users = df_marketing_selection[df_marketing_selection['is_conversion_event']]['user_id'].unique().count().value
-	>>> top_conversion_locations = modelhub.agg.unique_users(df_marketing_selection[df_marketing_selection['is_conversion_event']], groupby='feature_nice_name')
-	>>> top_conversion_locations = (top_conversion_locations / total_converted_users) * 100
-	>>> # show the results, with .to_frame() for nicer formatting
-	>>> top_conversion_locations = top_conversion_locations.to_frame().rename(columns={'unique_users': 'converted_users_percentage'})
-	>>> top_conversion_locations.sort_values(by='converted_users_percentage', ascending=False).head()
-	                                                                         converted_users_percentage
-	feature_nice_name
-	Link: browse-on-github located at Root Location: home => Content: hero                       100.0
+	                                                                                                     unique_users
+	application      feature_nice_name                                                       event_type
+	objectiv-website Link: about-us located at Root Location: home => Navigation: navbar-top PressEvent  1
 
 .. admonition:: Reference
 	:class: api-reference
 
 	* :doc:`modelhub.Aggregate.top_product_features <../open-model-hub/models/aggregation/modelhub.Aggregate.top_product_features>`
 	* :doc:`modelhub.Aggregate.top_product_features_before_conversion <../open-model-hub/models/aggregation/modelhub.Aggregate.top_product_features_before_conversion>`
-	* :doc:`bach.Series.unique <../bach/api-reference/Series/bach.Series.unique>`
-	* :doc:`bach.Series.count <../bach/api-reference/Series/bach.Series.count>`
-	* :doc:`bach.Series.to_frame <../bach/api-reference/Series/bach.Series.to_frame>`
 	* :doc:`bach.DataFrame.head <../bach/api-reference/DataFrame/bach.DataFrame.head>`
 
 Funnel Discovery: flows for _all_ users from marketing campaigns
@@ -768,41 +670,13 @@ Funnel Discovery: flows for _all_ users from marketing campaigns
 	>>> # for every user starting their session, find all maximum n consecutive steps they took
 	>>> df_steps = funnel.get_navigation_paths(df_funnel_from_marketing, steps=max_steps, by='user_id')
 	>>> df_steps.head()
-	                                                                                        location_stack_step_1 location_stack_step_2 location_stack_step_3 location_stack_step_4
+	                                                                                        location_stack_step_1                                                    location_stack_step_2 location_stack_step_3 location_stack_step_4
 	user_id
-	00d9abb7-8f5b-40ef-b189-4b046450eb3d      Link: logo located at Root Location: home => Navigation: navbar-top                  None                  None                  None
-	04ac1790-825a-47a3-aac3-dccfeee61ade      Link: logo located at Root Location: blog => Navigation: navbar-top                  None                  None                  None
-	0586a3c6-3316-4e11-99d6-617942d28e28   Link: browse-on-github located at Root Location: home => Content: hero                  None                  None                  None
-	099dd8fd-696f-425a-a358-86da9c92a703  Link: about-us located at Root Location: home => Navigation: navbar-top                  None                  None                  None
-	0a544db0-158c-41f2-b8c5-c951b87fd093      Link: logo located at Root Location: home => Navigation: navbar-top                  None                  None                  None
-
-.. doctest:: marketing-analytics
-	:skipif: engine is None
-
-	>>> # calculate the most frequent consecutive steps that all users took after starting their session, based on the location stack
-	>>> df_steps.value_counts().to_frame().head(20)
-	                                                                                                                                                                                                                                                                                                  value_counts
-	location_stack_step_1                                                     location_stack_step_2                                                   location_stack_step_3                                                   location_stack_step_4          
-	Link: spin-up-the-demo located at Root Location: home => Content: hero    NaN                                                                     NaN                                                                     NaN                                                                               17
-	Link: about-us located at Root Location: home => Navigation: navbar-top   NaN                                                                     NaN                                                                     NaN                                                                               16
-	Link: browse-on-github located at Root Location: home => Content: hero    NaN                                                                     NaN                                                                     NaN                                                                                8
-	Link: docs located at Root Location: home => Navigation: navbar-top       NaN                                                                     NaN                                                                     NaN                                                                                8
-	Link: logo located at Root Location: home => Navigation: navbar-top       NaN                                                                     NaN                                                                     NaN                                                                                6
-	Link: logo located at Root Location: blog => Navigation: navbar-top       NaN                                                                     NaN                                                                     NaN                                                                                6
-	Link: spin-up-the-demo located at Root Location: home => Content: try-it  NaN                                                                     NaN                                                                     NaN                                                                                5
-	Link: blog located at Root Location: home => Navigation: navbar-top       NaN                                                                     NaN                                                                     NaN                                                                                4
-	Link: docs-taxonomy located at Root Location: home => Content: taxonomy   NaN                                                                     NaN                                                                     NaN                                                                                4
-	Link: faq located at Root Location: home => Navigation: navbar-top        NaN                                                                     NaN                                                                     NaN                                                                                3
-	Link: jobs located at Root Location: home => Navigation: navbar-top       NaN                                                                     NaN                                                                     NaN                                                                                2
-	Link: docs-taxonomy located at Root Location: home => Content: taxonomy   Link: browse-on-github located at Root Location: home => Content: hero  Link: about-us located at Root Location: home => Navigation: navbar-top Link: browse-on-github located at Root Location: home => Content: hero             1
-	Link: docs-tracking located at Root Location: home => Content: solution   NaN                                                                     NaN                                                                     NaN                                                                                1
-	Link: github located at Root Location: home => Navigation: navbar-top     Link: docs located at Root Location: home => Navigation: navbar-top     NaN                                                                     NaN                                                                                1
-	Link: join-us-on-slack located at Root Location: home => Content: slack   Link: spin-up-the-demo located at Root Location: home => Content: hero  NaN                                                                     NaN                                                                                1
-	Link: logo located at Root Location: home => Navigation: navbar-top       Link: blog located at Root Location: home => Navigation: navbar-top     NaN                                                                     NaN                                                                                1
-	Link: privacy-policy located at Root Location: home => Navigation: footer NaN                                                                     NaN                                                                     NaN                                                                                1
-	Link: slack located at Root Location: home => Navigation: navbar-top      Link: about-us located at Root Location: home => Navigation: navbar-top NaN                                                                     NaN                                                                                1
-	                                                                          Link: logo located at Root Location: home => Navigation: navbar-top     NaN                                                                     NaN                                                                                1
-	Link: spin-up-the-demo located at Root Location: home => Content: hero    Link: browse-on-github located at Root Location: home => Content: hero  NaN                                                                     NaN                                                                                1
+	00d9abb7-8f5b-40ef-b189-4b046450eb3d  Link: about-us located at Root Location: home => Navigation: navbar-top                                                                     None                  None                  None
+	06186850-48e2-49b1-963f-8615eab56f30  Link: about-us located at Root Location: home => Navigation: navbar-top                                                                     None                  None                  None
+	10a4beb9-a55b-4d30-8975-2c3c23015c1d      Link: docs located at Root Location: home => Navigation: navbar-top  Link: about-us located at Root Location: home => Navigation: navbar-top                  None                  None
+	11311189-2e02-458d-b474-9137b7d9d8f3       Link: faq located at Root Location: home => Navigation: navbar-top                                                                     None                  None                  None
+	132ef6df-8f7f-42a6-9a33-b63f3f408309   Link: spin-up-the-demo located at Root Location: home => Content: hero                                                                     None                  None                  None
 
 .. code-block:: jupyter-notebook
 	
@@ -821,13 +695,9 @@ Funnel Discovery: flows for _converted_ users from marketing
 	>>> # filter down to all sequences that have actually converted with the `only_converted_paths` param
 	>>> df_steps_till_conversion = funnel.get_navigation_paths(df_funnel_from_marketing, steps=max_steps, by='user_id', add_conversion_step_column=True, only_converted_paths=True)
 	>>> df_steps_till_conversion.head(5)
-	                                                                                        location_stack_step_1                                                   location_stack_step_2                                                   location_stack_step_3 location_stack_step_4  _first_conversion_step_number
+	                                                                                        location_stack_step_1                                                   location_stack_step_2 location_stack_step_3 location_stack_step_4  _first_conversion_step_number
 	user_id
-	99f741a0-d05e-4688-8bd9-53f66bf926aa  Link: about-us located at Root Location: home => Navigation: navbar-top  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
-	99f741a0-d05e-4688-8bd9-53f66bf926aa  Link: docs-taxonomy located at Root Location: home => Content: taxonomy  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
-	a4883c3d-8aa1-4222-b6ad-e765c6900179   Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
-	a4883c3d-8aa1-4222-b6ad-e765c6900179  Link: about-us located at Root Location: home => Navigation: navbar-top  Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: browse-on-github located at Root Location: home => Content: hero                  None                              3
-	ed42dc5f-6040-4ddc-b7e5-48162adb7bbc  Link: docs-modeling located at Root Location: home => Content: solution  Link: browse-on-github located at Root Location: home => Content: hero                                                                    None                  None                              2
+	99f741a0-d05e-4688-8bd9-53f66bf926aa  Link: about-us located at Root Location: home => Navigation: navbar-top  Link: browse-on-github located at Root Location: home => Content: hero                  None                  None                              2
 
 .. code-block:: jupyter-notebook
 	
@@ -851,19 +721,12 @@ Funnel Discovery: drop-off for users from marketing
 	>>> df_funnel_non_converted = df_funnel_non_converted[~df_funnel_non_converted['user_id'].isin(funnel_converted_users)]
 	>>> # get the last used feature in the location_stack before dropping off
 	>>> modelhub.aggregate.drop_off_locations(df_funnel_non_converted, groupby='user_id', percentage=True).head(10)
-	                                                                                                         percentage
-	__feature_nice_name
-	Root Location: home	                                                                                 70.398010
-	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...	          7.960199
-	Link: about-us located at Root Location: home => Navigation: navbar-top	                                  4.477612
-	Link: spin-up-the-demo located at Root Location: home => Content: hero	                                  3.980100
-	Link: docs located at Root Location: home => Navigation: navbar-top	                                  2.487562
-	Link: logo located at Root Location: home => Navigation: navbar-top	                                  1.741294
-	Link: blog located at Root Location: home => Navigation: navbar-top	                                  1.492537
-	Link: spin-up-the-demo located at Root Location: home => Content: try-it	                          1.243781
-	Link: docs-taxonomy located at Root Location: home => Content: taxonomy	                                  0.995025
-	Content: post-release-objectiv-now-has-support-for-deepnote located at Root Location: blog	          0.746269
-
+	                                                                                               percentage
+	location
+	Root Location: home                                                                             50.691244
+	Overlay: star-us-notification-overlay located at Root Location: home => Pressable: star-us...   46.543779
+	Root Location: blog                                                                              1.843318
+	Content: post-release-objectiv-now-has-support-for-deepnote located at Root Location: blog       0.921659
 
 .. admonition:: Reference
 	:class: api-reference
@@ -896,13 +759,13 @@ For more details on how to do feature engineering, see our
 	>>> features_us = feature_prepare.groupby(['user_id', 'utm_source']).session_id.nunique()
 	>>> features_us_unstacked = features_us.unstack(fill_value=0)
 	>>> features_us_unstacked.head()
-	                                      test  reddit  linkedin  twitter  none  hs_email  reactdigest
+	                                      reddit  linkedin  twitter  none  reactdigest
 	user_id
-	0000bb2f-66e9-4e48-8e2f-7d0a82446ef4     0       0         0        0     1         0            0
-	000c5fff-ceb0-4533-b182-b285494fd822     0       0         0        0     1         0            0
-	002116e6-baf2-4f10-bcda-85166008c9b3     0       0         0        0     2         0            0
-	0030b2d8-4be4-4cba-bb59-f1c6e89dae4f     0       0         0        0     3         0            0
-	003fea99-74aa-4c71-8f9c-b81d8d882422     0       0         0        0     1         0            0
+	00d9abb7-8f5b-40ef-b189-4b046450eb3d       0         0        1     1            0
+	00f4ce36-a3dd-4830-a379-9d4d83340d34       0         0        1     0            0
+	01db2734-458c-4381-9761-1fbb5804cdd3       0         0        1     0            0
+	023ec189-91de-4458-9b46-6ac948b6d8b8       0         0        0     3            0
+	028552a8-5951-435e-ab2b-e1278bfc7d41       0         0        0     1            0
 
 .. admonition:: Reference
 	:class: api-reference
@@ -919,4 +782,61 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
+
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
+
+	# --- hide: start ---
+	import os
+	import pandas as pd
+	from bach import DataFrame
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['http', 'marketing', 'application'])
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-08-01', end_date='2022-08-20')
+	df['feature_nice_name'] = df.location_stack.ls.nice_name
+	df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+	df_acquisition = df.copy()
+	df_acquisition['referrer'] = df_acquisition.http.context.referrer
+	df_acquisition['utm_source'] = df_acquisition.marketing.context.source
+	df_acquisition['utm_medium'] = df_acquisition.marketing.context.medium
+	df_acquisition['utm_campaign'] = df_acquisition.marketing.context.campaign
+	campaign_sessions = df_acquisition[~df_acquisition['utm_source'].isnull()]['session_id'].unique()
+	df_marketing_only = df_acquisition[df_acquisition['session_id'].isin(campaign_sessions)]
+	source_selection = ['twitter', 'reddit']
+	sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}), convert_objects=True).sources
+	df_marketing_selection = df_marketing_only[(df_marketing_only.utm_source.isin(sources))]
+	df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
+	users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(users_from_marketing_daily)
+
+That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
+
+Next Steps
+----------
+
+Play with this notebook in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in  under 5 minutes, 
+and play with this example notebook yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* :doc:`Product Analytics notebook <./product-analytics>` - easily run basic product analytics on your data.
+* :doc:`Funnel Discovery notebook <./funnel-discovery>` - analyze the paths that users take that impact your 
+	product goals.

@@ -7,8 +7,9 @@ import pytest
 from sqlalchemy.future import Engine
 
 from bach.savepoints import Savepoints, CreatedObject
+from bach.testing import assert_equals_data
 from sql_models.model import Materialization
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
 @pytest.mark.skip_athena_todo()

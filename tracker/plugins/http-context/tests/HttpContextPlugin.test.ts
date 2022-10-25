@@ -21,6 +21,14 @@ describe('HttpContextPlugin', () => {
     jest.resetAllMocks();
   });
 
+  it('should TrackerConsole.error when calling `enrich` before `initialize`', () => {
+    const testHttpContextPlugin = new HttpContextPlugin();
+    testHttpContextPlugin.enrich({ location_stack: [], global_contexts: [] });
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv:HttpContextPlugin｣ Cannot enrich. Make sure to initialize the plugin first.'
+    );
+  });
+
   it('should TrackerConsole.error when calling `validate` before `initialize`', () => {
     const testHttpContextPlugin = new HttpContextPlugin();
     const validEvent = new TrackerEvent({
@@ -133,6 +141,12 @@ describe('HttpContextPlugin', () => {
     const testTracker = new Tracker({
       applicationId: 'app-id',
       plugins: [new HttpContextPlugin()],
+    });
+
+    it('should return silently when `enrich` is called before `initialize`', () => {
+      const testHttpContextPlugin = new HttpContextPlugin();
+      testHttpContextPlugin.enrich({ location_stack: [], global_contexts: [] });
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
 
     it('should return silently  when calling `validate` before `initialize`', () => {

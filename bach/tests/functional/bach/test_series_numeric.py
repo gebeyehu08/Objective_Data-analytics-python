@@ -1,17 +1,13 @@
 import math
-from decimal import Decimal
 from typing import Union
 
 import numpy as np
 import pandas as pd
-import pytest
-from psycopg2._range import NumericRange
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
-from sql_models.util import is_postgres, is_bigquery
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
-
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
+from bach.testing import assert_equals_data
 
 def helper_test_simple_arithmetic(engine: Engine, a: Union[int, float], b: Union[int, float]):
     """
@@ -121,7 +117,6 @@ def test_aggregations_sum_mincount(engine):
         assert (math.isnan(pd_agg) and bt_agg_value is None) or bt_agg_value == pd_agg
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_aggregations_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': [1, 3, 5, 7, 9]})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
@@ -131,7 +126,7 @@ def test_aggregations_quantile(engine):
     for column, quantile in zip(pdf.columns, quantiles):
         expected = pdf[column].quantile(q=quantile)
         result = bt[column].quantile(q=quantile).to_numpy()[0]
-        assert expected == result
+        assert round(expected, 10) == round(result, 10)
 
     for column in pdf.columns:
         expected_all_quantiles = pdf[column].quantile(q=quantiles)
@@ -139,7 +134,6 @@ def test_aggregations_quantile(engine):
         pd.testing.assert_series_equal(expected_all_quantiles, result_all_quantiles.to_pandas(), check_names=False)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_grouped_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': ['a', 'a', 'a', 'b', 'b']})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
@@ -151,25 +145,17 @@ def test_grouped_quantile(engine):
     pd.testing.assert_series_equal(expected, result.to_pandas(), check_names=False)
 
 
-@pytest.mark.skip_athena_todo()  # TODO: Athena
 def test_series_cut(engine) -> None:
     bins = 4
     inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']
 
     # right == true
     result_right = inhabitants.cut(bins=bins).sort_index()
-    bounds_right = '(]'
+    bounds_right = 'right'
 
-    if is_postgres(engine):
-        bin1_right = NumericRange(Decimal('607.215'),  Decimal('23896.25'), bounds=bounds_right)
-        bin2_right = NumericRange(Decimal('23896.25'),  Decimal('47092.5'), bounds=bounds_right)
-        bin4_right = NumericRange(Decimal('70288.75'), Decimal('93485'), bounds=bounds_right)
-    elif is_bigquery(engine):
-        bin1_right = {'lower': 607.215,  'upper': 23896.25, 'bounds': bounds_right}
-        bin2_right = {'lower': 23896.25,  'upper': 47092.5, 'bounds': bounds_right}
-        bin4_right = {'lower': 70288.75,  'upper': 93485., 'bounds': bounds_right}
-    else:
-        raise Exception
+    bin1_right = pd.Interval(607.215, 23896.25, bounds_right)
+    bin2_right = pd.Interval(23896.25, 47092.5, bounds_right)
+    bin4_right = pd.Interval(70288.75, 93485, bounds_right)
 
     assert_equals_data(
         result_right,
@@ -187,23 +173,16 @@ def test_series_cut(engine) -> None:
             [33520, bin2_right],
             [93485, bin4_right],
         ],
+        use_to_pandas=True
     )
 
     # right == false
     result_not_right = inhabitants.cut(bins=bins, right=False).sort_index()
-    bounds_not_right = '[)'
+    left_bounds = 'left'
 
-    if is_postgres(engine):
-        bin1_not_right = NumericRange(Decimal('700'),  Decimal('23896.25'), bounds=bounds_not_right)
-        bin2_not_right = NumericRange(Decimal('23896.25'),  Decimal('47092.5'), bounds=bounds_not_right)
-        bin4_not_right = NumericRange(Decimal('70288.75'), Decimal('93577.785'), bounds=bounds_not_right)
-    elif is_bigquery(engine):
-        bin1_not_right = {'lower': 700.,  'upper': 23896.25, 'bounds': bounds_not_right}
-        bin2_not_right = {'lower': 23896.25,  'upper': 47092.5, 'bounds': bounds_not_right}
-        bin4_not_right = {'lower': 70288.75,  'upper': 93577.785, 'bounds': bounds_not_right}
-    else:
-        raise Exception
-
+    bin1_not_right = pd.Interval(700., 23896.25, left_bounds)
+    bin2_not_right = pd.Interval(23896.25, 47092.5, left_bounds)
+    bin4_not_right = pd.Interval(70288.75, 93577.785, left_bounds)
     assert_equals_data(
         result_not_right,
         expected_columns=['inhabitants', 'range'],
@@ -220,6 +199,7 @@ def test_series_cut(engine) -> None:
             [33520, bin2_not_right],
             [93485, bin4_not_right],
         ],
+        use_to_pandas=True
     )
 
     inhabitants_pdf = inhabitants.to_pandas()
@@ -234,24 +214,15 @@ def test_series_cut(engine) -> None:
             np.testing.assert_almost_equal(exp.right, float(res.right), decimal=2)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_series_qcut(engine) -> None:
-    bounds = '(]'
+    bounds = 'right'
     inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']
 
     result = inhabitants.qcut(q=4).sort_index()
-    if is_postgres(engine):
-        bin1 = NumericRange(Decimal('699.999'),  Decimal('2007.5'), bounds=bounds)
-        bin2 = NumericRange(Decimal('2007.5'),  Decimal('10120'), bounds=bounds)
-        bin3 = NumericRange(Decimal('10120'),  Decimal('13750'), bounds=bounds)
-        bin4 = NumericRange(Decimal('13750'), Decimal('93485'), bounds=bounds)
-    elif is_bigquery(engine):
-        bin1 = {'lower': 699.999, 'upper': 2007.5, 'bounds': bounds}
-        bin2 = {'lower': 2007.5, 'upper': 10120, 'bounds': bounds}
-        bin3 = {'lower': 10120, 'upper': 13750, 'bounds': bounds}
-        bin4 = {'lower': 13750, 'upper': 93485, 'bounds': bounds}
-    else:
-        raise Exception()
+    bin1 = pd.Interval(699.999, 2007.5, closed=bounds)
+    bin2 = pd.Interval(2007.5, 10120., closed=bounds)
+    bin3 = pd.Interval(10120., 13750., closed=bounds)
+    bin4 = pd.Interval(13750., 93485., closed=bounds)
 
     assert_equals_data(
         result,
@@ -269,16 +240,12 @@ def test_series_qcut(engine) -> None:
             [33520, bin4],
             [93485, bin4],
         ],
+        use_to_pandas=True,
     )
 
     result2 = inhabitants.qcut(q=[0.25, 0.5]).sort_index()
 
-    if is_postgres(engine):
-        bin2 = NumericRange(Decimal('2007.499'),  Decimal('10120'), bounds=bounds)
-    elif is_bigquery(engine):
-        bin2 = {'lower': 2007.499, 'upper': 10120, 'bounds': bounds}
-    else:
-        raise Exception()
+    bin2 = pd.Interval(2007.499, 10120., closed=bounds)
 
     assert_equals_data(
         result2,
@@ -296,6 +263,7 @@ def test_series_qcut(engine) -> None:
             [33520, None],
             [93485, None],
         ],
+        use_to_pandas=True,
     )
 
     inhabitants_pdf = inhabitants.to_pandas().sort_values()
@@ -399,3 +367,29 @@ def test_exp(engine) -> None:
         decimal=14
     )
 
+
+def test_astype_to_string(engine):
+    pdf = pd.DataFrame(
+        data={
+            'value_0': [123.0, 123.123456, 123.01, 123.0000],
+            'value_1': [123] * 4,
+            'value_2': [123.123] * 4,
+            'value_3': [123.0] * 4,
+            'value_4': [0] * 4,
+        }
+    )
+    df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
+    df['value_1'] = df['value_1'].astype('float64')
+    df['value_4'] = df['value_4'].astype('float64')
+
+    df = df.astype(str)
+    assert_equals_data(
+        df,
+        expected_columns=['_index_0', 'value_0', 'value_1', 'value_2', 'value_3', 'value_4'],
+        expected_data=[
+            [0, '123',        '123', '123.123', '123', '0'],
+            [1, '123.123456', '123', '123.123', '123', '0'],
+            [2, '123.01',     '123', '123.123', '123', '0'],
+            [3, '123',        '123', '123.123', '123', '0']
+        ]
+    )

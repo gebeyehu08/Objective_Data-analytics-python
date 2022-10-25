@@ -13,32 +13,30 @@ import pandas
 import sqlparse
 from sqlalchemy.engine import Engine
 
-from bach.expression import Expression, SingleValueExpression, VariableToken, ColumnReferenceToken
+from bach.expression import Expression, SingleValueExpression, VariableToken, NonAtomicExpression
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
 from bach.utils import (
-    escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn
+    escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn,
+    get_name_to_column_mapping, get_sql_column_name, merge_sql_statements
 )
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, RefPath, SourceTableModelBuilder
 
 from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres, \
-    is_athena
+from sql_models.util import is_bigquery, DatabaseNotSupportedException, is_postgres, is_athena,\
+    ddl_quote_identifier
 
 if TYPE_CHECKING:
     from bach.partitioning import Window, GroupBy
     from bach.savepoints import Savepoints
     from bach.series import Series, SeriesBoolean
 
-# TODO exclude from docs
 DataFrameOrSeries = Union['DataFrame', 'Series']
 # ColumnNames: a single column name, or a list of column names
-# TODO exclude from docs
 ColumnNames = Union[str, List[str]]
-# TODO exclude from docs
 ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 # ColumnFunction: Identifier for a function that can be applied to a column, possibly in the context of a
 #     window or aggregation.
@@ -227,7 +225,11 @@ class DataFrame:
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
 
-        validate_node_column_references_in_sorting_expressions(node=base_node, order_by=self.order_by)
+        validate_node_column_references_in_sorting_expressions(
+            dialect=engine.dialect,
+            node=base_node,
+            order_by=self.order_by
+        )
 
     @property
     def engine(self):
@@ -337,17 +339,28 @@ class DataFrame:
         a DataFrame will change it to be not materialized. Calling :py:meth:`materialize` on a
         non-materialized DataFrame will return a new DataFrame that is materialized.
 
-        TODO: a known problem is that DataFrames with 'json_postgres' columns are never in a materialized
-         state, and cannot be materialized with materialize()
+        A known problem is that DataFrames with 'json_postgres' columns are never in a materialized
+        state, and cannot be materialized with materialize()
 
         :returns: True if this DataFrame is in a materialized state, False otherwise
         """
         if self.group_by or self.order_by:
             return False
-        if tuple(self.all_series.keys()) != self.base_node.columns:
+        if tuple(self.all_series.keys()) != self.base_node.series_names:
             return False
+        dialect = self.engine.dialect
         for name, series in self.all_series.items():
-            if series.expression != Expression.column_reference(name):
+            # In some cases there are two possible expected column names: For BigQuery we only allow
+            # lower-case series names, as mixing upper and lower case can lead to duplicate names. So names
+            # with upper-case characters will be escaped and get_sql_column_name() will return a name
+            # different from the series name.
+            # However, if we are querying directly from a table, then it is okay to query a column with upper
+            # case characters in the name, as then there is a guarantee that the column name is unique.
+            possible_column_expressions = [
+                Expression.column_reference(name),
+                Expression.column_reference(get_sql_column_name(dialect, name))
+            ]
+            if series.expression not in possible_column_expressions:
                 return False
         return True
 
@@ -537,6 +550,7 @@ class DataFrame:
             table_name: str,
             index: List[str],
             all_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
+            name_to_column_mapping: Optional[Mapping[str, str]] = None
     ) -> 'DataFrame':
         """
         Instantiate a new DataFrame based on the content of an existing table in the database.
@@ -547,22 +561,27 @@ class DataFrame:
         :param engine: a sqlalchemy engine for the database.
         :param table_name: the table name that contains the data to instantiate as DataFrame.
             Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'.
-        :param index: list of column names that make up the index. At least one column needs to be
+        :param index: list of series names that make up the index. At least one series needs to be
             selected for the index.
-        :param all_dtypes: Optional. Mapping from column name to dtype.
-            Must contain all index and data columns.
-            Must be in same order as the columns appear in the the sql-model.
+        :param all_dtypes: Optional. Mapping from series name to dtype.
+            Must contain all index and data series.
+            Must be in same order as the columns appear in the sql-model.
+        :param name_to_column_mapping: Optional mapping from series names to the actual column names in the
+            table. If mapping is None or missing a specific name, then the column name is assumed to be the
+            same as the series name.
         :returns: A DataFrame based on a sql table.
 
         .. note::
             If all_dtypes is not set, then this will query the database.
         """
+        name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
         if all_dtypes is not None:
             dtypes = all_dtypes
         else:
             dtypes = get_dtypes_from_table(
                 engine=engine,
                 table_name=table_name,
+                name_to_column_mapping=name_to_column_mapping
             )
 
         # We just generate a reference to the base table
@@ -571,7 +590,8 @@ class DataFrame:
             engine=engine,
             model=sql_model,
             index=index,
-            all_dtypes=dtypes
+            all_dtypes=dtypes,
+            name_to_column_mapping=name_to_column_mapping
         )
 
     @classmethod
@@ -580,36 +600,46 @@ class DataFrame:
             engine: Engine,
             model: SqlModel,
             index: List[str],
-            all_dtypes: Optional[Mapping[str, StructuredDtype]] = None
+            all_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
+            name_to_column_mapping: Optional[Mapping[str, str]] = None
     ) -> 'DataFrame':
         """
         Instantiate a new DataFrame based on the result of the query defined in `model`.
 
-        If all_dtypes is not specified, then a transaction scoped temporary table will be created with
-        0 result rows from the model. The meta data of this table will be used to deduce the dtypes.
+        If all_dtypes is not specified, then the model is compiled to sql and executed as a query on the
+        database. The result-set's meta data is used to determine the columns and dtypes. This might not work
+        with custom data types. If the all_dtypes data is available, it's advised to provide it.
 
         :param engine: a sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
-        :param index: list of column names that make up the index. At least one column needs to be
+        :param index: list of series names that make up the index. At least one series needs to be
             selected for the index.
-        :param all_dtypes: Optional. Mapping from column name to dtype.
-            Must contain all index and data columns.
-            Must be in same order as the columns appear in the the sql-model.
+        :param all_dtypes: Optional. Mapping series name to dtype.
+            Must contain all index and data series.
+            Must be in same order as the columns appear in the sql-model.
+        :param name_to_column_mapping: Optional mapping from series names to the actual column names in the
+            model result. If mapping is None or missing a specific name, then the column name is assumed to
+            be the same as the series name.
         :returns: A DataFrame based on an SqlModel
 
         .. note::
-            If all_dtypes is not set, then this will query the database and create and remove a temporary
-            table.
+            If all_dtypes is not set, then this will query the database
         """
+        name_to_column_mapping = name_to_column_mapping if name_to_column_mapping else {}
         if all_dtypes is not None:
             dtypes = all_dtypes
         else:
-            dtypes = get_dtypes_from_model(engine=engine, node=model)
+            dtypes = get_dtypes_from_model(
+                engine=engine,
+                node=model,
+                name_to_column_mapping=name_to_column_mapping
+            )
         return cls._from_node(
             engine=engine,
             model=model,
             index=index,
-            all_dtypes=dtypes
+            all_dtypes=dtypes,
+            name_to_column_mapping=name_to_column_mapping
         )
 
     @classmethod
@@ -618,17 +648,22 @@ class DataFrame:
             engine,
             model: SqlModel,
             index: List[str],
-            all_dtypes: Mapping[str, StructuredDtype]
+            all_dtypes: Mapping[str, StructuredDtype],
+            name_to_column_mapping: Mapping[str, str]
     ) -> 'DataFrame':
         """
         INTERNAL: Instantiate a new DataFrame based on the result of the query defined in `model`.
+
         :param engine: an sqlalchemy engine for the database.
         :param model: an SqlModel that specifies the queries to instantiate as DataFrame.
-        :param index: list of column names that make up the index. At least one column needs to be
+        :param index: list of series names that make up the index. At least one series needs to be
             selected for the index.
-        :param all_dtypes: Dictionary mapping column name to dtype.
-            Must contain all index and data columns.
-            Must be in same order as the columns appear in the the sql-model.
+        :param all_dtypes: Dictionary mapping series name to dtype.
+            Must contain all index and data series.
+            Must be in same order as the columns appear in the sql-model.
+        :param name_to_column_mapping: Mapping from series names to the actual column names in the
+            model result. If mapping is missing a specific name, then the column name is assumed to
+            be the same as the series name.
         :returns: A DataFrame based on an SqlModel
 
         """
@@ -640,9 +675,11 @@ class DataFrame:
         index_dtypes = {k: all_dtypes[k] for k in index}
         series_dtypes = {k: all_dtypes[k] for k in all_dtypes.keys() if k not in index}
 
+        column_expressions = {c: Expression.column_reference(name_to_column_mapping.get(c, c))
+                              for c in all_dtypes.keys()}
         bach_model = BachSqlModel.from_sql_model(
             sql_model=model,
-            column_expressions={c: Expression.column_reference(c) for c in all_dtypes.keys()},
+            column_expressions=column_expressions,
         )
 
         from bach.savepoints import Savepoints
@@ -654,7 +691,8 @@ class DataFrame:
             group_by=None,
             order_by=[],
             savepoints=Savepoints(),
-            variables={}
+            variables={},
+            name_to_column_mapping=name_to_column_mapping
         )
         if not df.is_materialized:
             # This happens when the columns in the model are in a different order than the columns in the
@@ -732,6 +770,7 @@ class DataFrame:
     @classmethod
     def get_instance(
         cls,
+        *,
         engine,
         base_node: BachSqlModel,
         index_dtypes: Mapping[str, StructuredDtype],
@@ -739,13 +778,15 @@ class DataFrame:
         group_by: Optional['GroupBy'],
         order_by: List[SortColumn],
         savepoints: 'Savepoints',
-        variables: Dict['DtypeNamePair', Hashable]
+        variables: Dict['DtypeNamePair', Hashable],
+        name_to_column_mapping: Mapping[str, str],
     ) -> 'DataFrame':
         """
         INTERNAL: Get an instance with the right series instantiated based on the dtypes array.
 
         This assumes that base_node has a column for all names in index_dtypes and dtypes.
-        If single_value is True, SingleValueExpression is used as the class for the series expressions
+        name_to_column_mapping maps series names to the sql column names in base_node, for missing entries
+        the column name is assumed to be the series name.
         """
         base_params = {
             'engine': engine,
@@ -757,7 +798,7 @@ class DataFrame:
             name: get_series_type_from_dtype(dtype).get_class_instance(
                 index={},  # Empty index for index series
                 name=name,
-                expression=Expression.column_reference(name),
+                expression=Expression.column_reference(name_to_column_mapping.get(name, name)),
                 instance_dtype=dtype,
                 **base_params
             )
@@ -768,7 +809,7 @@ class DataFrame:
             name: get_series_type_from_dtype(dtype).get_class_instance(
                 index=index,
                 name=name,
-                expression=Expression.column_reference(name),
+                expression=Expression.column_reference(name_to_column_mapping.get(name, name)),
                 instance_dtype=dtype,
                 **base_params
             )
@@ -788,6 +829,7 @@ class DataFrame:
 
     def copy_override(
         self,
+        *,
         engine: Optional[Engine] = None,
         base_node: Optional[BachSqlModel] = None,
         index: Optional[Mapping[str, 'Series']] = None,
@@ -797,8 +839,9 @@ class DataFrame:
         variables: Optional[Dict[DtypeNamePair, Hashable]] = None,
         index_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
         series_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
-        single_value: bool = False,
         savepoints: Optional['Savepoints'] = None,
+        single_value: bool = False,
+        name_to_column_mapping: Dict[str, str] = None,
         **kwargs
     ) -> 'DataFrame':
         """
@@ -806,9 +849,13 @@ class DataFrame:
 
         Create a copy of self, with the given arguments overridden
 
-        There are three special parameters: index_dtypes, series_dtypes and single_value. These are used to
-        create new index and data series iff index and/or series are not given. `single_value` determines
-        whether the Expressions for those newly created series should be SingleValueExpressions or not.
+        There are four special parameters:
+            index_dtypes, series_dtypes, single_value and name_to_column_mapping.
+        These are used to create new index and data series iff index and/or series are not given.
+        `single_value` determines whether the Expressions for those newly created series should be
+        `SingleValueExpressions` or not.
+        `name_to_column_mapping` optionally maps series names to the sql column names in base_node.
+
         All other arguments are passed through to `__init__`, filled with current instance values if None is
         given in the parameters.
         """
@@ -831,6 +878,7 @@ class DataFrame:
         }
 
         expression_class = SingleValueExpression if single_value else Expression
+        name_to_column_mapping = name_to_column_mapping if name_to_column_mapping is not None else {}
 
         if index_dtypes:
             new_index: Dict[str, Series] = {}
@@ -841,7 +889,7 @@ class DataFrame:
                     base_node=args['base_node'],
                     index={},  # Empty index for index series
                     name=name,
-                    expression=expression_class.column_reference(name),
+                    expression=expression_class.column_reference(name_to_column_mapping.get(name, name)),
                     group_by=args['group_by'],
                     order_by=[],
                     instance_dtype=dtype
@@ -861,21 +909,22 @@ class DataFrame:
                             f'cannot instantiate {series_type.__name__} class without level information.'
                         )
                     multi_level_series = cast(SeriesAbstractMultiLevel, self.all_series[name])
-                    extra_params.update(
-                        {
-                            lvl_name: lvl.copy_override(
-                                expression=expression_class.column_reference(f'_{name}_{lvl_name}')
+
+                    levels_extra_params = {}
+                    for lvl_name, lvl in multi_level_series.levels.items():
+                        col_name = f'_{name}_{lvl_name}'
+                        sql_col_name = name_to_column_mapping.get(col_name, col_name)
+                        levels_extra_params[lvl_name] = lvl.copy_override(
+                                expression=expression_class.column_reference(sql_col_name)
                             )
-                            for lvl_name, lvl in multi_level_series.levels.items()
-                        }
-                    )
+                    extra_params.update(levels_extra_params)
 
                 new_series[name] = series_type.get_class_instance(
                     engine=args['engine'],
                     base_node=args['base_node'],
                     index=args['index'],  # Empty index for index series
                     name=name,
-                    expression=expression_class.column_reference(name),
+                    expression=expression_class.column_reference(name_to_column_mapping.get(name, name)),
                     group_by=args['group_by'],
                     order_by=[],
                     instance_dtype=dtype,
@@ -987,6 +1036,7 @@ class DataFrame:
         """
         index_dtypes = {k: v.instance_dtype for k, v in self.index.items()}
         series_dtypes = {k: v.instance_dtype for k, v in self.data.items()}
+        name_to_column_mapping = get_name_to_column_mapping(self.engine.dialect, self.all_series.keys())
         node = self.get_current_node(name=node_name, limit=limit, distinct=distinct)
         materialization = Materialization.normalize(materialization)
         assert materialization in (Materialization.CTE, Materialization.TEMP_TABLE)
@@ -1000,7 +1050,8 @@ class DataFrame:
             group_by=None,
             order_by=[],
             savepoints=self.savepoints,
-            variables=self.variables
+            variables=self.variables,
+            name_to_column_mapping=name_to_column_mapping
         )
 
         if not inplace:
@@ -1114,7 +1165,7 @@ class DataFrame:
             sure that `table_name` does not contain any valuable information. Additionally, make sure \
             that it is not a source table of this DataFrame.
 
-        :raises Exception: If if_exists='fail'' and the table already exists. The exact exception depends on
+        :raises Exception: If if_exists='fail' and the table already exists. The exact exception depends on
             the underlying database.
         :return: New DataFrame; the base_node consists of a query on the newly created table.
 
@@ -1126,31 +1177,50 @@ class DataFrame:
         .. note::
             This function writes to the database.
         """
+        from bach.series import SeriesJson
         if if_exists not in {'fail', 'replace'}:
             raise ValueError(f'Value of if_exists ({if_exists}) must be either "fail" or "replace"')
         dialect = self.engine.dialect
-        model = self.get_current_node(name='database_create_table')
+        df_cp = self.copy()
+
+        # since hive does not support json type, we must cast all JSON series to string.
+        series_to_stringify = {
+            series.name: 'string'
+            for series in self.all_series.values()
+            if isinstance(series, SeriesJson) and is_athena(dialect)
+        }
+        if series_to_stringify:
+            df_cp = df_cp.astype(series_to_stringify)
+
+        model = df_cp.get_current_node(name='database_create_table')
         model = model.copy_set_materialization(Materialization.TABLE)
         model = model.copy_set_materialization_name(materialization_name=table_name)
 
         placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
 
-        sql = to_sql(dialect=dialect, model=model)
+        sql_statements = []
+        if if_exists == 'replace':
+            sql_drop = f'DROP TABLE IF EXISTS {ddl_quote_identifier(dialect, table_name)}'
+            sql_statements.append(sql_drop)
+        sql_create = to_sql(dialect=dialect, model=model)
+        sql_statements.append(sql_create)
+
+        sql_statements = merge_sql_statements(dialect, sql_statements)
         with self.engine.connect() as conn:
-            if if_exists == 'replace':
-                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}; {sql}'
+            for sql in sql_statements:
+                sql = escape_parameter_characters(conn, sql)
+                conn.execute(sql)
 
-            sql = escape_parameter_characters(conn, sql)
-            conn.execute(sql)
-
-        all_dtypes = {**self.index_dtypes, **self.dtypes}
-        return self.from_table(
+        all_dtypes = {**df_cp.index_dtypes, **df_cp.dtypes}
+        result = self.from_table(
             engine=self.engine,
             table_name=table_name,
             index=self.index_columns,
             all_dtypes=all_dtypes
         )
+        # cast to original dtypes
+        return result.astype(self.dtypes)
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
@@ -1235,11 +1305,13 @@ class DataFrame:
                         name='getitem_where_boolean',
                         where_clause=Expression.construct("where {}", key.expression))
 
+            name_to_column_mapping = get_name_to_column_mapping(self.engine.dialect, self.all_series.keys())
             return self.copy_override(
                 base_node=node,
                 group_by=None,
                 index_dtypes={name: series.instance_dtype for name, series in self.index.items()},
                 series_dtypes={name: series.instance_dtype for name, series in self.data.items()},
+                name_to_column_mapping=name_to_column_mapping,
                 single_value=single_value
             )
         raise NotImplementedError(f"Only str, (set|list)[str], slice or SeriesBoolean are supported, "
@@ -1989,17 +2061,23 @@ class DataFrame:
             This function queries the database.
         """
         sql = self.view_sql(limit=limit)
+        dialect = self.engine.dialect
 
         series_name_to_dtype = {}
-        for series in self.all_series.values():
+        for name, series in self.all_series.items():
             pandas_info = series.to_pandas_info()
             if pandas_info is not None:
-                series_name_to_dtype[series.name] = pandas_info.dtype
+                sql_column_name = get_sql_column_name(dialect=dialect, name=name)
+                series_name_to_dtype[sql_column_name] = pandas_info.dtype
 
         with self.engine.connect() as conn:
             # read_sql_query expects a parameterized query, so we need to escape the parameter characters
             sql = escape_parameter_characters(conn, sql)
             pandas_df = pandas.read_sql_query(sql, conn, dtype=series_name_to_dtype)
+
+        # Rename the columns that the query gives, to the actual series names of the DataFrame
+        columns = {get_sql_column_name(dialect=dialect, name=name): name for name in self.all_series.keys()}
+        pandas_df = pandas_df.rename(columns=columns)
 
         # Post-process any columns if needed. e.g. in BigQuery we represent UUIDs as text, so we convert
         # the strings that the query gives us into UUID objects
@@ -2061,6 +2139,13 @@ class DataFrame:
         exprs = []
         fmtstr = []
 
+        # flag indicating that an alias from the select clause can be used
+        # directly in the order by clause. Meaning that we should avoid using the series'
+        # expression as it will be evaluated to the actual output column
+        # BigQuery: https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#order_by_clause
+        # PrestoDB: https://prestodb.io/docs/current/sql/select.html#order-by-clause
+        alias_allowed_in_order_by = is_bigquery(self.engine) or is_athena(self.engine)
+
         for sc in self.order_by:
             # pandas sorts by default all nulls last
             fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
@@ -2073,8 +2158,16 @@ class DataFrame:
                 continue
 
             expr = sc.expression
-            if self.group_by and is_bigquery(self.engine):
-                expr = Expression.column_reference(all_series_expr[expr.to_sql(dialect)])
+            sql_expr = expr.to_sql(dialect)
+
+            if sql_expr in all_series_expr:
+                if (
+                    alias_allowed_in_order_by or (self.group_by and is_bigquery(self.engine))
+                ):
+                    expr = Expression.column_reference(
+                        get_sql_column_name(dialect, all_series_expr[sql_expr])
+                    )
+
             exprs.append(expr)
             fmtstr.append(fmt)
 
@@ -2533,65 +2626,8 @@ class DataFrame:
         :param axis: only ``axis=1`` is supported. This means columns are aggregated.
         :returns: a new DataFrame with the aggregation applied to all selected columns.
         """
-        valid_index = (
-            {s.name: s for s in self._index.values() if hasattr(s, 'quantile')}
-            if self.group_by is None else {}
-        )
-        valid_series = {
-            s.name: s.copy_override(index=valid_index) for s in self._data.values() if hasattr(s, 'quantile')
-        }
-        if not valid_series and not valid_index:
-            raise ValueError('DataFrame has no series supporting "quantile" operation.')
-
-        df = self.copy_override(series=valid_series, index=valid_index)
-        if df.group_by is None:
-            df = df.groupby()
-
-        quantiles = [q] if isinstance(q, float) else q
-
-        all_quantile_dfs = []
-        for qt in quantiles:
-            new_series = df._apply_func_to_series(
-                func='quantile',
-                axis=axis,
-                numeric_only=False,
-                exclude_non_applied=True,
-                partition=df.group_by,
-                q=qt,
-                **kwargs,
-            )
-            initial_series = new_series[0]
-            quantile_df = df.copy_override(
-                base_node=initial_series.base_node,
-                series={s.name: s for s in new_series},
-                index={},
-                group_by=initial_series.group_by,
-            )
-
-            if quantile_df.group_by:
-                # materialize the dataframe since we need to add the label for the quantile
-                quantile_df = quantile_df.materialize()
-
-            quantile_df['quantile'] = qt
-            all_quantile_dfs.append(quantile_df)
-
-        final_index = 'quantile'
-
-        if len(quantiles) == 1:
-            # if only one quantile was calculated, then we don't need to add the label on the index
-            result = all_quantile_dfs[0]
-            result = result[[col for col in result.data_columns if col != final_index]]
-        else:
-            from bach.operations.concat import DataFrameConcatOperation
-            result = DataFrameConcatOperation(objects=all_quantile_dfs, ignore_index=True)()
-            # q column should be in the index when calculating multiple quantiles
-            result = result.set_index('quantile')
-
-        if is_bigquery(result.engine):
-            # BigQuery returns quantile per row, need to apply distinct
-            result = result.materialize(node_name='bq_quantile', distinct=True)
-
-        return result
+        from bach.quantile import calculate_quantiles_df
+        return calculate_quantiles_df(df=self.copy(), q=q, partition=self.group_by)
 
     def nunique(self, axis=1, skipna=True, **kwargs):
         """
@@ -3065,7 +3101,14 @@ class DataFrame:
         for ds in dropna_series:
             main_condition = self.all_series[ds].isnull()
             if self.all_series[ds].dtype in ['float64', 'int64']:
-                main_condition = main_condition | (self.all_series[ds] == float('nan'))
+                # PG
+                nan_condition = self.all_series[ds] == float('nan')
+                if is_athena(self.engine) or is_bigquery(self.engine):
+                    nan_condition = nan_condition.copy_override(
+                        expression=NonAtomicExpression.construct('is_nan({})', self.all_series[ds]),
+                    )
+
+                main_condition = main_condition | nan_condition
 
             conditions.append(main_condition)
 
@@ -3441,6 +3484,9 @@ class DataFrame:
 
         .. note::
             DataFrame should contain at least one index level.
+
+        .. note::
+            This function queries the database.
         """
         if not self.index:
             raise IndexError('DataFrame/Series should have at least one index level.')

@@ -2,13 +2,13 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
-from bach.series import Series
+from bach.series import Series, SeriesString, SeriesInt64, SeriesFloat64
+
 from sql_models.constants import NotSet, not_set
 from typing import cast, List, Union, TYPE_CHECKING
 
-from sql_models.util import is_bigquery, is_postgres
-
 from modelhub.decorators import use_only_required_objectiv_series
+from modelhub.series import SeriesLocationStack
 from modelhub.util import check_groupby
 
 if TYPE_CHECKING:
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, Series]], str, Series, NotSet]
+LocationStackType = Union[str, SeriesString, SeriesLocationStack, SeriesInt64]
 
 
 class Aggregate:
@@ -427,17 +428,19 @@ class Aggregate:
         if _end_date is not None:
             data = data[data['moment'] < _end_date]
 
-        # in BigQuery columns cannot start with numbers
+        cd_series = data['cohort_distance'].copy_override_type(bach.SeriesFloat64).round()
+        formatted_cd_series = (
+            cd_series.astype(dtype=bach.SeriesString.dtype).copy_override_type(bach.SeriesString)
+        )
         data['cohort_distance_prefix'] = '_'
-        data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
-        data['cohort_distance'] = data['cohort_distance_prefix'] + data['cohort_distance']
+        data['cohort_distance'] = data['cohort_distance_prefix'] + formatted_cd_series
 
         retention_matrix = data.groupby(['first_cohort',
                                          'cohort_distance']).agg({'user_id': 'nunique'}).unstack(
             level='cohort_distance')
 
         # renaming columns, removing string attached after unstacking
-        column_name_map = {col: col.replace('__user_id_nunique', '').replace('.0', '')
+        column_name_map = {col: col.replace('__user_id_nunique', '')
                            for col in retention_matrix.data_columns}
         retention_matrix = retention_matrix.rename(columns=column_name_map)
 
@@ -479,14 +482,16 @@ class Aggregate:
 
     @staticmethod
     def drop_off_locations(data: bach.DataFrame,
-                           location_stack: 'SeriesLocationStack' = None,
+                           location_stack: LocationStackType = None,
                            groupby: Union[List[Union[str, Series]], str, Series] = 'user_id',
                            percentage=False) -> bach.DataFrame:
         """
         Find the locations/features where users drop off, and their usage/share.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location_stack: the slice of the location stack to consider.
+        :param location_stack: the column of which to create the drop-off locations.
+            Can be a string of the name of the column in data, or a Series with the
+            same base node as `data`. If None the default location stack is taken.
 
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
             - if `None`, the whole location stack is taken.
@@ -498,28 +503,123 @@ class Aggregate:
 
         data = data.copy()
 
-        if location_stack is not None:
-            data['__feature_nice_name'] = location_stack.ls.nice_name
-        else:
-            data['__feature_nice_name'] = data.location_stack.ls.nice_name
+        column = location_stack or data['location_stack']
+        if type(column) == str:
+            column = data[column]
+
+        data['location'] = column
+        if type(column) == SeriesLocationStack:
+            # extract the nice name per event
+            data['location'] = column.ls.nice_name
 
         # need to drop missing values because we don't
         # want to get as a last step None value
-        data = data.dropna(subset='__feature_nice_name')
+        data = data.dropna(subset='location')
 
-        by = [data['moment']]
-        series = data.groupby(groupby)['__feature_nice_name'].sort_by_series(by=by,
-                                                                             ascending=True)
-        series_json_array = cast(bach.SeriesString, series).to_json_array()
+        window = data.sort_values(by='moment', ascending=True).groupby(groupby).window(
+            end_boundary=bach.partitioning.WindowFrameBoundary.FOLLOWING,
+        )
+        drop_loc = window['location'].window_last_value()
+        drop_loc = drop_loc.materialize(distinct=True)
 
-        drop_loc = series_json_array.json[-1].materialize()
-
+        result = drop_loc.value_counts(normalize=percentage).to_frame()
         if percentage:
-            total_count = drop_loc.count().value
-            drop_loc = (drop_loc.value_counts() / total_count) * 100
-            drop_loc = drop_loc.to_frame().rename(
-                columns={'value_counts': 'percentage'})
-            drop_loc = drop_loc.sort_values(by='percentage', ascending=False)
-            return drop_loc
+            result = result.rename(columns={'value_counts': 'percentage'})
+            result['percentage'] *= 100
+            result = result.sort_values(by='percentage', ascending=False)
+        return result
 
-        return drop_loc.value_counts().to_frame()
+    def funnel_conversion(self,
+                          data: bach.DataFrame,
+                          location_stack: LocationStackType = None) -> bach.DataFrame:
+        """
+        Calculates conversion numbers for all locations stacks in the `data`.
+        N.B. Filter the dataframe beforehand to filter down to the funnel locations.
+
+
+        For each step in a funnel, calculates the number of unique users who started it,
+        the number of unique users who completed the step (defined as whether the user
+        went to any other step in the funnel),
+        the conversion rate to completing the step, the conversion rate to completing the step
+        when looking at all users who started the funnel (= the 'full' conversion rate),
+        and the fraction of the users in the funnel dropping out at the given step.
+
+        N.B. We assumed that the funnel direction is always the same.
+        The implementation of VisibleEvents makes for the most accurate calculation
+        of the conversion numbers, as the number of users as well as the conversion rate
+        is based on events on each location stack.
+
+        :param data: The :py:class:`bach.DataFrame` to apply the operation on.
+        :param location_stack: The column that holds the steps in the funnel. Can be:
+
+            - A string of the name of the column in `data`.
+            - Any slice of a :py:class:`modelhub.SeriesLocationStack` type column.
+            - A Series with the same base node as `data`.
+
+            If its value is `None`, the whole location stack is taken.
+
+        :returns: :py:class:`bach.DataFrame` with the following columns: `step` (the location considered as a
+            step, e.g. a feature or root location), `n_users` (number of unique users starting the step),
+            `n_users_completed_step` (number of unique users completing the step),
+            `step_conversion_rate` (number of users completing the step / `n_users`), `full_conversion_rate`
+            (number of users completing the step / number of users starting the funnel), and `dropoff_share`
+            (ratio between the users dropping out at a given step and users at the begging at the funnel).
+        """
+
+        data = data.copy()
+
+        from modelhub.util import check_objectiv_dataframe
+        columns_to_check = ['location_stack', 'user_id', 'session_id',
+                            'session_hit_number', 'moment']
+        check_objectiv_dataframe(df=data, columns_to_check=columns_to_check)
+
+        column = location_stack or data['location_stack']
+        if type(column) == str:
+            column = data[column]
+        data['location'] = column
+        if type(column) == SeriesLocationStack:
+            # extract the nice name per event
+            data['location'] = column.ls.nice_name
+        location = 'location'
+
+        df_root_user = data.sort_values(['session_id', 'session_hit_number']).\
+            drop_duplicates(subset=[location, 'user_id'], keep='first')
+
+        funnel = self._mh.get_funnel_discovery()
+        df_steps = funnel.get_navigation_paths(df_root_user, location_stack=location,
+                                               steps=2, by='user_id', sort_by='moment')
+
+        # n_users
+        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique().to_frame().\
+            reset_index().rename(columns={'user_id': 'n_users'})
+
+        # n_users_completed_step
+        # remove rows where 2nd step is NaN (it means the user left the funnel)
+        step_completed_df = df_steps.dropna().reset_index()[['user_id', f'{location}_step_1']]
+        step_completed_df = step_completed_df.groupby([f'{location}_step_1']).count()\
+            .rename(columns={'user_id_count': 'n_users_completed_step'}).sort_index()
+
+        # merging n_users with n_users completed_step and n_users for drop-offs
+        result = step_visitors_df.merge(step_completed_df,
+                                        left_on=location,
+                                        right_on=f'{location}_step_1',
+                                        how='left').reset_index(drop=True)
+        result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
+
+        n_users_start = result['n_users'].max()
+
+        # n_users drop-offs
+        result['dropoff_share'] = result['n_users'] - result['n_users_completed_step']
+        result['dropoff_share'] = cast(SeriesFloat64, (result['dropoff_share'] / n_users_start)).round(3)
+
+        # step_conversion_rate
+        result['step_conversion_rate'] = result['n_users_completed_step'] / result['n_users']
+        result['step_conversion_rate'] = cast(SeriesFloat64, result['step_conversion_rate']).round(3)
+
+        # full_conversion_rate
+        result['full_conversion_rate'] = result['n_users_completed_step'] / n_users_start
+        result['full_conversion_rate'] = cast(SeriesFloat64, result['full_conversion_rate']).round(3)
+
+        columns = [location, 'n_users', 'n_users_completed_step', 'step_conversion_rate',
+                   'full_conversion_rate', 'dropoff_share']
+        return result[columns].sort_values('n_users', ascending=False)

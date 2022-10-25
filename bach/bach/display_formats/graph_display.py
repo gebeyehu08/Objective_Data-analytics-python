@@ -128,7 +128,7 @@ class SqlModelGraphDisplay:
             f'<TD BGCOLOR="{_COLUMN_LABEL_COLOR}" COLSPAN="{{col_span}}">{{col}}</TD>'
         )
 
-        col_names = list(current_node.column_expressions.keys())
+        col_names = list(current_node.series_names)
 
         # split list of column names into equal-sized sub lists
         col_names_per_row = np.array_split(

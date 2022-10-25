@@ -12,8 +12,8 @@ This example notebook shows how to use the 'Funnel Discovery' model on your data
 It's also available as a `full Jupyter notebook 
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/funnel-discovery.ipynb>`_
 to run on your own data (see how to :doc:`get started in your notebook <../get-started-in-your-notebook>`), 
-or you can instead `run the Demo </docs/home/try-the-demo/>`_ to quickly try it out. The dataset used 
-here is the same as in the Demo.
+or you can instead `run Objectiv Up </docs/home/up/>`__ to try it out. The dataset used here is the same as in 
+Up.
 
 In classical funnel analysis you predefine the steps, and then you analyze the differences for user 
 attributes or behavior in each step.
@@ -41,7 +41,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> # set the timeframe of the analysis
-	>>> start_date = '2022-02-01'
+	>>> start_date = '2022-07-01'
 	>>> end_date = None
 
 .. we override the timeframe for the doctests below
@@ -49,8 +49,8 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 .. testsetup:: funnel-discovery
 	:skipif: engine is None
 
-	start_date = '2022-02-01'
-	end_date = '2022-06-30'
+	start_date = '2022-07-01'
+	end_date = '2022-07-30'
 	pd.set_option('display.max_colwidth', 93)
 
 .. doctest:: funnel-discovery
@@ -121,11 +121,11 @@ Out of curiosity, let's see which features are used by users that converted, sor
 	>>> top_conversion_locations.sort_values(by='converted_users_percentage', ascending=False).head()
 	                                                                                   converted_users_percentage
 	feature_nice_name
-	Link: Quickstart Guide located at Root Location: home => Navigation: docs-sidebar                   15.946844
-	Link: logo located at Root Location: home => Navigation: navbar-top                                 10.797342
-	Link: Tracking located at Root Location: home => Navigation: navbar-top                             10.631229
-	Link: Taxonomy located at Root Location: modeling => Navigation: navbar-top                         10.299003
-	Link: Modeling located at Root Location: tracking => Navigation: navbar-top                         9.966777
+	Link: quickstart-guide located at Root Location: home => Navigation: docs-sidebar                   18.115942
+	Link: introduction located at Root Location: home => Navigation: docs-sidebar                       13.043478
+	Link: get-a-launchpad located at Root Location: home => Navigation: docs-sidebar                    13.043478
+	Link: logo located at Root Location: tracking => Navigation: navbar-top                             12.318841
+	Link: tracking located at Root Location: modeling => Navigation: navbar-top                         12.318841
 
 .. admonition:: Reference
 	:class: api-reference
@@ -142,8 +142,8 @@ See step sequences per user
 ---------------------------
 Before we see what helped conversion and what didn't, let's have a look at which consecutive steps each user 
 took (aka the features they used) in general, after starting their session, based on the 
-`location stack <https://objectiv.io/docs/tracking/core-concepts/locations>`_. We have to specify the maximum 
-n steps, and use the :doc:`get_navigation_paths 
+`location stack <https://objectiv.io/docs/tracking/locations>`_. We have to specify the maximum n steps, and 
+use the :doc:`get_navigation_paths 
 <../open-model-hub/models/funnels/FunnelDiscovery/modelhub.FunnelDiscovery.get_navigation_paths>` operation.
 
 .. doctest:: funnel-discovery
@@ -160,13 +160,13 @@ n steps, and use the :doc:`get_navigation_paths
 	>>> # for every user starting their session, find all maximum n consecutive steps they took
 	>>> df_steps = funnel.get_navigation_paths(df, steps=max_steps, by='user_id')
 	>>> df_steps.head()
-	                                                                    location_stack_step_1	                            location_stack_step_2	                            location_stack_step_3	                            location_stack_step_4
+	                                                                                                             location_stack_step_1                                                                         location_stack_step_2                                                                         location_stack_step_3                                                                         location_stack_step_4    
 	user_id
-	0000bb2f-66e9-4e48-8e2f-7d0a82446ef4 	Link: about-us located at Root Location: home ... 	Link: logo located at Root Location: about => ...	                                             None	                                             None
-	00529837-d672-4747-9b87-fd09f2919326 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	Link: basic-product-analytics located at Root ...
-	00529837-d672-4747-9b87-fd09f2919326 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	Link: basic-product-analytics located at Root ...	                                             None
-	00529837-d672-4747-9b87-fd09f2919326 	Link: bach-and-sklearn located at Root Locatio... 	Link: basic-product-analytics located at Root ...	                                             None	                                             None
-	00529837-d672-4747-9b87-fd09f2919326 	Link: spin-up-the-demo located at Root Locatio... 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio...
+	002116e6-baf2-4f10-bcda-85166008c9b3  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...  Link: contribute located at Root Location: home => Navigation: docs-sidebar => Expandable...                                 Link: objectivs-slack-channels located at Root Location: home                           Link: logo located at Root Location: home => Navigation: navbar-top    
+	002116e6-baf2-4f10-bcda-85166008c9b3                           Link: logo located at Root Location: home => Navigation: navbar-top  Link: quickstart-guide located at Root Location: home => Navigation: doc-paginator-naviga...                                                                                          None                                                                                          None    
+	002116e6-baf2-4f10-bcda-85166008c9b3  Link: contribute located at Root Location: home => Navigation: docs-sidebar => Expandable...                                 Link: objectivs-slack-channels located at Root Location: home                           Link: logo located at Root Location: home => Navigation: navbar-top  Link: quickstart-guide located at Root Location: home => Navigation: doc-paginator-naviga...    
+	002116e6-baf2-4f10-bcda-85166008c9b3                                 Link: objectivs-slack-channels located at Root Location: home                           Link: logo located at Root Location: home => Navigation: navbar-top  Link: quickstart-guide located at Root Location: home => Navigation: doc-paginator-naviga...                                                                                          None
+	002116e6-baf2-4f10-bcda-85166008c9b3                        Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...  Link: contribute located at Root Location: home => Navigation: docs-sidebar => Expandable...                                 Link: objectivs-slack-channels located at Root Location: home
 
 .. admonition:: Reference
 	:class: api-reference
@@ -178,34 +178,34 @@ n steps, and use the :doc:`get_navigation_paths
 See top step sequences for all users
 ------------------------------------
 For the bigger picture, calculate the most frequent consecutive steps that all users took after starting 
-their session, based on the `location stack <https://objectiv.io/docs/tracking/core-concepts/locations>`_.
+their session, based on the `location stack <https://objectiv.io/docs/tracking/locations>`_.
 
 .. doctest:: funnel-discovery
 	:skipif: engine is None
 
 	>>> df_steps.value_counts().to_frame().head(20)
 	                                                                                                                                                                                                                                                                                                                                                                                         value_counts
-	location_stack_step_1                                                                         location_stack_step_2                                                                         location_stack_step_3                                                                         location_stack_step_4                                                     
-	Pressable: after located at Root Location: home => Content: capture-data => Content: data-... NaN                                                                                           NaN                                                                                           NaN                                                                                                      87
-	Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-... NaN                                                                                           NaN                                                                                                      49
-	Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: before located at Root Location: home => Content: capture-data => Content: data... NaN                                                                                           NaN                                                                                                      48
-	Link: about-us located at Root Location: home => Navigation: navbar-top                       NaN                                                                                           NaN                                                                                           NaN                                                                                                      48
-	Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 NaN                                                                                           NaN                                                                                           NaN                                                                                                      48
-	Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... NaN                                                                                           NaN                                                                                                      46
-	                                                                                              Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: before located at Root Location: home => Content: capture-data => Content: data...            39
-	Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... Pressable: before located at Root Location: home => Content: modeling => Content: modeling... NaN                                                                                           NaN                                                                                                      35
-	Pressable: before located at Root Location: home => Content: modeling => Content: modeling... Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... NaN                                                                                           NaN                                                                                                      31
-	Link: logo located at Root Location: blog => Navigation: navbar-top                           NaN                                                                                           NaN                                                                                           NaN                                                                                                      30
-	Pressable: after located at Root Location: home => Content: modeling => Content: modeling-... NaN                                                                                           NaN                                                                                           NaN                                                                                                      29
-	Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-...            29
-	Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-... NaN                                                                                                      28
-	                                                                                                                                                                                                                                                                                          Pressable: after located at Root Location: home => Content: modeling => Content: modeling-...            25
-	Link: spin-up-the-demo located at Root Location: home => Content: hero                        NaN                                                                                           NaN                                                                                           NaN                                                                                                      24
-	Link: about-us located at Root Location: home => Navigation: navbar-top                       Link: blog located at Root Location: about => Navigation: navbar-top                          Link: jobs located at Root Location: blog => Navigation: navbar-top                           Link: faq located at Root Location: jobs => Navigation: navbar-top                                       22
-	Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 Link: github located at Root Location: home => Navigation: navbar-top => Overlay: hamburge... NaN                                                                                           NaN                                                                                                      22
-	Link: Overview located at Root Location: docs => Navigation: docs-sidebar => Expandable: A... Link: Overview located at Root Location: docs => Navigation: docs-sidebar => Expandable: A... Link: Overview located at Root Location: docs => Navigation: docs-sidebar => Expandable: A... Link: Overview located at Root Location: docs => Navigation: docs-sidebar => Expandable: A...            21
-	Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 Link: jobs located at Root Location: home => Navigation: navbar-top => Overlay: hamburger-... NaN                                                                                           NaN                                                                                                      21
-	Link: star-us located at Root Location: home => Content: hero                                 NaN                                                                                           NaN                                                                                           NaN                                                                                                      20
+	location_stack_step_1                                                                         location_stack_step_2                                                                         location_stack_step_3                                                                         location_stack_step_4
+	Link: about-us located at Root Location: home => Navigation: navbar-top                       NaN                                                                                           NaN                                                                                           NaN                                                                                                      19
+	Link: spin-up-the-demo located at Root Location: home => Content: hero                        NaN                                                                                           NaN                                                                                           NaN                                                                                                      17
+	Link: browse-on-github located at Root Location: home => Content: hero                        NaN                                                                                           NaN                                                                                           NaN                                                                                                      11
+	Link: docs located at Root Location: home => Navigation: navbar-top                           NaN                                                                                           NaN                                                                                           NaN                                                                                                      11
+	Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: before located at Root Location: home => Content: capture-data => Content: data...             6
+	Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-... Pressable: before located at Root Location: home => Content: capture-data => Content: data... Pressable: after located at Root Location: home => Content: capture-data => Content: data-...             6
+	Link: logo located at Root Location: blog => Navigation: navbar-top                           NaN                                                                                           NaN                                                                                           NaN                                                                                                       5
+	Link: about-us located at Root Location: home => Navigation: navbar-top                       Link: blog located at Root Location: about => Navigation: navbar-top                          Link: jobs located at Root Location: blog => Navigation: navbar-top                           Link: faq located at Root Location: jobs => Navigation: navbar-top                                        5
+	Link: postgresql located at Root Location: tracking => Navigation: docs-sidebar => Expanda... Link: google-bigquery located at Root Location: tracking => Navigation: docs-sidebar => Ex... Link: amazon-s3 located at Root Location: tracking => Navigation: docs-sidebar => Expandab... Link: snowplow-pipeline located at Root Location: tracking => Navigation: docs-sidebar => ...             4
+	Link: jobs located at Root Location: home => Navigation: navbar-top                           NaN                                                                                           NaN                                                                                           NaN                                                                                                       4
+	Link: blog located at Root Location: home => Navigation: navbar-top                           NaN                                                                                           NaN                                                                                           NaN                                                                                                       4
+	Pressable: hamburger located at Root Location: home => Navigation: navbar-top                 Link: about-us located at Root Location: home => Navigation: navbar-top => Overlay: hambur... NaN                                                                                           NaN                                                                                                       4
+	Link: localecontext located at Root Location: taxonomy => Navigation: docs-sidebar => Expa... Link: marketingcontext located at Root Location: taxonomy => Navigation: docs-sidebar => E... Link: pathcontext located at Root Location: taxonomy => Navigation: docs-sidebar => Expand... Link: sessioncontext located at Root Location: taxonomy => Navigation: docs-sidebar => Exp...             4
+	Link: docs-taxonomy located at Root Location: home => Content: taxonomy                       NaN                                                                                           NaN                                                                                           NaN                                                                                                       4
+	Link: spin-up-the-demo located at Root Location: home => Content: try-it                      NaN                                                                                           NaN                                                                                           NaN                                                                                                       4
+	Link: logo located at Root Location: home => Navigation: navbar-top                           NaN                                                                                           NaN                                                                                           NaN                                                                                                       3
+	Link: about-us located at Root Location: home => Navigation: navbar-top                       Link: faq located at Root Location: about => Navigation: navbar-top                           NaN                                                                                           NaN                                                                                                       3
+	Link: get-a-launchpad located at Root Location: home => Navigation: docs-sidebar              Link: introduction located at Root Location: home => Navigation: docs-sidebar                 NaN                                                                                           NaN                                                                                                       3
+	Link: google-bigquery located at Root Location: tracking => Navigation: docs-sidebar => Ex... Link: amazon-s3 located at Root Location: tracking => Navigation: docs-sidebar => Expandab... Link: snowplow-pipeline located at Root Location: tracking => Navigation: docs-sidebar => ... Link: postgresql located at Root Location: tracking => Navigation: docs-sidebar => Expanda...             3
+	Link: bach-and-sklearn located at Root Location: modeling => Navigation: docs-sidebar => E... Link: basic-product-analytics located at Root Location: modeling => Navigation: docs-sideb... Link: basic-user-intent-analysis located at Root Location: modeling => Navigation: docs-si... Link: explore-your-data located at Root Location: modeling => Navigation: docs-sidebar => ...             3
 
 .. admonition:: Reference
 	:class: api-reference
@@ -227,18 +227,18 @@ convert.
 	>>> # add which step resulted in conversion to the dataframe, with the `add_conversion_step_column` param
 	>>> df_first_conversion_step = funnel.get_navigation_paths(df, steps=max_steps, by='user_id', add_conversion_step_column=True)
 	>>> df_first_conversion_step.head(10)
-	                                        location_stack_step_1                                   location_stack_step_2                                   location_stack_step_3                                   location_stack_step_4                                   _first_conversion_step_number
+	                                                                                                             location_stack_step_1                                                                         location_stack_step_2                                                                         location_stack_step_3                                                                         location_stack_step_4  _first_conversion_step_number
 	user_id
-	0000bb2f-66e9-4e48-8e2f-7d0a82446ef4 	Link: about-us located at Root Location: home ... 	Link: logo located at Root Location: about => ... 	None 	                                                None 	                                            	NaN
-	00529837-d672-4747-9b87-fd09f2919326 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	Link: basic-product-analytics located at Root ... 	None 	                                                2.0
-	00529837-d672-4747-9b87-fd09f2919326 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	Link: basic-product-analytics located at Root ...	3.0
-	00529837-d672-4747-9b87-fd09f2919326 	Pressable: after located at Root Location: hom... 	Link: spin-up-the-demo located at Root Locatio... 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	NaN
-	00529837-d672-4747-9b87-fd09f2919326 	Link: spin-up-the-demo located at Root Locatio... 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	4.0
-	00529837-d672-4747-9b87-fd09f2919326 	Link: blog located at Root Location: home => N... 	Pressable: after located at Root Location: hom... 	Link: spin-up-the-demo located at Root Locatio... 	Link: blog located at Root Location: home => N... 	NaN
-	00529837-d672-4747-9b87-fd09f2919326 	Link: bach-and-sklearn located at Root Locatio... 	Link: basic-product-analytics located at Root ... 	None 	                                                None	                                                1.0
-	005aa19c-7e80-4960-928c-a0853355ee5f 	Link: check-out-thijs-obj-on-github located at... 	Link: jobs located at Root Location: about => ... 	None 	                                                None	                                                NaN
-	007f5fd7-7535-434e-aa3e-3d52f06d63ce 	Link: Modeling located at Root Location: home ... 	Link: Modeling feature importance located at R... 	Link: docs located at Root Location: home => N... 	Link: Modeling located at Root Location: home ... 	1.0
-	007f5fd7-7535-434e-aa3e-3d52f06d63ce 	Link: docs located at Root Location: home => N... 	Link: Modeling located at Root Location: home ... 	Link: Modeling feature importance located at R... 	Link: docs located at Root Location: home => N... 	2.0
+	002116e6-baf2-4f10-bcda-85166008c9b3                        Link: spin-up-the-demo located at Root Location: home => Content: hero                       Link: about-us located at Root Location: home => Navigation: navbar-top                          Link: logo located at Root Location: about => Navigation: navbar-top                        Link: spin-up-the-demo located at Root Location: home => Content: hero                            NaN
+	002116e6-baf2-4f10-bcda-85166008c9b3  Link: contribute located at Root Location: home => Navigation: docs-sidebar => Expandable...                                 Link: objectivs-slack-channels located at Root Location: home                           Link: logo located at Root Location: home => Navigation: navbar-top  Link: quickstart-guide located at Root Location: home => Navigation: doc-paginator-naviga...                            1.0
+	002116e6-baf2-4f10-bcda-85166008c9b3                       Link: about-us located at Root Location: home => Navigation: navbar-top                          Link: logo located at Root Location: about => Navigation: navbar-top                        Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...                            4.0
+	002116e6-baf2-4f10-bcda-85166008c9b3  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...  Link: contribute located at Root Location: home => Navigation: docs-sidebar => Expandable...                                 Link: objectivs-slack-channels located at Root Location: home                           Link: logo located at Root Location: home => Navigation: navbar-top                            1.0
+	002116e6-baf2-4f10-bcda-85166008c9b3                          Link: logo located at Root Location: about => Navigation: navbar-top                        Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...  Link: contribute located at Root Location: home => Navigation: docs-sidebar => Expandable...                            3.0
+	002116e6-baf2-4f10-bcda-85166008c9b3                        Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...  Link: contribute located at Root Location: home => Navigation: docs-sidebar => Expandable...                                 Link: objectivs-slack-channels located at Root Location: home                            2.0
+	002116e6-baf2-4f10-bcda-85166008c9b3                                 Link: objectivs-slack-channels located at Root Location: home                           Link: logo located at Root Location: home => Navigation: navbar-top  Link: quickstart-guide located at Root Location: home => Navigation: doc-paginator-naviga...                                                                                          None                            1.0
+	002116e6-baf2-4f10-bcda-85166008c9b3                           Link: logo located at Root Location: home => Navigation: navbar-top  Link: quickstart-guide located at Root Location: home => Navigation: doc-paginator-naviga...                                                                                          None                                                                                          None                            1.0
+	00d9abb7-8f5b-40ef-b189-4b046450eb3d                           Link: logo located at Root Location: home => Navigation: navbar-top                      Link: spin-up-the-demo located at Root Location: home => Content: try-it                                                                                          None                                                                                          None                            NaN
+	04f965ad-21b8-4a2f-bb16-ed58645cb21d       Link: models located at Root Location: modeling => Navigation: doc-paginator-navigation                                                                                          None                                                                                          None                                                                                          None                            1.0
 
 To filter down to all sequences that have actually converted, use the `only_converted_paths` parameter.
 
@@ -248,13 +248,13 @@ To filter down to all sequences that have actually converted, use the `only_conv
 	>>> # filter down to all sequences that have actually converted with the `only_converted_paths` param
 	>>> df_steps_till_conversion = funnel.get_navigation_paths(df, steps=max_steps, by='user_id', add_conversion_step_column=True, only_converted_paths=True)
 	>>> df_steps_till_conversion.head(5)  
-	                                        location_stack_step_1                                   location_stack_step_2                                   location_stack_step_3                                   location_stack_step_4	                                    _first_conversion_step_number
-	user_id          
-	00529837-d672-4747-9b87-fd09f2919326 	Link: spin-up-the-demo located at Root Locatio... 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio...	    4
-	00529837-d672-4747-9b87-fd09f2919326 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	None 	                                                None	                                                    2
-	00529837-d672-4747-9b87-fd09f2919326 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	None	                                                    3
-	007f5fd7-7535-434e-aa3e-3d52f06d63ce 	Link: docs located at Root Location: home => N... 	Link: Modeling located at Root Location: home ... 	None 	                                                None	                                                    2
-	007f5fd7-7535-434e-aa3e-3d52f06d63ce 	Link: docs located at Root Location: home => N... 	Link: Modeling located at Root Location: home ... 	None 	                                                None	                                                    2
+	                                                                                        location_stack_step_1                                                                         location_stack_step_2                                                                         location_stack_step_3                                                                         location_stack_step_4  _first_conversion_step_number
+	user_id
+	002116e6-baf2-4f10-bcda-85166008c9b3  Link: about-us located at Root Location: home => Navigation: navbar-top                          Link: logo located at Root Location: about => Navigation: navbar-top                        Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...                              4
+	002116e6-baf2-4f10-bcda-85166008c9b3     Link: logo located at Root Location: about => Navigation: navbar-top                        Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...                                                                                          None                              3
+	002116e6-baf2-4f10-bcda-85166008c9b3   Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...                                                                                          None                                                                                          None                              2
+	0b227a8a-792e-400f-9108-3ad3f2ecafd6   Link: spin-up-the-demo located at Root Location: home => Content: hero              Link: get-a-launchpad located at Root Location: home => Navigation: docs-sidebar                                                                                          None                                                                                          None                              2
+	0b227a8a-792e-400f-9108-3ad3f2ecafd6      Link: jobs located at Root Location: blog => Navigation: navbar-top                            Link: faq located at Root Location: jobs => Navigation: navbar-top                       Link: tracking located at Root Location: home => Navigation: navbar-top                                                                                          None                              3
 
 We can use this to for instance see which sequences converted on the 4th step.
 
@@ -264,13 +264,13 @@ We can use this to for instance see which sequences converted on the 4th step.
 	>>> # filter down to sequences that converted on the 4th step
 	>>> condition_convert_on_step_4 = df_steps_till_conversion['_first_conversion_step_number'] == 4
 	>>> df_steps_till_conversion[condition_convert_on_step_4].head()
-	                                        location_stack_step_1	                                location_stack_step_2	                                location_stack_step_3	                                location_stack_step_4	                                _first_conversion_step_number
-	user_id          
-	00529837-d672-4747-9b87-fd09f2919326 	Link: spin-up-the-demo located at Root Locatio... 	Link: blog located at Root Location: home => N... 	Link: docs located at Root Location: blog => N... 	Link: bach-and-sklearn located at Root Locatio... 	4
-	01891784-6333-40f1-8be6-739f3adfdb97 	Link: about-us located at Root Location: home ... 	Pressable: hamburger located at Root Location:... 	Link: faq located at Root Location: home => Na... 	Pressable: navbar-toggle located at Root Locat... 	4
-	02f197f4-90d1-4374-b8a5-89e2e91310d7 	Pressable: after located at Root Location: hom... 	Pressable: before located at Root Location: ho... 	Pressable: after located at Root Location: hom... 	Link: logo located at Root Location: modeling ... 	4
-	05bd4058-b7df-4476-8174-dcf0be107b5c 	Link: blog located at Root Location: home => N... 	Link: jobs located at Root Location: blog => N... 	Link: faq located at Root Location: jobs => Na... 	Link: Objectiv.io located at Root Location: ho... 	4
-	0605440c-1eba-479a-9000-8294576199aa 	Link: check-out-jansenbob-on-github located at... 	Link: blog located at Root Location: about => ... 	Link: read-more located at Root Location: blog... 	Link: MediaEvent located at Root Location: tax... 	4
+	                                                                                              location_stack_step_1                                                          location_stack_step_2                                                                         location_stack_step_3                                                                         location_stack_step_4  _first_conversion_step_number   
+	user_id
+	002116e6-baf2-4f10-bcda-85166008c9b3        Link: about-us located at Root Location: home => Navigation: navbar-top           Link: logo located at Root Location: about => Navigation: navbar-top                        Link: spin-up-the-demo located at Root Location: home => Content: hero  Link: get-help located at Root Location: home => Navigation: docs-sidebar => Expandable: ...                              4   
+	0b227a8a-792e-400f-9108-3ad3f2ecafd6           Link: blog located at Root Location: about => Navigation: navbar-top            Link: jobs located at Root Location: blog => Navigation: navbar-top                            Link: faq located at Root Location: jobs => Navigation: navbar-top                       Link: tracking located at Root Location: home => Navigation: navbar-top                              4   
+	1972f852-8e8d-495f-8ba6-01efcbb1984b            Link: jobs located at Root Location: home => Navigation: navbar-top        Link: about-us located at Root Location: jobs => Navigation: navbar-top                           Link: faq located at Root Location: about => Navigation: navbar-top              Link: get-a-launchpad located at Root Location: home => Navigation: docs-sidebar                              4   
+	3c5a5bb8-e855-4bd2-9011-e0604bc60ad3            Link: blog located at Root Location: home => Navigation: navbar-top            Link: jobs located at Root Location: blog => Navigation: navbar-top                           Link: docs located at Root Location: jobs => Navigation: navbar-top                       Link: modeling located at Root Location: home => Navigation: navbar-top                              4
+	3e13be46-b673-44c9-974a-fb44e0d14063  Pressable: hamburger located at Root Location: home => Navigation: navbar-top  Pressable: hamburger located at Root Location: home => Navigation: navbar-top  Link: docs located at Root Location: home => Navigation: navbar-top => Overlay: hamburger...     Link: taxonomy-docstaxonomy located at Root Location: taxonomy => Navigation: breadcrumbs                              4
 
 Visualize these sequences in a Sankey diagram
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -286,7 +286,7 @@ see the source and target node.
 .. code-block:: jupyter-notebook
 	
 	>>> # plot the Sankey diagram using the top 15 examples via the `n_top_examples` param
-	>>> funnel.plot_sankey_diagram(df_steps_till_conversion[condition_convert_on_step_4], n_top_examples=15)
+	>>> funnel.plot_sankey_diagram(df_steps_till_conversion[condition_convert_on_step_4], n_top_examples=10)
 
 .. image:: ../img/docs/example-notebooks/funnel-discovery-plot-sankey-4th-step.png
   :alt: Funnel Discovery Sankey diagram for users that dropped off
@@ -317,13 +317,13 @@ by finding all *last used* features by non-converted users, and calculating thei
 
 	>>> # get the last used features by non-converted users, sorted by their usage share compared to all features
 	>>> modelhub.aggregate.drop_off_locations(df_non_converted, groupby='user_id', percentage=True).head()
-	                                                                                                    percentage
-	__feature_nice_name
-	Pressable: after located at Root Location: home => Content: capture-data => Content: data-...	     12.273476
-	Pressable: after located at Root Location: home => Content: modeling => Content: modeling-...	      9.884679
-	Link: about-us located at Root Location: home => Navigation: navbar-top	                              5.271829
-	Pressable: hamburger located at Root Location: home => Navigation: navbar-top	                      5.024712
-	Pressable: before located at Root Location: home => Content: capture-data => Content: data...	      4.283361
+	                                                                         percentage
+	location
+	Link: about-us located at Root Location: home => Navigation: navbar-top   10.798122
+	Link: spin-up-the-demo located at Root Location: home => Content: hero    10.328638
+	Link: browse-on-github located at Root Location: home => Content: hero     7.981221
+	Link: docs located at Root Location: home => Navigation: navbar-top        6.103286
+	Link: faq located at Root Location: home => Navigation: navbar-top         3.286385
 
 
 .. admonition:: Reference
@@ -356,13 +356,13 @@ do or do not convert.
 	>>> df_marketing = df_marketing[df_marketing['user_id'].isin(user_list)]
 	>>> 
 	>>> df_marketing.head()
-	                                             day                  moment                               user_id                                                                                location_stack  event_type                              stack_event_types  session_id  session_hit_number                                                                                   application                                                                                     marketing    application_id                                                                             feature_nice_name  is_conversion_event utm_campaign
-	event_id                                                                                                                                                                                                                                                                                                                                                                                                          
-	d1c72d21-4233-40dc-b93d-3323dbf4cf75  2022-06-01 2022-06-01 18:55:35.074  04ac1790-825a-47a3-aac3-dccfeee61ade  [{'id': 'blog', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        4490                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': None, '_type': 'MarketingContext', '_types': ['AbstractContext', '...  objectiv-website                           Link: logo located at Root Location: blog => Navigation: navbar-top                False         blog
-	3a714be8-20aa-46cb-8deb-fa03635e20a9  2022-04-12 2022-04-12 12:43:29.990  09cb57db-1a41-4f9f-bade-64a7f9f374ad  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1742                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': 'open source analytics', '_type': 'MarketingContext', '_types': ['...  objectiv-website                           Link: docs located at Root Location: home => Navigation: navbar-top                False  16526831451
-	99fed3fd-6f22-430c-92a4-78149d85c78e  2022-04-12 2022-04-12 12:43:36.151  09cb57db-1a41-4f9f-bade-64a7f9f374ad  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1742                   4  [{'id': 'objectiv-docs', '_type': 'ApplicationContext', '_types': ['AbstractContext', 'Ab...                                                                                            []     objectiv-docs  Link: Quickstart Guide located at Root Location: home => Navigation: doc-paginator-naviga...                 True         None
-	ff88125e-49d0-47e8-a60a-48b7e244e5ac  2022-03-21 2022-03-21 23:36:20.587  0b7fa533-64ca-48c9-84d9-04c54b0fa069  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1450                   3  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': 'open source analytics software', '_type': 'MarketingContext', '_t...  objectiv-website                 Pressable: hamburger located at Root Location: home => Navigation: navbar-top                False  16526831451
-	38d7bf60-6c65-4521-9dbc-82138a862d4f  2022-03-21 2022-03-21 23:36:23.769  0b7fa533-64ca-48c9-84d9-04c54b0fa069  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1450                   5  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': 'open source analytics software', '_type': 'MarketingContext', '_t...  objectiv-website  Link: docs located at Root Location: home => Navigation: navbar-top => Overlay: hamburger...                False  16526831451
+	                                             day                  moment                               user_id                                                                                location_stack  event_type                              stack_event_types  session_id  session_hit_number                                                                                   application                                                                                     marketing    application_id                                                         feature_nice_name  is_conversion_event     utm_campaign
+	event_id                                                                                                                                                                                                                                                                                                                                                                                                                        
+	d96998ca-8e3c-4f77-95b0-a47aa58f6fe1  2022-07-21 2022-07-21 18:40:48.053  00d9abb7-8f5b-40ef-b189-4b046450eb3d  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]         522                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': None, '_type': 'MarketingContext', '_types': ['AbstractContext', '...  objectiv-website       Link: logo located at Root Location: home => Navigation: navbar-top                False             july
+	b5da354e-29f9-4a55-b5f7-61e55d98cdad  2022-07-21 2022-07-21 18:41:45.374  00d9abb7-8f5b-40ef-b189-4b046450eb3d  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]         522                   2  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...                                                                                            []  objectiv-website  Link: spin-up-the-demo located at Root Location: home => Content: try-it                False             None
+	2c88c4ee-d0d2-40e7-a655-d1f19536bbb4  2022-07-23 2022-07-23 13:53:34.328  0586a3c6-3316-4e11-99d6-617942d28e28  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]         644                   3  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': None, '_type': 'MarketingContext', '_types': ['AbstractContext', '...  objectiv-website    Link: browse-on-github located at Root Location: home => Content: hero                False         utm_test
+	ad8193ea-48c8-4f7f-88b9-35ea5209cc66  2022-07-29 2022-07-29 10:38:55.474  099dd8fd-696f-425a-a358-86da9c92a703  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1110                   1  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...  [{'id': 'utm', 'term': None, '_type': 'MarketingContext', '_types': ['AbstractContext', '...  objectiv-website   Link: about-us located at Root Location: home => Navigation: navbar-top                False  july_conversion
+	ca7a7056-f501-4267-8526-7eb6a56676ed  2022-07-29 2022-07-29 10:39:57.200  099dd8fd-696f-425a-a358-86da9c92a703  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...  PressEvent  [AbstractEvent, InteractiveEvent, PressEvent]        1110                   2  [{'id': 'objectiv-website', '_type': 'ApplicationContext', '_types': ['AbstractContext', ...                                                                                            []  objectiv-website      Link: jobs located at Root Location: about => Navigation: navbar-top                False             None
 
 Let's define what you see as conversion events for these users. In this example, we'll again view someone as 
 converted when they go on to read the documentation from our website, but you can 
@@ -395,8 +395,8 @@ For an overall look: let's calculate the share of converted and non-converted us
 	>>> n_users_total = n_users_converted + n_users_non_converted
 	>>> 
 	>>> print(f'Converted users: {round((n_users_converted / n_users_total) * 100)}%\nNon-converted users: {round((n_users_non_converted / n_users_total) * 100)}%')
-	Converted users: 28%
-	Non-converted users: 72%
+	Converted users: 34%
+	Non-converted users: 66%
 
 Now we're most interested in the large share of users who did not convert; let's have a look at them next.
 
@@ -409,14 +409,13 @@ this time when they came from a marketing campaign.
 	:skipif: engine is None
 
 	>>> modelhub.aggregate.drop_off_locations(df_marketing_non_converted, groupby='user_id', percentage=True).head()
-	                                                                                               percentage
-	__feature_nice_name
-	Link: logo located at Root Location: blog => Navigation: navbar-top	                        10.169492
-	Pressable: hamburger located at Root Location: home => Navigation: navbar-top	                 8.474576
-	Link: star-us-on-github located at Root Location: home => Content: hero	                         8.474576
-	Link: star-us-on-github located at Root Location: home => Navigation: hero	                 8.474576
-	Link: objectiv-quickstart-guide located at Root Location: home => Content: the-stack-quick...	 5.084746
-
+	                                                                          percentage
+	location
+	Link: browse-on-github located at Root Location: home => Content: hero     19.298246
+	Link: spin-up-the-demo located at Root Location: home => Content: hero     19.298246
+	Link: about-us located at Root Location: home => Navigation: navbar-top     8.771930
+	Link: docs located at Root Location: home => Navigation: navbar-top         5.263158
+	Link: spin-up-the-demo located at Root Location: home => Content: try-it    5.263158
 
 Visualize the sequences in a Sankey diagram for non-converted users from a marketing campaign
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -461,13 +460,58 @@ Get the SQL for any analysis
 
 The SQL for any analysis can be exported with one command, so you can use models in production directly to 
 simplify data debugging & delivery to BI tools like Metabase, dbt, etc. See how you can `quickly create BI 
-dashboards with this <https://objectiv.io/docs/home/try-the-demo#creating-bi-dashboards>`_.
+dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_.
 
-Where to go next
-----------------
+.. exec_code::
+	:language: jupyter-notebook
+	:language_output: jupyter-notebook-out
+
+	# --- hide: start ---
+	import os
+	from modelhub import ModelHub
+	modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application'])
+	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-04-01', end_date='2022-07-30')
+	df['application_id'] = df.application.context.id
+	df['feature_nice_name'] = df.location_stack.ls.nice_name
+	df = df[df['event_type'] == 'PressEvent']
+	df['is_conversion_event'] = False
+	df.loc[df['application_id'] == 'objectiv-docs', 'is_conversion_event'] = True
+	total_converted_users = df[df['is_conversion_event']]['user_id'].unique().count().value
+	top_conversion_locations = modelhub.agg.unique_users(df[df['is_conversion_event']], groupby='feature_nice_name')
+	top_conversion_locations = (top_conversion_locations / total_converted_users) * 100
+	top_conversion_locations = top_conversion_locations.to_frame().rename(columns={'unique_users': 'converted_users_percentage'})
+	def display_sql_as_markdown(arg): [print('sql\n' + arg.view_sql() + '\n')]
+	# --- hide: stop ---
+	# show the underlying SQL for this dataframe - works for any dataframe/model in Objectiv
+	display_sql_as_markdown(top_conversion_locations)
+
+That's it! `Join us on Slack <https://objectiv.io/join-slack>`_ if you have any questions or suggestions.
+
+Next Steps
+----------
+
+Play with this notebook in Objectiv Up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spin up a full-fledged product analytics pipeline with `Objectiv Up </docs/home/up>`__ in  under 5 minutes, 
+and play with this example notebook yourself.
+
+Use this notebook with your own data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the example notebooks on any dataset that was collected with Objectiv's tracker, so feel free to 
+use them to bootstrap your own projects. They are available as Jupyter notebooks on our `GitHub repository 
+<https://github.com/objectiv/objectiv-analytics/tree/main/notebooks>`_. See `instructions to set up the 
+Objectiv tracker <https://objectiv.io/docs/tracking/>`_. 
+
+Check out related example notebooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Now that you've discovered the customer journeys that lead to conversion or drop-off, you can further analyze 
 each of them to understand which ones could be optimized, or should get more/less focus. Another next step 
 could be to have a more in-depth look at the marketing campaign data differences per source. 
 
-See the :doc:`open taxonomy example <./open-taxonomy>` for more on how to use open taxonomy based data, or 
-have a look at the other example notebooks for other use cases.
+* :doc:`Product Analytics notebook <./product-analytics>` - easily run basic product analytics on your data.
+* :doc:`Marketing Analytics notebook <./marketing-analytics>` - analyze the above metrics and more for users 
+	coming from marketing efforts.

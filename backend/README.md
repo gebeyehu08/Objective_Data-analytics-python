@@ -1,8 +1,9 @@
 # Objectiv Backend
 
-Running the backend will enable you to receive and process tracking data in your environment. It consists of three images:
+Running the backend will enable you to receive and process tracking data in your environment. It consists of four images:
 
 * `objectiv_collector` - Endpoint that the Objectiv-tracker can send events to (http://localhost:5000).
+* `objectiv_validator` - Endpoint that is used by the collector to validate events against the schema (http://localhost:8082).
 * `objectiv_postgres` - Database to store data.
 * `objectiv_notebook` - Jupyter notebook that can be used to query the data (http://localhost:8888).
 

@@ -18,7 +18,7 @@ from bach.series.series import ToPandasInfo
 from bach.sql_model import BachSqlModel
 from bach.types import AllSupportedLiteralTypes, get_series_type_from_dtype, StructuredDtype
 from sql_models.constants import DBDialect, NotSet, not_set
-from sql_models.util import DatabaseNotSupportedException, is_postgres, is_bigquery
+from sql_models.util import DatabaseNotSupportedException, is_postgres, is_bigquery, is_athena
 
 T = TypeVar('T', bound='SeriesAbstractMultiLevel')
 
@@ -26,6 +26,13 @@ if TYPE_CHECKING:
     from bach.partitioning import GroupBy
     from bach.series import SeriesBoolean, SeriesAbstractNumeric, SeriesFloat64, SeriesInt64, SeriesString
     from bach.dataframe import DataFrame
+
+_BOUNDS_PANDAS_INTERVAL_CLOSED_MAPPING = {
+    '[]': 'both',
+    '[)': 'left',
+    '(]': 'right',
+    '()': 'neither',
+}
 
 
 class SeriesAbstractMultiLevel(Series, ABC):
@@ -117,7 +124,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             # then levels MUST be in the base node.
             missing_references = [
                 f'_{name}_{level_name}' for level_name in default_level_dtypes.keys()
-                if f'_{name}_{level_name}' not in base_node.columns
+                if f'_{name}_{level_name}' not in base_node.series_names
             ]
             if missing_references:
                 raise ValueError(
@@ -408,7 +415,8 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
     dtype_aliases = (pandas.Interval, 'numrange')
     supported_db_dtype = {
         DBDialect.POSTGRES: 'numrange',
-        DBDialect.BIGQUERY: 'STRUCT<lower FLOAT64, upper FLOAT64, bounds STRING(2)>'
+        DBDialect.BIGQUERY: 'STRUCT<lower FLOAT64, upper FLOAT64, bounds STRING(2)>',
+        DBDialect.ATHENA: 'STRUCT<lower: double, upper: double, bounds: varchar(2)>',
     }
 
     supported_value_types = (pandas.Interval, dict)
@@ -455,18 +463,32 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
             return ToPandasInfo(dtype='object', function=self._parse_numeric_interval_value_postgres)
         if is_bigquery(self.engine):
             return ToPandasInfo(dtype='object', function=self._parse_numeric_interval_value_bigquery)
+        if is_athena(self.engine):
+            return ToPandasInfo(dtype='object', function=self._parse_numeric_interval_value_athena)
         return None
 
     def get_column_expression(self, table_alias: str = None) -> Expression:
         # construct final column based on levels
         if is_postgres(self.engine):
             # casting is needed since numrange does not support float64
-            base_expr_stmt = f'numrange(cast({{}} as numeric), cast({{}} as numeric), {{}})'
+            # we cast first to text, as casting double precision to numeric might round decimal values
+            base_expr_stmt = f'numrange({{}}::text::numeric, {{}}::text::numeric, {{}})'
 
         elif is_bigquery(self.engine):
             # BigQuery has no proper datatype for numeric intervals,
             # therefore we should represent it as a struct
             base_expr_stmt = f'struct({{}} as `lower`, {{}} as `upper`, {{}} as `bounds`)'
+        elif is_athena(self.engine):
+            # Athena has no proper datatype for numeric intervals,
+            # therefore we should represent it as a "row" structure type and cast it as a json.
+            # If we do not cast the row value to json, the engine will return a stringified structure
+            # on the following format: "{lower=#, upper=#, bounds= ""}", which is harder to parse.
+            # Meanwhile, casting it as a json will result with an array of 3 elements.
+            # Explicitly creating the array in the expression is not possible, as Athena does not
+            # allow arrays of different db types.
+            base_expr_stmt = (
+                'cast(cast(row({}, {}, {}) as row(lower double, upper double, bounds varchar(2))) as json)'
+            )
         else:
             raise DatabaseNotSupportedException(self.engine)
 
@@ -478,7 +500,8 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
             self.upper,
             self.bounds,
         )
-        return Expression.construct_expr_as_name(expr, self.name)
+        dialect = self.engine.dialect
+        return Expression.construct_expr_as_sql_name(dialect=dialect, expr=expr, name=self.name)
 
     @staticmethod
     def _parse_numeric_interval_value_postgres(value) -> Optional[pandas.Interval]:
@@ -509,10 +532,17 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
         if not isinstance(value, dict) or not all(k in value for k in expected_keys):
             raise ValueError(f'{value} has not the expected structure.')
 
-        if value['bounds'] == '[]':
-            closed = 'both'
-        elif value['bounds'] == '[)':
-            closed = 'left'
-        else:
-            closed = 'right'
+        closed = _BOUNDS_PANDAS_INTERVAL_CLOSED_MAPPING[value['bounds']]
         return pandas.Interval(float(value['lower']), float(value['upper']), closed=closed)
+
+    @staticmethod
+    def _parse_numeric_interval_value_athena(value) -> Optional[pandas.Interval]:
+        """
+        Helper function that converts Athena JSON (list) values into a pandas.Interval object.
+        """
+        if value is None:
+            return None
+
+        lower, upper, bounds = tuple(value)
+        closed = _BOUNDS_PANDAS_INTERVAL_CLOSED_MAPPING[bounds]
+        return pandas.Interval(lower, upper, closed=closed)

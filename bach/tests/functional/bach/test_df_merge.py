@@ -6,11 +6,11 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from bach import DataFrame, SeriesString
+from bach import DataFrame
+from bach.testing import assert_equals_data
 
 from tests.functional.bach.test_data_and_utils import (
-    get_df_with_test_data, get_df_with_food_data,
-    assert_equals_data, get_df_with_railway_data
+    get_df_with_test_data, get_df_with_food_data, get_df_with_railway_data
 )
 
 
@@ -193,7 +193,6 @@ def test_merge_basic_on_indexes(engine):
         result = btr.merge(mtr, left_index=True, right_index=True)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_merge_suffixes(engine):
     bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
     mt = get_df_with_food_data(engine)[['skating_order', 'food']]
@@ -532,7 +531,6 @@ def test_merge_non_materialized(engine):
         )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_merge_on_conditions(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['a', 'b', 'c', 'd'],
@@ -559,7 +557,6 @@ def test_merge_on_conditions(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_merge_on_conditions_w_on_data_columns(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['b', 'a', 'c', 'd'],
@@ -587,7 +584,6 @@ def test_merge_on_conditions_w_on_data_columns(engine) -> None:
     )
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_merge_on_conditions_renamed_column(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['b', 'a', 'c', 'd'],
@@ -607,7 +603,6 @@ def test_merge_on_conditions_renamed_column(engine) -> None:
     result = df1.merge(df2, on=on_condition)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1209')
 def test_merge_on_conditions_w_index(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['a', 'b', 'c', 'd'],

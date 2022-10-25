@@ -1,12 +1,15 @@
 import pytest
 
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
+from bach.testing import assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_basic_unstack(engine) -> None:
     bt = get_df_with_test_data(engine=engine, full_data_set=False)
+
+    # As an extra check on handling capitalized column correctly, introduce a column with a name that's a
+    # duplicate when considering names as case-insensitive.
+    bt['Founding'] = bt['founding'] + 1
 
     with pytest.raises(NotImplementedError, match=r'index must be a multi level'):
         bt.unstack()
@@ -19,25 +22,26 @@ def test_basic_unstack(engine) -> None:
         'Leeuwarden__skating_order',
         'Leeuwarden__inhabitants',
         'Leeuwarden__founding',
+        'Leeuwarden__Founding',
         'Súdwest-Fryslân__skating_order',
         'Súdwest-Fryslân__inhabitants',
         'Súdwest-Fryslân__founding',
+        'Súdwest-Fryslân__Founding',
     ]
     assert set(result.data_columns) == set(new_cols)
     result = result[new_cols]
     assert_equals_data(
         result.sort_index(),
+        use_to_pandas=True,
         expected_columns=['city'] + new_cols,
         expected_data=[
-            ['Drylts', None, None, None, 3., 3055., 1268.],
-            ['Ljouwert', 1., 93485., 1285., None, None, None],
-            ['Snits', None, None, None, 2., 33520., 1456.],
+            ['Drylts', None, None, None, None, 3., 3055., 1268., 1269.],
+            ['Ljouwert', 1., 93485., 1285., 1286., None, None, None, None],
+            ['Snits', None, None, None, None, 2., 33520., 1456., 1457.],
         ],
     )
 
 
-@pytest.mark.skip_athena_todo()
-@pytest.mark.skip_bigquery_todo()
 def test_unstack_level(engine) -> None:
     bt = get_df_with_test_data(engine=engine, full_data_set=False)
     bt = bt.set_index(keys=['city', 'skating_order', 'municipality'])
@@ -49,6 +53,7 @@ def test_unstack_level(engine) -> None:
 
     assert_equals_data(
         result[new_cols].sort_index(),
+        use_to_pandas=True,
         expected_columns=['city', 'municipality'] + new_cols,
         expected_data=[
             ['Drylts', 'Súdwest-Fryslân', None, None, None, None, 1268., 3055.],
@@ -70,6 +75,7 @@ def test_unstack_level(engine) -> None:
 
     assert_equals_data(
         result2[new_cols2].sort_index(level='skating_order'),
+        use_to_pandas=True,
         expected_columns=['skating_order', 'municipality'] + new_cols2,
         expected_data=[
             [1, 'Leeuwarden', 0, 0, 1285., 93485., 0, 0],

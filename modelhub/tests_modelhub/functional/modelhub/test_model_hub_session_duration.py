@@ -3,17 +3,16 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__
+from modelhub import __version__, ModelHub
 import pytest
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
-from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach.testing import assert_equals_data
 import datetime
 
 
-def test_defaults(db_params):
+def test_defaults(objectiv_df):
     # setting nothing, thus using all defaults (which is just moment without formatting)
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.aggregate.session_duration(df)
+    modelhub = ModelHub()
+    s = modelhub.aggregate.session_duration(objectiv_df)
 
     # with standard time_aggregation, all sessions are bounces
     assert len(s.to_numpy()) == 0
@@ -23,10 +22,10 @@ def test_defaults(db_params):
     (True, [[datetime.timedelta(microseconds=2667)]]),
     (False, [[datetime.timedelta(microseconds=1143)]])
 ])
-def test_no_grouping(db_params, exclude_bounces, expected_data):
+def test_no_grouping(objectiv_df, exclude_bounces, expected_data):
     # not grouping to anything
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.aggregate.session_duration(df, groupby=None, exclude_bounces=exclude_bounces)
+    modelhub = ModelHub()
+    s = modelhub.aggregate.session_duration(objectiv_df, groupby=None, exclude_bounces=exclude_bounces)
 
     assert_equals_data(
         s,
@@ -36,10 +35,10 @@ def test_no_grouping(db_params, exclude_bounces, expected_data):
     )
 
 
-def test_time_aggregation_in_df(db_params):
+def test_time_aggregation_in_objectiv_df(objectiv_df):
     # using time_aggregation (and default groupby: mh.time_agg(df, ))
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-    s = modelhub.aggregate.session_duration(df)
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    s = modelhub.aggregate.session_duration(objectiv_df)
 
     assert_equals_data(
         s,
@@ -53,10 +52,10 @@ def test_time_aggregation_in_df(db_params):
     )
 
 
-def test_overriding_time_aggregation_in(db_params):
+def test_overriding_time_aggregation_in(objectiv_df):
     # overriding time_aggregation
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, '%Y-%m'))
+    modelhub = ModelHub()
+    bts = modelhub.aggregate.session_duration(objectiv_df, groupby=modelhub.time_agg(objectiv_df, '%Y-%m'))
 
     assert_equals_data(
         bts,
@@ -68,7 +67,7 @@ def test_overriding_time_aggregation_in(db_params):
         use_to_pandas=True,
     )
 
-    bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, '%Y-%m'), method='sum')
+    bts = modelhub.aggregate.session_duration(objectiv_df, groupby=modelhub.time_agg(objectiv_df, '%Y-%m'), method='sum')
 
     assert_equals_data(
         bts,
@@ -81,10 +80,10 @@ def test_overriding_time_aggregation_in(db_params):
     )
 
 
-def test_groupby(db_params):
+def test_groupby(objectiv_df):
     # group by other columns
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-    s = modelhub.aggregate.session_duration(df, groupby='event_type')
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    s = modelhub.aggregate.session_duration(objectiv_df, groupby='event_type')
 
     assert_equals_data(
         s,
@@ -94,10 +93,10 @@ def test_groupby(db_params):
     )
 
 
-def test_groupby_incl_time_agg(db_params):
+def test_groupby_incl_time_agg(objectiv_df):
     # group by other columns (as series), including time_agg
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-    s = modelhub.aggregate.session_duration(df, groupby=[modelhub.time_agg(df, '%Y-%m'), df.session_id])
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    s = modelhub.aggregate.session_duration(objectiv_df, groupby=[modelhub.time_agg(objectiv_df, '%Y-%m'), objectiv_df.session_id])
 
     assert_equals_data(
         s,
