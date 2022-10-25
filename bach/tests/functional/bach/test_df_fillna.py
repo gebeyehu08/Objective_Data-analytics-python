@@ -81,6 +81,14 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
         check_names=False,
     )
 
+    # test selecting from ffilled df
+    pd.testing.assert_frame_equal(
+        fillna_check_ffill_expected[fillna_check_ffill_expected.F=='f'],
+        fillna_check_ffill_result[fillna_check_ffill_result.F=='f'].to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
     fillna_check_bfill_expected = check_sort_expected.fillna(method='bfill')
     fillna_check_bfill_result = check_sort_result.fillna(method='bfill')
     pd.testing.assert_frame_equal(

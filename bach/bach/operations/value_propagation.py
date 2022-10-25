@@ -81,7 +81,7 @@ class ValuePropagation:
 
         # sort values, this way we respect the provided order by
         df = df.sort_values(by=self.ROW_NUMBER_SERIES_NAME)
-        return df[self._df.data_columns]
+        return df[self._df.data_columns].materialize(node_name='nafilled')
 
     def _add_partition_per_data_columns(self, df: DataFrame) -> DataFrame:
         """
