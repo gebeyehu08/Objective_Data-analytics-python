@@ -22,6 +22,7 @@ const destination = '../generated/docs/';
 	const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
 
 	// extract required contexts for this entity
+	// TODO: turn into a proper objectiv with keys instead of an array
 	const rules = entity.validation?.rules;
 	let requiredContexts = Array();
 	if (rules && rules.length > 0) {
@@ -38,7 +39,7 @@ const destination = '../generated/docs/';
 	
 	Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entity.name}.md` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
-		
+
 		docsWriter.writeH1(entity.name);
 		docsWriter.writeLine();
 		docsWriter.writeLine(primaryDescription);
@@ -48,22 +49,24 @@ const destination = '../generated/docs/';
 		docsWriter.writeLine();
 
 		// Mermaid chart
-		docsWriter.writeMermaidChartForEntity(entity, "Diagram: " + entity.name);
+		docsWriter.writeMermaidChartForEntity(entity, "Diagram: " + entity.name + ' inheritance');
 		docsWriter.writeLine();
-		
+
 		// for Events: write list of required contexts
-		docsWriter.writeH3('Requires');
-		docsWriter.writeLine();
-		if (requiredContexts.length > 0) {
-			for (let i = 0; i < requiredContexts.length; i++) {
-				let rc = requiredContexts[i];
-				docsWriter.writeRequiredContext(rc[0], rc[2], rc[1]);
+		if (entity.isEvent) {
+			docsWriter.writeH3('Requires');
+			docsWriter.writeLine();
+			if (requiredContexts.length > 0) {
+				for (let i = 0; i < requiredContexts.length; i++) {
+					let rc = requiredContexts[i];
+					docsWriter.writeRequiredContext(rc[0], rc[2], rc[1]);
+				}
+			} else {
+				docsWriter.writeLine('None.');
 			}
-		} else {
-			docsWriter.writeLine('None.');
+			docsWriter.writeLine();
 		}
-		docsWriter.writeLine();
-		
+
 		// create plain content rows from the given entity's properties
 		function getPropertiesRows(properties) {
 			let rows = Array() as [string[]];
@@ -90,69 +93,6 @@ const destination = '../generated/docs/';
 			getPropertiesRows(entity.inheritedProperties));
 
 		docsWriter.writeEndOfLine();
-		
-		// if(entity.parent) {
-		// 	docsWriter.writeH3('Parent');
-		// 	docsWriter.writeLine(entity.parent.name);
-		// 	docsWriter.writeEndOfLine();
-		// }
-
-		// if(entity.parents.length) {
-		// 	docsWriter.writeH3('All Parents');
-		// 	docsWriter.writeLine(entity.parents.map(({ name }) => name).join(' > '));
-		// 	docsWriter.writeEndOfLine();
-		// }
-
-		// if(entity.ownChildren.length) {
-		// 	docsWriter.writeH3('Own Children');
-		// 	docsWriter.writeLine(entity.ownChildren.map(({ name }) => name).join(', '));
-		// 	docsWriter.writeEndOfLine();
-		// }
-
-		// if(entity.children.length) {
-		// 	docsWriter.writeH3('All Children');
-		// 	docsWriter.writeLine(entity.children.map(({ name }) => name).join(', '));
-		// 	docsWriter.writeEndOfLine();
-		// }
-
-		// if(entity.ownProperties.length) {
-		// 	docsWriter.writeH3('Own Properties');
-
-		// 	entity.ownProperties.forEach((entityProperty) => {
-		// 		const { name, type, description, internal } = entityProperty;
-		// 		if (!internal) {
-		// 			docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-		// 		}
-		// 	});
-
-		// 	docsWriter.writeEndOfLine();
-		// }
-
-		// if(entity.inheritedProperties.length) {
-		// 	docsWriter.writeH3('Inherited Properties');
-
-		// 	entity.inheritedProperties.forEach((entityProperty) => {
-		// 		const { name, type, description, internal } = entityProperty;
-		// 		if (!internal) {
-		// 			docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-		// 		}
-		// 	});
-
-		// 	docsWriter.writeEndOfLine();
-		// }
-
-		// if(entity.properties.length) {
-		// 	docsWriter.writeH3('All Properties');
-
-		// 	entity.properties.forEach((entityProperty) => {
-		// 		const { name, type, description, internal } = entityProperty;
-		// 		if (!internal) {
-		// 			docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-		// 		}
-		// 	});
-
-		// 	docsWriter.writeEndOfLine();
-		// }
 
 		// final notes
 		docsWriter.writeLine(admonitionDescription);
