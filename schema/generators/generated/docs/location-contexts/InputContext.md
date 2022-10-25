@@ -13,7 +13,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: InputContext inheritance"
   baseColor="blue"
   links={[
-{ name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' },{ name: 'AbstractLocationContext', to: '/taxonomy/reference/abstracts/AbstractLocationContext' },  ]}
+{ name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' }, { name: 'AbstractLocationContext', to: '/taxonomy/reference/abstracts/AbstractLocationContext' },   ]}
 />
 
 ### Inherited Properties

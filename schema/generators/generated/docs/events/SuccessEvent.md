@@ -13,7 +13,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: SuccessEvent inheritance"
   baseColor="blue"
   links={[
-{ name: 'AbstractEvent', to: '/taxonomy/reference/abstracts/AbstractEvent' },{ name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' },  ]}
+{ name: 'AbstractEvent', to: '/taxonomy/reference/abstracts/AbstractEvent' }, { name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' },   ]}
 />
 
 ### Requires

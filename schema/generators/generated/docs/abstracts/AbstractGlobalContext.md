@@ -21,7 +21,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: AbstractGlobalContext inheritance"
   baseColor="blue"
   links={[
-{ name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' },{ name: 'ApplicationContext', to: '/taxonomy/reference/ApplicationContext' },{ name: 'CookieIdContext', to: '/taxonomy/reference/CookieIdContext' },{ name: 'HttpContext', to: '/taxonomy/reference/HttpContext' },{ name: 'IdentityContext', to: '/taxonomy/reference/IdentityContext' },{ name: 'InputValueContext', to: '/taxonomy/reference/InputValueContext' },{ name: 'LocaleContext', to: '/taxonomy/reference/LocaleContext' },{ name: 'MarketingContext', to: '/taxonomy/reference/MarketingContext' },{ name: 'PathContext', to: '/taxonomy/reference/PathContext' },{ name: 'SessionContext', to: '/taxonomy/reference/SessionContext' },  ]}
+{ name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' }, { name: 'ApplicationContext', to: '/taxonomy/reference/global-contexts/ApplicationContext' }, { name: 'CookieIdContext', to: '/taxonomy/reference/global-contexts/CookieIdContext' }, { name: 'HttpContext', to: '/taxonomy/reference/global-contexts/HttpContext' }, { name: 'IdentityContext', to: '/taxonomy/reference/global-contexts/IdentityContext' }, { name: 'InputValueContext', to: '/taxonomy/reference/global-contexts/InputValueContext' }, { name: 'LocaleContext', to: '/taxonomy/reference/global-contexts/LocaleContext' }, { name: 'MarketingContext', to: '/taxonomy/reference/global-contexts/MarketingContext' }, { name: 'PathContext', to: '/taxonomy/reference/global-contexts/PathContext' }, { name: 'SessionContext', to: '/taxonomy/reference/global-contexts/SessionContext' },   ]}
 />
 
 ### Inherited Properties

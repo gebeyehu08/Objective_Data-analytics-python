@@ -298,13 +298,12 @@ export class DocusaurusWriter extends CodeWriter {
 				else if (entity.isEvent) {
 					path += 'events/';
 				}
-				// TODO: get whether it's a GlobalContext or LocationContext
-				// else if (entity.isContext && TODO == "GlobalContext") {
-				// 	path += 'global-contexts/';
-				// }
-				// else if (entity.isContext && TODO == "LocationContext") {
-				// 	path += 'location-contexts/';
-				// }
+				else if (entity.isGlobalContext) {
+					path += 'global-contexts/';
+				}
+				else if (entity.isLocationContext) {
+					path += 'location-contexts/';
+				}
 				links += '{ name: \'' + entity.name + '\', to: \'' + path + entity.name + '\' }, ';
 			}
 			return links;
