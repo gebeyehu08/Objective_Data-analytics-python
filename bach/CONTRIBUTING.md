@@ -1,6 +1,6 @@
-# Contributing to Objectiv Bach
+# Objectiv Bach -  Development
 
-Thank you for considering contributing to Objectiv Bach. Please first take a look at the [Contribution Guide](https://objectiv.io/docs/home/the-project/contribute) in our Docs if you haven’t already. It contains information about our contribution process and where you can fit in.
+Here you'll find instructions for development on Objectiv Bach. If you want to contribute (Thank you!), please take a look at the [Contribution Guide](https://www.objectiv.io/docs/home/the-project/contribute) in our Docs. It contains information about our contribution process and where you can fit in.
 
 ## Getting the latest version of Bach
 If you want the latest and greatest from your local checkout, install objectiv_bach in edit mode:

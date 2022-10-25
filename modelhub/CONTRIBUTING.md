@@ -1,11 +1,8 @@
-# Contributing to the open model hub
+# Objectiv open model hub - Development
 
-
-Thank you for considering contributing to the open model hub. Please first take a look at the [Contribution Guide](https://objectiv.io/docs/home/the-project/contribute) in our Docs if you haven’t already. It contains information about our contribution process and where you can fit in.
-
+Here you'll find instructions for development on the open model hub. If you want to contribute (Thank you!), please take a look at the [Contribution Guide](https://www.objectiv.io/docs/home/the-project/contribute) in our Docs. It contains information about our contribution process and where you can fit in.
 
 ## Set up development environment
-
 
 ```
 virtualenv venv
