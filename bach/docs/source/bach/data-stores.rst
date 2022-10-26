@@ -6,7 +6,7 @@
 
 
 =====================
-Supported data stores
+Supported Data Stores
 =====================
 Currently Bach supports AWS Athena, Google BigQuery, and PostgreSQL. Our aim is to support all popular data
 stores, and our roadmap includes Databricks, Redshift, ClickHouse, Snowflake, etcetera.
