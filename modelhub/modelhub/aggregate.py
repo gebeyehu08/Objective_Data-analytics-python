@@ -628,7 +628,7 @@ class Aggregate:
         result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
 
         if new_groupby:
-            result = result.merge(result.groupby(groupby)['n_users'].max(),
+            result = result.merge(result.groupby(new_groupby)['n_users'].max(),
                                   on=new_groupby, suffixes=('', '_max'))
         else:
             result['n_users_max'] = result['n_users'].max()
