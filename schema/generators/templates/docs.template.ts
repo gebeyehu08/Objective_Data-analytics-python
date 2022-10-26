@@ -166,7 +166,6 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 	
 	entitiesOverview.forEach((category) => {
 		docsWriter.writeH1(category.name);
-		// TODO: add description for each category
 		docsWriter.writeLine(category.description);
 		docsWriter.writeLine();
 		category.listOfChildren.forEach((child) => {
