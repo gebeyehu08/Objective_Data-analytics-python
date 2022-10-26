@@ -1,4 +1,4 @@
-# Objectiv React Tracker
+# Objectiv React Native Tracker
 
 Objectiv tracker for React Native applications that embraces the open analytics taxonomy. Supports core tracking methods and default auto-tracking (ApplicationLoaded) out of the box.
 
