@@ -1,5 +1,5 @@
 ---
-slug: /taxonomy/reference/global-contexts/
+slug: /taxonomy/global-contexts/
 ---
 
 # AbstractGlobalContext

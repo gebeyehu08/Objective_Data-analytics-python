@@ -1,5 +1,5 @@
 ---
-slug: /taxonomy/reference/location-contexts/
+slug: /taxonomy/location-contexts/
 ---
 
 # AbstractLocationContext

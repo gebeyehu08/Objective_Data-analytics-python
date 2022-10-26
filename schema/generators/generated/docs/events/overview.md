@@ -1,5 +1,5 @@
 ---
-slug: /taxonomy/reference/events/
+slug: /taxonomy/events/
 ---
 
 # AbstractEvent

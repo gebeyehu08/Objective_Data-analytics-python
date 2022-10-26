@@ -41,7 +41,7 @@ export type PropertiesDefinition = {
 		}
 		outputFile = entity.name.replace('Abstract', '').replace(/[A-Z]/g, ' $&').trim().replace(' ', '-')
 		.toLowerCase() + 's/overview.md';
-		frontMatterSlug = "/taxonomy/reference/" + outputFile.replace('overview.md', '');
+		frontMatterSlug = "/taxonomy/" + outputFile.replace('overview.md', '');
 
 		// add this Abstract entity and its children to an Array used to generate the Reference overview page
 		let abstractEntity = {
@@ -157,7 +157,6 @@ export type PropertiesDefinition = {
 });
 
 // generate reference/overview.md for all the relevant Abstracts
-console.log("entitiesOverview:", entitiesOverview);
 const outputFile = 'overview.md';
 const frontMatterSlug = '/taxonomy/reference/';
 Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
