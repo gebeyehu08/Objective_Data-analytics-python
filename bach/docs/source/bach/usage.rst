@@ -1,18 +1,29 @@
-.. _bach_examples:
+.. _bach_usage:
 
 .. currentmodule:: bach
 
 .. frontmatterposition:: 4
 
-========
-Examples
-========
-Here we'll give some very basic examples of the usage of Bach: creating a DataFrame, basic operations,
-aggregate operations, and getting the resulting data filtered and sorted. For this example there is no
-separate notebook available, but the operations demonstrated here are used in the other example notebooks.
+
+
+
+=====
+Usage
+=====
+In the :ref:`Usage Examples <usage_examples>` we'll give some basic Bach examples: creating a DataFrame,
+simple data operations, aggregate operations, and getting the resulting data filtered and sorted.
+
+The :ref:`Bach Best Practices <bach_best_practices>` section highlights some Bach-specific best practices.
+
+
+.. _usage_examples:
+
+Usage Examples
+--------------
 
 In the examples we'll assume that the database has a table called 'example', with a few specific
 columns. The SQL to create that table can be found below in :ref:`appendix_example_data`.
+
 
 To get a taste of what you can do with Objectiv Bach, There is a `demo
 </docs/home/up>`_ available that enables you to run the full Objectiv pipeline
@@ -21,7 +32,7 @@ models and a Metabase environment to output data to.
 
 
 Create a DataFrame from a database table
-----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     from bach import from_table
@@ -39,7 +50,7 @@ It is also possible to create a DataFrame from an arbitrary sql query (using
 :py:meth:`from_pandas <DataFrame.from_pandas>`).
 
 Basic operations
-----------------
+^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     # Adding a new column
@@ -69,7 +80,7 @@ and transfer all data.
 
 
 Aggregate operations
---------------------
+^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     # Group on century, select the 'inhabitants' column, and calculate the maximum value within the group
@@ -95,7 +106,7 @@ state of the DataFrame and its Series.
 
 
 Filtering, sorting, and output
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     # Only keep the rows for which inhabitants == inhabitants_max,
@@ -127,7 +138,7 @@ encompasses all operations done so far.
 
 
 Filtering by Index Labels
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 .. important::
     In the following examples we call the :py:meth:`to_pandas() <DataFrame.to_pandas>` method multiple times, 
     but we do it only for visualization purposes. Please use :py:meth:`to_pandas() <DataFrame.to_pandas>` 
@@ -207,7 +218,7 @@ in the frame, this will not raise any error since Bach has no notion of which va
     df.loc['x'].to_pandas()
 
 Setting Values to DataFrame Subset
-----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In previous section we played around a bit with the :py:meth:`loc() <DataFrame.loc>` property, by just 
 filtering the frame using labels. As in pandas, you are also able to set values to a specific group of rows 
@@ -238,10 +249,69 @@ this case.
     ``df.sort_index().loc['Sleat':, 'municipality'] = 'Fryslân'`` will have no effect on ``df``, since
     :py:meth:`sort_index() <DataFrame.sort_index>` returns a new DataFrame.
 
+
+.. _bach_best_practices:
+
+Bach Best Practices
+-------------------
+
+Use simple Series names for cleaner SQL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+All Series in a Bach DataFrame map directly to database columns with the same name. However, some databases
+limit the characters that can be used in column names. To accommodate this, Bach will transparently
+map Series names with 'special' characters to different column names.
+
+This does mean that the columns names in the generated SQL query can be different from the names in a
+DataFrame. If that's undesired, then stick to Series names only containing the characters `a-z`, `0-9`,
+and `\_`, that start with `a-z`, and a maximum length of 63 characters.
+
+
+Use a data sample to limit the data queried
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Querying big datasets can be very costly in both time and money.
+To get a smaller sample of the current DataFrame, use :py:meth:`DataFrame.get_sample()`:
+
+.. code-block:: python
+
+    table_name = 'example-project.writable_dataset.table_name'
+    df = df.get_sample(table_name, sample_percentage=10)
+
+This creates a permanent table with 10% of the current data of the DataFrame. The DataFrame `df` will use
+this new table in all later operations. One can use :py:meth:`DataFrame.get_unsampled()` to switch the
+source table for the DataFrame back to the original table, without undoing any of the operations that have
+been done since the sample was created.
+
+Use temporary tables to limit query complexity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Very complex queries can lead to problems with databases. Sometimes the performance degrades and sometimes
+databases might not even be able to execute a query at all.
+
+One solution is to materialize the state of you DataFrame into a temporary table, in between complex
+operations.
+
+.. code-block:: python
+
+    df = df.materialize(materialization='temp_table')
+
+Calling :py:meth:`DataFrame.materialize()` does not cause a direct call to the database, but rather changes the SQL
+that will be generated later on. That SQL will be split in parts: first the query to create a temporary table
+with the current state of the DataFrame, and then the SQL for the following operations. In some cases this
+can help the database a lot.
+
+One way of checking SQL complexity is to print the resulting query:
+
+.. code-block:: python
+
+    display_sql_as_markdown(df)
+
+
+
 .. _appendix_example_data:
 
 Appendix: Example Data
 ----------------------
+Data used by some of the :ref:`Usage Examples <usage_examples>`
+
 .. code-block:: sql
 
     CREATE TABLE example (

@@ -52,7 +52,7 @@ writing resulting data to a table and inspecting that table.
 **Bach Series names with special characters get encoded.**
 Athena limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See the `tip on using simple Series names <core-concepts#use-simple-series-names-for-cleaner-sql>`__.
+See the `tip on using simple Series names </docs/modeling/bach/usage#use-simple-series-names-for-cleaner-sql>`__.
 
 
 Google BigQuery
@@ -65,7 +65,7 @@ When running Bach on BigQuery, one should be aware of the following:
 **Bach Series names with special characters get encoded.**
 Big Query limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See the `tip on using simple series names <core-concepts/#use-simple-series-names-for-cleaner-sql>`__.
+See the `tip on using simple series names </docs/modeling/bach/usage#use-simple-series-names-for-cleaner-sql>`__.
 
 **BigQuery cannot execute very complex queries**
 Sometimes complex operations on Bach cannot be executed on BigQuery and you might get an error:
@@ -79,7 +79,7 @@ One way to avoid this problem is by materializing intermediate results, before t
 
     df = df.materialize(materialization='temp_table')
 
-See also the `tip on using temporary tables <core-concepts#use-temporary-tables-to-limit-query-complexity>`__.
+See also the `tip on using temporary tables </docs/modeling/bach/usage#use-temporary-tables-to-limit-query-complexity>`__.
 
 **Special BigQuery Series types.**
 The Series dtype `list` and `dict` are currently only supported on BigQuery, and their functionality is
