@@ -46,7 +46,7 @@ export interface AbstractContext {
 }
 
 /**
-* This is the abstract parent of all Events.
+* Describe interactive and non-interactive Events.
 */
 export interface AbstractEvent {
   /**
@@ -97,8 +97,7 @@ export interface AbstractEvent {
 }
 
 /**
-* This is the abstract parent of all Global Contexts. Global contexts add general information to an
-* Event.
+* Global Contexts capture general data for an Event, such as user identity & marketing info.
 */
 export interface AbstractGlobalContext extends AbstractContext {
   /**
@@ -109,7 +108,9 @@ export interface AbstractGlobalContext extends AbstractContext {
 
 /**
 * AbstractLocationContext are the abstract parents of all Location Contexts.
-* Location Contexts are meant to describe where an event originated from in the visual UI.
+* Location Contexts describe the exact position in an application's UI from where an Event was
+* triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order
+* defines the hierarchy.
 */
 export interface AbstractLocationContext extends AbstractContext {
   /**

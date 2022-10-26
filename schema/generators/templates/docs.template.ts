@@ -168,6 +168,7 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 		docsWriter.writeH1(category.name);
 		// TODO: add description for each category
 		docsWriter.writeLine(category.description);
+		docsWriter.writeLine();
 		category.listOfChildren.forEach((child) => {
 			docsWriter.write('* ');
 			docsWriter.writeLink(child.name, child.url);

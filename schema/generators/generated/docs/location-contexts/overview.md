@@ -4,7 +4,7 @@ slug: /taxonomy/location-contexts/
 
 # AbstractLocationContext
 
-
+[Location Contexts](./location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.
 
 import Mermaid from '@theme/Mermaid'
 

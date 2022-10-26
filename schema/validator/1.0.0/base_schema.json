@@ -199,7 +199,8 @@
   "events": {
     "AbstractEvent": {
       "documentation": [
-        { "description": "This is the abstract parent of all Events.", "type": "text", "target": "primary" }
+        { "description": "Describe interactive and non-interactive Events.", "type": "text", "target": "primary" },
+        { "description": "Describe interactive and non-interactive [Events](./events/overview.md).", "type": "markdown", "target": "primary" }
       ],
       "properties":{
         "_schema_version": {
@@ -469,13 +470,15 @@
     },
     "AbstractGlobalContext": {
       "documentation": [
-        { "description": "This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.", "type": "text", "target": "primary" }
+        { "description": "Global Contexts capture general data for an Event, such as user identity & marketing info.", "type": "text", "target": "primary" },
+        { "description": "[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info", "type": "markdown", "target": "primary" }
       ],
       "parent": "AbstractContext"
     },
     "AbstractLocationContext": {
       "documentation": [
-        { "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.", "type": "text", "target": "primary" }
+        { "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "text", "target": "primary" },
+        { "description": "[Location Contexts](./location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "markdown", "target": "primary" }
       ],
       "parent": "AbstractContext"
     },

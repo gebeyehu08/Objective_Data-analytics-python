@@ -4,7 +4,7 @@ slug: /taxonomy/global-contexts/
 
 # AbstractGlobalContext
 
-
+[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info
 
 import Mermaid from '@theme/Mermaid'
 

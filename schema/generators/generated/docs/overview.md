@@ -3,6 +3,7 @@ slug: /taxonomy/reference/
 ---
 
 # Global Contexts
+[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info
 
 * [ApplicationContext](./global-contexts/ApplicationContext.md)
 * [CookieIdContext](./global-contexts/CookieIdContext.md)
@@ -15,6 +16,7 @@ slug: /taxonomy/reference/
 * [SessionContext](./global-contexts/SessionContext.md)
 
 # Location Contexts
+[Location Contexts](./location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.
 
 * [ContentContext](./location-contexts/ContentContext.md)
 * [ExpandableContext](./location-contexts/ExpandableContext.md)
@@ -27,6 +29,7 @@ slug: /taxonomy/reference/
 * [LinkContext](./location-contexts/LinkContext.md)
 
 # Events
+Describe interactive and non-interactive [Events](./events/overview.md).
 
 * [InteractiveEvent](./events/InteractiveEvent.md)
 * [NonInteractiveEvent](./events/NonInteractiveEvent.md)
