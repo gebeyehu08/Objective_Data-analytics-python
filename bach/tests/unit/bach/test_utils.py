@@ -6,7 +6,7 @@ from bach.expression import Expression
 from bach.sql_model import BachSqlModel
 from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, \
     validate_node_column_references_in_sorting_expressions, get_name_from_sql_column_name, \
-    get_sql_column_name, merge_sql_statements
+    get_sql_column_name, merge_sql_statements, athena_get_engine_url
 from sql_models.model import Materialization, CustomSqlModelBuilder
 from sql_models.util import is_athena
 
@@ -225,3 +225,21 @@ def test_merge_sql_statements(dialect):
     if is_athena(dialect):
         expected = ['select test', 'select x', 'drop table y']
     assert merge_sql_statements(dialect, ['select test', 'select x', 'drop table y']) == expected
+
+
+def test_athena_get_engine_url():
+    # test that all parts of the url are properly escaped. Even if the test string is not valid for a lot
+    # of these parameters
+    result = athena_get_engine_url(
+        aws_access_key_id='+%',
+        aws_secret_access_key='+%',
+        region_name='+%',
+        schema_name='+%',
+        s3_staging_dir='+%',
+        athena_work_group='+%',
+        catalog_name='+%',
+    )
+    assert result == (
+        'awsathena+rest://%2B%25:%2B%25@athena.%2B%25.amazonaws.com:443/'
+        '%2B%25?s3_staging_dir=%2B%25&work_group=%2B%25&catalog_name=%2B%25'
+    )

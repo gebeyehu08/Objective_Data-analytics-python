@@ -39,7 +39,6 @@ import os
 from collections import defaultdict
 from enum import Enum
 from typing import Dict, List
-from urllib.parse import quote_plus
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -50,6 +49,7 @@ from dotenv import dotenv_values
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
+from bach.utils import athena_get_engine_url
 from sql_models.util import is_athena
 
 # Load settings from .test_env file, but allow overrides from Environment variables
@@ -258,20 +258,15 @@ def _get_bigquery_engine() -> Engine:
 
 def _get_athena_engine() -> Engine:
     if _DB_ATHENA_TEST_URL:
-        return create_engine(_DB_ATHENA_TEST_URL)
-    aws_access_key_id = quote_plus(_DB_ATHENA_AWS_ACCESS_KEY_ID)
-    aws_secret_access_key = quote_plus(_DB_ATHENA_AWS_SECRET_ACCESS_KEY)
-    region_name = quote_plus(_DB_ATHENA_REGION_NAME)
-    schema_name = quote_plus(_DB_ATHENA_SCHEMA_NAME)
-    s3_staging_dir = quote_plus(_DB_ATHENA_S3_STAGING_DIR)
-    athena_work_group = quote_plus(_DB_ATHENA_WORK_GROUP)
-    catalog_name = quote_plus(_DB_ATHENA_CATALOG_NAME)
-
-    url = (
-        f'awsathena+rest://'
-        f'{aws_access_key_id}:{aws_secret_access_key}'
-        f'@athena.{region_name}.amazonaws.com:443/'
-        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
-        f'&catalog_name={catalog_name}'
-    )
+        url = _DB_ATHENA_TEST_URL
+    else:
+        url = athena_get_engine_url(
+            aws_access_key_id=_DB_ATHENA_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=_DB_ATHENA_AWS_SECRET_ACCESS_KEY,
+            region_name=_DB_ATHENA_REGION_NAME,
+            schema_name=_DB_ATHENA_SCHEMA_NAME,
+            s3_staging_dir=_DB_ATHENA_S3_STAGING_DIR,
+            athena_work_group=_DB_ATHENA_WORK_GROUP,
+            catalog_name=_DB_ATHENA_CATALOG_NAME,
+        )
     return create_engine(url)

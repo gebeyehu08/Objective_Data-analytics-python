@@ -1,6 +1,8 @@
 import base64
 import re
 from typing import NamedTuple, Dict, List, Set, Iterable
+from urllib.parse import quote_plus
+
 from sqlalchemy.engine import Connection, Dialect
 
 from bach.expression import Expression, ColumnReferenceToken
@@ -188,3 +190,33 @@ def merge_sql_statements(dialect: Dialect, sql_statements: List[str]) -> List[st
         return sql_statements
     combined = '; '.join(sql_statements)
     return [combined]
+
+
+def athena_get_engine_url(
+    aws_access_key_id: str,
+    aws_secret_access_key: str,
+    region_name: str,
+    schema_name: str,
+    s3_staging_dir: str,
+    athena_work_group: str,
+    catalog_name: str
+) -> str:
+    """
+    Gives a url that can be passed to SqlAlchemy's `create_engine()` to connect to an Athena database.
+    """
+    aws_access_key_id = quote_plus(aws_access_key_id)
+    aws_secret_access_key = quote_plus(aws_secret_access_key)
+    region_name = quote_plus(region_name)
+    schema_name = quote_plus(schema_name)
+    s3_staging_dir = quote_plus(s3_staging_dir)
+    athena_work_group = quote_plus(athena_work_group)
+    catalog_name = quote_plus(catalog_name)
+
+    url = (
+        f'awsathena+rest://'
+        f'{aws_access_key_id}:{aws_secret_access_key}'
+        f'@athena.{region_name}.amazonaws.com:443/'
+        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
+        f'&catalog_name={catalog_name}'
+    )
+    return url
