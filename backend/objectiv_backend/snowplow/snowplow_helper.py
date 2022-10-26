@@ -464,6 +464,10 @@ def write_data_to_sp_collector(events: EventDataList, config: SnowplowConfig):
         body = json.loads(payload.body)
         headers = {'Content-type': 'application/json'}
 
+        print(f'obj: {json.dumps(event, indent=4)}')
+        print(f'sp_raw: {payload}')
+        print(f'sp: {json.dumps(body, indent=4)}')
+
         url = f'{collector_url}{payload.path}'
         r = requests.post(url, headers=headers, json=body)
 
