@@ -1,3 +1,7 @@
+---
+slug: /taxonomy/reference/global-contexts/
+---
+
 # AbstractGlobalContext
 
 

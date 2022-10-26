@@ -45,6 +45,19 @@ export class DocusaurusWriter extends CodeWriter {
 		super(writer);
 		this.indentString = '  ';
 	}
+	
+	/**
+	 * Write frontmatter to the document.
+	 * @param slug URL for the document.
+	 */
+	public writeFrontmatter(slug) {
+		if(slug != '') {
+		this.writeLine('---');
+			this.writeLine('slug: ' + slug);
+			this.writeLine('---');
+			this.writeLine();
+		}
+	}
 
 	/**
 	 * Write an H1 element.

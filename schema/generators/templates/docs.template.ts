@@ -29,6 +29,8 @@ export type PropertiesDefinition = {
 	const isLocationContext = entity.isLocationContext;
 	const isGlobalContext = entity.isGlobalContext;
 	
+	let frontMatterSlug = ''; // the documentation URL, specifically set for Abstracts
+	
 	let outputFile = (isLocationContext ? 'location-contexts/' : isGlobalContext ? 'global-contexts/' 
 		: 'events/') + entity.name + '.md';
 	if(isAbstract) {
@@ -38,6 +40,7 @@ export type PropertiesDefinition = {
 		}
 		outputFile = entity.name.replace('Abstract', '').replace(/[A-Z]/g, ' $&').trim().replace(' ', '-')
 			.toLowerCase() + 's/overview.md';
+		frontMatterSlug = "/taxonomy/reference/" + outputFile.replace('overview.md', '');
 	}
 
 	// extract required contexts for this entity
@@ -62,6 +65,8 @@ export type PropertiesDefinition = {
 	Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
 
+		docsWriter.writeFrontmatter(frontMatterSlug);
+		
 		docsWriter.writeH1(entity.name);
 		docsWriter.writeLine();
 		docsWriter.writeLine(primaryDescription);
