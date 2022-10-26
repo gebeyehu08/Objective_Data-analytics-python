@@ -70,7 +70,7 @@ make tests-all
 * [Pandas](https://github.com/pandas-dev/pandas): the inspiration for the API.
    Pandas has excellent [documentation](https://pandas.pydata.org/docs/) for its API.
 * [SQL-models](./sql_models/): Sub-project that is used for generating the underlying sql-queries. Can be 
-  found in the [`sql_models`](./sql_models/) package
+  found in the [`sql_models`](./sql_models/) package.
 
 ## Support
 * [Visit Objectiv Docs for instructions & FAQs](https://objectiv.io/docs/)
