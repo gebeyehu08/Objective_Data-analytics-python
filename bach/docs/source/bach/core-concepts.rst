@@ -62,7 +62,7 @@ Bach usage tips
 Use simple Series names for cleaner SQL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 All Series in a Bach DataFrame map directly to database columns with the same name. However, some databases
-limit the characters than can be used in column names. To accommodate this, Bach will transparently
+limit the characters that can be used in column names. To accommodate this, Bach will transparently
 map Series names with 'special' characters to different column names.
 
 This does mean that the columns names in the generated SQL query can be different from the names in a
@@ -75,7 +75,7 @@ Use a data sample to limit the data queried
 Querying big datasets can be very costly in both time and money.
 To get a smaller sample of the current DataFrame, use :py:meth:`DataFrame.get_sample()`:
 
-.. code-block:: console
+.. code-block:: jupyter-notebook
 
     table_name = 'example-project.writable_dataset.table_name'
     df = df.get_sample(table_name, sample_percentage=10)
@@ -93,7 +93,7 @@ databases might not even be able to execute a query at all.
 One solution is to materialize the state of you DataFrame into a temporary table, in between complex
 operations.
 
-.. code-block:: console
+.. code-block:: jupyter-notebook
 
     df = df.materialize(materialization='temp_table')
 
@@ -104,6 +104,6 @@ can help the database a lot.
 
 One way of checking SQL complexity is to print the resulting query:
 
-.. code-block:: console
+.. code-block:: jupyter-notebook
 
     display_sql_as_markdown(df)

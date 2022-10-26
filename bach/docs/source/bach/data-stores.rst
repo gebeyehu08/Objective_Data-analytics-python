@@ -10,9 +10,9 @@ Supported data stores
 Currently Bach supports AWS Athena, Google BigQuery, and PostgreSQL. Our aim is to support all popular data
 stores, and our roadmap includes Databricks, Redshift, ClickHouse, Snowflake, etcetera.
 
-For information on how to setup Objectiv with each of these data stores see the collector sections for
+For information on how to setup Objectiv with each of these data stores see the Collector sections for
 `PostgreSQL </docs/tracking/collector/postgresql>`__, `AWS Athena </docs/tracking/collector/amazon-s3>`__,
-or `Google BigQuery </docs/tracking/collector/google-bigquery>`__
+or `Google BigQuery </docs/tracking/collector/google-bigquery>`__.
 
 Bach works the same, regardless of the underlying database. Generally, anything that works on a supported
 database will work on the other databases too; no code changes needed. There are some notable exceptions to
@@ -51,7 +51,7 @@ writing resulting data to a table and inspecting that table.
 **Bach Series names with special characters get encoded.**
 Athena limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See the `tip on using simple series names </docs/modeling/bach/core-concepts/#use-simple-series-names-for-cleaner-sql>`_
+See the :doc:`tip on using simple Series names <core-concepts#use-simple-series-names-for-cleaner-sql>`.
 
 
 Google BigQuery
@@ -64,7 +64,7 @@ When running Bach on BigQuery, one should be aware of the following:
 **Bach Series names with special characters get encoded.**
 Big Query limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See the `tip on using simple series names </docs/modeling/bach/core-concepts/#use-simple-series-names-for-cleaner-sql>`_
+See the :doc:`tip on using simple series names <core-concepts/#use-simple-series-names-for-cleaner-sql>`.
 
 **BigQuery cannot execute very complex queries**
 Sometimes complex operations on Bach cannot be executed on BigQuery and you might get an error:
@@ -72,12 +72,13 @@ Sometimes complex operations on Bach cannot be executed on BigQuery and you migh
     Resources exceeded during query execution: Not enough resources for query planning - too many
     subqueries or query is too complex.
 
-One way to avoid this problem is by materializing intermediate results, before the query becomes to complex.
-.. code-block:: console
+One way to avoid this problem is by materializing intermediate results, before the query becomes too complex.
+
+.. code-block:: jupyter-notebook
 
     df = df.materialize(materialization='temp_table')
 
-See also the `tip on using temporary tables </docs/modeling/bach/core-concepts/#use-temporary-tables-to-limit-query-complexity>`_.
+See also the :doc:`tip on using temporary tables <core-concepts#use-temporary-tables-to-limit-query-complexity>`.
 
 **Special BigQuery Series types.**
 The Series dtype `list` and `dict` are currently only supported on BigQuery, and their functionality is
