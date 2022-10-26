@@ -237,3 +237,19 @@ will apply the same version to all other packages as well.
 
 For the moment we are not using the changelog feature of Changesets.   
 This means the changeset description is purely internal and does not matter too much at this point.
+
+## Support
+* [Visit Objectiv Docs for instructions & FAQs](https://objectiv.io/docs/)
+* [Join Objectiv on Slack to get help](https://objectiv.io/join-slack/)
+* [Request a feature or report an issue on Github](https://github.com/objectiv/objectiv-analytics)
+
+**Found a security issue?**
+Please don’t use the issue tracker but contact us directly. See [SECURITY.md](../SECURITY.md) for details.
+
+## License
+
+This repository is part of the source code for Objectiv, which is released under the Apache 2.0 License. Please refer to [LICENSE.md](../LICENSE.md) for details.
+
+---
+
+Copyright (c) 2021-2022 Objectiv B.V. All rights reserved.
