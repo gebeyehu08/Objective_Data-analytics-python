@@ -258,7 +258,5 @@ def test_astype_db_types(engine):
             'timestamp2': SeriesTimestamp,
             'time': SeriesTime,
             'json': SeriesJson,
-        },
-        # There is a bug in bqutil.fn.typeof() that causes it to not recognize some strings as a string.
-        expected_db_type_overrides={DBDialect.BIGQUERY: {'json': 'UNKNOWN'}}
+        }
     )
