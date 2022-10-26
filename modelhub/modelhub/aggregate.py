@@ -532,7 +532,7 @@ class Aggregate:
     def funnel_conversion(self,
                           data: bach.DataFrame,
                           location_stack: LocationStackType = None,
-                          groupby = None
+                          groupby: GroupByType = not_set
                           ) -> bach.DataFrame:
         """
         Calculates conversion numbers for all locations stacks in the `data`.
@@ -559,6 +559,8 @@ class Aggregate:
             - A Series with the same base node as `data`.
 
             If its value is `None`, the whole location stack is taken.
+        :param groupby: sets the column(s) to group by. It would be also handy later
+            for the filtering of the results.
 
         :returns: :py:class:`bach.DataFrame` with the following columns: `step` (the location considered as a
             step, e.g. a feature or root location), `n_users` (number of unique users starting the step),
@@ -567,6 +569,13 @@ class Aggregate:
             (number of users completing the step / number of users starting the funnel), and `dropoff_share`
             (ratio between the users dropping out at a given step and users at the begging at the funnel).
         """
+
+        if groupby is not_set or groupby is None:
+            new_groupby = []
+        elif not isinstance(groupby, list):
+            new_groupby = [groupby]
+        else:
+            new_groupby = groupby
 
         data = data.copy()
 
@@ -587,15 +596,15 @@ class Aggregate:
         df_root_user = data.sort_values(['session_id', 'session_hit_number']).\
             drop_duplicates(subset=[location, 'user_id'], keep='first')
 
-        gb = location
-        funnel_by = ['user_id']
-        sorting = 'n_users'
-        merge_gb = f'{location}_step_1'
-        if groupby:
-            gb = groupby + [location]
-            funnel_by = groupby + ['user_id']
-            merge_gb = groupby + [f'{location}_step_1']
-            sorting = groupby + ['n_users']
+        gb: Union[str, List] = location
+        funnel_by: List = ['user_id']
+        merge_gb: Union[str, List] = f'{location}_step_1'
+        sorting: Union[str, List] = 'n_users'
+        if new_groupby:
+            gb = new_groupby + [location]
+            funnel_by = new_groupby + ['user_id']
+            merge_gb = new_groupby + [f'{location}_step_1']
+            sorting = new_groupby + ['n_users']
 
         funnel = self._mh.get_funnel_discovery()
         df_steps = funnel.get_navigation_paths(df_root_user, location_stack=location,
@@ -618,8 +627,9 @@ class Aggregate:
                                         how='left').reset_index(drop=True)
         result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
 
-        if groupby:
-            result = result.merge(result.groupby(groupby)['n_users'].max(), on=groupby, suffixes=('', '_max'))
+        if new_groupby:
+            result = result.merge(result.groupby(groupby)['n_users'].max(),
+                                  on=new_groupby, suffixes=('', '_max'))
         else:
             result['n_users_max'] = result['n_users'].max()
 
@@ -638,7 +648,7 @@ class Aggregate:
 
         columns = [location, 'n_users', 'n_users_completed_step', 'step_conversion_rate',
                    'full_conversion_rate', 'dropoff_share']
-        if groupby:
-            columns = groupby + columns
+        if new_groupby:
+            columns = new_groupby + columns
 
         return result[columns].sort_values(sorting, ascending=False)
