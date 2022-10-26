@@ -532,7 +532,7 @@ class Aggregate:
     def funnel_conversion(self,
                           data: bach.DataFrame,
                           location_stack: LocationStackType = None,
-                          groupby: Union[List, str] = None
+                          groupby: Union[List[str], str] = None
                           ) -> bach.DataFrame:
         """
         Calculates conversion numbers for all locations stacks in the `data`.
@@ -570,7 +570,7 @@ class Aggregate:
             (ratio between the users dropping out at a given step and users at the begging at the funnel).
         """
 
-        if groupby is not_set or groupby is None:
+        if groupby is None:
             new_groupby = []
         elif not isinstance(groupby, list):
             new_groupby = [groupby]
