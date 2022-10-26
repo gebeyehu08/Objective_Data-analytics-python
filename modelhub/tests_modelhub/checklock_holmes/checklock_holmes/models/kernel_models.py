@@ -1,7 +1,8 @@
 from uuid import UUID
 
-from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 from pydantic.main import BaseModel
+
+from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
 class ChecklockKernelConfig(BaseModel):

@@ -2,7 +2,6 @@ from typing import Any
 from uuid import UUID
 
 import nbformat
-from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from mypy.applytype import Optional
 from nbclient.exceptions import CellExecutionError
 from papermill.clientwrap import PapermillNotebookClient
@@ -13,6 +12,7 @@ from checklock_holmes.checklock_kernel.manager import (
 from checklock_holmes.checklock_nb_client.execution_manager import (
     WatsonExecutionManager
 )
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 

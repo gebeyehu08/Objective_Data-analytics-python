@@ -4,11 +4,11 @@ Copyright 2022 Objectiv B.V.
 from uuid import UUID
 
 import pandas
-from checklock_holmes.output_history.handler import OutputHistoryHandler
 from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelapp import IPKernelApp, kernel_aliases, kernel_flags
-from traitlets.traitlets import Dict, Unicode, Bool
+from traitlets.traitlets import Bool, Dict, Unicode
 
+from checklock_holmes.output_history.handler import OutputHistoryHandler
 from checklock_holmes.settings import settings
 
 

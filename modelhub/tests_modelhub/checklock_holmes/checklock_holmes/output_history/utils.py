@@ -21,6 +21,6 @@ def get_output_file_key(
     return f'{check_folder}/{encoded_cell_source.decode()}.pkl'
 
 
-def extract_cell_source_from_output_key(output_key: str) -> str:
-    encoded_cell_source = output_key.split('/')[-1].split('.pkl')[0]
+def decode_pickle_file_key(output_key: str) -> str:
+    encoded_cell_source = output_key.split('.pkl')[0]
     return base64.b64decode(encoded_cell_source.encode()).decode()
