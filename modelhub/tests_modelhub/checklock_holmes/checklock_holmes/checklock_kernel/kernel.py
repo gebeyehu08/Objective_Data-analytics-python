@@ -34,7 +34,7 @@ class ChecklockKernelApp(IPKernelApp):
         }
     )
 
-    notebook_name: Unicode = Unicode(help='The name of the notebook been executed.').tag(config=True)
+    notebook_name: Unicode = Unicode(help='The name of the notebook being executed.').tag(config=True)
     db_engine: Unicode = Unicode(help='The db engine used for query execution').tag(config=True)
     check_id: Unicode = Unicode(help='Unique UUID of current check.').tag(config=True)
 

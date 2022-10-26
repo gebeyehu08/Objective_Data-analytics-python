@@ -37,11 +37,12 @@ class ChecklockNBClient(PapermillNotebookClient):
         super(ChecklockNBClient, self).__init__(nb_man, km=km, **kwargs)
 
     async def async_execute(self, reset_kc: bool = False, **kwargs: Any) -> nbformat.NotebookNode:
-        nb = await super().async_execute(reset_kc, **kwargs)
-
-        # shutdown the Kernel after finishing executing the notebook,
-        # this way we avoid having dangling processes
-        await self._async_cleanup_kernel()
+        try:
+            nb = await super().async_execute(reset_kc, **kwargs)
+        finally:
+            # shutdown the Kernel after finishing executing the notebook,
+            # this way we avoid having dangling processes
+            await self._async_cleanup_kernel()
         return nb
 
     async def async_execute_cell(

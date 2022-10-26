@@ -32,7 +32,7 @@ class AsyncChecklockKernelManager(AsyncKernelManager):
         notebook_name: str, db_engine: SupportedDBEngine, check_id: UUID
     ) -> KernelSpec:
         argv = [
-            "python", "-m", "checklock_holmes.checklock_kernel.kernel", "-f", "{connection_file}",
+            "python3", "-m", "checklock_holmes.checklock_kernel.kernel", "-f", "{connection_file}",
             "--notebook", notebook_name, "--db_engine", db_engine.value, "--check_id", str(check_id)
         ]
         return KernelSpec(
