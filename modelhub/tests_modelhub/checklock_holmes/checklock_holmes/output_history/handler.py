@@ -157,15 +157,15 @@ class OutputHistoryHandler:
     def _compare_pickle_files(
         self, history_check_key: str, current_check_key: str,
     ) -> List[OutputComparisonResult]:
-        # et all pickle files per check
+        # get all pickle files per check
         history_pickle_files = self._get_pickle_file_keys_by_check_key(history_check_key)
-        current_pickle_files = self._get_pickle_file_keys_by_check_key(history_check_key)
+        current_pickle_files = self._get_pickle_file_keys_by_check_key(current_check_key)
 
         results = []
-        for h_pickel_file, h_key in history_pickle_files.items():
-            decoded_cell_source = decode_pickle_file_key(h_pickel_file)
+        for h_pickle_file, h_key in history_pickle_files.items():
+            decoded_cell_source = decode_pickle_file_key(h_pickle_file)
 
-            if h_pickel_file not in current_pickle_files:
+            if h_pickle_file not in current_pickle_files:
                 # the cell was not found in the current check
                 results.append(
                     OutputComparisonResult(
@@ -178,7 +178,7 @@ class OutputHistoryHandler:
                 continue
 
             # if pickel_file was found in current check, then do comparison
-            c_key = current_pickle_files[h_pickel_file]
+            c_key = current_pickle_files[h_pickle_file]
             history_obj = self._client.get_object(Bucket=self.bucket_name, Key=h_key)
             history_df = pd.read_pickle(history_obj['Body'])
             current_obj = self._client.get_object(Bucket=self.bucket_name, Key=c_key)
