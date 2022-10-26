@@ -1,7 +1,7 @@
 """
 CHECKLOCK HOLMES CLI
 Usage:
-    checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit] [--start_date=<start_date>] [--end_date=<end_date>]
+    checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit] [--start_date=<start_date>] [--end_date=<end_date>] [--update-history]
     checklock-holmes.py -h | --help
 
 Options:
@@ -14,6 +14,7 @@ Options:
     -t --timeit                     Time each cell
     --start_date=<start_date>       First date for which objectiv data is loaded for Modelhub. Format as 'YYYY-MM-DD'.
     --end_date=<end_date>           Last date for which objectiv data is loaded for Modelhub. Format as 'YYYY-MM-DD'.
+    --update-history                Replaces current "source of truth" pandas outputs for each checked notebook based on engine.
 
 Before running checks, please define .env file. Must include the following variables per engine:
 - ATHENA
@@ -33,6 +34,7 @@ import datetime
 import itertools
 from typing import List
 
+from checklock_holmes.output_history.handler import OutputHistoryHandler
 from docopt import docopt
 from tqdm.asyncio import tqdm_asyncio
 
@@ -55,6 +57,7 @@ async def _check_notebook_per_engine(
     nb_path: str,
     check_settings: NoteBookCheckSettings,
     github_issues_file_path: str,
+    store_outputs: bool,
 ) -> List[NoteBookCheck]:
     nb_metadata = NoteBookMetadata(
         path=nb_path, start_date=check_settings.start_date, end_date=check_settings.end_date,
@@ -68,7 +71,7 @@ async def _check_notebook_per_engine(
             script_path = f'{check_settings.dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
             store_nb_script(script_path, nb_checker.get_script(engine))
 
-        tasks.append(nb_checker.async_check_notebook(engine))
+        tasks.append(nb_checker.async_check_notebook(engine, store_outputs=store_outputs))
 
     pb = tqdm_asyncio()
     pb.set_description(f'Checking {nb_metadata.name}...')
@@ -88,6 +91,7 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
         return
 
     github_issues_file_path = f'{check_settings.github_issues_dir}/{get_github_issue_filename()}'
+    store_outputs = settings.aws_bucket and check_settings.update_history
 
     all_checks = await asyncio.gather(
         *[
@@ -95,11 +99,16 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
                 nb_path,
                 check_settings=check_settings,
                 github_issues_file_path=github_issues_file_path,
+                store_outputs=store_outputs,
             )
             for nb_path in check_settings.notebooks_to_check
         ]
     )
     all_checks = list(itertools.chain.from_iterable(all_checks))
+
+    if store_outputs:
+        history_handler = OutputHistoryHandler()
+        history_handler.update_history(all_checks)
 
     # display final check report
     display_check_results(
@@ -131,6 +140,7 @@ if __name__ == '__main__':
         display_cell_timing=arguments['--timeit'],
         start_date=start_date,
         end_date=end_date,
+        update_history=arguments['--update-history'],
     )
     asyncio.run(
         async_check_notebooks(nb_check_settings, exit_on_fail=arguments['--exitfirst'])

@@ -41,6 +41,7 @@ class NoteBookCheckSettings(BaseModel):
     display_cell_timing: bool = False
     start_date: Optional[datetime.date] = None
     end_date: Optional[datetime.date] = None
+    update_history: bool = False
 
     @validator('engines_to_check')
     def _process_engines_to_check(cls, engines_to_check: List[str]) -> List[SupportedDBEngine]:
@@ -111,3 +112,4 @@ class NoteBookCheck(BaseModel):
     failing_block: Optional[str] = None
     elapsed_time: Optional[float] = None
     elapsed_time_per_cell: Optional[List[CellTiming]] = None
+    update_history: bool = False
