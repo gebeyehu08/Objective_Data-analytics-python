@@ -41,9 +41,5 @@ None.
 | **global\_contexts** | GlobalContexts | Global contexts add global / general information about the event. They carry information that is not related to where the Event originated (location), such as device, platform or business data.                                                                            |
 | **id**               | uuid           | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                       |
 | **time**             | integer        | Timestamp indicating when the event was generated.                                                                                                                                                                                                                           |
-### Inherited Properties
-
-|  | type | description |
-|:-|:-----|:------------|
 
 

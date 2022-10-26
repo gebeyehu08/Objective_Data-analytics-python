@@ -22,16 +22,23 @@ export type PropertiesDefinition = {
 };
 
 [...getContexts(), ...getEvents()].forEach((entity) => {
-	const entityCategory = entity.isEvent ? 'event' : 'context';
 	const primaryDescription = entity.getDescription({ type: 'markdown', target: 'primary' });
 	const admonitionDescription = entity.getDescription({ type: 'markdown', target: 'admonition' });
 
 	const isAbstract = entity.isAbstract;
 	const isLocationContext = entity.isLocationContext;
 	const isGlobalContext = entity.isGlobalContext;
-
-	const folderPrefix = isAbstract ? 'abstracts' : isLocationContext ? 'location-' : isGlobalContext ? 'global-' : '';
-	const fullFolderName = `${folderPrefix}${isAbstract ? '' : `${entityCategory}s`}`;
+	
+	let outputFile = (isLocationContext ? 'location-contexts/' : isGlobalContext ? 'global-contexts/' 
+		: 'events/') + entity.name + '.md';
+	if(isAbstract) {
+		// special case for AbstractContext; skip it
+		if (entity.name == 'AbstractContext') {
+			return;
+		}
+		outputFile = entity.name.replace('Abstract', '').replace(/[A-Z]/g, ' $&').trim().replace(' ', '-')
+			.toLowerCase() + 's/overview.md';
+	}
 
 	// extract required contexts for this entity
 	const rules = entity.validation?.rules;
@@ -52,7 +59,7 @@ export type PropertiesDefinition = {
 		}
 	}
 
-	Generator.generate({ outputFile: `${destination}/${fullFolderName}/${entity.name}.md` }, (writer: TextWriter) => {
+	Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
 
 		docsWriter.writeH1(entity.name);
@@ -107,10 +114,12 @@ export type PropertiesDefinition = {
 			docsWriter.writeTable(['', 'type', 'description'], getPropertiesRows(entity.ownProperties));
 		}
 
-		// table of inherited properties
-		docsWriter.writeH3('Inherited Properties');
-		docsWriter.writeLine();
-		docsWriter.writeTable(['', 'type', 'description'], getPropertiesRows(entity.inheritedProperties));
+		// table of inherited properties, if any
+		if (entity.inheritedProperties.length > 0) {
+			docsWriter.writeH3('Inherited Properties');
+			docsWriter.writeLine();
+			docsWriter.writeTable(['', 'type', 'description'], getPropertiesRows(entity.inheritedProperties));
+		}
 
 		docsWriter.writeEndOfLine();
 
