@@ -75,7 +75,7 @@ Use a data sample to limit the data queried
 Querying big datasets can be very costly in both time and money.
 To get a smaller sample of the current DataFrame, use :py:meth:`DataFrame.get_sample()`:
 
-.. code-block:: jupyter-notebook
+.. code-block:: python
 
     table_name = 'example-project.writable_dataset.table_name'
     df = df.get_sample(table_name, sample_percentage=10)
@@ -93,7 +93,7 @@ databases might not even be able to execute a query at all.
 One solution is to materialize the state of you DataFrame into a temporary table, in between complex
 operations.
 
-.. code-block:: jupyter-notebook
+.. code-block:: python
 
     df = df.materialize(materialization='temp_table')
 
@@ -104,6 +104,6 @@ can help the database a lot.
 
 One way of checking SQL complexity is to print the resulting query:
 
-.. code-block:: jupyter-notebook
+.. code-block:: python
 
     display_sql_as_markdown(df)
