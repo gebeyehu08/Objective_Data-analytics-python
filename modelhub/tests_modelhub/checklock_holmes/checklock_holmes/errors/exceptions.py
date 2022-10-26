@@ -11,5 +11,6 @@ class CuriousIncident(Exception):
 class OutputHistoryException(Exception):
     def __init__(self, exc: Exception):
         super().__init__(
-            f'Cannot ready history file, might be corrupted. Please manually delete it and generate again!. {exc}'
+            f'Cannot ready history file, might be corrupted. '
+            f'Please manually delete it and generate again!. {exc}'
         )

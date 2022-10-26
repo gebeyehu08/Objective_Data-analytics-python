@@ -5,13 +5,13 @@ import re
 from dataclasses import dataclass
 
 import nbformat
-from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from papermill.iorw import load_notebook_node
 
 from checklock_holmes.checklock_nb_client.notebook_engine import (
     ChecklockNBEngine
 )
 from checklock_holmes.errors.exceptions import CuriousIncident
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.models.nb_checker_models import (
     CellTiming, NoteBookCheck, NoteBookMetadata
 )

@@ -1,27 +1,30 @@
 import json
 import pickle
 from collections import defaultdict
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 from uuid import UUID
 
-import pandas
+import boto3
+import pandas as pd
+from botocore.exceptions import ClientError
+
 from checklock_holmes.errors.exceptions import OutputHistoryException
 from checklock_holmes.models.nb_checker_models import NoteBookCheck
 from checklock_holmes.output_history.utils import get_output_file_key
 from checklock_holmes.settings import settings
-import boto3
-from botocore.exceptions import ClientError
-
 
 HistoryType = Dict[str, Dict[str, Dict[str, str]]]
 OUTPUT_FILE_HISTORY_PATH = 'output_history.json'
 
 
 class OutputHistoryHandler:
+    bucket_name: str
+
     def __init__(self):
         if not settings.aws_bucket:
             raise OutputHistoryException(Exception('Please setup AWS env variables.'))
 
+        self.bucket_name = settings.aws_bucket.name
         self._client = boto3.client(
             's3',
             region_name=settings.aws_bucket.region_name,
@@ -31,7 +34,7 @@ class OutputHistoryHandler:
 
     def write_pandas_object(
         self,
-        obj: Union[pandas.DataFrame, pandas.Series],
+        obj: Union[pd.DataFrame, pd.Series],
         notebook_name: str,
         db_engine: str,
         check_id: UUID,
@@ -45,10 +48,10 @@ class OutputHistoryHandler:
             check_id=check_id,
             cell_source=cell_source,
         )
-        self._client.put_object(Bucket=settings.aws_bucket.name, Key=out_key, Body=pickled_df)
+        self._client.put_object(Bucket=self.bucket_name, Key=out_key, Body=pickled_df)
 
     def update_history(self, nb_checks: List[NoteBookCheck]) -> None:
-        new_history = defaultdict(lambda: defaultdict(dict))
+        new_history: HistoryType = defaultdict(lambda: defaultdict(dict))
         for nb in nb_checks:
             if not nb.completed:
                 continue
@@ -66,7 +69,7 @@ class OutputHistoryHandler:
             new_history = self._merge_histories(old_history, dict(new_history))
 
         self._client.put_object(
-            Bucket=settings.aws_bucket.name,
+            Bucket=self.bucket_name,
             Key=OUTPUT_FILE_HISTORY_PATH,
             Body=json.dumps(new_history),
         )
@@ -100,7 +103,7 @@ class OutputHistoryHandler:
 
     def _get_current_history(self) -> HistoryType:
         try:
-            obj = self._client.get_object(Bucket=settings.aws_bucket.name, Key=OUTPUT_FILE_HISTORY_PATH)
+            obj = self._client.get_object(Bucket=self.bucket_name, Key=OUTPUT_FILE_HISTORY_PATH)
             return json.loads(obj['Body'].read())
         except ClientError as exc:
             if exc.response['Error']['Code'] == 'NoSuchKey':

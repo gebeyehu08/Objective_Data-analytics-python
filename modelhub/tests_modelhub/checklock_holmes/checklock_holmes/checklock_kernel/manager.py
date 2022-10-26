@@ -3,10 +3,10 @@ Copyright 2022 Objectiv B.V.
 """
 from uuid import UUID
 
-from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from jupyter_client.kernelspec import KernelSpec
 from jupyter_client.manager import AsyncKernelManager
 
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 

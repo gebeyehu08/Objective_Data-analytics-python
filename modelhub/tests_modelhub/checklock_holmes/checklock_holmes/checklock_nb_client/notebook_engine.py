@@ -1,7 +1,6 @@
 from uuid import UUID
 
 import nbformat
-from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from papermill.engines import NBClientEngine
 
 from checklock_holmes.checklock_nb_client.execution_manager import (
@@ -10,6 +9,7 @@ from checklock_holmes.checklock_nb_client.execution_manager import (
 from checklock_holmes.checklock_nb_client.notebook_client import (
     ChecklockNBClient
 )
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
