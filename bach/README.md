@@ -2,7 +2,7 @@
 
 Bach is a Python-based analytics modeling library with a Pandas-like interface. It translates all operations and models to SQL, running directly on your full dataset. All DataFrames & models can be converted to an SQL statement with just a single command, to use in other tools like dbt or BI.
 
-Bach is part of [Objectiv](https://objectiv.io/), an open-source data collection & modeling platform that helps data teams run product analytics from their notebooks. Bach therefore works with any dataset that embraces Objectiv's [open analytics taxonomy](https://objectiv.io/docs/taxonomy/), so you can take pre-built models from [open model hub](https://objectiv.io/docs/taxonomy/) to quickly build deep analyses for a wide range of product & marketing use cases.
+Bach is part of [Objectiv](https://objectiv.io/), an open-source data collection & modeling platform that helps data teams run product analytics from their notebooks. Bach therefore works with any dataset that embraces Objectiv's [open analytics taxonomy](https://objectiv.io/docs/modeling/open-model-hub/), so you can take pre-built models from [open model hub](https://objectiv.io/docs/taxonomy/) to quickly build deep analyses for a wide range of product & marketing use cases.
 
 
 ## Installation
