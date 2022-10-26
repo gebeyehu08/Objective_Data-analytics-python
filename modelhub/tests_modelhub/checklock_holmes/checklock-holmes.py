@@ -48,7 +48,7 @@ from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
     DATE_FORMAT, DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR
 )
-from checklock_holmes.utils.supported_engines import SupportedEngine
+from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
 async def _check_notebook_per_engine(
@@ -111,7 +111,7 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
 
 if __name__ == '__main__':
     cli_docstring = __doc__.format(
-        supported_engines=', '.join([engine for engine in SupportedEngine]),
+        supported_engines=', '.join([engine for engine in SupportedDBEngine]),
         default_nb_dir=DEFAULT_NOTEBOOKS_DIR,
         default_github_issues_dir=DEFAULT_GITHUB_ISSUES_DIR,
     )

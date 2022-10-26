@@ -10,7 +10,7 @@ from checklock_holmes.models.env_models import (
     DEFAULT_METABASE_ENV, AWSBucketEnvModel, BaseDBEnvModel, BigQueryEnvModel,
     MetaBaseEnvModel
 )
-from checklock_holmes.utils.supported_engines import SupportedEngine
+from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
 class Settings(BaseSettings):
@@ -28,20 +28,20 @@ class Settings(BaseSettings):
         env_nested_delimiter = '__'
 
     @property
-    def engine_env_var_mapping(self) -> Dict[SupportedEngine, BaseDBEnvModel]:
+    def engine_env_var_mapping(self) -> Dict[SupportedDBEngine, BaseDBEnvModel]:
         mapping = {}
         if self.pg_db:
-            mapping[SupportedEngine.POSTGRES] = self.pg_db
+            mapping[SupportedDBEngine.POSTGRES] = self.pg_db
 
         if self.bq_db:
-            mapping[SupportedEngine.BIGQUERY] = self.bq_db
+            mapping[SupportedDBEngine.BIGQUERY] = self.bq_db
 
         if self.athena_db:
-            mapping[SupportedEngine.ATHENA] = self.athena_db
+            mapping[SupportedDBEngine.ATHENA] = self.athena_db
 
         return mapping
 
-    def get_env_variables(self, engine: SupportedEngine) -> Dict[str, str]:
+    def get_env_variables(self, engine: SupportedDBEngine) -> Dict[str, str]:
         return {
             **(self.engine_env_var_mapping[engine].dict() if engine in self.engine_env_var_mapping else {}),
             **self.metabase.dict(),
