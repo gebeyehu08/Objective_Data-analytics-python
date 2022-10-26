@@ -91,35 +91,10 @@ def test_funnel_conversion_groupby(objectiv_df):
             [datetime.date(2021, 12, 3), 'link: d', 1, 0, 0.0, 0.0, 1.0],
         ],
         use_to_pandas=True,
-        order_by=['day', 'location'],
-    )
-
-    # groupby - Series
-    objectiv_df['year_month'] = modelhub.time_agg(objectiv_df, '%Y-%m')
-    groupby = 'year_month'
-    columns = [groupby] + fc_columns
-
-    bts = modelhub.agg.funnel_conversion(objectiv_df,
-                                         location_stack='feature_nice_name',
-                                         groupby=groupby)
-    assert_equals_data(
-        bts,
-        expected_columns=columns,
-        expected_data=[
-            ['2021-11', 'link: c', 1, 1, 1.0, 1.0, 0.0],
-            ['2021-11', 'link: g', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-11', 'link: l', 1, 1, 1.0, 1.0, 0.0],
-            ['2021-11', 'link: n', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-12', 'expanda', 1, 1, 1.0, 0.5, 0.0],
-            ['2021-12', 'link: a', 2, 1, 0.5, 0.5, 0.5],
-            ['2021-12', 'link: c', 2, 1, 0.5, 0.5, 0.5],
-            ['2021-12', 'link: d', 1, 0, 0.0, 0.0, 0.5],
-        ],
-        use_to_pandas=True,
         order_by=[groupby, 'location'],
     )
 
-    # groupby - list of str
+    # groupby - list
     groupby = ['day', 'session_id']
     columns = groupby + fc_columns
     bts = modelhub.agg.funnel_conversion(objectiv_df,
@@ -142,31 +117,4 @@ def test_funnel_conversion_groupby(objectiv_df):
         ],
         use_to_pandas=True,
         order_by=groupby + ['location'],
-    )
-
-    # groupby - List[Series, str]
-    objectiv_df['year_month'] = modelhub.time_agg(objectiv_df, '%Y-%m')
-    groupby = ['year_month', 'session_id']
-    columns = groupby + fc_columns
-
-    bts = modelhub.agg.funnel_conversion(objectiv_df,
-                                         location_stack='feature_nice_name',
-                                         groupby=groupby)
-    assert_equals_data(
-        bts,
-        expected_columns=columns,
-        expected_data=[
-            ['2021-11', 1, 'link: c', 1, 1, 1.0, 1.0, 0.0],
-            ['2021-11', 1, 'link: l', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-11', 2, 'link: n', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-11', 3, 'link: g', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-12', 4, 'link: a', 1, 1, 1.0, 1.0, 0.0],
-            ['2021-12', 4, 'link: c', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-12', 5, 'expanda', 1, 1, 1.0, 1.0, 0.0],
-            ['2021-12', 5, 'link: c', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-12', 6, 'link: a', 1, 0, 0.0, 0.0, 1.0],
-            ['2021-12', 7, 'link: d', 1, 0, 0.0, 0.0, 1.0],
-        ],
-        use_to_pandas=True,
-        order_by=['session_id', 'location'],
     )

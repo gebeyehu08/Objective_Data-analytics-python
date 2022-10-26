@@ -532,7 +532,7 @@ class Aggregate:
     def funnel_conversion(self,
                           data: bach.DataFrame,
                           location_stack: LocationStackType = None,
-                          groupby: GroupByType = not_set
+                          groupby: Union[List, str] = None
                           ) -> bach.DataFrame:
         """
         Calculates conversion numbers for all locations stacks in the `data`.
