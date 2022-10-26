@@ -91,7 +91,7 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
         return
 
     github_issues_file_path = f'{check_settings.github_issues_dir}/{get_github_issue_filename()}'
-    store_outputs = settings.aws_bucket is not None and check_settings.update_history
+    store_outputs = check_settings.update_history
 
     all_checks = await asyncio.gather(
         *[

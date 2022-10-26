@@ -80,8 +80,8 @@ class Settings(BaseSettings):
         if not aws_env:
             warnings.warn(
                 message=(
-                    'Cannot store cell outputs. '
-                    'Please define AWS variables in .env file'
+                    'Cell outputs will be stored locally. '
+                    'Please define AWS variables in .env file if you prefer to store files in an S3 bucket'
                 ),
                 category=UserWarning,
             )

@@ -33,8 +33,8 @@ class ChecklockKernel(IPythonKernel):
         if not self.parent.store_outputs:
             return None
 
-        # skip if aws bucket is not set up.
-        if not settings.aws_bucket or not isinstance(result.result, (pandas.DataFrame, pandas.Series)):
+        # skip if it is not a pandas output
+        if not isinstance(result.result, (pandas.DataFrame, pandas.Series)):
             return None
 
         OutputHistoryHandler().write_pandas_object(

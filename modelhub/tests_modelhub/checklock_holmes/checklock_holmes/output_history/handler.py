@@ -1,7 +1,7 @@
 import json
 import pickle
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 import boto3
@@ -10,27 +10,29 @@ from botocore.exceptions import ClientError
 
 from checklock_holmes.errors.exceptions import OutputHistoryException
 from checklock_holmes.models.nb_checker_models import NoteBookCheck
-from checklock_holmes.output_history.utils import get_output_file_key
+from checklock_holmes.output_history.utils import (
+    get_output_check_key, get_output_file_key
+)
 from checklock_holmes.settings import settings
+from checklock_holmes.utils.helpers import create_dir_if_not_exists
 
 HistoryType = Dict[str, Dict[str, Dict[str, str]]]
 OUTPUT_FILE_HISTORY_PATH = 'output_history.json'
 
+LOCAL_OUTPUT_FILE_DIR = '.output_files'
+
 
 class OutputHistoryHandler:
-    bucket_name: str
-
     def __init__(self):
-        if not settings.aws_bucket:
-            raise OutputHistoryException(Exception('Please setup AWS env variables.'))
-
-        self.bucket_name = settings.aws_bucket.name
-        self._client = boto3.client(
-            's3',
-            region_name=settings.aws_bucket.region_name,
-            aws_access_key_id=settings.aws_bucket.access_key_id,
-            aws_secret_access_key=settings.aws_bucket.secret_access_key,
-        )
+        if settings.aws_bucket:
+            self._client = boto3.client(
+                's3',
+                region_name=settings.aws_bucket.region_name,
+                aws_access_key_id=settings.aws_bucket.access_key_id,
+                aws_secret_access_key=settings.aws_bucket.secret_access_key,
+            )
+        else:
+            create_dir_if_not_exists(LOCAL_OUTPUT_FILE_DIR)
 
     def write_pandas_object(
         self,
@@ -40,15 +42,20 @@ class OutputHistoryHandler:
         check_id: UUID,
         cell_source: str,
     ) -> None:
-        pickled_df = pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
-
         out_key = get_output_file_key(
             notebook_name=notebook_name,
             db_engine=db_engine,
             check_id=check_id,
             cell_source=cell_source,
         )
-        self._client.put_object(Bucket=self.bucket_name, Key=out_key, Body=pickled_df)
+        if settings.aws_bucket:
+            pickled_df = pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
+            self._client.put_object(Bucket=settings.aws_bucket.name, Key=out_key, Body=pickled_df)
+        else:
+            create_dir_if_not_exists(
+                f'{LOCAL_OUTPUT_FILE_DIR}/{get_output_check_key(notebook_name, db_engine, check_id)}'
+            )
+            obj.to_pickle(path=f'{LOCAL_OUTPUT_FILE_DIR}/{out_key}')
 
     def update_history(self, nb_checks: List[NoteBookCheck]) -> None:
         new_history: HistoryType = defaultdict(lambda: defaultdict(dict))
@@ -68,11 +75,19 @@ class OutputHistoryHandler:
         if old_history:
             new_history = self._merge_histories(old_history, dict(new_history))
 
-        self._client.put_object(
-            Bucket=self.bucket_name,
-            Key=OUTPUT_FILE_HISTORY_PATH,
-            Body=json.dumps(new_history),
-        )
+        self._save_history(new_history)
+
+    def _save_history(self, history: HistoryType) -> None:
+        if settings.aws_bucket:
+            self._client.put_object(
+                Bucket=settings.aws_bucket.name,
+                Key=OUTPUT_FILE_HISTORY_PATH,
+                Body=json.dumps(history),
+            )
+            return None
+
+        with open(f'{LOCAL_OUTPUT_FILE_DIR}/{OUTPUT_FILE_HISTORY_PATH}', 'w') as file:
+            file.write(json.dumps(history))
 
     @staticmethod
     def _get_date_key(nb: NoteBookCheck) -> str:
@@ -102,8 +117,15 @@ class OutputHistoryHandler:
         return new_history
 
     def _get_current_history(self) -> HistoryType:
+        if not settings.aws_bucket:
+            try:
+                with open(f'{LOCAL_OUTPUT_FILE_DIR}/{OUTPUT_FILE_HISTORY_PATH}', 'r') as file:
+                    return json.load(file)
+            except FileNotFoundError:
+                return {}
+
         try:
-            obj = self._client.get_object(Bucket=self.bucket_name, Key=OUTPUT_FILE_HISTORY_PATH)
+            obj = self._client.get_object(Bucket=settings.aws_bucket.name, Key=OUTPUT_FILE_HISTORY_PATH)
             return json.loads(obj['Body'].read())
         except ClientError as exc:
             if exc.response['Error']['Code'] == 'NoSuchKey':
