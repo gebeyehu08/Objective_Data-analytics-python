@@ -24,6 +24,7 @@ export type PropertiesDefinition = {
 
 [...getContexts(), ...getEvents()].forEach((entity) => {
 	const primaryDescription = entity.getDescription({ type: 'markdown', target: 'primary' });
+	const secondaryDescription = entity.getDescription({ type: 'markdown', target: 'secondary' });
 	const admonitionDescription = entity.getDescription({ type: 'markdown', target: 'admonition' });
 	
 	const isAbstract = entity.isAbstract;
@@ -46,7 +47,7 @@ export type PropertiesDefinition = {
 		// add this Abstract entity and its children to an Array used to generate the Reference overview page
 		let abstractEntity = {
 			name: entity.name.replace('Abstract', '').replace(/[A-Z]/g, ' $&').trim() + 's',
-			description: primaryDescription,
+			description: secondaryDescription,
 			listOfChildren: []
 		}
 		let listOfChildren = Array();

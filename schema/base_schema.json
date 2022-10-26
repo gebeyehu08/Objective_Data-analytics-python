@@ -191,8 +191,8 @@
   "events": {
     "AbstractEvent": {
       "documentation": [
-        { "description": "Describe interactive and non-interactive Events.", "type": "text", "target": "primary" },
-        { "description": "Describe interactive and non-interactive [Events](./events/overview.md).", "type": "markdown", "target": "primary" }
+        { "description": "The abstract parent of all Events.", "type": "text", "target": "primary" },
+        { "description": "Describe interactive and non-interactive [Events](./events/overview.md).", "type": "markdown", "target": "secondary" }
       ],
       "properties":{
         "_schema_version": {
@@ -454,15 +454,15 @@
     },
     "AbstractGlobalContext": {
       "documentation": [
-        { "description": "Global Contexts capture general data for an Event, such as user identity & marketing info.", "type": "text", "target": "primary" },
-        { "description": "[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info", "type": "markdown", "target": "primary" }
+        { "description": "The abstract parent of all Global Contexts. Global Contexts capture general data for an Event, such as user identity & marketing info.", "type": "text", "target": "primary" },
+        { "description": "[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info", "type": "markdown", "target": "secondary" }
       ],
       "parent": "AbstractContext"
     },
     "AbstractLocationContext": {
       "documentation": [
-        { "description": "Location Contexts describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "text", "target": "primary" },
-        { "description": "[Location Contexts](./location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "markdown", "target": "primary" }
+        { "description": "The abstract parent of all Location Contexts. Location Contexts describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "text", "target": "primary" },
+        { "description": "[Location Contexts](./location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "markdown", "target": "secondary" }
       ],
       "parent": "AbstractContext"
     },

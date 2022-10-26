@@ -1,6 +1,6 @@
 {
     "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
-    "description": "This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.",
+    "description": "The abstract parent of all Global Contexts. Global Contexts capture general data for an Event, such as user identity & marketing info.",
     "self": {
         "vendor": "io.objectiv.context",
         "name": "AbstractGlobalContext",

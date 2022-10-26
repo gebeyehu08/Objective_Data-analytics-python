@@ -7,16 +7,10 @@
         "format": "jsonschema",
         "version": "1-0-0"
     },
-    "properties": {
-        "location_stack": {
-          "type": "array",
-          "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that deterministically describes where an event took place from global to specific. The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
-          "minItems": 1
-        }
-    },
-    "additionalProperties": true,
     "type": "object",
+    "properties": {},
+    "additionalProperties": false,
     "required": [
-        "location_stack"
+        null
     ]
 }
