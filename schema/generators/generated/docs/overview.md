@@ -3,7 +3,7 @@ slug: /taxonomy/reference/
 ---
 
 # Global Contexts
-[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info
+[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info.
 
 * [ApplicationContext](./global-contexts/ApplicationContext.md)
 * [CookieIdContext](./global-contexts/CookieIdContext.md)

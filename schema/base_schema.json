@@ -455,7 +455,7 @@
     "AbstractGlobalContext": {
       "documentation": [
         { "description": "The abstract parent of all Global Contexts. Global Contexts capture general data for an Event, such as user identity & marketing info.", "type": "text", "target": "primary" },
-        { "description": "[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info", "type": "markdown", "target": "secondary" }
+        { "description": "[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info.", "type": "markdown", "target": "secondary" }
       ],
       "parent": "AbstractContext"
     },
