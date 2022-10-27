@@ -314,24 +314,29 @@ export class DocusaurusWriter extends CodeWriter {
 			let links = '';
 			for (let i = 0; i < entities.length; i++) {
 				const entity = entities[i];
-				let path = '/taxonomy/reference/'
+				let path = '/taxonomy/'
 				// special case for AbstractContext; skip it
 				if (entity.name == 'AbstractContext') {
-					break;
+					continue;
 				}
-				if (entity.isAbstract) {
-					path += 'abstracts/';
+				else if (entity.isAbstract) {
+					path += entity.name
+						.replace('Abstract', '')
+						.replace(/[A-Z]/g, ' $&')
+						.trim()
+						.replace(' ', '-')
+						.toLowerCase() + 's';
 				}
 				else if (entity.isEvent) {
-					path += 'events/';
+					path += 'reference/events/' + entity.name;
 				}
 				else if (entity.isGlobalContext) {
-					path += 'global-contexts/';
+					path += 'reference/global-contexts/' + entity.name;
 				}
 				else if (entity.isLocationContext) {
-					path += 'location-contexts/';
+					path += 'reference/location-contexts/' + entity.name;
 				}
-				links += '{ name: \'' + entity.name + '\', to: \'' + path + entity.name + '\' }, ';
+				links += '{ name: \'' + entity.name + '\', to: \'' + path + '\' }, ';
 			}
 			return links;
 		}

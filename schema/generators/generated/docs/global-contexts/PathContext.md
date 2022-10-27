@@ -13,7 +13,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: PathContext inheritance"
   baseColor="blue"
   links={[
-  ]}
+{ name: 'AbstractGlobalContext', to: '/taxonomy/global-contexts' },   ]}
 />
 
 ### Inherited Properties

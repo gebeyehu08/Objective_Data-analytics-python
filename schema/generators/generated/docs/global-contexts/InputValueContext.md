@@ -13,7 +13,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: InputValueContext inheritance"
   baseColor="blue"
   links={[
-  ]}
+{ name: 'AbstractGlobalContext', to: '/taxonomy/global-contexts' },   ]}
 />
 
 ### Properties

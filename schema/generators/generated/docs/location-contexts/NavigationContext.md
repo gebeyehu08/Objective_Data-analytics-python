@@ -13,7 +13,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: NavigationContext inheritance"
   baseColor="blue"
   links={[
-  ]}
+{ name: 'AbstractLocationContext', to: '/taxonomy/location-contexts' },   ]}
 />
 
 ### Inherited Properties

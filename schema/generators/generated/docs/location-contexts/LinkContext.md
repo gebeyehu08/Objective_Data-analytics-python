@@ -13,7 +13,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: LinkContext inheritance"
   baseColor="blue"
   links={[
-  ]}
+{ name: 'AbstractLocationContext', to: '/taxonomy/location-contexts' }, { name: 'PressableContext', to: '/taxonomy/reference/location-contexts/PressableContext' },   ]}
 />
 
 ### Properties
