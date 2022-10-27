@@ -215,7 +215,8 @@ def athena_construct_engine_url(
     :param aws_secret_access_key: Optional, secret key for account
     :param region_name: region where data is hosted, e.g. 'eu-west-1'
     :param schema_name: Database name
-    :param s3_staging_dir: S3 path where query results should be written, e.g. 'S3://some_bucket/my_staging_area/'
+    :param s3_staging_dir: S3 path where query results should be written,
+            e.g. 'S3://some_bucket/my_staging_area/'
     :param athena_work_group: Optional, workgroup under which queries will be executed.
     :param catalog_name: Optional, catalog in which table information is stored.
     """
