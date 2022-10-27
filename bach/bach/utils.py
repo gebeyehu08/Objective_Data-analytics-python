@@ -192,7 +192,8 @@ def merge_sql_statements(dialect: Dialect, sql_statements: List[str]) -> List[st
     return [combined]
 
 
-def athena_get_engine_url(
+def athena_construct_engine_url(
+    *,
     aws_access_key_id: str,
     aws_secret_access_key: str,
     region_name: str,
@@ -202,7 +203,7 @@ def athena_get_engine_url(
     catalog_name: Optional[str] = None
 ) -> str:
     """
-    Gives a url that can be passed to SqlAlchemy's `create_engine()` to connect to an Athena database.
+    Construct a url that can be passed to SqlAlchemy's `create_engine()` to connect to an Athena database.
     """
     q_aws_access_key_id = quote_plus(aws_access_key_id)
     q_aws_secret_access_key = quote_plus(aws_secret_access_key)

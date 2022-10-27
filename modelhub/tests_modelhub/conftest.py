@@ -30,7 +30,7 @@ import os
 
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
-from bach.utils import athena_get_engine_url
+from modelhub import athena_construct_engine_url
 from dotenv import dotenv_values
 
 from tests_modelhub.data_and_utils.utils import DBParams
@@ -131,7 +131,7 @@ def _get_athena_db_params() -> DBParams:
     if _DB_ATHENA_TEST_URL:
         url = _DB_ATHENA_TEST_URL
     else:
-        url = athena_get_engine_url(
+        url = athena_construct_engine_url(
             aws_access_key_id=_DB_ATHENA_AWS_ACCESS_KEY_ID,
             aws_secret_access_key=_DB_ATHENA_AWS_SECRET_ACCESS_KEY,
             region_name=_DB_ATHENA_REGION_NAME,

@@ -49,7 +49,7 @@ from dotenv import dotenv_values
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
-from bach.utils import athena_get_engine_url
+from bach.utils import athena_construct_engine_url
 from sql_models.util import is_athena
 
 # Load settings from .test_env file, but allow overrides from Environment variables
@@ -260,7 +260,7 @@ def _get_athena_engine() -> Engine:
     if _DB_ATHENA_TEST_URL:
         url = _DB_ATHENA_TEST_URL
     else:
-        url = athena_get_engine_url(
+        url = athena_construct_engine_url(
             aws_access_key_id=_DB_ATHENA_AWS_ACCESS_KEY_ID,
             aws_secret_access_key=_DB_ATHENA_AWS_SECRET_ACCESS_KEY,
             region_name=_DB_ATHENA_REGION_NAME,

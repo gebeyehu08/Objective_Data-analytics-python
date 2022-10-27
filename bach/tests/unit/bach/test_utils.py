@@ -6,7 +6,7 @@ from bach.expression import Expression
 from bach.sql_model import BachSqlModel
 from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, \
     validate_node_column_references_in_sorting_expressions, get_name_from_sql_column_name, \
-    get_sql_column_name, merge_sql_statements, athena_get_engine_url
+    get_sql_column_name, merge_sql_statements, athena_construct_engine_url
 from sql_models.model import Materialization, CustomSqlModelBuilder
 from sql_models.util import is_athena
 
@@ -228,10 +228,10 @@ def test_merge_sql_statements(dialect):
 
 
 @pytest.mark.db_independent('Does not take a dialect/engine as parameter')
-def test_athena_get_engine_url():
+def test_athena_construct_engine_url():
     # test that all parts of the url are properly escaped. Even if the test string is not valid for a lot
     # of these parameters. The test string contains two characters that need to be escaped: `+` and `%`
-    result = athena_get_engine_url(
+    result = athena_construct_engine_url(
         aws_access_key_id='+test%',
         aws_secret_access_key='+test%',
         region_name='+test%',
@@ -245,7 +245,7 @@ def test_athena_get_engine_url():
         '%2Btest%25?s3_staging_dir=%2Btest%25&work_group=%2Btest%25&catalog_name=%2Btest%25'
     )
 
-    result = athena_get_engine_url(
+    result = athena_construct_engine_url(
         aws_access_key_id='+test%',
         aws_secret_access_key='+test%',
         region_name='+test%',
