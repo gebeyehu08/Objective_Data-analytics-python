@@ -242,7 +242,8 @@ def test_athena_construct_engine_url():
     )
     assert result == (
         'awsathena+rest://%2Btest%25:%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
-        '%2Btest%25?s3_staging_dir=%2Btest%25&work_group=%2Btest%25&catalog_name=%2Btest%25'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25&work_group=%2Btest%25&catalog_name=%2Btest%25'
     )
 
     result = athena_construct_engine_url(
@@ -254,5 +255,29 @@ def test_athena_construct_engine_url():
     )
     assert result == (
         'awsathena+rest://%2Btest%25:%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
-        '%2Btest%25?s3_staging_dir=%2Btest%25'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25'
+    )
+
+    result = athena_construct_engine_url(
+        aws_access_key_id='+test%',
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+    )
+    assert result == (
+        'awsathena+rest://%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25'
+    )
+
+    result = athena_construct_engine_url(
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+    )
+    assert result == (
+        'awsathena+rest://@athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25'
     )

@@ -194,8 +194,8 @@ def merge_sql_statements(dialect: Dialect, sql_statements: List[str]) -> List[st
 
 def athena_construct_engine_url(
     *,
-    aws_access_key_id: str,
-    aws_secret_access_key: str,
+    aws_access_key_id: str = None,
+    aws_secret_access_key: str = None,
     region_name: str,
     schema_name: str,
     s3_staging_dir: str,
@@ -204,11 +204,30 @@ def athena_construct_engine_url(
 ) -> str:
     """
     Construct a url that can be passed to SqlAlchemy's `create_engine()` to connect to an Athena database.
+
+    Note that the access key and secret access key are not needed for a valid url. Athena libraries will use
+    the standard fallback mechanism in case credentials are missing from the url, see
+    https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#configuring-credentials
+
+    For more information on
+
+    :param aws_access_key_id: Optional, account to use
+    :param aws_secret_access_key: Optional, secret key for account
+    :param region_name: region where data is hosted, e.g. 'eu-west-1'
+    :param schema_name: Database name
+    :param s3_staging_dir: S3 path where query results should be written, e.g. 'S3://some_bucket/my_staging_area/'
+    :param athena_work_group: Optional, workgroup under which queries will be executed.
+    :param catalog_name: Optional, catalog in which table information is stored.
     """
-    q_aws_access_key_id = quote_plus(aws_access_key_id)
-    q_aws_secret_access_key = quote_plus(aws_secret_access_key)
     q_region_name = quote_plus(region_name)
     q_schema_name = quote_plus(schema_name)
+
+    if aws_access_key_id and aws_secret_access_key:
+        q_user_pass = f'{quote_plus(aws_access_key_id)}:{quote_plus(aws_secret_access_key)}'
+    elif aws_access_key_id:
+        q_user_pass = f'{quote_plus(aws_access_key_id)}'
+    else:
+        q_user_pass = ''
 
     query_string_params = {'s3_staging_dir': s3_staging_dir}
     if athena_work_group is not None:
@@ -220,8 +239,6 @@ def athena_construct_engine_url(
 
     url = (
         f'awsathena+rest://'
-        f'{q_aws_access_key_id}:{q_aws_secret_access_key}'
-        f'@athena.{q_region_name}.amazonaws.com:443/'
-        f'{q_schema_name}?{query_string}'
+        f'{q_user_pass}@athena.{q_region_name}.amazonaws.com:443/{q_schema_name}?{query_string}'
     )
     return url
