@@ -63,7 +63,6 @@ def test_from_pandas_table(engine, unique_table_test_name):
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS, expected_data=EXPECTED_DATA)
 
 
-@pytest.mark.skip_athena_todo('https://github.com/objectiv/objectiv-analytics/issues/1376')
 def test_from_pandas_table_injection(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
     bt = DataFrame.from_pandas(
