@@ -8,10 +8,10 @@
 =====================
 Supported Data Stores
 =====================
-Currently Bach supports AWS Athena, Google BigQuery, and PostgreSQL. Our aim is to support all popular data
-stores, and our roadmap includes Databricks, Redshift, ClickHouse, Snowflake, etcetera.
+Our aim is to support all popular data stores with Bach. Currently Bach supports AWS Athena, Google BigQuery, 
+and PostgreSQL. Our roadmap includes Databricks, Redshift, ClickHouse, Snowflake, etcetera.
 
-For information on how to setup Objectiv with each of these data stores see the Collector sections for
+For information on how to setup Objectiv with each of the data stores, see the Collector sections for
 `PostgreSQL </docs/tracking/collector/postgresql>`__, `AWS Athena </docs/tracking/collector/amazon-s3>`__,
 or `Google BigQuery </docs/tracking/collector/google-bigquery>`__.
 
@@ -25,8 +25,8 @@ AWS Athena
 ---------------
 `AWS Athena <https://aws.amazon.com/athena/>`_ is a serverless cloud-hosted SQL engine that make it possible
 to query huge datasets that are stored on AWS's S3 service.
-When running Bach on Athena, one should be aware of the following:
 
+When running Bach on Athena, one should be aware of the following:
 
 **Overwriting tables doesn't delete the old data.**
 Operations that overwrite an existing table (e.g. :py:meth:`DataFrame.database_create_table()` with
@@ -52,7 +52,7 @@ writing resulting data to a table and inspecting that table.
 **Bach Series names with special characters get encoded.**
 Athena limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See the `tip on using simple Series names </docs/modeling/bach/usage#use-simple-series-names-for-cleaner-sql>`__.
+See the :ref:`tip on using simple Series names <bach_best_practices_simple_series_names>`.
 
 
 Google BigQuery
@@ -65,7 +65,7 @@ When running Bach on BigQuery, one should be aware of the following:
 **Bach Series names with special characters get encoded.**
 Big Query limits the allowed characters in column names. Therefore, Bach Series names that contain
 'special' characters are encoded in SQL, and might be harder to relate to the original series name.
-See the `tip on using simple series names </docs/modeling/bach/usage#use-simple-series-names-for-cleaner-sql>`__.
+See the :ref:`tip on using simple Series names <bach_best_practices_simple_series_names>`.
 
 **BigQuery cannot execute very complex queries**
 Sometimes complex operations on Bach cannot be executed on BigQuery and you might get an error:
@@ -79,7 +79,7 @@ One way to avoid this problem is by materializing intermediate results, before t
 
     df = df.materialize(materialization='temp_table')
 
-See also the `tip on using temporary tables </docs/modeling/bach/usage#use-temporary-tables-to-limit-query-complexity>`__.
+Also see the :ref:`tip on using temporary tables <bach_best_practices_temp_tables>`.
 
 **Special BigQuery Series types.**
 The Series dtype `list` and `dict` are currently only supported on BigQuery, and their functionality is

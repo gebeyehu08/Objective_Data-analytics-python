@@ -2,7 +2,7 @@
 
 .. currentmodule:: bach
 
-.. frontmatterposition:: 3
+.. frontmatterposition:: 1
 
 =============
 Core Concepts
@@ -16,8 +16,8 @@ Having said that, anyone that already knows pandas can get started with Bach in 
 
 The fundamental difference between pandas and Bach is how data is stored: in-memory versus in-database.
 Storing all data in databases is what allows Bach to work on huge datasets. But as a result, one sometimes
-has to use Bach slightly different than one would use pandas. This page explains the Bach core design ideas
-and their consequences in using Bach.
+has to use Bach slightly different than one would use pandas. This page explains the core design ideas and 
+their consequences in using Bach.
 
 Delayed database operations
 ---------------------------
@@ -57,5 +57,7 @@ Differences with pandas
   all series names within a DataFrame must be non-empty, unique, and the length is limited (generally 63
   characters). Pandas does not have these limitations.
 
-The `Bach Best Practices </docs/modeling/bach/usage/#bach_best_practices>`_ contain some usage tips that
-might not be obvious, even for experienced pandas users.
+Best Practices
+--------------
+See the :ref:`Best Practices <bach_best_practices>` section in the Usage page for some tips that might not be 
+obvious, even for experienced pandas users.
