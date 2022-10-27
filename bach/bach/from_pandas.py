@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import Tuple, Dict, Set
+from typing import Tuple, Dict
 
 import numpy
 import pandas
@@ -10,7 +10,7 @@ from sqlalchemy.engine import Engine, Dialect
 from bach import DataFrame, get_series_type_from_dtype
 from bach.types import value_to_dtype, DtypeOrAlias, Dtype
 from bach.expression import Expression, join_expressions
-from bach.utils import is_valid_column_name, get_sql_column_name, get_name_to_column_mapping
+from bach.utils import get_sql_column_name, get_name_to_column_mapping
 from sql_models.model import CustomSqlModelBuilder
 from sql_models.util import quote_identifier, DatabaseNotSupportedException, is_postgres, is_bigquery, \
     is_athena
@@ -70,9 +70,17 @@ def from_pandas_store_table(engine: Engine,
 
     df_copy = df_copy.rename(columns=name_to_column_mapping)
 
-    conn = engine.connect()
-    df_copy.to_sql(name=table_name, con=conn, if_exists=if_exists, index=False)
-    conn.close()
+    if is_athena(engine):
+        _athena_pandas_to_sql(
+            engine=engine,
+            df=df_copy,
+            table_name=table_name,
+            if_exists=if_exists,
+        )
+    else:
+        conn = engine.connect()
+        df_copy.to_sql(name=table_name, con=conn, if_exists=if_exists, index=False)
+        conn.close()
 
     index = list(index_dtypes.keys())
     return DataFrame.from_table(
@@ -82,6 +90,45 @@ def from_pandas_store_table(engine: Engine,
         all_dtypes=all_dtypes,
         name_to_column_mapping=name_to_column_mapping
     )
+
+
+def _athena_pandas_to_sql(df: pandas.DataFrame, table_name: str, engine: Engine, if_exists: str) -> None:
+    """
+    Helper function for writing records from a pandas DataFrame to Amazon Athena.
+    Currently, pandas.DataFrame.to_sql is broken for Athena, as an alternative
+    we use `pyathena.panda.util.to_sql`, which stores the records into the specified `location` parameter
+    in the engine's url. In case the location is not specified, s3_staging_dir parameter will be used instead.
+    """
+    from pyathena.pandas.util import to_sql
+    from pyathena.sqlalchemy_athena import AthenaDialect
+    from pyathena.connection import Connection
+
+    connection_args = AthenaDialect().create_connect_args(engine.url)[1]
+
+    # The location of the Amazon S3 table is specified by the location parameter in the connection string.
+    # If location is not specified, s3_staging_dir parameter will be used
+    # s3://{location or s3_staging_dir}/{schema}/{table}/
+    location = connection_args.get('location') or connection_args["s3_staging_dir"]
+    location += "/" if not location.endswith("/") else ""
+    location += f'{table_name}/'
+
+    # Pandas.to_sql is not used as pyAthena's SQLAlchemy DDL Compiler replaces BIGINT columns
+    # with INT db type, most likely a bug from pyathena as it raises a ParseException when trying
+    # to execute the CREATE statement.
+    # Fortunately, pyathena's to_sql function creates the correct DDL statement but requires a
+    # pyathena Connection instead
+
+    # For more information: https://pypi.org/project/pyathena/#pandas
+    with Connection(**connection_args) as conn:
+        to_sql(
+            df,
+            name=table_name,
+            schema=connection_args['schema_name'],
+            conn=conn,
+            if_exists=if_exists,
+            index=False,
+            location=location
+        )
 
 
 def from_pandas_ephemeral(

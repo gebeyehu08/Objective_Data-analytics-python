@@ -44,6 +44,7 @@ branch/PR, or run `make clean-target`, e.g.:
 
 ---
 
+## Doctests
 To run doctests for a single file: 
 
 ```
@@ -59,7 +60,14 @@ sphinx-build -M doctest source build [PATH_TO_FILE]
 Note that this will probably require copying some of the global doctest config currently defined in `conf.py` 
 to the respective file.
 
-To just run the Sphinx build (without doctests) for one file, use:
+## Sphinx build
+To run just the Sphinx build without the doctests, for all files:
+
+```
+make docusaurus-only
+```
+
+Or to just run the Sphinx build without the doctests for just one file, use:
 
 ```
 sphinx-build source build [PATH_TO_FILE]

@@ -5,14 +5,14 @@ from enum import Enum
 from typing import List
 
 
-class SupportedEngine(str, Enum):
+class SupportedDBEngine(str, Enum):
     ATHENA = 'athena'
     POSTGRES = 'postgres'
     BIGQUERY = 'bigquery'
     ALL = 'all'
 
     @classmethod
-    def get_supported_engines(cls, engines_to_check: List[str]) -> List['SupportedEngine']:
+    def get_supported_engines(cls, engines_to_check: List[str]) -> List['SupportedDBEngine']:
         """
         Returns supported engines based on cli provided param
         """
