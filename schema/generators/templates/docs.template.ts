@@ -93,7 +93,12 @@ export type PropertiesDefinition = {
 		
 		docsWriter.writeH1(entity.name);
 		docsWriter.writeLine();
-		docsWriter.writeLine(primaryDescription);
+		if(isAbstract) {
+			docsWriter.writeLine(secondaryDescription);
+		} 
+		else {
+			docsWriter.writeLine(primaryDescription);
+		}
 		docsWriter.writeLine();
 		
 		docsWriter.writeLine("import Mermaid from '@theme/Mermaid'");
@@ -165,8 +170,12 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 		
 	docsWriter.writeFrontmatter(frontMatterSlug);
 	
+	docsWriter.writeH1("Open analytics taxonomy reference");
+	docsWriter.writeLine("Details all Events & Contexts available.");
+	docsWriter.writeLine();
+	
 	entitiesOverview.forEach((category) => {
-		docsWriter.writeH1(category.name);
+		docsWriter.writeH2(category.name);
 		docsWriter.writeLine(category.description);
 		docsWriter.writeLine();
 		category.listOfChildren.forEach((child) => {

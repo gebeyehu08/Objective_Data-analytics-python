@@ -4,7 +4,7 @@ slug: /taxonomy/global-contexts/
 
 # AbstractGlobalContext
 
-
+[Global Contexts](/taxonomy/reference/global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info.
 
 import Mermaid from '@theme/Mermaid'
 
@@ -25,7 +25,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: AbstractGlobalContext inheritance"
   baseColor="blue"
   links={[
-{ name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' }, { name: 'ApplicationContext', to: '/taxonomy/reference/global-contexts/ApplicationContext' }, { name: 'CookieIdContext', to: '/taxonomy/reference/global-contexts/CookieIdContext' }, { name: 'HttpContext', to: '/taxonomy/reference/global-contexts/HttpContext' }, { name: 'IdentityContext', to: '/taxonomy/reference/global-contexts/IdentityContext' }, { name: 'InputValueContext', to: '/taxonomy/reference/global-contexts/InputValueContext' }, { name: 'LocaleContext', to: '/taxonomy/reference/global-contexts/LocaleContext' }, { name: 'MarketingContext', to: '/taxonomy/reference/global-contexts/MarketingContext' }, { name: 'PathContext', to: '/taxonomy/reference/global-contexts/PathContext' }, { name: 'SessionContext', to: '/taxonomy/reference/global-contexts/SessionContext' },   ]}
+{ name: 'ApplicationContext', to: '/taxonomy/reference/global-contexts/ApplicationContext' }, { name: 'CookieIdContext', to: '/taxonomy/reference/global-contexts/CookieIdContext' }, { name: 'HttpContext', to: '/taxonomy/reference/global-contexts/HttpContext' }, { name: 'IdentityContext', to: '/taxonomy/reference/global-contexts/IdentityContext' }, { name: 'InputValueContext', to: '/taxonomy/reference/global-contexts/InputValueContext' }, { name: 'LocaleContext', to: '/taxonomy/reference/global-contexts/LocaleContext' }, { name: 'MarketingContext', to: '/taxonomy/reference/global-contexts/MarketingContext' }, { name: 'PathContext', to: '/taxonomy/reference/global-contexts/PathContext' }, { name: 'SessionContext', to: '/taxonomy/reference/global-contexts/SessionContext' },   ]}
 />
 
 ### Inherited Properties

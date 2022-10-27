@@ -192,7 +192,7 @@
     "AbstractEvent": {
       "documentation": [
         { "description": "The abstract parent of all Events.", "type": "text", "target": "primary" },
-        { "description": "Describe interactive and non-interactive [Events](./events/overview.md).", "type": "markdown", "target": "secondary" }
+        { "description": "Describe interactive and non-interactive [Events](/taxonomy/reference/events/overview.md).", "type": "markdown", "target": "secondary" }
       ],
       "properties":{
         "_schema_version": {
@@ -263,7 +263,7 @@
     "InputChangeEvent": {
       "documentation": [
         { "description": "Event triggered when user input is modified.", "type": "text", "target": "primary" },
-        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that's triggered when user input is modified. Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value from the user.", "type": "markdown", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that's triggered when user input is modified. Optionally, add an [InputValueContext](/taxonomy/reference/global-contexts/InputValueContext.md) to track the input value from the user.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "InteractiveEvent",
@@ -387,7 +387,7 @@
     "PressEvent": {
       "documentation": [
         { "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).", "type": "text", "target": "primary" },
-        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is sent when a user presses on a pressable element (like a link, button, icon). Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value(s) from the user.", "type": "markdown", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is sent when a user presses on a pressable element (like a link, button, icon). Optionally, add an [InputValueContext](/taxonomy/reference/global-contexts/InputValueContext.md) to track the input value(s) from the user.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "InteractiveEvent",
@@ -455,14 +455,14 @@
     "AbstractGlobalContext": {
       "documentation": [
         { "description": "The abstract parent of all Global Contexts. Global Contexts capture general data for an Event, such as user identity & marketing info.", "type": "text", "target": "primary" },
-        { "description": "[Global Contexts](./global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info.", "type": "markdown", "target": "secondary" }
+        { "description": "[Global Contexts](/taxonomy/reference/global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info.", "type": "markdown", "target": "secondary" }
       ],
       "parent": "AbstractContext"
     },
     "AbstractLocationContext": {
       "documentation": [
         { "description": "The abstract parent of all Location Contexts. Location Contexts describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "text", "target": "primary" },
-        { "description": "[Location Contexts](./location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "markdown", "target": "secondary" }
+        { "description": "[Location Contexts](/taxonomy/reference/location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "markdown", "target": "secondary" }
       ],
       "parent": "AbstractContext"
     },

@@ -14,7 +14,7 @@ import Mermaid from '@theme/Mermaid'
   caption="Diagram: PressableContext inheritance"
   baseColor="blue"
   links={[
-{ name: 'AbstractContext', to: '/taxonomy/reference/abstracts/AbstractContext' }, { name: 'AbstractLocationContext', to: '/taxonomy/reference/abstracts/AbstractLocationContext' }, { name: 'LinkContext', to: '/taxonomy/reference/location-contexts/LinkContext' },   ]}
+{ name: 'LinkContext', to: '/taxonomy/reference/location-contexts/LinkContext' },   ]}
 />
 
 ### Inherited Properties

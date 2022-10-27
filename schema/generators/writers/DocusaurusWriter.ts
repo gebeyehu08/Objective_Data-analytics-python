@@ -52,7 +52,7 @@ export class DocusaurusWriter extends CodeWriter {
 	 */
 	public writeFrontmatter(slug) {
 		if(slug != '') {
-		this.writeLine('---');
+			this.writeLine('---');
 			this.writeLine('slug: ' + slug);
 			this.writeLine('---');
 			this.writeLine();
@@ -315,6 +315,10 @@ export class DocusaurusWriter extends CodeWriter {
 			for (let i = 0; i < entities.length; i++) {
 				const entity = entities[i];
 				let path = '/taxonomy/reference/'
+				// special case for AbstractContext; skip it
+				if (entity.name == 'AbstractContext') {
+					break;
+				}
 				if (entity.isAbstract) {
 					path += 'abstracts/';
 				}

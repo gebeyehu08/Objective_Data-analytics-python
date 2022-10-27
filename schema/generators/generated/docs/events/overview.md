@@ -4,7 +4,7 @@ slug: /taxonomy/events/
 
 # AbstractEvent
 
-
+Describe interactive and non-interactive [Events](/taxonomy/reference/events/overview.md).
 
 import Mermaid from '@theme/Mermaid'
 
