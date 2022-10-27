@@ -1,7 +1,7 @@
 import base64
 import re
-from typing import NamedTuple, Dict, List, Set, Iterable
-from urllib.parse import quote_plus
+from typing import NamedTuple, Dict, List, Set, Iterable, Optional
+from urllib.parse import quote_plus, urlencode
 
 from sqlalchemy.engine import Connection, Dialect
 
@@ -198,25 +198,29 @@ def athena_get_engine_url(
     region_name: str,
     schema_name: str,
     s3_staging_dir: str,
-    athena_work_group: str,
-    catalog_name: str
+    athena_work_group: Optional[str] = None,
+    catalog_name: Optional[str] = None
 ) -> str:
     """
     Gives a url that can be passed to SqlAlchemy's `create_engine()` to connect to an Athena database.
     """
-    aws_access_key_id = quote_plus(aws_access_key_id)
-    aws_secret_access_key = quote_plus(aws_secret_access_key)
-    region_name = quote_plus(region_name)
-    schema_name = quote_plus(schema_name)
-    s3_staging_dir = quote_plus(s3_staging_dir)
-    athena_work_group = quote_plus(athena_work_group)
-    catalog_name = quote_plus(catalog_name)
+    q_aws_access_key_id = quote_plus(aws_access_key_id)
+    q_aws_secret_access_key = quote_plus(aws_secret_access_key)
+    q_region_name = quote_plus(region_name)
+    q_schema_name = quote_plus(schema_name)
+
+    query_string_params = {'s3_staging_dir': s3_staging_dir}
+    if athena_work_group is not None:
+        query_string_params['work_group'] = athena_work_group
+    if catalog_name:
+        query_string_params['catalog_name'] = catalog_name
+
+    query_string = urlencode(query_string_params)
 
     url = (
         f'awsathena+rest://'
-        f'{aws_access_key_id}:{aws_secret_access_key}'
-        f'@athena.{region_name}.amazonaws.com:443/'
-        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
-        f'&catalog_name={catalog_name}'
+        f'{q_aws_access_key_id}:{q_aws_secret_access_key}'
+        f'@athena.{q_region_name}.amazonaws.com:443/'
+        f'{q_schema_name}?{query_string}'
     )
     return url

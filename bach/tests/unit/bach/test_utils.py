@@ -227,19 +227,32 @@ def test_merge_sql_statements(dialect):
     assert merge_sql_statements(dialect, ['select test', 'select x', 'drop table y']) == expected
 
 
+@pytest.mark.db_independent('Does not take a dialect/engine as parameter')
 def test_athena_get_engine_url():
     # test that all parts of the url are properly escaped. Even if the test string is not valid for a lot
-    # of these parameters
+    # of these parameters. The test string contains two characters that need to be escaped: `+` and `%`
     result = athena_get_engine_url(
-        aws_access_key_id='+%',
-        aws_secret_access_key='+%',
-        region_name='+%',
-        schema_name='+%',
-        s3_staging_dir='+%',
-        athena_work_group='+%',
-        catalog_name='+%',
+        aws_access_key_id='+test%',
+        aws_secret_access_key='+test%',
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+        athena_work_group='+test%',
+        catalog_name='+test%',
     )
     assert result == (
-        'awsathena+rest://%2B%25:%2B%25@athena.%2B%25.amazonaws.com:443/'
-        '%2B%25?s3_staging_dir=%2B%25&work_group=%2B%25&catalog_name=%2B%25'
+        'awsathena+rest://%2Btest%25:%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25?s3_staging_dir=%2Btest%25&work_group=%2Btest%25&catalog_name=%2Btest%25'
+    )
+
+    result = athena_get_engine_url(
+        aws_access_key_id='+test%',
+        aws_secret_access_key='+test%',
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+    )
+    assert result == (
+        'awsathena+rest://%2Btest%25:%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25?s3_staging_dir=%2Btest%25'
     )
