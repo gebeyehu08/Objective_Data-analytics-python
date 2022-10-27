@@ -16,6 +16,16 @@ const entityNames = [
 ];
 
 /**
+ * A list of rule names the parser will enrich and support.
+ */
+ const ruleNames = [
+  'RequiresLocationContext', 
+  'RequiresGlobalContext',
+  'UniqueContext',
+  'MatchContextProperty'
+]
+
+/**
  * A global map fo all supported entities, by their name (_type).
  */
 const entitiesMap = new Map();
@@ -401,4 +411,139 @@ export function getEvents(options?: {
   sortBy?: string;
 }) {
   return getEntities({ ...options, isEvent: true });
+}
+
+/**
+ * A global map for all supported rules, by their name.
+ */
+const rulesMap = new Map();
+
+/**
+ * Process each supported rule and fill the rulesMap with an enriched version of them.
+ */
+ruleNames.forEach((rule) => {
+  // TODO: enrich all rules
+});
+
+/**
+ * A global map for all supported types, by their name.
+ */
+ const typesMap = new Map();
+
+/**
+ * Process each supported entity and fill the typesMap with an enriched version of them.
+ */
+entityNames.forEach((entityName) => {
+  /**
+   * Get the original type definition from the BaseSchema
+   */
+   const entity = BaseSchema.contexts[entityName] ?? BaseSchema.events[entityName] ?? BaseSchema[entityName];
+   if(entity.type) {
+    typesMap.set(
+      entityName,
+      new (class {
+        private readonly _rules;
+        readonly documentation;
+  
+        /**
+         * To ease working with arrays of types we set their name in a new `name` property.
+         */
+        readonly name = entityName;
+  
+        /**
+         * Enrich type instance with some boolean flags identifying several characteristics of this type.
+         */
+        readonly isLocationStack = entityName.startsWith('LocationStack');
+        readonly isGlobalContexts = entityName.endsWith('GlobalContexts');
+  
+        /**
+         * Assigns the type definition onto the instance itself, omitting some properties we are going to enrich.
+         */
+        constructor() {
+          const { parent, properties, ...otherTypeProps } = entity;
+          Object.assign(this, otherTypeProps);
+          this._rules = entity?.validation?.rules ?? [];
+        }
+  
+        /**
+         * Gets all the rules of this type
+         */
+        get rules() {
+          let rules = this._rules;
+          rules.forEach((rule) => {
+            // TODO: enrich the rules with their description and scopes+description
+          });
+          return rules;
+        }
+  
+        /**
+         * Gets a documentation description by specifying `type` and `target`.
+         * Types: 'text' or 'markdown'
+         * Targets: 'primary', 'secondary', 'admonition'
+         */
+        getDescription(options: { type: 'text' | 'markdown'; target: 'primary' | 'secondary' | 'admonition' }) {
+          if (!this.documentation) {
+            return null;
+          }
+  
+          const { type, target } = options;
+  
+          const matchingDescriptions = this.documentation
+            .filter((documentationBlock) => {
+              if (type && target) {
+                return documentationBlock?.type === type && documentationBlock.target === target;
+              }
+              if (type) {
+                return documentationBlock.type === type;
+              }
+              if (target) {
+                return documentationBlock.target === target;
+              }
+              return true;
+            })
+            .map((documentationBlock) => documentationBlock.description);
+  
+          if (!matchingDescriptions.length) {
+            return null;
+          }
+  
+          return matchingDescriptions[0];
+        }
+      })()
+    );
+  }
+});
+
+/**
+ * Gets a list of enriched types from the BaseSchema. By default, returns all supported types.
+ */
+export function getTypes(options?: {
+  isLocationStack?: boolean;
+  isGlobalContexts?: boolean;
+  exclude?: Array<string>;
+  include?: Array<string>;
+  sortBy?: string;
+}) {
+  const { isLocationStack, isGlobalContexts, exclude, include, sortBy } = options ?? {};
+  const types = [];
+
+  for (let [_, type] of typesMap) {
+    if (
+      (isLocationStack === undefined || isLocationStack === type.isContext) &&
+      (isGlobalContexts === undefined || isGlobalContexts === type.isEvent) &&
+      (exclude === undefined || !exclude.includes(type.name))
+    ) {
+      types.push(type);
+    }
+
+    if (include !== undefined && include.includes(type.name)) {
+      types.push(type);
+    }
+  }
+
+  if (sortBy) {
+    return types.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
+  }
+
+  return types;
 }

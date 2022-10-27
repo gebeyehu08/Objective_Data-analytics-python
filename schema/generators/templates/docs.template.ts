@@ -5,7 +5,7 @@
 import { TextWriter } from '@yellicode/core';
 import { Generator } from '@yellicode/templating';
 import { DocusaurusWriter } from '../writers/DocusaurusWriter';
-import { getContexts, getEvents } from './parser';
+import { getContexts, getEvents, getTypes } from './parser';
 
 const destination = '../generated/docs/';
 let entitiesOverview = Array();
@@ -131,7 +131,10 @@ export type PropertiesDefinition = {
 		function getPropertiesRows(properties: Array<PropertiesDefinition>) {
 			let rows = Array() as [string[]];
 			properties.forEach((p) => {
-				const type = (p.type == "array") ? (p.type + "<" + p.items.type + ">") : p.type;
+				let type = (p.type == "array") ? (p.type + "<" + p.items.type + ">") : p.type;
+				if (['GlobalContexts', 'LocationStack'].includes(p.type)) {
+					type = "[" + type + "](/taxonomy/reference/types/" + p.type + ")"; 
+				}
 				if(!p.internal) {
 					let name = '**' + p.name.replaceAll('_', '\\_') 
 					+ ((p.optional || p.nullable) ? ' _[optional]_' : '') + '**';
@@ -184,5 +187,59 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 			docsWriter.writeEndOfLine();
 		});
 		docsWriter.writeLine();
+	});
+});
+
+// TODO: Generate pages for Types (e.g. LocationStack and GlobalContexts)
+// TODO: Generate Types overview page
+[...getTypes()].forEach((type) => {
+	const primaryDescription = type.getDescription({ type: 'text', target: 'primary' });
+	const outputFile = 'types/' + type.name + '.md';
+
+	Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
+		const docsWriter = new DocusaurusWriter(writer);
+
+		docsWriter.writeH1(type.name);
+		docsWriter.writeLine(primaryDescription);
+		docsWriter.writeLine();
+
+		if(type.type) {
+			docsWriter.writeH2('Type');
+			docsWriter.writeLine();
+			docsWriter.writeListItem(type.type);
+		}
+
+		if(type.items) {
+			docsWriter.writeH2('Items');
+			docsWriter.writeLine();
+			docsWriter.writeListItem(type.items.type);
+		}
+
+		if(type.rules) {
+			docsWriter.writeH2('Rules');
+			docsWriter.writeLine(type.validation.description);
+			docsWriter.writeLine();
+			type.rules.forEach((rule) => {
+				docsWriter.writeListItem(rule.type);
+				docsWriter.increaseIndent()
+				rule.scope.forEach((scope) => {
+					if(rule.type == 'UniqueContext') {
+						if (scope.includeContexts) {
+							docsWriter.writeListItem("Include Contexts: " + scope.includeContexts);
+						}
+						if (scope.excludeContexts) {
+							docsWriter.writeListItem("Exclude Contexts: " + scope.excludeContexts);
+						}
+						docsWriter.increaseIndent()
+						docsWriter.writeListItem("By: " + scope.by);
+						docsWriter.decreaseIndent()
+					}
+					else if (rule.type == 'RequiresGlobalContext') {
+						docsWriter.writeListItem("Context: " + scope.context);
+					}
+				});
+				docsWriter.decreaseIndent()
+			});
+		}
 	});
 });
