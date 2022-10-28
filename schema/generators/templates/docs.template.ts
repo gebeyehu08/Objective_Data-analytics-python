@@ -55,26 +55,17 @@ const destination = '../generated/docs/';
       docsWriter.writeEndOfLine();
     }
 
-    if (entity.ownProperties.length) {
-      docsWriter.writeH3('Own Properties');
-
-      entity.ownProperties.forEach((entityProperty) => {
-        const { name, type, description, internal } = entityProperty;
-        if (!internal) {
-          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-        }
-      });
-
-      docsWriter.writeEndOfLine();
-    }
-
     if (entity.inheritedProperties.length) {
       docsWriter.writeH3('Inherited Properties');
 
       entity.inheritedProperties.forEach((entityProperty) => {
-        const { name, type, description, internal } = entityProperty;
+        const { name, type, description, internal, optional, nullable, _overridden } = entityProperty;
         if (!internal) {
-          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+          docsWriter.writeLine(
+            `${name.toString()}: \`${type}\` ${_overridden ? '[overridden] ' : ''}${optional ? '[optional] ' : ''}${
+              nullable ? '[nullable] ' : ''
+            }- ${description}`
+          );
         }
       });
 
@@ -82,12 +73,16 @@ const destination = '../generated/docs/';
     }
 
     if (entity.properties.length) {
-      docsWriter.writeH3('All Properties');
+      docsWriter.writeH3('Properties');
 
       entity.properties.forEach((entityProperty) => {
-        const { name, type, description, internal } = entityProperty;
+        const { name, type, description, internal, optional, nullable, _inherited } = entityProperty;
         if (!internal) {
-          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+          docsWriter.writeLine(
+            `${name.toString()}: \`${type}\` ${_inherited ? '[inherited] ' : ''}${optional ? '[optional] ' : ''}${
+              nullable ? '[nullable] ' : ''
+            }- ${description}`
+          );
         }
       });
 
@@ -145,12 +140,14 @@ const getRuleSummaries = (rule, ruleSummaries) => {
           ruleSummaries.push(`${rule._inheritedFrom} items must be unique by their ${by.join('+')}`);
         }
         if (excludeContexts?.length) {
-          ruleSummaries.push(`${rule._inheritedFrom} items must be unique by their ${by.join('+')}, except ${excludeContexts.join(',')}`);
+          ruleSummaries.push(
+            `${rule._inheritedFrom} items must be unique by their ${by.join('+')}, except ${excludeContexts.join(',')}`
+          );
         }
         if (includeContexts?.length) {
-          includeContexts?.forEach(includedContext => {
+          includeContexts?.forEach((includedContext) => {
             ruleSummaries.push(`${includedContext} must be unique by their ${by.join('+')}`);
-          })
+          });
         }
       });
       break;

@@ -14,11 +14,11 @@ ContentContext, ExpandableContext, InputContext, MediaPlayerContext, NavigationC
 ContentContext, ExpandableContext, InputContext, MediaPlayerContext, NavigationContext, OverlayContext, PressableContext, RootLocationContext, LinkContext
 
 ### Inherited Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+id: `string` - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 
-### All Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+### Properties
+id: `string` [inherited] - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 
 

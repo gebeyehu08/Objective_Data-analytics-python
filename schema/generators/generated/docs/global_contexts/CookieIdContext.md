@@ -7,17 +7,14 @@ AbstractGlobalContext
 ### All Parents
 AbstractContext > AbstractGlobalContext
 
-### Own Properties
-`string` cookie_id: Unique identifier from the session cookie.
-
 ### Inherited Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+id: `string` - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 
-### All Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+### Properties
+id: `string` [inherited] - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
-`string` cookie_id: Unique identifier from the session cookie.
+cookie_id: `string` - Unique identifier from the session cookie.
 
 :::info setting of properties
 The collector will automatically set all the properties and assign a `cookie_id`.

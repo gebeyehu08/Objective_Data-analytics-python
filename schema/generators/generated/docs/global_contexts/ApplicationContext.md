@@ -8,11 +8,11 @@ AbstractGlobalContext
 AbstractContext > AbstractGlobalContext
 
 ### Inherited Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+id: `string` - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 
-### All Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+### Properties
+id: `string` [inherited] - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 
 :::info setting of properties
