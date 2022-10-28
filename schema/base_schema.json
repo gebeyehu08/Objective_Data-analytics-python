@@ -138,10 +138,6 @@
     },
     "validation": {
       "description": "TODO explain the basic requirements of a valid Location Stack",
-      "allowed_rules": [
-        "RequiresLocationContext",
-        "UniqueContext"
-      ],
       "rules": [
         {
           "type": "UniqueContext",
@@ -166,10 +162,6 @@
     },
     "validation": {
       "description": "TODO explain the basic requirements of a valid Global Contexts",
-      "allowed_rules": [
-        "RequiresGlobalContext",
-        "UniqueContext"
-      ],
       "rules": [
         {
           "type": "RequiresGlobalContext",
@@ -235,14 +227,6 @@
           "description": "Timestamp indicating when the event was generated.",
           "type": "integer"
         }
-      },
-      "validation": {
-        "allowed_rules": [
-          "RequiresLocationContext",
-          "RequiresGlobalContext",
-          "UniqueContext",
-          "MatchContextProperty"
-        ]
       }
     },
     "ApplicationLoadedEvent": {

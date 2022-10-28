@@ -4,7 +4,7 @@ Copyright 2022 Objectiv B.V.
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the 'engine' and 'dialect' parameters for
 test functions that have either of those.
-By default such a test function will get a Postgres dialect or engine. But if --big-query, --athena or --all
+By default such a test function will get a Postgres dialect or engine. But if --bigquery, --athena or --all
 is specified on the commandline, then it will (also) get a BigQuery/Athena dialect or engine. For specific
 tests, it is possible to disable testing for certain databases, see 'marks' section below.
 
@@ -137,7 +137,7 @@ def pytest_addoption(parser: Parser):
     # This function will automatically be called by pytest at the start of a test run, see:
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
     parser.addoption('--postgres', action='store_true', help='run the tests for Postgres')
-    parser.addoption('--big-query', action='store_true', help='run the tests for BigQuery')
+    parser.addoption('--bigquery', action='store_true', help='run the tests for BigQuery')
     parser.addoption('--athena', action='store_true', help='run the tests for Athena')
     parser.addoption('--all', action='store_true', help='run the tests for all databases.')
 
@@ -158,7 +158,7 @@ def pytest_sessionstart(session: Session):
     else:
         if session.config.getoption("athena"):
             _ENGINE_CACHE[DB.ATHENA] = _get_athena_engine()
-        if session.config.getoption("big_query"):
+        if session.config.getoption("bigquery"):
             _ENGINE_CACHE[DB.BIGQUERY] = _get_bigquery_engine()
         if session.config.getoption("postgres"):
             _ENGINE_CACHE[DB.POSTGRES] = _get_postgres_engine()

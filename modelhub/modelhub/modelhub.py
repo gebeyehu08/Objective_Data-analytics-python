@@ -5,7 +5,6 @@ import base64
 import os
 import re
 from typing import List, Union, Dict, Tuple, Optional, cast, Any
-from typing import TYPE_CHECKING
 
 import bach
 from sqlalchemy import create_engine

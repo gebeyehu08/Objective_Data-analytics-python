@@ -3,111 +3,23 @@ Copyright 2022 Objectiv B.V.
 """
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 import nbformat
-from nbclient.exceptions import CellExecutionError
-from papermill.clientwrap import PapermillNotebookClient
-from papermill.engines import NBClientEngine, NotebookExecutionManager
 from papermill.iorw import load_notebook_node
 
+from checklock_holmes.checklock_nb_client.notebook_engine import (
+    ChecklockNBEngine
+)
+from checklock_holmes.errors.exceptions import CuriousIncident
 from checklock_holmes.models.nb_checker_models import (
-    CellError, CellTiming, NoteBookCheck, NoteBookMetadata
+    CellTiming, NoteBookCheck, NoteBookMetadata
 )
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.cell_tags import CellTags
 from checklock_holmes.utils.constants import (
-    NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE, DATE_FORMAT
+    DATE_FORMAT, NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE
 )
-from checklock_holmes.utils.helpers import CuriousIncident
-from checklock_holmes.utils.supported_engines import SupportedEngine
-
-
-class WatsonExecutionManager(NotebookExecutionManager):
-    MAX_LOG_EXCEPTION_MESSAGE = 500
-
-    def cell_exception(
-        self, cell: nbformat.NotebookNode, cell_index: str = None, **kwargs,
-    ) -> None:
-        super().cell_exception(cell, cell_index, **kwargs)
-
-        exc = kwargs['exception']
-
-        if self.nb.metadata.papermill.error is None:
-            self.nb.metadata.papermill.error = CellError(
-                number=cell.metadata.papermill.index,
-                exc=f'{exc.ename}: {exc.evalue[:self.MAX_LOG_EXCEPTION_MESSAGE]}',
-            )
-
-    def notebook_start(self, **kwargs) -> None:
-        super().notebook_start(**kwargs)
-        for cell_idx, cell in enumerate(self.nb.cells):
-            cell.metadata.papermill.index = cell_idx
-
-
-class ChecklockNBClient(PapermillNotebookClient):
-    async def async_execute_cell(
-        self,
-        cell: nbformat.NotebookNode,
-        cell_index: int,
-        execution_count: Optional[int] = None,
-        store_history: bool = True,
-    ) -> nbformat.NotebookNode:
-        try:
-            self.nb_man.cell_start(cell, cell_index)
-            await super().async_execute_cell(
-                cell=cell,
-                cell_index=cell_index,
-                execution_count=execution_count,
-                store_history=store_history,
-            )
-        except CellExecutionError as ex:
-            self.nb_man.cell_exception(cell, cell_index=cell_index, exception=ex)
-        finally:
-            self.nb_man.cell_complete(cell, cell_index=cell_index)
-
-        return cell
-
-
-class ChecklockNBEngine(NBClientEngine):
-    EXECUTION_TIMEOUT = 2 * 60  # 2 minutes
-
-    @classmethod
-    async def async_execute_notebook(cls, nb: nbformat.NotebookNode) -> nbformat.NotebookNode:
-        """
-        A wrapper to handle notebook execution tasks.
-
-        Wraps the notebook object in a `NotebookExecutionManager` in order to track
-        execution state in a uniform manner. This is meant to help simplify
-        engine implementations. This allows a developer to just focus on
-        iterating and executing the cell contents.
-        """
-        nb_man = WatsonExecutionManager(
-            nb,
-            output_path=None,  # don't save notebook outputs
-            progress_bar=False,  # ignore for now
-            autosave_cell_every=0,  # don't perform any autosave
-        )
-
-        nb_man.notebook_start()
-        try:
-            await cls.async_execute_managed_notebook(nb_man)
-        finally:
-            nb_man.cleanup_pbar()
-            nb_man.notebook_complete()
-
-        return nb_man.nb
-
-    @classmethod
-    async def async_execute_managed_notebook(cls, nb_man: WatsonExecutionManager) -> nbformat.NotebookNode:
-        nb_client = ChecklockNBClient(
-            nb_man=nb_man,
-            timeout=cls.EXECUTION_TIMEOUT,
-            interrupt_on_timeout=True,
-            allow_errors=True,
-            force_raise_errors=True,
-        )
-        return await nb_client.async_execute()
+from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
 @dataclass
@@ -119,7 +31,7 @@ class NoteBookChecker:
     }
     _ENV_VAR_CELL_TAG = 'injected-engine-variables'
 
-    async def async_check_notebook(self, engine: SupportedEngine) -> NoteBookCheck:
+    async def async_check_notebook(self, engine: SupportedDBEngine) -> NoteBookCheck:
         """
         Creates and executes the notebook's script for the provided engine.
 
@@ -136,6 +48,9 @@ class NoteBookChecker:
         try:
             executed_nb = await ChecklockNBEngine.async_execute_notebook(
                 nb=self._load_notebook_node(engine),
+                notebook_name=self.metadata.name,
+                db_engine=engine,
+                check_id=self.metadata.check_id,
             )
         except Exception as exc:
             raise CuriousIncident(notebook_name=self.metadata.name, exc=exc)
@@ -167,7 +82,7 @@ class NoteBookChecker:
             elapsed_time_per_cell=cell_timings,
         )
 
-    def get_script(self, engine: SupportedEngine) -> str:
+    def get_script(self, engine: SupportedDBEngine) -> str:
         """
         Extracts all code cells from the notebook and generates a script based on it.
         If is_execution is True, then code cells will be wrapped for error logging
@@ -197,7 +112,7 @@ class NoteBookChecker:
 
         return nb_script
 
-    def _get_env_setup_block(self, engine: SupportedEngine) -> str:
+    def _get_env_setup_block(self, engine: SupportedDBEngine) -> str:
         """
         Returns the code block for setting env variables based on the engine to use.
         """
@@ -215,7 +130,7 @@ class NoteBookChecker:
 
     def _load_notebook_node(
         self,
-        engine: SupportedEngine,
+        engine: SupportedDBEngine,
     ) -> nbformat.NotebookNode:
         nb_node = load_notebook_node(notebook_path=self.metadata.path)
         nb_node.metadata['papermill']['error'] = None

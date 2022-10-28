@@ -58,7 +58,7 @@ try:
 
         # Query all events since 2022-03-01, we use this cut-off to avoid importing broken/invalid events
         # due to breaking schema changes before this date. (Last one was february)
-        query = f"SELECT value FROM data WHERE day >= '2022-03-01'"
+        query = f"SELECT value FROM data WHERE day >= '2022-03-01' AND day < '2022-10-20'"
         cur.execute(query)
 
         count = 0
@@ -72,11 +72,12 @@ try:
             for row in rows:
                 count += 1
                 event = row['value']
-                # override / set additional timestamps, so SP properly sets them, rather than using the current time
+                # override / set additional timestamps, so SP properly sets them, rather than using the current time,
+                # but only if they are not set in ithe original event
                 # see: objectiv_backend/end_point/collector.py:set_time_in_events() for more info
-                event['transport_time'] = row['value']['time']
-                event['corrected_time'] = row['value']['time']
-                event['collector_time'] = row['value']['time']
+                for ts in ['transport_time', 'corrected_time', 'collector_time']:
+                    if ts not in event:
+                        event[ts] = row['value']['time']
                 events.append(event)
 
             if snowplow_config.gcp_enabled:
@@ -86,7 +87,7 @@ try:
                 write_data_to_aws_pipeline(events=events, config=snowplow_config, good=True)
 
             # show some progress on the console after finishing a batch
-            print('.', end='')
+            print('.', end='', flush=True)
 
         print(f'done processing ({count} rows)')
 

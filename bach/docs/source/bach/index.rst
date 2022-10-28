@@ -28,8 +28,13 @@ The package can be installed from PyPI:
 
 How to use
 ----------
-Once your app is `tracking data </docs/tracking/>`_, follow the steps in the :ref:`examples <bach_examples>` 
+Once your app is `tracking data </docs/tracking/>`_, follow the steps on :ref:`Usage <bach_usage>`
 to work with Bach.
+
+If you just want to get a taste of what you can do with Objectiv Bach, There is a `demo
+</docs/home/up>`_ available that enables you to run the full Objectiv pipeline
+on your local machine. It includes our website as a demo app, a Jupyter Notebook environment with working
+Bach-powered models and a Metabase environment to output data to.
 
 The two main data classes in Bach are the DataFrame and Series:
 
@@ -43,7 +48,7 @@ The two main data classes in Bach are the DataFrame and Series:
     :hidden:
 
     core-concepts
-    examples
+    usage
     data-stores
     api-reference/index
 

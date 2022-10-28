@@ -6,11 +6,13 @@ import glob
 import os
 import re
 from typing import Dict, List, Optional
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, validator
+from pydantic.fields import Field
 
 from checklock_holmes.utils.constants import NOTEBOOK_EXTENSION
-from checklock_holmes.utils.supported_engines import SupportedEngine
+from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
 class CellError(BaseModel):
@@ -32,7 +34,7 @@ def _check_dir(dir_name: Optional[str]) -> None:
 
 
 class NoteBookCheckSettings(BaseModel):
-    engines_to_check: List[SupportedEngine]
+    engines_to_check: List[SupportedDBEngine]
     notebooks_to_check: List[str]
     github_issues_dir: str
     dump_nb_scripts_dir: Optional[str] = None
@@ -41,11 +43,11 @@ class NoteBookCheckSettings(BaseModel):
     end_date: Optional[datetime.date] = None
 
     @validator('engines_to_check')
-    def _process_engines_to_check(cls, engines_to_check: List[str]) -> List[SupportedEngine]:
+    def _process_engines_to_check(cls, engines_to_check: List[str]) -> List[SupportedDBEngine]:
         """
         Verifies if engines are supported, parses string values to SupportedEngine instance
         """
-        return SupportedEngine.get_supported_engines(engines_to_check)
+        return SupportedDBEngine.get_supported_engines(engines_to_check)
 
     @validator('notebooks_to_check')
     def _process_notebooks_to_check(cls, nb_to_check: List[str]) -> List[str]:
@@ -84,6 +86,7 @@ class NoteBookCheckSettings(BaseModel):
 class NoteBookMetadata(BaseModel):
     path: str
     name: str = ''
+    check_id: UUID = Field(default_factory=uuid4)
     start_date: Optional[datetime.date] = None
     end_date: Optional[datetime.date] = None
 
