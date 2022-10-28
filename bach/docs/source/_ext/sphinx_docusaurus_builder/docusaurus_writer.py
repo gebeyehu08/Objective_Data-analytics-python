@@ -566,7 +566,7 @@ class DocusaurusTranslator(Translator):
                         if (i != 0): 
                             node_input += "\n"
                         if (line[0:3] == '>>>'):
-                            node_input += line[3:]
+                            node_input += line[4:]
                         else:
                             node_input += line
                         output_index = i+1
