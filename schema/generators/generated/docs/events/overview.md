@@ -10,21 +10,21 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-            AbstractEvent["AbstractEvent<span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span>"];
-      AbstractEvent --> InteractiveEvent["InteractiveEvent<span class='requires_context'>requires:<br />RootLocationContext<br />PathContext<br /></span><span class='properties'></span>"];
-      AbstractEvent --> NonInteractiveEvent;
-      InteractiveEvent --> InputChangeEvent["InputChangeEvent<span class='requires_context'>requires:<br />InputContext<br /></span><span class='properties'></span>"];
-      InteractiveEvent --> PressEvent["PressEvent<span class='requires_context'>requires:<br />PressableContext<br /></span><span class='properties'></span>"];
-      NonInteractiveEvent --> ApplicationLoadedEvent;
-      NonInteractiveEvent --> FailureEvent["FailureEvent<span class='properties'>message: string<br /></span>"];
-      NonInteractiveEvent --> HiddenEvent;
-      NonInteractiveEvent --> MediaEvent["MediaEvent<span class='requires_context'>requires:<br />MediaPlayerContext<br /></span><span class='properties'></span>"];
-      NonInteractiveEvent --> SuccessEvent["SuccessEvent<span class='properties'>message: string<br /></span>"];
-      NonInteractiveEvent --> VisibleEvent;
-      MediaEvent --> MediaLoadEvent;
-      MediaEvent --> MediaPauseEvent;
-      MediaEvent --> MediaStartEvent;
-      MediaEvent --> MediaStopEvent;
+            AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"];
+      AbstractEvent --> InteractiveEvent["InteractiveEvent<span class='requires_context'>requires:<br />RootLocationContext<br />PathContext<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      AbstractEvent --> NonInteractiveEvent["NonInteractiveEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      InteractiveEvent --> InputChangeEvent["InputChangeEvent<span class='requires_context'>requires:<br />InputContext<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      InteractiveEvent --> PressEvent["PressEvent<span class='requires_context'>requires:<br />PressableContext<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      NonInteractiveEvent --> ApplicationLoadedEvent["ApplicationLoadedEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      NonInteractiveEvent --> FailureEvent["FailureEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>message: string<br /></span></span>"];
+      NonInteractiveEvent --> HiddenEvent["HiddenEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      NonInteractiveEvent --> MediaEvent["MediaEvent<span class='requires_context'>requires:<br />MediaPlayerContext<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      NonInteractiveEvent --> SuccessEvent["SuccessEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>message: string<br /></span></span>"];
+      NonInteractiveEvent --> VisibleEvent["VisibleEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaLoadEvent["MediaLoadEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaPauseEvent["MediaPauseEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaStartEvent["MediaStartEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaStopEvent["MediaStopEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
     class AbstractEvent diagramActive
   `}
   caption="Diagram: AbstractEvent inheritance"

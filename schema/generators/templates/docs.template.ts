@@ -66,7 +66,7 @@ export type PropertiesDefinition = {
 		abstractEntity.listOfChildren = listOfChildren;
 		entitiesOverview.push(abstractEntity);
 	}
-	
+
 	// extract required contexts for this entity
 	const rules = entity.validation?.rules;
 	let requiredContexts = Array();
@@ -85,7 +85,7 @@ export type PropertiesDefinition = {
 			}
 		}
 	}
-	
+
 	Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
 		
@@ -100,10 +100,10 @@ export type PropertiesDefinition = {
 			docsWriter.writeLine(primaryDescription);
 		}
 		docsWriter.writeLine();
-		
+
 		docsWriter.writeLine("import Mermaid from '@theme/Mermaid'");
 		docsWriter.writeLine();
-		
+
 		// Mermaid chart
 		docsWriter.writeMermaidChartForEntity(entity, "Diagram: " + entity.name + ' inheritance');
 		docsWriter.writeLine();

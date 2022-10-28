@@ -6,8 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent["AbstractEvent<span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span>"] --> NonInteractiveEvent;
-      NonInteractiveEvent -->       SuccessEvent["SuccessEvent<span class='properties'>message: string<br /></span>"];
+      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent["NonInteractiveEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      NonInteractiveEvent["NonInteractiveEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"] -->       SuccessEvent["SuccessEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>message: string<br /></span></span>"];
     class SuccessEvent diagramActive
   `}
   caption="Diagram: SuccessEvent inheritance"

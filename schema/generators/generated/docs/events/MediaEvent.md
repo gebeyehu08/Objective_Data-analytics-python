@@ -6,12 +6,12 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent["AbstractEvent<span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span>"] --> NonInteractiveEvent;
-      NonInteractiveEvent -->       MediaEvent["MediaEvent<span class='requires_context'>requires:<br />MediaPlayerContext<br /></span><span class='properties'></span>"];
-      MediaEvent --> MediaLoadEvent;
-      MediaEvent --> MediaPauseEvent;
-      MediaEvent --> MediaStartEvent;
-      MediaEvent --> MediaStopEvent;
+      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent["NonInteractiveEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      NonInteractiveEvent["NonInteractiveEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"] -->       MediaEvent["MediaEvent<span class='requires_context'>requires:<br />MediaPlayerContext<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaLoadEvent["MediaLoadEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaPauseEvent["MediaPauseEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaStartEvent["MediaStartEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
+      MediaEvent --> MediaStopEvent["MediaStopEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
     class MediaEvent diagramActive
   `}
   caption="Diagram: MediaEvent inheritance"

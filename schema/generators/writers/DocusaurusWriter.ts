@@ -31,7 +31,11 @@ export type EntityDefinition = {
 			}
 		]
 	};
+	rules: Function;
+	ownRules: Function;
+	inheritedRules: Function;
 	_parent: string;
+	_rules: [];
 };
 
 export type RequiredContextsDefinition = {
@@ -196,7 +200,7 @@ export class DocusaurusWriter extends CodeWriter {
 		 */
 		function getRequiredContextsAndProperties(entity: EntityDefinition) {
 			// first, extract the requiredContexts for this entity, from the validation rules
-			const rules = entity.validation?.rules;
+			const rules = entity.ownRules;
 			let requiredContexts = Array();
 			if (rules && rules.length > 0) {
 				for (let i = 0; i < rules.length; i++) {
