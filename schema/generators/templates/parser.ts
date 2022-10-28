@@ -16,16 +16,6 @@ const entityNames = [
 ];
 
 /**
- * A list of rule names the parser will enrich and support.
- */
- const ruleNames = [
-  'RequiresLocationContext', 
-  'RequiresGlobalContext',
-  'UniqueContext',
-  'MatchContextProperty'
-]
-
-/**
  * A global map fo all supported entities, by their name (_type).
  */
 const entitiesMap = new Map();
@@ -437,18 +427,6 @@ export function getEvents(options?: {
 }
 
 /**
- * A global map for all supported rules, by their name.
- */
-const rulesMap = new Map();
-
-/**
- * Process each supported rule and fill the rulesMap with an enriched version of them.
- */
-ruleNames.forEach((rule) => {
-  // TODO: enrich all rules
-});
-
-/**
  * A global map for all supported types, by their name.
  */
  const typesMap = new Map();
@@ -492,11 +470,7 @@ entityNames.forEach((entityName) => {
          * Gets all the rules of this type
          */
         get rules() {
-          let rules = this._rules;
-          rules.forEach((rule) => {
-            // TODO: enrich the rules with their description and scopes+description
-          });
-          return rules;
+          return this._rules;
         }
   
         /**

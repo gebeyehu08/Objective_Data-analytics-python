@@ -162,7 +162,7 @@ export type PropertiesDefinition = {
 		}
 
 		docsWriter.writeEndOfLine();
-		
+
 		if (entity.ownRules.length) {
       docsWriter.writeH3('Validation Rules');
       // Build a list of own rules summaries
@@ -235,31 +235,24 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 			docsWriter.writeListItem(type.items.type);
 		}
 
-		if(type.rules) {
-			docsWriter.writeH2('Rules');
+		if(type.rules.length) {
+			docsWriter.writeH2('Validation Rules');
 			docsWriter.writeLine(type.validation.description);
 			docsWriter.writeLine();
-			type.rules.forEach((rule) => {
-				docsWriter.writeListItem(rule.type);
-				docsWriter.increaseIndent()
-				rule.scope.forEach((scope) => {
-					if(rule.type == 'UniqueContext') {
-						if (scope.includeContexts) {
-							docsWriter.writeListItem("Include Contexts: " + scope.includeContexts);
-						}
-						if (scope.excludeContexts) {
-							docsWriter.writeListItem("Exclude Contexts: " + scope.excludeContexts);
-						}
-						docsWriter.increaseIndent()
-						docsWriter.writeListItem("By: " + scope.by);
-						docsWriter.decreaseIndent()
-					}
-					else if (rule.type == 'RequiresGlobalContext') {
-						docsWriter.writeListItem("Context: " + scope.context);
-					}
-				});
-				docsWriter.decreaseIndent()
+			// Build a list of own rules summaries
+			let ruleSummaries = [];
+			type.rules.forEach((entityRule) => {
+				getRuleSummaries(entityRule, ruleSummaries);
 			});
+
+			// Remove dupes
+			[...new Set(ruleSummaries)]
+				// Sort
+				.sort((a, b) => a.localeCompare(b))
+				// Write a line per rule
+				.forEach((ruleSummary) => docsWriter.writeListItem(ruleSummary + "."));
+
+			docsWriter.writeEndOfLine();
 		}
 	});
 });

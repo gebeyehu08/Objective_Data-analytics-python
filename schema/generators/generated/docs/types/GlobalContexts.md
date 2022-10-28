@@ -8,13 +8,10 @@ related to where the Event originated (location), such as device, platform or bu
 ## Items
 
 * AbstractGlobalContext
-## Rules
+## Validation Rules
 TODO explain the basic requirements of a valid Global Contexts
 
-* RequiresGlobalContext
-  * Context: ApplicationContext
-* UniqueContext
-  * Exclude Contexts: InputValueContext
-    * By: _type,id
-  * Include Contexts: InputValueContext
-    * By: _type,id,value
+* `GlobalContexts` should contain `ApplicationContext`.
+* InputValueContext should have a unique combination of `{_type, id, value}` properties.
+* Items in `undefined` should have a unique combination of `{_type, id}` properties, except for `InputValueContext`.
+

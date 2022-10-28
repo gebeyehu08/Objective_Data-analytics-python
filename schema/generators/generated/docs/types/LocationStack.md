@@ -9,8 +9,8 @@ The whole stack (list) is needed to exactly pinpoint where in the UI the event o
 ## Items
 
 * AbstractLocationContext
-## Rules
+## Validation Rules
 TODO explain the basic requirements of a valid Location Stack
 
-* UniqueContext
-    * By: _type,id
+* Items in `undefined` should have a unique combination of `{_type, id}` properties.
+
