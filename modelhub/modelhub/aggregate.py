@@ -531,9 +531,7 @@ class Aggregate:
 
     def funnel_conversion(self,
                           data: bach.DataFrame,
-                          location_stack: LocationStackType = None,
-                          groupby: List[str] = None
-                          ) -> bach.DataFrame:
+                          location_stack: LocationStackType = None) -> bach.DataFrame:
         """
         Calculates conversion numbers for all locations stacks in the `data`.
         N.B. Filter the dataframe beforehand to filter down to the funnel locations.
@@ -587,59 +585,41 @@ class Aggregate:
         df_root_user = data.sort_values(['session_id', 'session_hit_number']).\
             drop_duplicates(subset=[location, 'user_id'], keep='first')
 
-        gb = location
-        funnel_by = ['user_id']
-        sorting = 'n_users'
-        merge_gb = f'{location}_step_1'
-        if groupby:
-            gb = groupby + [location]
-            funnel_by = groupby + ['user_id']
-            merge_gb = groupby + [f'{location}_step_1']
-            sorting = groupby + ['n_users']
-
         funnel = self._mh.get_funnel_discovery()
         df_steps = funnel.get_navigation_paths(df_root_user, location_stack=location,
-                                               steps=2, by=funnel_by, sort_by='moment')
+                                               steps=2, by='user_id', sort_by='moment')
 
         # n_users
-        step_visitors_df = df_root_user.groupby(gb)['user_id'].nunique().to_frame().\
+        step_visitors_df = df_root_user.groupby(location)['user_id'].nunique().to_frame().\
             reset_index().rename(columns={'user_id': 'n_users'})
 
         # n_users_completed_step
         # remove rows where 2nd step is NaN (it means the user left the funnel)
-        step_completed_df = df_steps.dropna().reset_index()[funnel_by + [f'{location}_step_1']]
-        step_completed_df = step_completed_df.groupby(merge_gb).count()\
+        step_completed_df = df_steps.dropna().reset_index()[['user_id', f'{location}_step_1']]
+        step_completed_df = step_completed_df.groupby([f'{location}_step_1']).count()\
             .rename(columns={'user_id_count': 'n_users_completed_step'}).sort_index()
 
         # merging n_users with n_users completed_step and n_users for drop-offs
         result = step_visitors_df.merge(step_completed_df,
-                                        left_on=gb,
-                                        right_on=merge_gb,
+                                        left_on=location,
+                                        right_on=f'{location}_step_1',
                                         how='left').reset_index(drop=True)
         result['n_users_completed_step'] = result['n_users_completed_step'].fillna(0)
 
-        if groupby:
-            result = result.merge(result.groupby(groupby)['n_users'].max(), on = groupby, suffixes=('',
-                                                                                                    '_max'))
-        else:
-            result['n_users_max'] = result['n_users'].max()
+        n_users_start = result['n_users'].max()
 
         # n_users drop-offs
         result['dropoff_share'] = result['n_users'] - result['n_users_completed_step']
-        result['dropoff_share'] = cast(SeriesFloat64, (result['dropoff_share'] / result['n_users_max'])).round(3)
+        result['dropoff_share'] = cast(SeriesFloat64, (result['dropoff_share'] / n_users_start)).round(3)
 
         # step_conversion_rate
         result['step_conversion_rate'] = result['n_users_completed_step'] / result['n_users']
         result['step_conversion_rate'] = cast(SeriesFloat64, result['step_conversion_rate']).round(3)
 
         # full_conversion_rate
-        result['full_conversion_rate'] = result['n_users_completed_step'] / result['n_users_max']
+        result['full_conversion_rate'] = result['n_users_completed_step'] / n_users_start
         result['full_conversion_rate'] = cast(SeriesFloat64, result['full_conversion_rate']).round(3)
 
         columns = [location, 'n_users', 'n_users_completed_step', 'step_conversion_rate',
                    'full_conversion_rate', 'dropoff_share']
-        if groupby:
-            columns = groupby + columns
-
-
-        return result[columns].sort_values(sorting, ascending=False)
+        return result[columns].sort_values('n_users', ascending=False)
