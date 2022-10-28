@@ -3,7 +3,6 @@ slug: /taxonomy/reference/
 ---
 
 # Open analytics taxonomy reference
-Details all Events & Contexts available.
 
 ## Global Contexts
 [Global Contexts](/taxonomy/reference/global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info.

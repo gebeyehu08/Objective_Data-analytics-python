@@ -6,8 +6,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent["NonInteractiveEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"];
-      NonInteractiveEvent["NonInteractiveEvent<span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'></span>"] -->       FailureEvent["FailureEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>message: string<br /></span></span>"];
+      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent;
+      NonInteractiveEvent -->       FailureEvent["FailureEvent<span class='properties'>message: string<br /></span>"];
     class FailureEvent diagramActive
   `}
   caption="Diagram: FailureEvent inheritance"
@@ -33,12 +33,6 @@ None.
 | **global\_contexts** | GlobalContexts | Global contexts add global / general information about the event. They carry information that is not related to where the Event originated (location), such as device, platform or business data.                                                                            |
 | **id**               | uuid           | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                       |
 | **time**             | integer        | Timestamp indicating when the event was generated.                                                                                                                                                                                                                           |
-
-### Validation Rules
-* GlobalContexts items must be unique by their _type+id, except for InputValueContext.
-* GlobalContexts must contain context ApplicationContext.
-* InputValueContext must be unique by their _type+id+value.
-* LocationStack items must be unique by their _type+id.
 
 :::info setting of properties
 The tracker will automatically set all the properties. The message is an error code or short message captured from the occurring error. This is purely for descriptive purposes.
