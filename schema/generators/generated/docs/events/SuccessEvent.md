@@ -6,7 +6,7 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-      AbstractEvent["AbstractEvent<span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span>"] --> NonInteractiveEvent;
+      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent;
       NonInteractiveEvent -->       SuccessEvent["SuccessEvent<span class='properties'>message: string<br /></span>"];
     class SuccessEvent diagramActive
   `}
@@ -33,6 +33,12 @@ None.
 | **global\_contexts** | [GlobalContexts](/taxonomy/reference/types/GlobalContexts) | Global contexts add global / general information about the event. They carry information that is not related to where the Event originated (location), such as device, platform or business data.                                                                            |
 | **id**               | uuid                                                       | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                       |
 | **time**             | integer                                                    | Timestamp indicating when the event was generated.                                                                                                                                                                                                                           |
+
+### Validation Rules
+* `GlobalContexts` should contain `ApplicationContext`.
+* InputValueContext should have a unique combination of `{_type, id, value}` properties.
+* Items in `GlobalContexts` should have a unique combination of `{_type, id}` properties, except for `InputValueContext`.
+* Items in `LocationStack` should have a unique combination of `{_type, id}` properties.
 
 :::info setting of properties
 The tracker will automatically set all the properties. The message is an error code or short message captured from the occurring success event. This is purely for descriptive purposes.

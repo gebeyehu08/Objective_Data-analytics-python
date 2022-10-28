@@ -418,7 +418,7 @@ const MarketingContext = z.object({
    */
   _type: z.literal(ContextTypes.enum.MarketingContext),
   /**
-   * Identifies the advertiser, site, publication, etc.
+   * The advertiser, site, publication, etc.
    */
   source: z.string(),
   /**
@@ -426,7 +426,7 @@ const MarketingContext = z.object({
    */
   medium: z.string(),
   /**
-   * Individual campaign name, slogan, promo code, etc.
+   * Campaign name, slogan, promo code, etc.
    */
   campaign: z.string(),
   /**
@@ -434,11 +434,11 @@ const MarketingContext = z.object({
    */
   term: z.string().nullable(),
   /**
-   * Used to differentiate similar content, or links within the same ad.
+   * To differentiate similar content, or links within the same ad.
    */
   content: z.string().nullable(),
   /**
-   * To differentiate similar content, or links within the same ad.
+   * Identifies the platform where the marketing activity was undertaken.
    */
   source_platform: z.string().nullable(),
   /**

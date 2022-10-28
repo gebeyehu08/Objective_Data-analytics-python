@@ -31,7 +31,11 @@ export type EntityDefinition = {
 			}
 		]
 	};
+	rules: Function;
+	ownRules: Function;
+	inheritedRules: Function;
 	_parent: string;
+	_rules: [];
 };
 
 export type RequiredContextsDefinition = {
@@ -196,12 +200,15 @@ export class DocusaurusWriter extends CodeWriter {
 		 */
 		function getRequiredContextsAndProperties(entity: EntityDefinition) {
 			// first, extract the requiredContexts for this entity, from the validation rules
-			const rules = entity.validation?.rules;
+			const rules = entity.ownRules;
 			let requiredContexts = Array();
 			if (rules && rules.length > 0) {
 				for (let i = 0; i < rules.length; i++) {
 					let rule = rules[i];
-					if (['RequiresLocationContext', 'RequiresGlobalContext'].includes(rule.type)) {
+					// show required contexts if they're location or global, and if it's either an AbstractEvent or 
+					// they contexts are not inherited
+					if (['RequiresLocationContext', 'RequiresGlobalContext'].includes(rule.type) 
+						&& (entity.name == 'AbstractEvent' || !rule._inheritedFrom)) {
 						const requiredName = rule.scope[0].context;
 						const type = rule.type.replace('Requires', '');
 						const url = '../' + type.replace('Context', '-contexts/').toLowerCase() + requiredName + '.md';

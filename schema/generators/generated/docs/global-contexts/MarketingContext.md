@@ -20,12 +20,12 @@ import Mermaid from '@theme/Mermaid'
 
 |                                    | type   | description                                                                          |
 |:-----------------------------------|:-------|:-------------------------------------------------------------------------------------|
-| **source**                         | string | Identifies the advertiser, site, publication, etc.                                   |
+| **source**                         | string | The advertiser, site, publication, etc.                                              |
 | **medium**                         | string | Advertising or marketing medium: cpc, banner, email newsletter, etc.                 |
-| **campaign**                       | string | Individual campaign name, slogan, promo code, etc.                                   |
+| **campaign**                       | string | Campaign name, slogan, promo code, etc.                                              |
 | **term _[optional]_**              | string | Search keywords.                                                                     |
-| **content _[optional]_**           | string | Used to differentiate similar content, or links within the same ad.                  |
-| **source\_platform _[optional]_**  | string | To differentiate similar content, or links within the same ad.                       |
+| **content _[optional]_**           | string | To differentiate similar content, or links within the same ad.                       |
+| **source\_platform _[optional]_**  | string | Identifies the platform where the marketing activity was undertaken.                 |
 | **creative\_format _[optional]_**  | string | Identifies the creative used (e.g., skyscraper, banner, etc).                        |
 | **marketing\_tactic _[optional]_** | string | Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc). |
 ### Inherited Properties

@@ -10,8 +10,8 @@ import Mermaid from '@theme/Mermaid'
 
 <Mermaid chart={`
     graph LR
-            AbstractEvent["AbstractEvent<span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span>"];
-      AbstractEvent --> InteractiveEvent["InteractiveEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />RootLocationContext<br />PathContext<br /></span><span class='properties'>location_stack: LocationStack<br /></span></span>"];
+            AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"];
+      AbstractEvent --> InteractiveEvent["InteractiveEvent<span class='requires_context'>requires:<br />RootLocationContext<br />PathContext<br /></span><span class='properties'></span>"];
       AbstractEvent --> NonInteractiveEvent;
       InteractiveEvent --> InputChangeEvent["InputChangeEvent<span class='requires_context'>requires:<br />InputContext<br /></span><span class='properties'></span>"];
       InteractiveEvent --> PressEvent["PressEvent<span class='requires_context'>requires:<br />PressableContext<br /></span><span class='properties'></span>"];
@@ -35,7 +35,7 @@ import Mermaid from '@theme/Mermaid'
 
 ### Requires
 
-None.
+* [ApplicationContext](../global-contexts/ApplicationContext.md) (a GlobalContext).
 
 ### Properties
 
@@ -45,5 +45,11 @@ None.
 | **global\_contexts** | [GlobalContexts](/taxonomy/reference/types/GlobalContexts) | Global contexts add global / general information about the event. They carry information that is not related to where the Event originated (location), such as device, platform or business data.                                                                            |
 | **id**               | uuid                                                       | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                       |
 | **time**             | integer                                                    | Timestamp indicating when the event was generated.                                                                                                                                                                                                                           |
+
+### Validation Rules
+* `GlobalContexts` should contain `ApplicationContext`.
+* InputValueContext should have a unique combination of `{_type, id, value}` properties.
+* Items in `GlobalContexts` should have a unique combination of `{_type, id}` properties, except for `InputValueContext`.
+* Items in `LocationStack` should have a unique combination of `{_type, id}` properties.
 
 
