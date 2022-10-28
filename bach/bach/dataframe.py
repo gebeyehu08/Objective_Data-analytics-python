@@ -3186,6 +3186,7 @@ class DataFrame:
         self,
         sort_by: Optional[Union[str, Sequence[str]]] = None,
         ascending: Union[bool, List[bool]] = True,
+        groupby: Optional[Union[str, Sequence[str]]] = None
     ) -> 'DataFrame':
         """
         Fill missing values by propagating the last non-nullable value in each series.
@@ -3195,6 +3196,8 @@ class DataFrame:
             yield different results affecting the values to be propagated when using a filling method.
         :param ascending: Whether to sort ascending (True) or descending (False). If this is a list, then the
             `sort_by` must also be a list and ``len(ascending) == len(sort_by)``.
+        :param groupby: Name(s) of the column(s) to group the propagation by: values are
+            propagated within each group only. If `None` values are propagated in the entire DataFrame.
 
         :return: a new dataframe with filled missing values.
 
@@ -3205,14 +3208,17 @@ class DataFrame:
             If sort_by is non-deterministic, this operation might yield different results after
             performing other operations over the resultant dataframe.
         """
+        # groupby is added a parameter (instead of using df.groupby) in order to not lose the index of the
+        # df the function is applied to.
         from bach.operations.value_propagation import ValuePropagation
         v_propagation = ValuePropagation(df=self, method='ffill')
-        return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
+        return v_propagation.propagate(sort_by=sort_by, ascending=ascending, window_group=groupby)
 
     def bfill(
         self,
         sort_by: Optional[Union[str, Sequence[str]]] = None,
         ascending: Union[bool, List[bool]] = True,
+        groupby: Optional[Union[str, Sequence[str]]] = None
     ) -> 'DataFrame':
         """
         Fill missing values by using the next non-nullable value in each series.
@@ -3222,6 +3228,8 @@ class DataFrame:
             yield different results affecting the values to be propagated when using a filling method.
         :param ascending: Whether to sort ascending (True) or descending (False). If this is a list, then the
             `sort_by` must also be a list and ``len(ascending) == len(sort_by)``.
+        :param groupby: Name(s) of the column(s) to group the propagation by: values are
+            propagated within each group only. If `None` values are propagated in the entire DataFrame.
 
         :return: a new dataframe with filled missing values.
 
@@ -3232,9 +3240,11 @@ class DataFrame:
             If sort_by is non-deterministic, this operation might yield different results after
             performing other operations over the resultant dataframe.
         """
+        # groupby is added a parameter (instead of using df.groupby) in order to not lose the index of the
+        # df the function is applied to.
         from bach.operations.value_propagation import ValuePropagation
         v_propagation = ValuePropagation(df=self, method='bfill')
-        return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
+        return v_propagation.propagate(sort_by=sort_by, ascending=ascending, window_group=groupby)
 
     def _get_parsed_subset_of_data_columns(
         self, subset: Optional[Union[str, Sequence[str]]],

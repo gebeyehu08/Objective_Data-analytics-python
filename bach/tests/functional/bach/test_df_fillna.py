@@ -99,28 +99,34 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
     )
 
 
-def test_ffill_propagation(engine) -> None:
-    pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
+def test_ffill_propagation_on_groups(engine) -> None:
+    pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"), index=[1,2,3,4,5,6,7,9])
     pdf['groups'] = pdf.B>0
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
-    pdf = pdf.reset_index().rename(columns={'index': '_index_0'})
 
-    pd.testing.assert_frame_equal(
-        pdf, df.to_pandas(), check_index_type=False, check_names=False,
-    )
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
 
-    from bach.operations.value_propagation import ValuePropagation
-    vp = ValuePropagation(df, method='ffill')
-    df_ffill = vp.propagate(window_group='groups')
-
-    pdf_ffill = pdf.groupby('groups').fillna(method='ffill')
-    pdf_ffill['groups'] = pdf.groups
+    df_ffill = df.ffill(groupby='groups')
+    pdf_ffill = pdf.groupby('groups').ffill()
 
     pd.testing.assert_frame_equal(
         pdf_ffill,
         df_ffill.to_pandas(),
         check_index_type=False,
         check_names=False)
+
+    # test without index
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
+    pdf = pdf.reset_index().rename(columns={'index': '_index_0'})
+
+    df_ffill = df.ffill(groupby='groups')
+    pdf_ffill = pdf.groupby('groups').ffill()
+
+    pd.testing.assert_frame_equal(
+        pdf_ffill,
+        df_ffill.to_pandas(),
+        check_index_type=False,
+        check_names=False)
+
 
 def test_fillna_w_methods(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
