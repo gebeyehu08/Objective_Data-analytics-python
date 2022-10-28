@@ -30,6 +30,7 @@ describe('Contexts', () => {
         ApplicationContext.safeParse({
           _type: 'ApplicationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -39,6 +40,7 @@ describe('Contexts', () => {
         ApplicationContext.safeParse({
           _type: 'ApplicationContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -48,6 +50,7 @@ describe('Contexts', () => {
         ApplicationContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -58,6 +61,7 @@ describe('Contexts', () => {
           _type: 'ApplicationContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -66,6 +70,7 @@ describe('Contexts', () => {
       expect(
         ApplicationContext.safeParse({
           _type: 'ApplicationContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -74,6 +79,7 @@ describe('Contexts', () => {
       expect(
         ApplicationContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -83,6 +89,7 @@ describe('Contexts', () => {
         ApplicationContext.safeParse({
           _type: 'RootApplicationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -94,6 +101,7 @@ describe('Contexts', () => {
         ContentContext.safeParse({
           _type: 'ContentContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -103,6 +111,7 @@ describe('Contexts', () => {
         ContentContext.safeParse({
           _type: 'ContentContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -112,6 +121,7 @@ describe('Contexts', () => {
         ContentContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -122,6 +132,7 @@ describe('Contexts', () => {
           _type: 'ContentContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -130,6 +141,7 @@ describe('Contexts', () => {
       expect(
         ContentContext.safeParse({
           _type: 'ContentContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -138,6 +150,7 @@ describe('Contexts', () => {
       expect(
         ContentContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -147,6 +160,7 @@ describe('Contexts', () => {
         ContentContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -159,6 +173,7 @@ describe('Contexts', () => {
           _type: 'CookieIdContext',
           id: 'test',
           cookie_id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -169,6 +184,7 @@ describe('Contexts', () => {
           _type: 'CookieIdContext',
           id: 123,
           cookie_id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -179,6 +195,7 @@ describe('Contexts', () => {
           _type: 123,
           id: 'test',
           cookie_id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -190,6 +207,7 @@ describe('Contexts', () => {
           id: 'test',
           cookie_id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -199,6 +217,7 @@ describe('Contexts', () => {
         CookieIdContext.safeParse({
           _type: 'CookieIdContext',
           cookie_id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -208,6 +227,7 @@ describe('Contexts', () => {
         CookieIdContext.safeParse({
           id: 'test',
           cookie_id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -217,6 +237,7 @@ describe('Contexts', () => {
         CookieIdContext.safeParse({
           _type: 'CookieIdContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -227,6 +248,7 @@ describe('Contexts', () => {
           _type: 'RootLocationContext',
           id: 'test',
           cookie_id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -238,6 +260,7 @@ describe('Contexts', () => {
         ExpandableContext.safeParse({
           _type: 'ExpandableContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -247,6 +270,7 @@ describe('Contexts', () => {
         ExpandableContext.safeParse({
           _type: 'ExpandableContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -256,6 +280,7 @@ describe('Contexts', () => {
         ExpandableContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -266,6 +291,7 @@ describe('Contexts', () => {
           _type: 'ExpandableContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -274,6 +300,7 @@ describe('Contexts', () => {
       expect(
         ExpandableContext.safeParse({
           _type: 'ExpandableContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -282,6 +309,7 @@ describe('Contexts', () => {
       expect(
         ExpandableContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -291,6 +319,7 @@ describe('Contexts', () => {
         ExpandableContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -305,17 +334,20 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
 
-    it('should parse successfully without `remote_address`', () => {
+    it('should parse successfully with `remote_address` set to null', () => {
       expect(
         HttpContext.safeParse({
           _type: 'HttpContext',
           id: 'test',
           referrer: 'test',
           user_agent: 'test',
+          remote_address: null,
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -328,6 +360,7 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -340,6 +373,7 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -352,6 +386,7 @@ describe('Contexts', () => {
           referrer: 123,
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -364,6 +399,7 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 123,
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -376,6 +412,7 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 'test',
           remote_address: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -389,6 +426,7 @@ describe('Contexts', () => {
           user_agent: 'test',
           remote_address: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -400,6 +438,7 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -411,6 +450,7 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -422,6 +462,7 @@ describe('Contexts', () => {
           _type: 'test',
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -433,6 +474,7 @@ describe('Contexts', () => {
           _type: 'test',
           referrer: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -445,6 +487,7 @@ describe('Contexts', () => {
           referrer: 'test',
           user_agent: 'test',
           remote_address: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -457,6 +500,7 @@ describe('Contexts', () => {
           _type: 'IdentityContext',
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -467,6 +511,7 @@ describe('Contexts', () => {
           _type: 'IdentityContext',
           id: 123,
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -477,6 +522,7 @@ describe('Contexts', () => {
           _type: 123,
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -487,6 +533,7 @@ describe('Contexts', () => {
           _type: 'IdentityContext',
           id: 'test',
           value: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -498,6 +545,7 @@ describe('Contexts', () => {
           id: 'test',
           value: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -507,6 +555,7 @@ describe('Contexts', () => {
         IdentityContext.safeParse({
           _type: 'IdentityContext',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -516,6 +565,7 @@ describe('Contexts', () => {
         IdentityContext.safeParse({
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -525,6 +575,7 @@ describe('Contexts', () => {
         IdentityContext.safeParse({
           id: 'test',
           _type: 'IdentityContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -535,6 +586,7 @@ describe('Contexts', () => {
           _type: 'RootLocationContext',
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -546,6 +598,7 @@ describe('Contexts', () => {
         InputContext.safeParse({
           _type: 'InputContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -555,6 +608,7 @@ describe('Contexts', () => {
         InputContext.safeParse({
           _type: 'InputContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -564,6 +618,7 @@ describe('Contexts', () => {
         InputContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -574,6 +629,7 @@ describe('Contexts', () => {
           _type: 'InputContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -582,6 +638,7 @@ describe('Contexts', () => {
       expect(
         InputContext.safeParse({
           _type: 'InputContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -590,6 +647,7 @@ describe('Contexts', () => {
       expect(
         InputContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -599,6 +657,7 @@ describe('Contexts', () => {
         InputContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -611,6 +670,7 @@ describe('Contexts', () => {
           _type: 'InputValueContext',
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -621,6 +681,7 @@ describe('Contexts', () => {
           _type: 'InputValueContext',
           id: 123,
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -631,6 +692,7 @@ describe('Contexts', () => {
           _type: 123,
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -641,6 +703,7 @@ describe('Contexts', () => {
           _type: 'InputValueContext',
           id: 'test',
           value: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -652,6 +715,7 @@ describe('Contexts', () => {
           id: 'test',
           value: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -661,6 +725,7 @@ describe('Contexts', () => {
         InputValueContext.safeParse({
           _type: 'InputValueContext',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -670,6 +735,7 @@ describe('Contexts', () => {
         InputValueContext.safeParse({
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -679,6 +745,7 @@ describe('Contexts', () => {
         InputValueContext.safeParse({
           id: 'test',
           _type: 'InputValueContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -689,6 +756,7 @@ describe('Contexts', () => {
           _type: 'RootLocationContext',
           id: 'test',
           value: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -701,6 +769,7 @@ describe('Contexts', () => {
           _type: 'LinkContext',
           id: 'test',
           href: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -711,6 +780,7 @@ describe('Contexts', () => {
           _type: 'LinkContext',
           id: 123,
           href: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -721,6 +791,7 @@ describe('Contexts', () => {
           _type: 123,
           id: 'test',
           href: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -731,6 +802,7 @@ describe('Contexts', () => {
           _type: 'LinkContext',
           id: 'test',
           href: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -742,6 +814,7 @@ describe('Contexts', () => {
           id: 'test',
           href: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -751,6 +824,7 @@ describe('Contexts', () => {
         LinkContext.safeParse({
           _type: 'LinkContext',
           href: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -760,6 +834,7 @@ describe('Contexts', () => {
         LinkContext.safeParse({
           id: 'test',
           href: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -769,6 +844,7 @@ describe('Contexts', () => {
         LinkContext.safeParse({
           id: 'test',
           _type: 'LinkContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -779,6 +855,7 @@ describe('Contexts', () => {
           _type: 'RootLocationContext',
           id: 'test',
           href: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -790,6 +867,9 @@ describe('Contexts', () => {
         LocaleContext.safeParse({
           _type: 'LocaleContext',
           id: 'test',
+          language_code: null,
+          country_code: null,
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -799,6 +879,9 @@ describe('Contexts', () => {
         LocaleContext.safeParse({
           _type: 'LocaleContext',
           id: 123,
+          language_code: null,
+          country_code: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -808,6 +891,9 @@ describe('Contexts', () => {
         LocaleContext.safeParse({
           _type: 123,
           id: 'test',
+          language_code: null,
+          country_code: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -818,6 +904,8 @@ describe('Contexts', () => {
           _type: 'LocaleContext',
           id: 'test',
           language_code: 123,
+          country_code: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -827,7 +915,9 @@ describe('Contexts', () => {
         LocaleContext.safeParse({
           _type: 'LocaleContext',
           id: 'test',
+          language_code: null,
           country_code: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -837,7 +927,10 @@ describe('Contexts', () => {
         LocaleContext.safeParse({
           _type: 'LocaleContext',
           id: 'test',
+          language_code: null,
+          country_code: null,
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -846,6 +939,9 @@ describe('Contexts', () => {
       expect(
         LocaleContext.safeParse({
           _type: 'LocaleContext',
+          language_code: null,
+          country_code: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -854,6 +950,9 @@ describe('Contexts', () => {
       expect(
         LocaleContext.safeParse({
           id: 'test',
+          language_code: null,
+          country_code: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -863,6 +962,9 @@ describe('Contexts', () => {
         LocaleContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          language_code: null,
+          country_code: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -877,6 +979,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -889,6 +997,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -901,6 +1015,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -913,6 +1033,12 @@ describe('Contexts', () => {
           source: 123,
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -925,6 +1051,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 123,
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -937,6 +1069,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 123,
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -950,6 +1088,11 @@ describe('Contexts', () => {
           medium: 'test',
           campaign: 'test',
           term: 123,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -962,7 +1105,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
           content: 123,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -975,7 +1123,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
           source_platform: 123,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -988,7 +1141,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
           creative_format: 123,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1001,7 +1159,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
           marketing_tactic: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1014,7 +1177,13 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1026,6 +1195,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1037,6 +1212,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1049,6 +1230,12 @@ describe('Contexts', () => {
           source: 'test',
           medium: 'test',
           campaign: 'test',
+          term: null,
+          content: null,
+          source_platform: null,
+          creative_format: null,
+          marketing_tactic: null,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1060,6 +1247,7 @@ describe('Contexts', () => {
         MediaPlayerContext.safeParse({
           _type: 'MediaPlayerContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -1069,6 +1257,7 @@ describe('Contexts', () => {
         MediaPlayerContext.safeParse({
           _type: 'MediaPlayerContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1078,6 +1267,7 @@ describe('Contexts', () => {
         MediaPlayerContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1088,6 +1278,7 @@ describe('Contexts', () => {
           _type: 'MediaPlayerContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1096,6 +1287,7 @@ describe('Contexts', () => {
       expect(
         MediaPlayerContext.safeParse({
           _type: 'MediaPlayerContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1104,6 +1296,7 @@ describe('Contexts', () => {
       expect(
         MediaPlayerContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1113,6 +1306,7 @@ describe('Contexts', () => {
         MediaPlayerContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1124,6 +1318,7 @@ describe('Contexts', () => {
         NavigationContext.safeParse({
           _type: 'NavigationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -1133,6 +1328,7 @@ describe('Contexts', () => {
         NavigationContext.safeParse({
           _type: 'NavigationContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1142,6 +1338,7 @@ describe('Contexts', () => {
         NavigationContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1152,6 +1349,7 @@ describe('Contexts', () => {
           _type: 'NavigationContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1160,6 +1358,7 @@ describe('Contexts', () => {
       expect(
         NavigationContext.safeParse({
           _type: 'NavigationContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1168,6 +1367,7 @@ describe('Contexts', () => {
       expect(
         NavigationContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1177,6 +1377,7 @@ describe('Contexts', () => {
         NavigationContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1188,6 +1389,7 @@ describe('Contexts', () => {
         OverlayContext.safeParse({
           _type: 'OverlayContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -1197,6 +1399,7 @@ describe('Contexts', () => {
         OverlayContext.safeParse({
           _type: 'OverlayContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1206,6 +1409,7 @@ describe('Contexts', () => {
         OverlayContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1216,6 +1420,7 @@ describe('Contexts', () => {
           _type: 'OverlayContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1224,6 +1429,7 @@ describe('Contexts', () => {
       expect(
         OverlayContext.safeParse({
           _type: 'OverlayContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1232,6 +1438,7 @@ describe('Contexts', () => {
       expect(
         OverlayContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1241,6 +1448,7 @@ describe('Contexts', () => {
         OverlayContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1252,6 +1460,7 @@ describe('Contexts', () => {
         PathContext.safeParse({
           _type: 'PathContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -1261,6 +1470,7 @@ describe('Contexts', () => {
         PathContext.safeParse({
           _type: 'PathContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1270,6 +1480,7 @@ describe('Contexts', () => {
         PathContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1280,6 +1491,7 @@ describe('Contexts', () => {
           _type: 'PathContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1288,6 +1500,7 @@ describe('Contexts', () => {
       expect(
         PathContext.safeParse({
           _type: 'PathContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1296,6 +1509,7 @@ describe('Contexts', () => {
       expect(
         PathContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1305,6 +1519,7 @@ describe('Contexts', () => {
         PathContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1316,6 +1531,7 @@ describe('Contexts', () => {
         PressableContext.safeParse({
           _type: 'PressableContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -1325,6 +1541,7 @@ describe('Contexts', () => {
         PressableContext.safeParse({
           _type: 'PressableContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1334,6 +1551,7 @@ describe('Contexts', () => {
         PressableContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1344,6 +1562,7 @@ describe('Contexts', () => {
           _type: 'PressableContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1352,6 +1571,7 @@ describe('Contexts', () => {
       expect(
         PressableContext.safeParse({
           _type: 'PressableContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1360,6 +1580,7 @@ describe('Contexts', () => {
       expect(
         PressableContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1369,6 +1590,7 @@ describe('Contexts', () => {
         PressableContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1380,6 +1602,7 @@ describe('Contexts', () => {
         RootLocationContext.safeParse({
           _type: 'RootLocationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -1389,6 +1612,7 @@ describe('Contexts', () => {
         RootLocationContext.safeParse({
           _type: 'RootLocationContext',
           id: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1398,6 +1622,7 @@ describe('Contexts', () => {
         RootLocationContext.safeParse({
           _type: 123,
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1408,6 +1633,7 @@ describe('Contexts', () => {
           _type: 'RootLocationContext',
           id: 'test',
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1416,6 +1642,7 @@ describe('Contexts', () => {
       expect(
         RootLocationContext.safeParse({
           _type: 'RootLocationContext',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1424,6 +1651,7 @@ describe('Contexts', () => {
       expect(
         RootLocationContext.safeParse({
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1433,6 +1661,7 @@ describe('Contexts', () => {
         RootLocationContext.safeParse({
           _type: 'ApplicationContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1445,6 +1674,7 @@ describe('Contexts', () => {
           _type: 'SessionContext',
           id: 'test',
           hit_number: 0,
+          _types: [],
         }).success
       ).toBe(true);
     });
@@ -1455,6 +1685,7 @@ describe('Contexts', () => {
           _type: 'SessionContext',
           id: 123,
           hit_number: 0,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1465,6 +1696,7 @@ describe('Contexts', () => {
           _type: 123,
           id: 'test',
           hit_number: 0,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1475,6 +1707,7 @@ describe('Contexts', () => {
           _type: 'SessionContext',
           id: 'test',
           hit_number: '0',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1486,6 +1719,7 @@ describe('Contexts', () => {
           id: 'test',
           hit_number: 0,
           extra: 123,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1495,6 +1729,7 @@ describe('Contexts', () => {
         SessionContext.safeParse({
           _type: 'SessionContext',
           hit_number: 0,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1504,6 +1739,7 @@ describe('Contexts', () => {
         SessionContext.safeParse({
           id: 'test',
           hit_number: 0,
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1513,6 +1749,7 @@ describe('Contexts', () => {
         SessionContext.safeParse({
           _type: 'SessionContext',
           id: 'test',
+          _types: [],
         }).success
       ).toBe(false);
     });
@@ -1523,6 +1760,7 @@ describe('Contexts', () => {
           _type: 'ApplicationContext',
           id: 'test',
           hit_number: 0,
+          _types: [],
         }).success
       ).toBe(false);
     });

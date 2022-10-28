@@ -7,9 +7,10 @@ from typing import Dict, Optional, Union, cast
 from pydantic import BaseSettings, root_validator
 
 from checklock_holmes.models.env_models import (
-    DEFAULT_METABASE_ENV, BaseDBEnvModel, BigQueryEnvModel, MetaBaseEnvModel
+    DEFAULT_METABASE_ENV, AWSBucketEnvModel, BaseDBEnvModel, BigQueryEnvModel,
+    MetaBaseEnvModel
 )
-from checklock_holmes.utils.supported_engines import SupportedEngine
+from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
 class Settings(BaseSettings):
@@ -19,26 +20,28 @@ class Settings(BaseSettings):
 
     metabase: MetaBaseEnvModel = DEFAULT_METABASE_ENV
 
+    aws_bucket: Optional[AWSBucketEnvModel] = None
+
     class Config:
         env_file = './.env'
         env_file_enconding = 'utf-8'
         env_nested_delimiter = '__'
 
     @property
-    def engine_env_var_mapping(self) -> Dict[SupportedEngine, BaseDBEnvModel]:
+    def engine_env_var_mapping(self) -> Dict[SupportedDBEngine, BaseDBEnvModel]:
         mapping = {}
         if self.pg_db:
-            mapping[SupportedEngine.POSTGRES] = self.pg_db
+            mapping[SupportedDBEngine.POSTGRES] = self.pg_db
 
         if self.bq_db:
-            mapping[SupportedEngine.BIGQUERY] = self.bq_db
+            mapping[SupportedDBEngine.BIGQUERY] = self.bq_db
 
         if self.athena_db:
-            mapping[SupportedEngine.ATHENA] = self.athena_db
+            mapping[SupportedDBEngine.ATHENA] = self.athena_db
 
         return mapping
 
-    def get_env_variables(self, engine: SupportedEngine) -> Dict[str, str]:
+    def get_env_variables(self, engine: SupportedDBEngine) -> Dict[str, str]:
         return {
             **(self.engine_env_var_mapping[engine].dict() if engine in self.engine_env_var_mapping else {}),
             **self.metabase.dict(),
@@ -55,7 +58,7 @@ class Settings(BaseSettings):
             if not _env_base_db or not _env_base_db.dsn:
                 warnings.warn(
                     message=(
-                        f'Cannot run checks for Postgres. Please define {base_db.upper()}__DSN '
+                        f'Cannot run checks for {base_db}. Please define {base_db.upper()}__DSN '
                         'variable in .env file'
                     ),
                     category=UserWarning,

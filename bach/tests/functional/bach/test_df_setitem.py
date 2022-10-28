@@ -137,9 +137,7 @@ def test_set_const_json(engine):
         ['a', 'b', 'c'],
         {'a': 'b', 'c': 'd'},
     ]
-    # There is a bug in bqutil.fn.typeof() that causes it to not recognize the string as a string.
-    expected_db_type_override = {DBDialect.BIGQUERY: 'UNKNOWN'}
-    check_set_const(engine, constants, SeriesJson, expected_db_type_override=expected_db_type_override)
+    check_set_const(engine, constants, SeriesJson)
 
 
 def test_set_const_int_from_series(engine):

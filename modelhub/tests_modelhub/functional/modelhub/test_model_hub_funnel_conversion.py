@@ -6,19 +6,18 @@ from decimal import Decimal
 import pytest
 
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__
+from modelhub import __version__, ModelHub
 from bach.testing import assert_equals_data
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 
 
-def test_funnel_conversion(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    df['feature_nice_name'] = df.location_stack.ls.nice_name.str.lower().str[:7]
+def test_funnel_conversion(objectiv_df):
+    modelhub = ModelHub()
+    objectiv_df['feature_nice_name'] = objectiv_df.location_stack.ls.nice_name.str.lower().str[:7]
 
     columns = ['location', 'n_users', 'n_users_completed_step',
                'step_conversion_rate', 'full_conversion_rate', 'dropoff_share']
 
-    bts = modelhub.agg.funnel_conversion(df, location_stack='feature_nice_name')
+    bts = modelhub.agg.funnel_conversion(objectiv_df, location_stack='feature_nice_name')
     assert_equals_data(
         bts,
         expected_columns=columns,
@@ -36,7 +35,7 @@ def test_funnel_conversion(db_params):
     )
 
     # location_stack - default
-    bts = modelhub.agg.funnel_conversion(df, location_stack=None)
+    bts = modelhub.agg.funnel_conversion(objectiv_df, location_stack=None)
     bts['sort_str'] = bts['location'].astype(dtype=str).str[15:19].str.lower()
     columns = ['sort_str', 'n_users', 'n_users_completed_step',
                'step_conversion_rate', 'full_conversion_rate', 'dropoff_share']

@@ -64,12 +64,11 @@ export const makeContentContext = (props: {
 * Global context with information needed to reconstruct a user session.
 */
 export const makeCookieIdContext = (props: {
-  cookie_id: string,
   id: string,
+  cookie_id: string,
 }): CookieIdContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  cookie_id: props.cookie_id,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -77,6 +76,7 @@ export const makeCookieIdContext = (props: {
   ],
   id: props.id,
   _type: GlobalContextName.CookieIdContext,
+  cookie_id: props.cookie_id,
 });
 
 /**
@@ -100,16 +100,13 @@ export const makeExpandableContext = (props: {
 * A GlobalContext describing meta information about the agent that sent the event.
 */
 export const makeHttpContext = (props: {
+  id: string,
   referrer: string,
   user_agent: string,
   remote_address: string,
-  id: string,
 }): HttpContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  referrer: props.referrer,
-  user_agent: props.user_agent,
-  remote_address: props.remote_address,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -117,6 +114,9 @@ export const makeHttpContext = (props: {
   ],
   id: props.id,
   _type: GlobalContextName.HttpContext,
+  referrer: props.referrer,
+  user_agent: props.user_agent,
+  remote_address: props.remote_address,
 });
 
 /**
@@ -127,12 +127,11 @@ export const makeHttpContext = (props: {
 * The `value` field should contain the unique identifier within that scope.
 */
 export const makeIdentityContext = (props: {
-  value: string,
   id: string,
+  value: string,
 }): IdentityContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  value: props.value,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -140,6 +139,7 @@ export const makeIdentityContext = (props: {
   ],
   id: props.id,
   _type: GlobalContextName.IdentityContext,
+  value: props.value,
 });
 
 /**
@@ -163,12 +163,11 @@ export const makeInputContext = (props: {
 * A GlobalContext containing the value of a single input element. Multiple can be present.
 */
 export const makeInputValueContext = (props: {
-  value: string,
   id: string,
+  value: string,
 }): InputValueContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  value: props.value,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -176,19 +175,19 @@ export const makeInputValueContext = (props: {
   ],
   id: props.id,
   _type: GlobalContextName.InputValueContext,
+  value: props.value,
 });
 
 /**
 * A PressableContext that contains a destination (href).
 */
 export const makeLinkContext = (props: {
-  href: string,
   id: string,
+  href: string,
 }): LinkContext => ({
   __instance_id: generateGUID(),
   __pressable_context: true,
   __location_context: true,
-  href: props.href,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractLocationContext,
@@ -197,20 +196,19 @@ export const makeLinkContext = (props: {
   ],
   id: props.id,
   _type: LocationContextName.LinkContext,
+  href: props.href,
 });
 
 /**
 * A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).
 */
 export const makeLocaleContext = (props: {
+  id: string,
   language_code: string,
   country_code: string,
-  id: string,
 }): LocaleContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  language_code: props.language_code,
-  country_code: props.country_code,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -218,6 +216,8 @@ export const makeLocaleContext = (props: {
   ],
   id: props.id,
   _type: GlobalContextName.LocaleContext,
+  language_code: props.language_code,
+  country_code: props.country_code,
 });
 
 /**
@@ -225,6 +225,7 @@ export const makeLocaleContext = (props: {
 * effectiveness and other models.
 */
 export const makeMarketingContext = (props: {
+  id: string,
   source: string,
   medium: string,
   campaign: string,
@@ -233,10 +234,16 @@ export const makeMarketingContext = (props: {
   source_platform: string,
   creative_format: string,
   marketing_tactic: string,
-  id: string,
 }): MarketingContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
+  _types: [
+    AbstractContextName.AbstractContext,
+    AbstractContextName.AbstractGlobalContext,
+    GlobalContextName.MarketingContext
+  ],
+  id: props.id,
+  _type: GlobalContextName.MarketingContext,
   source: props.source,
   medium: props.medium,
   campaign: props.campaign,
@@ -245,13 +252,6 @@ export const makeMarketingContext = (props: {
   source_platform: props.source_platform,
   creative_format: props.creative_format,
   marketing_tactic: props.marketing_tactic,
-  _types: [
-    AbstractContextName.AbstractContext,
-    AbstractContextName.AbstractGlobalContext,
-    GlobalContextName.MarketingContext
-  ],
-  id: props.id,
-  _type: GlobalContextName.MarketingContext,
 });
 
 /**
@@ -363,12 +363,11 @@ export const makeRootLocationContext = (props: {
 * A GlobalContext describing meta information about the current session.
 */
 export const makeSessionContext = (props: {
-  hit_number: number,
   id: string,
+  hit_number: number,
 }): SessionContext => ({
   __instance_id: generateGUID(),
   __global_context: true,
-  hit_number: props.hit_number,
   _types: [
     AbstractContextName.AbstractContext,
     AbstractContextName.AbstractGlobalContext,
@@ -376,72 +375,74 @@ export const makeSessionContext = (props: {
   ],
   id: props.id,
   _type: GlobalContextName.SessionContext,
+  hit_number: props.hit_number,
 });
 
 /**
 * A factory to generate any Context.
 */
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'ApplicationContext',
   id: string,
 }): ApplicationContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'ContentContext',
   id: string,
 }): ContentContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'CookieIdContext',
-  cookie_id: string,
   id: string,
+  cookie_id: string,
 }): CookieIdContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'ExpandableContext',
   id: string,
 }): ExpandableContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'HttpContext',
+  id: string,
   referrer: string,
   user_agent: string,
   remote_address: string,
-  id: string,
 }): HttpContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'IdentityContext',
-  value: string,
   id: string,
+  value: string,
 }): IdentityContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'InputContext',
   id: string,
 }): InputContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'InputValueContext',
-  value: string,
   id: string,
+  value: string,
 }): InputValueContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'LinkContext',
-  href: string,
   id: string,
+  href: string,
 }): LinkContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'LocaleContext',
+  id: string,
   language_code: string,
   country_code: string,
-  id: string,
 }): LocaleContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'MarketingContext',
+  id: string,
   source: string,
   medium: string,
   campaign: string,
@@ -450,82 +451,81 @@ export function makeContext (contextProps: {
   source_platform: string,
   creative_format: string,
   marketing_tactic: string,
-  id: string,
 }): MarketingContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'MediaPlayerContext',
   id: string,
 }): MediaPlayerContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'NavigationContext',
   id: string,
 }): NavigationContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'OverlayContext',
   id: string,
 }): OverlayContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'PathContext',
   id: string,
 }): PathContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'PressableContext',
   id: string,
 }): PressableContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'RootLocationContext',
   id: string,
 }): RootLocationContext;
 
-export function makeContext (contextProps: {
+export function makeContext (props: {
   _type: 'SessionContext',
-  hit_number: number,
   id: string,
+  hit_number: number,
 }): SessionContext;
 
-export function makeContext ({ _type, ...contextProps }: any) {
+export function makeContext ({ _type, ...props }: any) {
   switch(_type) {
     case 'ApplicationContext':
-      return makeApplicationContext(contextProps);
+      return makeApplicationContext(props);
     case 'ContentContext':
-      return makeContentContext(contextProps);
+      return makeContentContext(props);
     case 'CookieIdContext':
-      return makeCookieIdContext(contextProps);
+      return makeCookieIdContext(props);
     case 'ExpandableContext':
-      return makeExpandableContext(contextProps);
+      return makeExpandableContext(props);
     case 'HttpContext':
-      return makeHttpContext(contextProps);
+      return makeHttpContext(props);
     case 'IdentityContext':
-      return makeIdentityContext(contextProps);
+      return makeIdentityContext(props);
     case 'InputContext':
-      return makeInputContext(contextProps);
+      return makeInputContext(props);
     case 'InputValueContext':
-      return makeInputValueContext(contextProps);
+      return makeInputValueContext(props);
     case 'LinkContext':
-      return makeLinkContext(contextProps);
+      return makeLinkContext(props);
     case 'LocaleContext':
-      return makeLocaleContext(contextProps);
+      return makeLocaleContext(props);
     case 'MarketingContext':
-      return makeMarketingContext(contextProps);
+      return makeMarketingContext(props);
     case 'MediaPlayerContext':
-      return makeMediaPlayerContext(contextProps);
+      return makeMediaPlayerContext(props);
     case 'NavigationContext':
-      return makeNavigationContext(contextProps);
+      return makeNavigationContext(props);
     case 'OverlayContext':
-      return makeOverlayContext(contextProps);
+      return makeOverlayContext(props);
     case 'PathContext':
-      return makePathContext(contextProps);
+      return makePathContext(props);
     case 'PressableContext':
-      return makePressableContext(contextProps);
+      return makePressableContext(props);
     case 'RootLocationContext':
-      return makeRootLocationContext(contextProps);
+      return makeRootLocationContext(props);
     case 'SessionContext':
-      return makeSessionContext(contextProps);
+      return makeSessionContext(props);
   }
 }

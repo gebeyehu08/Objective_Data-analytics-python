@@ -1,7 +1,17 @@
 # InputContext
 A [LocationContext](/taxonomy/reference/location-contexts/overview.md)  that describes an element that accepts user input, i.e. a form field.
 
-### Properties
+### Parent
+AbstractLocationContext
+
+### All Parents
+AbstractContext > AbstractLocationContext
+
+### Inherited Properties
+`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+for Context instance uniqueness.
+
+### All Properties
 `string` id: A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 

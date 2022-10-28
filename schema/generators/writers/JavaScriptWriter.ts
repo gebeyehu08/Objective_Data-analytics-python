@@ -3,7 +3,6 @@
  */
 
 import { CodeWriter, CodeWriterUtility, TextWriter } from '@yellicode/core';
-import { getObjectKeys } from '../templates/common';
 
 export class JavaScriptWriter extends CodeWriter {
   documentationLineLength = 120;
@@ -33,7 +32,7 @@ export class JavaScriptWriter extends CodeWriter {
     this.writeLine('{');
     this.increaseIndent();
 
-    const objectKeys = getObjectKeys(object);
+    const objectKeys = Object.keys(object);
     objectKeys.forEach((key, index) => {
       const value = object[key];
       this.writeIndent();

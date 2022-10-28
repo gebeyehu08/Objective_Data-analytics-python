@@ -1,9 +1,5 @@
-import json
-from collections import defaultdict
-from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, Any, NamedTuple, Optional
-from uuid import UUID
 
 import bach
 import pandas as pd
@@ -12,7 +8,6 @@ from sql_models.util import is_postgres
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
-from modelhub import ModelHub
 from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL
 
 
@@ -43,31 +38,6 @@ def get_df_with_json_data_real(db_params: DBParams) -> bach.DataFrame:
     df['global_contexts'] = df.global_contexts.astype('json')
     df['location_stack'] = df.location_stack.astype('json')
     return df
-
-
-def get_objectiv_dataframe_test(db_params=None, time_aggregation=None, global_contexts=None):
-    if not db_params:
-        # by default use PG (this should be removed after modelhub is able to work with all bach engines)
-        import os
-        db_url = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
-        credentials = None
-        table_name = 'objectiv_data'
-    else:
-        db_url = db_params.url
-        credentials = db_params.credentials
-        table_name = db_params.table_name
-
-    kwargs = {}
-    if time_aggregation:
-        kwargs = {'time_aggregation': time_aggregation}
-    modelhub = ModelHub(**kwargs, global_contexts=global_contexts, )
-
-    return modelhub.get_objectiv_dataframe(
-        db_url=db_url,
-        table_name=table_name,
-        bq_credentials_path=credentials,
-    ), modelhub
-
 
 def create_engine_from_db_params(db_params: DBParams) -> Engine:
     if db_params.credentials:

@@ -5,6 +5,8 @@ In this module we setup the database for functional tests.
 """
 from pathlib import Path
 
+import bach
+import pandas
 from filelock import FileLock
 import pytest
 from _pytest.fixtures import SubRequest
@@ -12,8 +14,29 @@ from _pytest.tmpdir import TempPathFactory
 from sqlalchemy import create_engine
 
 from tests_modelhub.conftest import get_postgres_db_params
-from tests_modelhub.data_and_utils.utils import setup_db
+from tests_modelhub.data_and_utils.utils import setup_db, create_engine_from_db_params
+from tests_modelhub.data_and_utils.data_objectiv import TEST_SESSIONIZED_DATA, GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA
 
+
+@pytest.fixture()
+def objectiv_df(db_params, request) -> bach.DataFrame:
+    engine = create_engine_from_db_params(db_params)
+    sessionized_df = bach.DataFrame.from_pandas(
+        engine=engine,
+        df=pandas.DataFrame(TEST_SESSIONIZED_DATA),
+        convert_objects=True,
+    )
+    sessionized_df['stack_event_types'] = sessionized_df['stack_event_types'].astype('json')
+    sessionized_df['location_stack'] = sessionized_df['location_stack'].astype('objectiv_location_stack')
+    for gc in GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA:
+        sessionized_df[gc] = sessionized_df[gc].astype('objectiv_global_context')
+
+    global_contexts = request.param if hasattr(request, 'param') else []
+    unrequested_gc = set(GLOBAL_CONTEXTS_IN_CURRENT_TEST_DATA) - set(global_contexts)
+    sessionized_df = sessionized_df.drop(columns=unrequested_gc)
+
+    sessionized_df = sessionized_df.set_index('event_id', drop=True)
+    return sessionized_df
 
 @pytest.fixture(autouse=True, scope='session')
 def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, worker_id: str) -> None:
@@ -24,7 +47,7 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
     get created only once.
     """
     # use same logic as tests_modelhub.conftest.pytest_generate_tests()
-    testing_pg = not request.session.config.getoption("big_query")
+    testing_pg = not request.session.config.getoption("bigquery")
     if not testing_pg:
         return
 

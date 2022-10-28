@@ -1,71 +1,100 @@
 .. _supported_data_stores:
 
-.. frontmatterposition:: 5
-
 .. currentmodule:: bach
 
-=====================
-Supported data stores
-=====================
-Our aim is to support all popular data stores with Bach. Currently we support `PostgreSQL 
-</docs/tracking/collector/postgresql>`_ and `Google BigQuery </docs/tracking/collector/google-bigquery>`_; 
-see below for more details and tips on each. Amazon Athena support is coming soon, and our roadmap includes 
-Databricks, Redshift, Clickhouse, etcetera.
+.. frontmatterposition:: 5
 
-PostgreSQL
+
+=====================
+Supported Data Stores
+=====================
+Our aim is to support all popular data stores with Bach. Currently Bach supports AWS Athena, Google BigQuery, 
+and PostgreSQL. Our roadmap includes Databricks, Redshift, ClickHouse, Snowflake, etcetera.
+
+For information on how to setup Objectiv with each of the data stores, see the Collector sections for
+`PostgreSQL </docs/tracking/collector/postgresql>`__, `AWS Athena </docs/tracking/collector/amazon-s3>`__,
+or `Google BigQuery </docs/tracking/collector/google-bigquery>`__.
+
+Bach works the same, regardless of the underlying database. Generally, anything that works on a supported
+database will work on the other databases too; no code changes needed. There are some notable exceptions to
+this. Below we list the major platform-specific exceptions, and other things to keep in mind when using Bach
+with the different supported databases.
+
+
+AWS Athena
 ---------------
-Out of the box, the Objectiv Collector `comes with a PostgreSQL database 
-</docs/tracking/collector/postgresql>`_. There are no known compatibility issues - please let us know if you 
-find any.
+`AWS Athena <https://aws.amazon.com/athena/>`_ is a serverless cloud-hosted SQL engine that make it possible
+to query huge datasets that are stored on AWS's S3 service.
+
+When running Bach on Athena, one should be aware of the following:
+
+**Overwriting tables doesn't delete the old data.**
+Operations that overwrite an existing table (e.g. :py:meth:`DataFrame.database_create_table()` with
+`if_exists='replace'`) don't actually remove the data of the original table. The original table definition
+is removed from Athena, but the data itself resides on AWS S3. You will have to clean up data on S3 yourself.
+
+
+**Temporary tables are not supported.**
+As an alternative consider using :py:meth:`DataFrame.database_create_table()`.
+
+
+**Some Bach data types are represented or stored as different types.**
+The data type support in Athena is limited compared to some other databases.
+Bach uses some workarounds for this, that are mostly transparent to the user, but can become clear when
+writing resulting data to a table and inspecting that table.
+
+- The Bach types `time` and `timedelta` do not use specialized time types, but Athena's `double` type to
+  store the number of (partial) seconds.
+- The bach type `json` is converted to `string` when writing it to a table. Athena does not support
+  storing `json` data directly.
+
+
+**Bach Series names with special characters get encoded.**
+Athena limits the allowed characters in column names. Therefore, Bach Series names that contain
+'special' characters are encoded in SQL, and might be harder to relate to the original series name.
+See the :ref:`tip on using simple Series names <bach_best_practices_simple_series_names>`.
+
 
 Google BigQuery
 ---------------
-Google BigQuery is supported via a Snowplow pipeline. See `how to set up Google BigQuery 
-</docs/tracking/collector/google-bigquery>`_.
+`Google BigQuery <https://cloud.google.com/bigquery>`_ is a serverless cloud-hosted database that can handle
+huge datasets.
+When running Bach on BigQuery, one should be aware of the following:
 
-A few things are useful to keep in mind while modeling on BigQuery, see the tips below.
 
-**Use valid column names for cleaner SQL**
+**Bach Series names with special characters get encoded.**
+Big Query limits the allowed characters in column names. Therefore, Bach Series names that contain
+'special' characters are encoded in SQL, and might be harder to relate to the original series name.
+See the :ref:`tip on using simple Series names <bach_best_practices_simple_series_names>`.
 
-All Series in a Bach DataFrame map directly to database columns with the same name. However, BigQuery limits
-the characters than can be used in column names. To accommodate this, Bach will transparently
-map 'troublesome' Series names to different column names.
-
-This does mean that the columns names in the generated SQL query can be different from the names in a
-DataFrame. If that's undesired, then stick to Series names only containing the characters `a-z`, `0-9`,
-and `\_`, and that start with `a-z`.
-
-**Use a data sample**
-
-Querying big datasets can be expensive with BigQuery. To get a smaller sample of the current DataFrame, 
-use :py:meth:`DataFrame.get_sample()`:
-
-.. code-block:: console
-
-    table_name = 'objectiv-production.writable_dataset.table_name'
-    df.get_sample(table_name, sample_percentage=10)
-
-This creates a permanent table, so make sure you have a write access.
-
-**Use temporary tables to limit query complexity**
-
+**BigQuery cannot execute very complex queries**
 Sometimes complex operations on Bach cannot be executed on BigQuery and you might get an error:
 
-    Resources exceeded during query execution: Not enough resources for query planning - too many 
+    Resources exceeded during query execution: Not enough resources for query planning - too many
     subqueries or query is too complex.
 
-If the underlying SQL query is complex for your dataset and you still need to apply other operations, in order 
-to avoid the query becoming too complex (and getting the error above), you should first materialize the 
-current DataFrame as a temporary table:
+One way to avoid this problem is by materializing intermediate results, before the query becomes too complex.
 
-.. code-block:: console
+.. code-block:: python
 
     df = df.materialize(materialization='temp_table')
 
-and then continue to do all the other operations. 
+Also see the :ref:`tip on using temporary tables <bach_best_practices_temp_tables>`.
 
-One way of checking SQL complexity is to print the resulting query:
+**Special BigQuery Series types.**
+The Series dtype `list` and `dict` are currently only supported on BigQuery, and their functionality is
+limited. Some functions might not work as expected when using them on such series, e.g. sorting on such
+columns will give an error.
 
-.. code-block:: console
 
-    display_sql_as_markdown(df)
+PostgreSQL
+---------------
+`PostgreSQL <https://www.postgresql.org/>`_ is a very feature-rich database, and as a result Bach is
+fully supported with very few oddities.
+Generally Postgres has little trouble with complex queries that are generated by Bach. But it might struggle
+handling big data sets, which might be less of a problem for some of the other databases.
+
+**Special Postgres Series type.**
+The Series dtype `json\_postgres` is only supported on Postgres. When possible, one should use the `json`
+dtype, which is supported on all databases.
+

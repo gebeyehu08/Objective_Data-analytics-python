@@ -3,18 +3,17 @@ Copyright 2021 Objectiv B.V.
 """
 import modelhub
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__
+from modelhub import __version__, ModelHub
 import pytest
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test, DBParams
+from tests_modelhub.data_and_utils.utils import DBParams
 from bach.testing import assert_equals_data
 from uuid import UUID
 
 
 # map
-def test_is_first_session(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-
-    s = modelhub.map.is_first_session(df)
+def test_is_first_session(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    s = modelhub.map.is_first_session(objectiv_df)
 
     assert_equals_data(
         s,
@@ -38,10 +37,10 @@ def test_is_first_session(db_params):
     )
 
     # use created series to filter dataframe
-    df['s'] = s
+    objectiv_df['s'] = s
 
     assert_equals_data(
-        df[df.s].s,
+        objectiv_df[objectiv_df.s].s,
         expected_columns=['event_id', 's'],
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), True],
@@ -56,10 +55,9 @@ def test_is_first_session(db_params):
     )
 
 
-def test_is_new_user(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-
-    s = modelhub.map.is_new_user(df)
+def test_is_new_user(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    s = modelhub.map.is_new_user(objectiv_df)
 
     assert_equals_data(
         s,
@@ -83,10 +81,10 @@ def test_is_new_user(db_params):
     )
 
     # use created series to filter dataframe
-    df['s'] = s
+    objectiv_df['s'] = s
 
     assert_equals_data(
-        df[df.s].s,
+        objectiv_df[objectiv_df.s].s,
         expected_columns=['event_id', 's'],
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), True],
@@ -101,7 +99,7 @@ def test_is_new_user(db_params):
         convert_uuid=True,
     )
 
-    s = modelhub.map.is_new_user(df, time_aggregation='%Y-%m')
+    s = modelhub.map.is_new_user(objectiv_df, time_aggregation='%Y-%m')
 
     assert_equals_data(
         s,
@@ -125,10 +123,9 @@ def test_is_new_user(db_params):
     )
 
 
-def test_add_conversion_event(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-
-    location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
+def test_add_conversion_event(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    location_stack = objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     event_type = 'ClickEvent'
     conversion = 'github_clicks'
     modelhub.add_conversion_event(location_stack=location_stack,
@@ -139,7 +136,7 @@ def test_add_conversion_event(db_params):
     assert len(modelhub._conversion_events) == 1
     assert modelhub._conversion_events[conversion] == (location_stack, event_type)
 
-    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
+    ser = modelhub.map.is_conversion_event(objectiv_df, 'github_clicks')
     assert_equals_data(
         ser,
         expected_columns=['event_id', 'is_conversion_event'],
@@ -161,11 +158,16 @@ def test_add_conversion_event(db_params):
         convert_uuid=True,
     )
 
-    # location_stack not set
+
+def test_add_conversion_event_wo_location_stack(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    event_type = 'ClickEvent'
+    conversion = 'github_clicks'
+
     modelhub.add_conversion_event(event_type=event_type, name=conversion)
     assert modelhub._conversion_events[conversion] == (None, event_type)
 
-    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
+    ser = modelhub.map.is_conversion_event(objectiv_df, 'github_clicks')
 
     assert_equals_data(
         ser,
@@ -188,13 +190,17 @@ def test_add_conversion_event(db_params):
         convert_uuid=True,
     )
 
-    # event_type not set
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-    modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
+
+def test_add_conversion_event_wo_event_type(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    location_stack = objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
+    conversion = 'github_clicks'
+    modelhub.add_conversion_event(location_stack=location_stack, name=conversion)
+
     assert len(modelhub._conversion_events) == 1
     assert modelhub._conversion_events[conversion] == (location_stack, None)
 
-    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
+    ser = modelhub.map.is_conversion_event(objectiv_df, conversion)
 
     assert_equals_data(
         ser,
@@ -217,12 +223,16 @@ def test_add_conversion_event(db_params):
         convert_uuid=True,
     )
 
-    # name not set
-    modelhub.add_conversion_event(event_type='ClickEvent')
-    assert len(modelhub._conversion_events) == 2
-    assert modelhub._conversion_events['conversion_2'] == (None, event_type)
 
-    ser = modelhub.map.is_conversion_event(df, 'conversion_2')
+def test_add_conversion_event_wo_name(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    event_type = 'ClickEvent'
+    # name not set
+    modelhub.add_conversion_event(event_type=event_type)
+    assert len(modelhub._conversion_events) == 1
+    assert modelhub._conversion_events['conversion_1'] == (None, event_type)
+
+    ser = modelhub.map.is_conversion_event(objectiv_df, 'conversion_1')
 
     assert_equals_data(
         ser,
@@ -246,14 +256,13 @@ def test_add_conversion_event(db_params):
     )
 
 
-def test_is_conversion_event(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-
+def test_is_conversion_event(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
     # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
+    modelhub.add_conversion_event(location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext',
                                                                          'id': 'cta-repo-button'}:],
                                   event_type='ClickEvent', name='github_clicks')
-    s = modelhub.map.is_conversion_event(df, 'github_clicks')
+    s = modelhub.map.is_conversion_event(objectiv_df, 'github_clicks')
 
     assert_equals_data(
         s,
@@ -277,10 +286,10 @@ def test_is_conversion_event(db_params):
     )
 
     # use created series to filter dataframe
-    df['s'] = s
+    objectiv_df['s'] = s
 
     assert_equals_data(
-        df[df.s].s,
+        objectiv_df[objectiv_df.s].s,
         expected_columns=['event_id', 's'],
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
@@ -291,20 +300,22 @@ def test_is_conversion_event(db_params):
 
     # wrong conversion_event name
     with pytest.raises(KeyError, match="not labeled as a conversion"):
-        modelhub.map.is_conversion_event(df, 'some_clicks')
+        modelhub.map.is_conversion_event(objectiv_df, 'some_clicks')
 
     with pytest.raises(KeyError, match="not labeled as a conversion"):
-        modelhub.map.is_conversion_event(df, None)
+        modelhub.map.is_conversion_event(objectiv_df, None)
 
 
-def test_conversions_counter(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+def test_conversions_counter(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
-                            event_type='ClickEvent',
-                            name='github_clicks')
-    s = modelhub.map.conversions_counter(df, 'github_clicks')
+    modelhub.add_conversion_event(
+        location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
+        event_type='ClickEvent',
+        name='github_clicks',
+    )
+    s = modelhub.map.conversions_counter(objectiv_df, 'github_clicks')
 
     assert_equals_data(
         s,
@@ -329,10 +340,10 @@ def test_conversions_counter(db_params):
     )
 
     # use created series to filter dataframe
-    df['s'] = s == 1
+    objectiv_df['s'] = s == 1
 
     assert_equals_data(
-        df[df.s].s,
+        objectiv_df[objectiv_df.s].s,
         expected_columns=['event_id', 's'],
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), 1],
@@ -343,7 +354,7 @@ def test_conversions_counter(db_params):
         convert_uuid=True,
     )
 
-    s = modelhub.map.conversions_counter(df, 'github_clicks', partition='user_id')
+    s = modelhub.map.conversions_counter(objectiv_df, 'github_clicks', partition='user_id')
 
     assert_equals_data(
         s,
@@ -367,15 +378,15 @@ def test_conversions_counter(db_params):
     )
 
 
-def test_conversions_in_time(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+def test_conversions_in_time(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
     # add conversion event
     modelhub.add_conversion_event(
-        location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
+        location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
         event_type='ClickEvent',
         name='github_clicks')
-    s = modelhub.map.conversions_in_time(df, 'github_clicks')
+    s = modelhub.map.conversions_in_time(objectiv_df, 'github_clicks')
 
     assert_equals_data(
         s,
@@ -399,10 +410,10 @@ def test_conversions_in_time(db_params):
     )
 
     # use created series to filter dataframe
-    df['s'] = s == 1
+    objectiv_df['s'] = s == 1
 
     assert_equals_data(
-        df[df.s].s,
+        objectiv_df[objectiv_df.s].s,
         expected_columns=['event_id', 's'],
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
@@ -412,14 +423,16 @@ def test_conversions_in_time(db_params):
     )
 
 
-def test_pre_conversion_hit_number(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+def test_pre_conversion_hit_number(objectiv_df):
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
-                            event_type='ClickEvent',
-                            name='github_clicks')
-    s = modelhub.map.pre_conversion_hit_number(df, 'github_clicks')
+    modelhub.add_conversion_event(
+        location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
+        event_type='ClickEvent',
+        name='github_clicks',
+    )
+    s = modelhub.map.pre_conversion_hit_number(objectiv_df, 'github_clicks')
 
     assert_equals_data(
         s,
@@ -443,10 +456,10 @@ def test_pre_conversion_hit_number(db_params):
     )
 
     # use created series to filter dataframe
-    df['s'] = s == 2
+    objectiv_df['s'] = s == 2
 
     assert_equals_data(
-        df[df.s].s,
+        objectiv_df[objectiv_df.s].s,
         expected_columns=['event_id', 's'],
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), True],
@@ -455,7 +468,7 @@ def test_pre_conversion_hit_number(db_params):
         convert_uuid=True,
     )
 
-    s = modelhub.map.pre_conversion_hit_number(df, 'github_clicks', partition='user_id')
+    s = modelhub.map.pre_conversion_hit_number(objectiv_df, 'github_clicks', partition='user_id')
 
     assert_equals_data(
         s,
@@ -479,9 +492,9 @@ def test_pre_conversion_hit_number(db_params):
     )
 
 
-def test_time_agg(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.time_agg(df)
+def test_time_agg(objectiv_df):
+    modelhub = ModelHub()
+    s = modelhub.time_agg(objectiv_df)
 
     assert_equals_data(
         s,
@@ -504,8 +517,8 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m')
-    s = modelhub.time_agg(df)
+    modelhub = ModelHub(time_aggregation='%Y-%m')
+    s = modelhub.time_agg(objectiv_df)
 
     assert_equals_data(
         s,
@@ -528,8 +541,8 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.time_agg(df, time_aggregation='%Y-%m-%d')
+    modelhub = ModelHub()
+    s = modelhub.time_agg(objectiv_df, time_aggregation='%Y-%m-%d')
 
     assert_equals_data(
         s,
@@ -551,8 +564,8 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-    s = modelhub.time_agg(df, time_aggregation='%Y')
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    s = modelhub.time_agg(objectiv_df, time_aggregation='%Y')
 
     assert_equals_data(
         s,
