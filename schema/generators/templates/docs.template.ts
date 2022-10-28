@@ -157,6 +157,24 @@ export type PropertiesDefinition = {
 
 		docsWriter.writeEndOfLine();
 		
+		if (entity.rules.length) {
+      docsWriter.writeH3('Validation Rules');
+      // Build a list of all rules summaries
+      let ruleSummaries = [];
+      entity.rules.forEach((entityRule) => {
+        getRuleSummaries(entityRule, ruleSummaries);
+      });
+
+      // Remove dupes
+      [...new Set(ruleSummaries)]
+        // Sort
+        .sort((a, b) => a.localeCompare(b))
+        // Write a line per rule
+        .forEach((ruleSummary) => docsWriter.writeListItem(ruleSummary + "."));
+
+      docsWriter.writeEndOfLine();
+    }
+		
 		// final notes
 		docsWriter.writeLine(admonitionDescription);
 	});
@@ -198,14 +216,14 @@ const getRuleSummaries = (rule, ruleSummaries) => {
     case 'RequiresLocationContext':
       rule.scope.forEach(({ context, position }) => {
         ruleSummaries.push(
-          `Location Stack must contain ${context}${position !== undefined ? ` at index ${position}` : ''}`
+          `LocationStacks must contain ${context}${position !== undefined ? ` at index ${position}` : ''}`
         );
       });
       break;
 
     case 'RequiresGlobalContext':
       rule.scope.forEach(({ context }) => {
-        ruleSummaries.push(`Global Contexts must contain ${context}`);
+        ruleSummaries.push(`GlobalContexts must contain context ${context}`);
       });
       break;
 
@@ -216,7 +234,7 @@ const getRuleSummaries = (rule, ruleSummaries) => {
         }
         if (excludeContexts?.length) {
           ruleSummaries.push(
-            `${rule._inheritedFrom} items must be unique by their ${by.join('+')}, except ${excludeContexts.join(',')}`
+            `${rule._inheritedFrom} items must be unique by their ${by.join('+')}, except for ${excludeContexts.join(',')}`
           );
         }
         if (includeContexts?.length) {

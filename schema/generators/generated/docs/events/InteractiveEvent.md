@@ -31,4 +31,12 @@ import Mermaid from '@theme/Mermaid'
 | **id**               | uuid           | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                       |
 | **time**             | integer        | Timestamp indicating when the event was generated.                                                                                                                                                                                                                           |
 
+### Validation Rules
+* GlobalContexts items must be unique by their _type+id, except for InputValueContext.
+* GlobalContexts must contain context ApplicationContext.
+* GlobalContexts must contain context PathContext.
+* InputValueContext must be unique by their _type+id+value.
+* LocationStack items must be unique by their _type+id.
+* LocationStacks must contain RootLocationContext at index 0.
+
 

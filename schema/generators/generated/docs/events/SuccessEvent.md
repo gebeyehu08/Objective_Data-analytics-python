@@ -34,6 +34,12 @@ None.
 | **id**               | uuid           | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                       |
 | **time**             | integer        | Timestamp indicating when the event was generated.                                                                                                                                                                                                                           |
 
+### Validation Rules
+* GlobalContexts items must be unique by their _type+id, except for InputValueContext.
+* GlobalContexts must contain context ApplicationContext.
+* InputValueContext must be unique by their _type+id+value.
+* LocationStack items must be unique by their _type+id.
+
 :::info setting of properties
 The tracker will automatically set all the properties. The message is an error code or short message captured from the occurring success event. This is purely for descriptive purposes.
 :::
