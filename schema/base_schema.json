@@ -526,7 +526,7 @@
     "IdentityContext": {
       "documentation": [
         { "description": "A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "text", "target": "primary" },
-        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md)  to track the identity of users across sessions, platforms, devices. Multiple can be present.", "type": "markdown", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md)  to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all properties when using the official Plugin. On manual creation, `id` and `value` must be provided.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "AbstractGlobalContext",
