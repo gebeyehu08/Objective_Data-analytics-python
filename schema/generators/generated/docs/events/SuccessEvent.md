@@ -29,6 +29,12 @@ related to where the Event originated (location), such as device, platform or bu
 `integer` time: Timestamp indicating when the event was generated.
 `string` message: Success message.
 
+### Validation Rules
+Global Contexts must contain ApplicationContext
+GlobalContexts items must be unique by their _type+id, except InputValueContext
+InputValueContext must be unique by their _type+id+value
+LocationStack items must be unique by their _type+id
+
 :::info setting of properties
 The tracker will automatically set all the properties. The message is an error code or short message captured from the occurring success event. This is purely for descriptive purposes.
 :::

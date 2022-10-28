@@ -25,6 +25,15 @@ related to where the Event originated (location), such as device, platform or bu
 `uuid` id: Unique identifier for a specific instance of an event.
 `integer` time: Timestamp indicating when the event was generated.
 
+### Validation Rules
+Global Contexts must contain ApplicationContext
+Global Contexts must contain PathContext
+GlobalContexts items must be unique by their _type+id, except InputValueContext
+InputValueContext must be unique by their _type+id+value
+Location Stack must contain PressableContext
+Location Stack must contain RootLocationContext at index 0
+LocationStack items must be unique by their _type+id
+
 :::info setting of properties
 The tracker will automatically set all the properties.
 :::

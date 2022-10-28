@@ -67,7 +67,7 @@ const mapSchemaPropertiesToIglu = (properties) => {
 
   properties
     .filter(({ name }) => !skipProperties.includes(name))
-    .forEach(({ name, type, nullable, description, internal, value, ...otherAttributes }) => {
+    .forEach(({ name, type, nullable, description, internal, value, _rules, ...otherAttributes }) => {
       igluProperties[name] = {
         type: nullable ? [type, 'null'] : [type],
         description: description.replace(/\n/g, ''),

@@ -189,17 +189,23 @@ entityNames.forEach((entityName) => {
        * Gets the list of rules directly defined in this entity, not inherited.
        */
       get ownRules() {
-        return this._rules;
+        return [
+          ...this._rules,
+          ...this.properties.reduce((rules, property) => {
+            rules.push(...(property._rules ?? []));
+            return rules;
+          }, []),
+        ];
       }
 
       /**
-       * Gets the list of rules inherited from parents.
+       * Gets the list of rules inherited from parents and properties.
        */
       get inheritedRules() {
         let inheritedRules = [];
 
         this.parents.forEach((parent) => {
-          inheritedRules = [...inheritedRules, ...parent._rules];
+          inheritedRules = [...inheritedRules, ...parent.ownRules];
         });
 
         return inheritedRules;
@@ -260,6 +266,8 @@ entityNames.forEach((entityName) => {
                 ...property,
                 // Enrich with description from type definition. Text primary, since properties have no markdowns.
                 description: typeDefinition.getDescription({ type: 'text', target: 'primary' }),
+                // Flatten validation.rules block onto _rules.
+                _rules: typeDefinition?.validation?.rules.map(rule => ({...rule, _inheritedFrom: property.type})) ?? [],
               };
             default:
               return property;
