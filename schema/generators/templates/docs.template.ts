@@ -186,3 +186,50 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 		docsWriter.writeLine();
 	});
 });
+
+const getRuleSummaries = (rule, ruleSummaries) => {
+  switch (rule.type) {
+    case 'MatchContextProperty':
+      rule.scope.forEach(({ contextA, contextB, property }) => {
+        ruleSummaries.push(`${contextA}.${property} must equal ${contextB}.${property}`);
+      });
+      break;
+
+    case 'RequiresLocationContext':
+      rule.scope.forEach(({ context, position }) => {
+        ruleSummaries.push(
+          `Location Stack must contain ${context}${position !== undefined ? ` at index ${position}` : ''}`
+        );
+      });
+      break;
+
+    case 'RequiresGlobalContext':
+      rule.scope.forEach(({ context }) => {
+        ruleSummaries.push(`Global Contexts must contain ${context}`);
+      });
+      break;
+
+    case 'UniqueContext':
+      rule.scope.forEach(({ excludeContexts, includeContexts, by }) => {
+        if (!excludeContexts?.length && !includeContexts?.length) {
+          ruleSummaries.push(`${rule._inheritedFrom} items must be unique by their ${by.join('+')}`);
+        }
+        if (excludeContexts?.length) {
+          ruleSummaries.push(
+            `${rule._inheritedFrom} items must be unique by their ${by.join('+')}, except ${excludeContexts.join(',')}`
+          );
+        }
+        if (includeContexts?.length) {
+          includeContexts?.forEach((includedContext) => {
+            ruleSummaries.push(`${includedContext} must be unique by their ${by.join('+')}`);
+          });
+        }
+      });
+      break;
+
+    default:
+      throw new Error(`Cannot summarize rule ${rule.type}`);
+  }
+
+  return ruleSummaries;
+};
