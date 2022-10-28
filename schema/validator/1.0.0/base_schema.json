@@ -295,12 +295,6 @@
         { "description": "The parent of [Events](/taxonomy/events) that are the direct result of a user interaction, e.g. a button click.", "type": "markdown", "target": "primary" }
       ],
       "parent": "AbstractEvent",
-      "properties": {
-        "location_stack": {
-          "type": "LocationStack",
-          "optional": false
-        }
-      },
       "validation": {
         "description": "TODO: explain why PathContext is validated, for example",
         "rules": [
@@ -527,7 +521,7 @@
     "IdentityContext": {
       "documentation": [
         { "description": "A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "text", "target": "primary" },
-        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md)  to track the identity of users across sessions, platforms, devices. Multiple can be present.", "type": "markdown", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md)  to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all properties when using the official Plugin. On manual creation, `id` and `value` must be provided.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "AbstractGlobalContext",
@@ -604,7 +598,7 @@
       "parent": "AbstractGlobalContext",
       "properties": {
         "source": {
-          "description": "Identifies the advertiser, site, publication, etc.",
+          "description": "The advertiser, site, publication, etc.",
           "type": "string"
         },
         "medium": {
@@ -612,7 +606,7 @@
           "type": "string"
         },
         "campaign": {
-          "description": "Individual campaign name, slogan, promo code, etc.",
+          "description": "Campaign name, slogan, promo code, etc.",
           "type": "string"
         },
         "term": {
@@ -621,12 +615,12 @@
           "nullable": true
         },
         "content": {
-          "description": "Used to differentiate similar content, or links within the same ad.",
+          "description": "To differentiate similar content, or links within the same ad.",
           "type": "string",
           "nullable": true
         },
         "source_platform": {
-          "description": "To differentiate similar content, or links within the same ad.",
+          "description": "Identifies the platform where the marketing activity was undertaken.",
           "type": "string",
           "nullable": true
         },

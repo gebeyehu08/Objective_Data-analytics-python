@@ -55,26 +55,17 @@ const destination = '../generated/docs/';
       docsWriter.writeEndOfLine();
     }
 
-    if (entity.ownProperties.length) {
-      docsWriter.writeH3('Own Properties');
-
-      entity.ownProperties.forEach((entityProperty) => {
-        const { name, type, description, internal } = entityProperty;
-        if (!internal) {
-          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
-        }
-      });
-
-      docsWriter.writeEndOfLine();
-    }
-
     if (entity.inheritedProperties.length) {
       docsWriter.writeH3('Inherited Properties');
 
       entity.inheritedProperties.forEach((entityProperty) => {
-        const { name, type, description, internal } = entityProperty;
+        const { name, type, description, internal, optional, nullable, _overridden } = entityProperty;
         if (!internal) {
-          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+          docsWriter.writeLine(
+            `${name.toString()}: \`${type}\` ${_overridden ? '[overridden] ' : ''}${optional ? '[optional] ' : ''}${
+              nullable ? '[nullable] ' : ''
+            }- ${description}`
+          );
         }
       });
 
@@ -82,14 +73,37 @@ const destination = '../generated/docs/';
     }
 
     if (entity.properties.length) {
-      docsWriter.writeH3('All Properties');
+      docsWriter.writeH3('Properties');
 
       entity.properties.forEach((entityProperty) => {
-        const { name, type, description, internal } = entityProperty;
+        const { name, type, description, internal, optional, nullable, _inherited } = entityProperty;
         if (!internal) {
-          docsWriter.writeLine(`\`${type}\` ${name.toString()}: ${description}`);
+          docsWriter.writeLine(
+            `${name.toString()}: \`${type}\` ${_inherited ? '[inherited] ' : ''}${optional ? '[optional] ' : ''}${
+              nullable ? '[nullable] ' : ''
+            }- ${description}`
+          );
         }
       });
+
+      docsWriter.writeEndOfLine();
+    }
+
+    if (entity.rules.length) {
+      docsWriter.writeH3('Validation Rules');
+
+      // Build a list of all rules summaries
+      let ruleSummaries = [];
+      entity.rules.forEach((entityRule) => {
+        getRuleSummaries(entityRule, ruleSummaries);
+      });
+
+      // Remove dupes
+      [...new Set(ruleSummaries)]
+        // Sort
+        .sort((a, b) => a.localeCompare(b))
+        // Write a line per rule
+        .forEach((ruleSummary) => docsWriter.writeLine(ruleSummary));
 
       docsWriter.writeEndOfLine();
     }
@@ -97,3 +111,50 @@ const destination = '../generated/docs/';
     docsWriter.writeLine(admonitionDescription);
   });
 });
+
+const getRuleSummaries = (rule, ruleSummaries) => {
+  switch (rule.type) {
+    case 'MatchContextProperty':
+      rule.scope.forEach(({ contextA, contextB, property }) => {
+        ruleSummaries.push(`${contextA}.${property} must equal ${contextB}.${property}`);
+      });
+      break;
+
+    case 'RequiresLocationContext':
+      rule.scope.forEach(({ context, position }) => {
+        ruleSummaries.push(
+          `Location Stack must contain ${context}${position !== undefined ? ` at index ${position}` : ''}`
+        );
+      });
+      break;
+
+    case 'RequiresGlobalContext':
+      rule.scope.forEach(({ context }) => {
+        ruleSummaries.push(`Global Contexts must contain ${context}`);
+      });
+      break;
+
+    case 'UniqueContext':
+      rule.scope.forEach(({ excludeContexts, includeContexts, by }) => {
+        if (!excludeContexts?.length && !includeContexts?.length) {
+          ruleSummaries.push(`${rule._inheritedFrom} items must be unique by their ${by.join('+')}`);
+        }
+        if (excludeContexts?.length) {
+          ruleSummaries.push(
+            `${rule._inheritedFrom} items must be unique by their ${by.join('+')}, except ${excludeContexts.join(',')}`
+          );
+        }
+        if (includeContexts?.length) {
+          includeContexts?.forEach((includedContext) => {
+            ruleSummaries.push(`${includedContext} must be unique by their ${by.join('+')}`);
+          });
+        }
+      });
+      break;
+
+    default:
+      throw new Error(`Cannot summarize rule ${rule.type}`);
+  }
+
+  return ruleSummaries;
+};

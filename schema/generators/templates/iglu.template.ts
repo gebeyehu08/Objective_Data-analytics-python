@@ -25,15 +25,16 @@ Generator.generate(
     igluWriter.writeSelfDescribingEntity({
       vendor,
       name,
-      description: description,
-      properties: {
-        [name]: {
-          type: 'array',
+      description,
+      properties: [
+        {
+          name,
           description,
-          isRequired: true,
+          type: locationStack.type,
+          items: ['object'],
           minItems: 1,
         },
-      },
+      ],
     });
   }
 );

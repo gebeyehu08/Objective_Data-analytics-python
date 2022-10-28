@@ -63,12 +63,6 @@ export interface InteractiveEvent extends AbstractEvent {
   * An internal discriminator relating entities of the same hierarchical branch.
   */
   __interactive_event: true;
-  /**
-  * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-  * deterministically describes where an event took place from global to specific. 
-  * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-  */
-  location_stack: Array<AbstractLocationContext>;
 }
 
 /**
