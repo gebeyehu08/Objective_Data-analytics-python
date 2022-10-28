@@ -25,7 +25,7 @@ templating_1.Generator.generate({ outputFile: `${destination}${vendor}/location_
                 name,
                 description,
                 type: locationStack.type,
-                items: ['string'],
+                items: ['object'],
                 minItems: 1,
             },
         ],

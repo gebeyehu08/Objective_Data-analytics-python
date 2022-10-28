@@ -31,7 +31,7 @@ Generator.generate(
           name,
           description,
           type: locationStack.type,
-          items: ['string'],
+          items: ['object'],
           minItems: 1,
         },
       ],
