@@ -297,8 +297,7 @@
       "parent": "AbstractEvent",
       "properties": {
         "location_stack": {
-          "type": "LocationStack",
-          "optional": false
+          "type": "LocationStack"
         }
       },
       "validation": {
