@@ -295,11 +295,6 @@
         { "description": "The parent of [Events](/taxonomy/events) that are the direct result of a user interaction, e.g. a button click.", "type": "markdown", "target": "primary" }
       ],
       "parent": "AbstractEvent",
-      "properties": {
-        "location_stack": {
-          "type": "LocationStack"
-        }
-      },
       "validation": {
         "description": "TODO: explain why PathContext is validated, for example",
         "rules": [
