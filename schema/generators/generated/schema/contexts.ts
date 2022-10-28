@@ -154,7 +154,7 @@ export interface MarketingContext extends AbstractGlobalContext {
   */
   _type: 'MarketingContext';
   /**
-  * Identifies the advertiser, site, publication, etc.
+  * The advertiser, site, publication, etc.
   */
   source: string;
   /**
@@ -162,7 +162,7 @@ export interface MarketingContext extends AbstractGlobalContext {
   */
   medium: string;
   /**
-  * Individual campaign name, slogan, promo code, etc.
+  * Campaign name, slogan, promo code, etc.
   */
   campaign: string;
   /**
@@ -170,11 +170,11 @@ export interface MarketingContext extends AbstractGlobalContext {
   */
   term: string;
   /**
-  * Used to differentiate similar content, or links within the same ad.
+  * To differentiate similar content, or links within the same ad.
   */
   content: string;
   /**
-  * To differentiate similar content, or links within the same ad.
+  * Identifies the platform where the marketing activity was undertaken.
   */
   source_platform: string;
   /**

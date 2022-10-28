@@ -603,7 +603,7 @@
       "parent": "AbstractGlobalContext",
       "properties": {
         "source": {
-          "description": "Identifies the advertiser, site, publication, etc.",
+          "description": "The advertiser, site, publication, etc.",
           "type": "string"
         },
         "medium": {
@@ -611,7 +611,7 @@
           "type": "string"
         },
         "campaign": {
-          "description": "Individual campaign name, slogan, promo code, etc.",
+          "description": "Campaign name, slogan, promo code, etc.",
           "type": "string"
         },
         "term": {
@@ -620,12 +620,12 @@
           "nullable": true
         },
         "content": {
-          "description": "Used to differentiate similar content, or links within the same ad.",
+          "description": "To differentiate similar content, or links within the same ad.",
           "type": "string",
           "nullable": true
         },
         "source_platform": {
-          "description": "To differentiate similar content, or links within the same ad.",
+          "description": "Identifies the platform where the marketing activity was undertaken.",
           "type": "string",
           "nullable": true
         },

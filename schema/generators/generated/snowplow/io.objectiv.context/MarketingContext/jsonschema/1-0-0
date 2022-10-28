@@ -28,7 +28,7 @@
             "type": [
                 "string"
             ],
-            "description": "Identifies the advertiser, site, publication, etc."
+            "description": "The advertiser, site, publication, etc."
         },
         "medium": {
             "type": [
@@ -40,7 +40,7 @@
             "type": [
                 "string"
             ],
-            "description": "Individual campaign name, slogan, promo code, etc."
+            "description": "Campaign name, slogan, promo code, etc."
         },
         "term": {
             "type": [
@@ -54,14 +54,14 @@
                 "string",
                 "null"
             ],
-            "description": "Used to differentiate similar content, or links within the same ad."
+            "description": "To differentiate similar content, or links within the same ad."
         },
         "source_platform": {
             "type": [
                 "string",
                 "null"
             ],
-            "description": "To differentiate similar content, or links within the same ad."
+            "description": "Identifies the platform where the marketing activity was undertaken."
         },
         "creative_format": {
             "type": [
