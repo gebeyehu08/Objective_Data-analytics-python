@@ -12,18 +12,19 @@ export type SelfDescribingEntityDefinition = {
   vendor: string;
   name: string;
   description: string;
-  properties: {
-    [key: string]: {
+  properties: [
+    // This is not complete: expand it as needed
+    {
       [key: string]: any;
+      name: string;
       type: string;
+      items?: Array<string>;
       description: string;
-      isRequired?: boolean;
-    };
-  };
+    }
+  ];
 };
 
 const skipProperties = ['_type'];
-const skipAttributes = ['isRequired'];
 
 export class IgluWriter extends CodeWriter {
   constructor(writer: TextWriter) {
@@ -66,11 +67,11 @@ const mapSchemaPropertiesToIglu = (properties) => {
 
   properties
     .filter(({ name }) => !skipProperties.includes(name))
-    .forEach((property) => {
-      igluProperties[property.name] = {
-        type: property.nullable ? [property.type, "null"] : [property.type],
-        description: property.description.replace(/\n/g, ''),
-        items: property.items,
+    .forEach(({ name, type, nullable, description, internal, value, _rules, _inherited, ...otherAttributes }) => {
+      igluProperties[name] = {
+        type: nullable ? [type, 'null'] : [type],
+        description: description.replace(/\n/g, ''),
+        ...otherAttributes,
       };
     });
 

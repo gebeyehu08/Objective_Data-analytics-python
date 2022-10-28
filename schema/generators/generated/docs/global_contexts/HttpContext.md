@@ -7,21 +7,16 @@ AbstractGlobalContext
 ### All Parents
 AbstractContext > AbstractGlobalContext
 
-### Own Properties
-`string` referrer: Full URL to HTTP referrer of the current page.
-`string` user_agent: User-agent of the agent that sent the event.
-`string` remote_address: (public) IP address of the agent that sent the event.
-
 ### Inherited Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+id: `string` - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
 
-### All Properties
-`string` id: A unique string identifier to be combined with the Context Type (`_type`) 
+### Properties
+id: `string` [inherited] - A unique string identifier to be combined with the Context Type (`_type`) 
 for Context instance uniqueness.
-`string` referrer: Full URL to HTTP referrer of the current page.
-`string` user_agent: User-agent of the agent that sent the event.
-`string` remote_address: (public) IP address of the agent that sent the event.
+referrer: `string` - Full URL to HTTP referrer of the current page.
+user_agent: `string` - User-agent of the agent that sent the event.
+remote_address: `string` [nullable] - (public) IP address of the agent that sent the event.
 
 :::info setting of properties
 The tracker will automatically set the `_type`, `referrer` and `user_agent` properties, while the collector will automatically set the `remote_address`.
