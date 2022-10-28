@@ -202,7 +202,7 @@ class DataFrame:
                                  f'key: {key}, series.name: {value.name}')
             if not dict_name_series_equals(value.index, index):
                 raise ValueError(f'Indices in `series` should match dataframe. '
-                                 f'df: {value.index}, series.index: {index}')
+                                 f'df: {index}, series.index: {value.index}')
             if value.group_by != group_by:
                 raise ValueError(f'Group_by in `series` should match dataframe. '
                                  f'df: {group_by}, series.group_by: {value.group_by}')
