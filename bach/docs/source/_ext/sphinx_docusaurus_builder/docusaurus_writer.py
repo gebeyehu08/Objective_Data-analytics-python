@@ -856,6 +856,8 @@ class DocusaurusTranslator(Translator):
     def visit_desc_parameter(self, node):
         """Single method/class parameter."""
         self.add('<span className="parameter" id="'+ node[0].astext() + '">')
+        # do not escape the parameters printed in visit_Text(), by setting self._escape_text to False
+        self._escape_text = False
 
 
     def depart_desc_parameter(self, node):
