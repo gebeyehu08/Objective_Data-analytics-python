@@ -8,8 +8,8 @@ import { DocusaurusWriter } from '../writers/DocusaurusWriter';
 import { getContexts, getEvents, getTypes } from './parser';
 
 const destination = '../generated/docs/';
-let entitiesOverview = Array();
-let typesOverview = Array();
+let entitiesOverview = Array(); // stores the full list of entities, used to generate overview pages
+let typesOverview = Array(); // stores the full list of Types, used to generate overview pages
 
 export type PropertiesDefinition = {
 	name: string;
@@ -88,7 +88,8 @@ export type PropertiesDefinition = {
 				})
 			}
 		}
-		entity.requiredContexts = requiredContexts;
+		// store the required Contexts in the entity itself, to use later on for showing its rules or not
+		entity.requiredContexts = requiredContexts; 
 	}
 
 	Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
@@ -136,6 +137,7 @@ export type PropertiesDefinition = {
 		function getPropertiesRows(properties: Array<PropertiesDefinition>) {
 			let rows = Array() as [string[]];
 			properties.forEach((p) => {
+				// format arrays of types like GlobalContexts appropriately
 				let type = (p.type == "array") ? (p.type + "<" + p.items.type + ">") : p.type;
 				if (['GlobalContexts', 'LocationStack'].includes(p.type)) {
 					type = "[" + type + "](/taxonomy/reference/types/" + p.type + ")"; 
@@ -167,10 +169,10 @@ export type PropertiesDefinition = {
 
 		if (entity.ownRules.length) {
 			// Build a list of own rules summaries
-      let ruleSummaries = [];
-      entity.ownRules.forEach((entityRule) => {
+			let ruleSummaries = [];
+			entity.ownRules.forEach((entityRule) => {
 				getRuleSummaries(entityRule, ruleSummaries, entity);
-      });
+			});
 			
 			if(ruleSummaries.length > 0) {
 				docsWriter.writeH3('Validation Rules');
@@ -182,7 +184,7 @@ export type PropertiesDefinition = {
 					.forEach((ruleSummary) => docsWriter.writeListItem(ruleSummary + "."));
 			}
 			docsWriter.writeLine();
-    }
+		}
 		
 		// final notes
 		docsWriter.writeLine(admonitionDescription);
@@ -266,7 +268,7 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 		docsWriter.writeLine();
 	});
 	
-	// also generate the list of types
+	// also show a list of types
 	docsWriter.writeH2("Types");
 	docsWriter.writeLine("Describe the possible contents of properties that Events and Contexts can have.")
 	typesOverview.forEach((type) => {
@@ -281,12 +283,11 @@ const typesOverviewOutputFile = 'types/overview.md';
 const typesFrontMatterSlug = '/taxonomy/types/';
 Generator.generate({ outputFile: `${destination}/${typesOverviewOutputFile}` }, (writer: TextWriter) => {
 	const docsWriter = new DocusaurusWriter(writer);
-		
+
 	docsWriter.writeFrontmatter(typesFrontMatterSlug);
-	
+
 	docsWriter.writeH1("Types");
 	docsWriter.writeLine("The possible contents of properties that Events and Contexts can have:");
-	
 	typesOverview.forEach((type) => {
 		docsWriter.write('* ');
 		docsWriter.writeLink(type.name, type.url);
@@ -300,7 +301,8 @@ const getRuleSummaries = (rule, ruleSummaries, entity = null) => {
 	if(!rule._inheritedFrom) {
 		switch (rule.type) {
 			case 'MatchContextProperty':
-				// TODO: show InputValueContext as an optional Context for InputChangeEvent (and PressEvent?), and show its rules on the InputValueContext page as well
+				// TODO: show InputValueContext as an optional Context for InputChangeEvent (and PressEvent?), 
+				// and show its rules on the InputValueContext page as well
 				rule.scope.forEach(({ contextA, contextB, property }) => {
 					if(entity && entity.name == 'InputChangeEvent') {
 						console.log(contextA);
@@ -368,5 +370,5 @@ const getRuleSummaries = (rule, ruleSummaries, entity = null) => {
 			}
 	}
 
-  return ruleSummaries;
+	return ruleSummaries;
 };
