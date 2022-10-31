@@ -705,7 +705,7 @@ class DataFrame:
             cls,
             engine: Engine,
             df: pandas.DataFrame,
-            convert_objects: bool,
+            convert_objects: bool = True,
             name: str = 'loaded_data',
             materialization: str = 'cte',
             *,
@@ -715,8 +715,8 @@ class DataFrame:
         Instantiate a new DataFrame based on the content of a Pandas DataFrame.
 
         The index of the Pandas DataFrame is set to the index of the DataFrame. Only single level index is
-        supported. Supported dtypes are 'int32', 'int64', 'float64', 'string', 'datetime64[ns]', 'bool'. If
-        convert_objects is set to True, other columns are converted to supported data types if possible.
+        supported. Supported dtypes are 'int32', 'int64', 'float64', 'string', 'datetime64[ns]', 'bool'.
+        Other columns are converted to supported data types if possible, as long as convert_objects is True.
 
         How the data is loaded depends on the chosen materialization:
 
@@ -735,10 +735,9 @@ class DataFrame:
 
         :param engine: an sqlalchemy engine for the database.
         :param df: Pandas DataFrame to instantiate as DataFrame.
-        :param convert_objects: If True, the data in the columns with dtypes not in the list of supported
-            dtypes are checked they contain supported data types. 'Object' columns that contain strings are
-            converted to the 'string' dtype and loaded accordingly. Other types can only be loaded if
-            materialization is 'cte' and the type is supported as Bach Series.
+        :param convert_objects: If True (default), columns of type 'object' are converted to 'string' using
+            the pd.convert_dtypes() method where possible. Additionally, if materialization = 'cte', we'll
+            try to convert types for which there is a Bach Series type.
         :param name:
 
             * For 'table' materialization: name of the table that Pandas will write the data to.
@@ -1347,9 +1346,7 @@ class DataFrame:
             if isinstance(value, pandas.Series):
                 df = pandas.DataFrame(value)
                 df.columns = [key]
-                bt = DataFrame.from_pandas(self.engine,
-                                           df,
-                                           convert_objects=True)
+                bt = DataFrame.from_pandas(self.engine, df)
                 value = bt[key]
             if not isinstance(value, Series):
                 series = value_to_series(base=self, value=value, name=key)
