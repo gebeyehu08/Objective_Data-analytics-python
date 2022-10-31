@@ -136,8 +136,8 @@ export type PropertiesDefinition = {
 			properties.forEach((p) => {
 				const type = (p.type == "array") ? (p.type + "<" + p.items.type + ">") : p.type;
 				if(!p.internal) {
-					let name = '**' + p.name.replaceAll('_', '\\_') 
-					+ ((p.optional || p.nullable) ? ' _[optional]_' : '') + '**';
+					let name = '**' + p.name.replace(/_/g, '\\_') 
+						+ ((p.optional || p.nullable) ? ' _[optional]_' : '') + '**';
 					rows.push([name, type, p.description.replace(/(\r\n|\n|\r)/gm, "")]);
 				}
 			});
