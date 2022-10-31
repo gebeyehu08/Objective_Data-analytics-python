@@ -89,19 +89,17 @@ class ModelHub:
                        bq_credentials: Optional[str] = None) -> Engine:
         """
         returns db_connection based on db_url.
-        If db_url is for BigQuery, bq_credentials_path or bq_credentials must be provided.
+
+        If db_url is for BigQuery, bq_credentials_path or bq_credentials can be provided.
         When both are given, bq_credentials wins.
         """
         kwargs: Dict[str, Any] = {}
 
         if db_url and re.match(r'^bigquery://.+', db_url):
-            if not (bq_credentials_path or bq_credentials):
-                raise ValueError('BigQuery credentials or path is required for engine creation.')
-
             if bq_credentials:
                 credentials_base64 = base64.b64encode(bq_credentials.encode('utf-8'))
                 kwargs['credentials_base64'] = credentials_base64
-            else:
+            elif bq_credentials_path:
                 kwargs['credentials_path'] = bq_credentials_path
 
         db_url = db_url or os.environ.get('DSN', 'postgresql://objectiv:@localhost:5432/objectiv')
@@ -128,6 +126,17 @@ class ModelHub:
         transformations and sets the right data types for all columns. As such, the models from the model hub
         can be applied to a DataFrame created with this method.
 
+        For all databases, except BigQuery, the credentials can be specified as part of `db_url`. For
+        BigQuery the credentials can be set with either `bq_credentials` (primary) or `bq_credentials_path`.
+        Additionally, for all databases it's possible to specify credentials as part of the environment,
+        either as variables, files, or some other method. For more information on specifying the credentials
+        as part of the environment, check the documentation of the specific database vendor:
+        `Athena
+        <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#configuring-credentials>`__
+        , `BigQuery <https://cloud.google.com/docs/authentication/provide-credentials-adc>`__
+        , or `Postgres <https://www.postgresql.org/docs/current/libpq-envars.html>`__.
+
+
         :param db_url: the url that indicate database dialect and connection arguments. If not given, env DSN
             is used to create one. If that's not there, the default of
             'postgresql://objectiv:@localhost:5432/objectiv' will be used.
@@ -137,10 +146,8 @@ class ModelHub:
             the first date in the sql table. Format as 'YYYY-MM-DD'.
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
             and including the last date in the sql table. Format as 'YYYY-MM-DD'.
-        :param bq_credentials_path: path for BigQuery credentials. If db_url is for BigQuery engine, this
-            parameter or `bq_credentials` is required.  When both are given, bq_credentials wins.
-        :param bq_credentials: The json from the credentials file. If db_url is for BigQuery engine, this
-            parameter or `bq_credentials_path` is required. When both are given, bq_credentials wins.
+        :param bq_credentials_path: optional path to file with BigQuery credentials.
+        :param bq_credentials: optional BigQuery credentials, content from credentials file.
         :param with_sessionized_data: Indicates if DataFrame must include `session_id`
             and `session_hit_number` calculated series.
         :param session_gap_seconds: Amount of seconds to be use for identifying if events were triggered
