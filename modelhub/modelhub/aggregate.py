@@ -629,7 +629,7 @@ class Aggregate:
 
         if new_groupby:
             result = result.merge(result.groupby(new_groupby)['n_users'].max(),
-                                  on=new_groupby, suffixes=('', '_max'))
+                                  on=list(new_groupby), suffixes=('', '_max'))
         else:
             result['n_users_max'] = result['n_users'].max()
 
