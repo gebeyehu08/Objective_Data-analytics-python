@@ -39,6 +39,7 @@ entityNames.forEach((entityName) => {
       private readonly _properties;
       private readonly _rules;
       readonly documentation;
+      readonly type;
 
       /**
        * To ease working with arrays of entities we set their name in a new `name` property.
@@ -143,6 +144,13 @@ entityNames.forEach((entityName) => {
        */
       get isGlobalContext() {
         return this.parents.some((parent) => parent.name === 'AbstractGlobalContext');
+      }
+
+      /**
+       * Gets whether this entity is a Type.
+       */
+      get isType() {
+        return this.type !== undefined;
       }
 
       /**
@@ -363,12 +371,23 @@ export function getEntities(options?: {
   isParent?: boolean;
   isLocationContext?: boolean;
   isGlobalContext?: boolean;
+  isType?: boolean;
   exclude?: Array<string>;
   include?: Array<string>;
   sortBy?: string;
 }) {
-  const { isContext, isEvent, isAbstract, isParent, isLocationContext, isGlobalContext, exclude, include, sortBy } =
-    options ?? {};
+  const {
+    isContext,
+    isEvent,
+    isAbstract,
+    isParent,
+    isLocationContext,
+    isGlobalContext,
+    isType,
+    exclude,
+    include,
+    sortBy,
+  } = options ?? {};
   const entities = [];
 
   for (let [_, entity] of entitiesMap) {
@@ -379,6 +398,7 @@ export function getEntities(options?: {
       (isParent === undefined || isParent === entity.isParent) &&
       (isLocationContext === undefined || isLocationContext === entity.isLocationContext) &&
       (isGlobalContext === undefined || isGlobalContext === entity.isGlobalContext) &&
+      (isType === undefined || isType === entity.isType) &&
       (exclude === undefined || !exclude.includes(entity.name))
     ) {
       entities.push(entity);
@@ -436,27 +456,5 @@ export function getTypes(options?: {
   include?: Array<string>;
   sortBy?: string;
 }) {
-  const { isLocationStack, isGlobalContexts, exclude, include, sortBy } = options ?? {};
-  const types = [];
-
-  for (let [_, type] of entitiesMap) {
-    if (
-      type.type &&
-      (isLocationStack === undefined || isLocationStack === type.isContext) &&
-      (isGlobalContexts === undefined || isGlobalContexts === type.isEvent) &&
-      (exclude === undefined || !exclude.includes(type.name))
-    ) {
-      types.push(type);
-    }
-
-    if (include !== undefined && include.includes(type.name)) {
-      types.push(type);
-    }
-  }
-
-  if (sortBy) {
-    return types.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
-  }
-
-  return types;
+  return getEntities({ ...options, isType: true });
 }
