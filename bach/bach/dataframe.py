@@ -379,7 +379,7 @@ class DataFrame:
            data = {'index': ['a', 'b', 'c', 'd'], 'values': [1, 2, 3, 4]}
            pdf = pandas.DataFrame(data)
 
-           df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+           df = DataFrame.from_pandas(engine=engine, df=pdf)
            df = df.set_index('index')
 
         .. doctest:: loc
@@ -3295,7 +3295,7 @@ class DataFrame:
            import pandas
            data = {'index': ['a', 'b', 'c', 'd'], 'feature': [1, 2, 3, 4]}
            pdf = pandas.DataFrame(data)
-           df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+           df = DataFrame.from_pandas(engine=engine, df=pdf)
            df = df.set_index('index')
 
            feature = df['feature']
@@ -3356,7 +3356,7 @@ class DataFrame:
            data = {'index': ['a', 'b', 'c', 'd'], 'feature': [1, 2, 3, 4]}
            pdf = pandas.DataFrame(data)
 
-           df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+           df = DataFrame.from_pandas(engine=engine, df=pdf)
            df = df.set_index('index')
            agg_df = df.agg(['min', 'max'], numeric_only=True)
            agg_df = agg_df.merge(df, how='cross')
