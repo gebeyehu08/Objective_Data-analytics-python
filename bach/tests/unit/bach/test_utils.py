@@ -277,7 +277,7 @@ def test_athena_construct_engine_url():
         s3_staging_dir='+test%',
     )
     assert result == (
-        'awsathena+rest://@athena.%2Btest%25.amazonaws.com:443/'
+        'awsathena+rest://athena.%2Btest%25.amazonaws.com:443/'
         '%2Btest%25'
         '?s3_staging_dir=%2Btest%25'
     )

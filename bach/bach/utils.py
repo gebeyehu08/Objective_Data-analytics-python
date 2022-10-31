@@ -224,9 +224,9 @@ def athena_construct_engine_url(
     q_schema_name = quote_plus(schema_name)
 
     if aws_access_key_id and aws_secret_access_key:
-        q_user_pass = f'{quote_plus(aws_access_key_id)}:{quote_plus(aws_secret_access_key)}'
+        q_user_pass = f'{quote_plus(aws_access_key_id)}:{quote_plus(aws_secret_access_key)}@'
     elif aws_access_key_id:
-        q_user_pass = f'{quote_plus(aws_access_key_id)}'
+        q_user_pass = f'{quote_plus(aws_access_key_id)}@'
     else:
         q_user_pass = ''
 
@@ -240,6 +240,6 @@ def athena_construct_engine_url(
 
     url = (
         f'awsathena+rest://'
-        f'{q_user_pass}@athena.{q_region_name}.amazonaws.com:443/{q_schema_name}?{query_string}'
+        f'{q_user_pass}athena.{q_region_name}.amazonaws.com:443/{q_schema_name}?{query_string}'
     )
     return url
