@@ -46,7 +46,7 @@ export interface AbstractContext {
 }
 
 /**
-* This is the abstract parent of all Events.
+* The abstract parent of all Events.
 */
 export interface AbstractEvent {
   /**
@@ -58,14 +58,14 @@ export interface AbstractEvent {
   */
   _types: Array<string>;
   /**
-  * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-  * deterministically describes where an event took place from global to specific. 
-  * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+  * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which
+  * deterministically describes where in the UI of an application an Event took place.
   */
   location_stack: Array<AbstractLocationContext>;
   /**
-  * Global contexts add global / general information about the event. They carry information that is not
-  * related to where the Event originated (location), such as device, platform or business data.
+  * GlobalContexts add global/general information about the state in which an Event happened, such as a
+  * user's identity and marketing information. They do not carry information related to where the Event
+  * originated (location), which instead is captured by the LocationStack.
   */
   global_contexts: Array<AbstractGlobalContext>;
   /**
@@ -97,8 +97,8 @@ export interface AbstractEvent {
 }
 
 /**
-* This is the abstract parent of all Global Contexts. Global contexts add general information to an
-* Event.
+* The abstract parent of all Global Contexts. Global Contexts capture general data about the state in
+* which an Event happened, such as user's identity & marketing information.
 */
 export interface AbstractGlobalContext extends AbstractContext {
   /**
@@ -108,8 +108,9 @@ export interface AbstractGlobalContext extends AbstractContext {
 }
 
 /**
-* AbstractLocationContext are the abstract parents of all Location Contexts.
-* Location Contexts are meant to describe where an event originated from in the visual UI.
+* The abstract parent of all Location Contexts. Location Contexts describe the exact position in an
+* application's UI from where an Event was triggered. A location stack is composed of a hierarchical
+* stack of LocationContexts; the order defines the hierarchy.
 */
 export interface AbstractLocationContext extends AbstractContext {
   /**

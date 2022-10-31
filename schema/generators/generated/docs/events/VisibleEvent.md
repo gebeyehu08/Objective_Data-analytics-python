@@ -1,35 +1,34 @@
 # VisibleEvent
+
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that's emitted after a [LocationContext](/taxonomy/reference/location-contexts/overview.md) has become visible.
 
-### Parent
-NonInteractiveEvent
+import Mermaid from '@theme/Mermaid'
 
-### All Parents
-AbstractEvent > NonInteractiveEvent
+<Mermaid chart={`
+    graph LR
+      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent;
+      NonInteractiveEvent -->       VisibleEvent;
+    class VisibleEvent diagramActive
+  `}
+  caption="Diagram: VisibleEvent inheritance"
+  baseColor="blue"
+  links={[
+{ name: 'AbstractEvent', to: '/taxonomy/events' }, { name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' },   ]}
+/>
+
+### Requires
+
+None.
 
 ### Inherited Properties
-location_stack: `LocationStack` - The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-global_contexts: `GlobalContexts` - Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-id: `uuid` - Unique identifier for a specific instance of an event.
-time: `integer` - Timestamp indicating when the event was generated.
 
-### Properties
-location_stack: `LocationStack` [inherited] - The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-global_contexts: `GlobalContexts` [inherited] - Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-id: `uuid` [inherited] - Unique identifier for a specific instance of an event.
-time: `integer` [inherited] - Timestamp indicating when the event was generated.
+|                      | type                                                       | description                                                                                                                                                                                                                                                                    |
+|:---------------------|:-----------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **location\_stack**  | [LocationStack](/taxonomy/reference/types/LocationStack)   | The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically describes where in the UI of an application an Event took place.                                                                                            |
+| **global\_contexts** | [GlobalContexts](/taxonomy/reference/types/GlobalContexts) | GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and marketing information. They do not carry information related to where the Event originated (location), which instead is captured by the LocationStack. |
+| **id**               | uuid                                                       | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                         |
+| **time**             | integer                                                    | Timestamp indicating when the event was generated.                                                                                                                                                                                                                             |
 
-### Validation Rules
-Global Contexts must contain ApplicationContext
-GlobalContexts items must be unique by their _type+id, except InputValueContext
-InputValueContext must be unique by their _type+id+value
-LocationStack items must be unique by their _type+id
 
 :::info setting of properties
 The tracker will automatically set all the properties.
