@@ -541,8 +541,8 @@ def test_merge_on_conditions(engine) -> None:
         'B': [20, 5, 10, 20, 100],
     })
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     on_condition = [df1['A'] + df2['A'] == 'cg', df1['B'] / df2['B'] > 10]
     result = df1.merge(df2, on=on_condition)
@@ -567,8 +567,8 @@ def test_merge_on_conditions_w_on_data_columns(engine) -> None:
         'B': [20, 5, 50, 20, 100],
     })
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     on_condition = df1['B'] / df2['B'] == 5
     result = df1.merge(df2, on=['A', on_condition])
@@ -594,8 +594,8 @@ def test_merge_on_conditions_renamed_column(engine) -> None:
         'B': [20, 5, 50, 20, 100],
     })
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     df1 = df1.rename(columns={'B': 'C'})
     on_condition = df1['C'] > df2['B']
@@ -613,8 +613,8 @@ def test_merge_on_conditions_w_index(engine) -> None:
         'B': [20, 5, 10, 20, 100],
     })
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     on_condition = df1['B'] / df2['B'] > 10
     result = df1.merge(df2, on=on_condition, left_index=True, right_index=True)

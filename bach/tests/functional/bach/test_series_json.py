@@ -108,7 +108,7 @@ def test_json_array_contains(engine, dtype):
     ]
     pdf = pandas.DataFrame.from_records(test_data, columns=['index', 'column'])
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df['column'] = df.column.astype(dtype)
     df = df.materialize()
     # Done setting up custom test data
@@ -430,7 +430,7 @@ def test_complex_types_astype_json(engine, dtype):
 
 def test_json_str_as_str(engine, dtype) -> None:
     pdf = pd.DataFrame({'json_strs': ['"hi"', '"ola"', '"hallo"', '"hola"']})
-    df = DataFrame.from_pandas(engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine, df=pdf)
     df['json_strs'] = df['json_strs'].astype(dtype)
 
     result = df['json_strs'].astype('string')

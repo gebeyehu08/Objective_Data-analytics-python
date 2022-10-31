@@ -32,7 +32,7 @@ def compare_boundaries(expected: pd.Series, result: Series) -> None:
 
 def test_cut_operation_pandas(engine) -> None:
     p_series = pd.Series(range(100), name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     expected = pd.cut(p_series, bins=10)
     result = CutOperation(series=series, bins=10)()
@@ -45,7 +45,7 @@ def test_cut_operation_pandas(engine) -> None:
 
 def test_cut_operation_bach(engine) -> None:
     p_series = pd.Series(range(100), name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     ranges = [
         pd.Interval(0, 9.9, closed='both'),
@@ -86,7 +86,7 @@ def test_cut_operation_bach(engine) -> None:
 def test_cut_operation_boundary(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 2, 3, 4], name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     expected = pd.cut(p_series, bins=bins, right=True)
     result = CutOperation(series=series, bins=bins, right=True)()
@@ -96,7 +96,7 @@ def test_cut_operation_boundary(engine) -> None:
 def test_cut_w_ignore_index(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 2, 3, 4], name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     result = CutOperation(series=series, bins=bins, right=True, ignore_index=False)()
     assert ['_index_0', 'a'] == list(result.index.keys())
@@ -108,7 +108,7 @@ def test_cut_w_ignore_index(engine) -> None:
 def test_cut_w_include_empty_bins(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 1, 2, 3, 6, 7, 8], name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     result = CutOperation(
         series=series, bins=bins, include_empty_bins=True,
@@ -135,7 +135,7 @@ def test_cut_operation_calculate_bucket_properties(engine) -> None:
     bins = 2
     # min != max
     p_series_neq = pd.Series(data=[1, 3, 5, 16, 2, 20], name='a')
-    series_neq = DataFrame.from_pandas(engine=engine, df=p_series_neq.to_frame(), convert_objects=True).a
+    series_neq = DataFrame.from_pandas(engine=engine, df=p_series_neq.to_frame()).a
     result_neq = CutOperation(series=series_neq, bins=bins)._calculate_bucket_properties()
     expected_neq = pd.DataFrame(
         data={
@@ -151,7 +151,7 @@ def test_cut_operation_calculate_bucket_properties(engine) -> None:
 
     # min == max
     p_series_eq = pd.Series(data=[2, 2], name='a')
-    series_eq = DataFrame.from_pandas(engine=engine, df=p_series_eq.to_frame(), convert_objects=True).a
+    series_eq = DataFrame.from_pandas(engine=engine, df=p_series_eq.to_frame()).a
     result_eq = CutOperation(series=series_eq, bins=bins)._calculate_bucket_properties()
     expected_eq = pd.DataFrame(
         data={
@@ -167,7 +167,7 @@ def test_cut_operation_calculate_bucket_properties(engine) -> None:
 
     # min == max == 0
     p_series_zero = pd.Series(data=[0, 0, 0, 0], name='a')
-    series_zero = DataFrame.from_pandas(engine=engine, df=p_series_zero.to_frame(), convert_objects=True).a
+    series_zero = DataFrame.from_pandas(engine=engine, df=p_series_zero.to_frame()).a
     result_zero = CutOperation(series=series_zero, bins=bins)._calculate_bucket_properties()
     expected_zero = pd.DataFrame(
         data={
@@ -184,7 +184,7 @@ def test_cut_operation_calculate_bucket_properties(engine) -> None:
 
 def test_cut_calculate_pandas_adjustments(engine) -> None:
     pdf = pd.DataFrame(data={'min': [1], 'max': [100]})
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     to_adjust = df['min']
     to_compare = df['max']
     result = CutOperation(series=df['min'], bins=1)._calculate_pandas_adjustments(to_adjust, to_compare)
@@ -205,7 +205,7 @@ def test_cut_calculate_pandas_adjustments(engine) -> None:
 def test_cut_calculate_bucket_ranges(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 1, 2, 3, 4, 5, 6, 7, 8], name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     cut_operation = CutOperation(series=series, bins=bins)
     bucket_properties_df = cut_operation._calculate_bucket_properties()
@@ -226,7 +226,7 @@ def test_cut_calculate_bucket_ranges(engine) -> None:
 
 def test_qcut_operation(engine) -> None:
     p_series = pd.Series(range(100), name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     expected_w_list = pd.qcut(p_series, q=[0.25, 0.3, 0.7, 0.9])
     result_w_list = QCutOperation(series=series, q=[0.25, 0.3, 0.7, 0.9])()
@@ -239,7 +239,7 @@ def test_qcut_operation(engine) -> None:
 
 def test_qcut_operation_one_quantile(engine) -> None:
     p_series = pd.Series(range(10), name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
     expected = pd.qcut(p_series, q=0)
     result = QCutOperation(series=series, q=0)()
     compare_boundaries(expected, result)
@@ -251,7 +251,7 @@ def test_qcut_operation_one_quantile(engine) -> None:
 
 def test_get_quantile_ranges(engine) -> None:
     p_series = pd.Series(data=[1, 1, 2, 3, 4, 5, 6, 7, 8], name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     qcut_operation = QCutOperation(series=series, q=[0.25, 0.5])
     result = qcut_operation._get_quantile_ranges()
@@ -270,7 +270,7 @@ def test_get_quantile_ranges(engine) -> None:
 
 def test_qcut_w_duplicated_quantiles(engine) -> None:
     p_series = pd.Series(data=[0, 1, 2, 2, 2, 2, 2], name='a')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).a
 
     expected = pd.qcut(p_series, q=[0.25, 0.5, 0.75], duplicates='drop')
     result = QCutOperation(series=series, q=[0.25, 0.5, 0.75])()

@@ -47,7 +47,7 @@ def helper_test_simple_arithmetic(engine: Engine, a: Union[int, float], b: Union
 def test_round(engine):
     values = [1.9, 3.0, 4.123, 6.425124, 2.00000000001, 2.1, np.nan, 7.]
     pdf = pd.DataFrame(data={'num': values})
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
     bt['const'] = 14.12345
     assert bt.const.expression.is_constant
 
@@ -68,7 +68,7 @@ def test_round(engine):
 def test_round_integer(engine):
     values = [1, 3, 4, 6, 2, 2, 6, 7]
     pdf = pd.DataFrame(data={'num': values})
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
 
     result = bt.reset_index(drop=True)
 
@@ -85,7 +85,7 @@ def test_round_integer(engine):
 def test_aggregations_simple_tests(engine):
     values = [1, 3, 4, 6, 2, 2, np.nan, 7, 8]
     pdf = pd.DataFrame(data={'num': values})
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
 
     numeric_agg = ['sum', 'mean']
     stats_agg = ['sem', 'std', 'var']
@@ -100,7 +100,7 @@ def test_aggregations_simple_tests(engine):
 
 def test_aggregations_sum_mincount(engine):
     pdf = pd.DataFrame(data={'num': [1, np.nan, 7, 8]})
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
 
     for i in [5, 4, 3]:
         pd_agg = pdf.sum(min_count=i)['num']
@@ -119,7 +119,7 @@ def test_aggregations_sum_mincount(engine):
 
 def test_aggregations_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': [1, 3, 5, 7, 9]})
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
 
     quantiles = [0.25, 0.3, 0.5, 0.75, 0.86]
 
@@ -136,7 +136,7 @@ def test_aggregations_quantile(engine):
 
 def test_grouped_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': ['a', 'a', 'a', 'b', 'b']})
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
 
     quantiles = [0.25, 0.3, 0.5, 0.75, 0.86]
 
@@ -378,7 +378,7 @@ def test_astype_to_string(engine):
             'value_4': [0] * 4,
         }
     )
-    df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine, pdf)
     df['value_1'] = df['value_1'].astype('float64')
     df['value_4'] = df['value_4'].astype('float64')
 

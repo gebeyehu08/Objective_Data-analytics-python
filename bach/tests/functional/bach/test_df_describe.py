@@ -117,7 +117,7 @@ def test_describe_datetime(engine) -> None:
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     result = df.describe()
     result = result.reset_index(drop=False)
@@ -142,7 +142,7 @@ def test_describe_date(engine) -> None:
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df['column'] = df['column'].astype('date')
 
     result = df.describe()
@@ -168,7 +168,7 @@ def test_describe_time(engine) -> None:
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df['column'] = df['column'].astype('time')
 
     result = df.describe()
@@ -194,7 +194,7 @@ def test_describe_boolean(engine) -> None:
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     result = df.describe()
     result = result.reset_index(drop=False)
@@ -222,7 +222,7 @@ def test_describe_json(engine) -> None:
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df['column'] = df['column'].astype('json')
 
     result = df.describe()
@@ -249,7 +249,7 @@ def test_describe_uuid(engine) -> None:
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df['column'] = df['column'].astype('uuid')
     result = df.describe()
     result = result.reset_index(drop=False)

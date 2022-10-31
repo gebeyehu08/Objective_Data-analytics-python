@@ -18,7 +18,7 @@ def test_dropna_w_nan(engine) -> None:
             'c': [    1,      2,      3,   4,    5,    6],
         },
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     pdf.loc[pdf['a'] == 'b', 'c'] = float('nan')
     df.loc[df['a'] == 'b', 'c'] = float('nan')
@@ -44,7 +44,7 @@ def test_dropna_w_nan(engine) -> None:
 def test_basic_dropna(engine) -> None:
     pdf = pd.DataFrame(DATA)
 
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df.dropna()
     pd.testing.assert_frame_equal(
         pdf.dropna(),
@@ -56,7 +56,7 @@ def test_basic_dropna(engine) -> None:
 def test_dropna_all(engine) -> None:
     pdf = pd.DataFrame(DATA)
 
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df.dropna(how='all')
     pd.testing.assert_frame_equal(
         pdf.dropna(how='all'),
@@ -68,7 +68,7 @@ def test_dropna_all(engine) -> None:
 def test_dropna_thresh(engine) -> None:
     pdf = pd.DataFrame(DATA)
 
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df.dropna(thresh=2)
     pd.testing.assert_frame_equal(
         pdf.dropna(thresh=2),

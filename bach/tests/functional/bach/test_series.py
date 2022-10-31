@@ -179,7 +179,7 @@ def test_fillna(engine):
     # TODO test fillna with series instead of constants.
     values = [1, np.nan, 3, np.nan, 7]
     pdf = pd.DataFrame(data={'num': values})
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
 
     def tf(x):
         bt_fill = bt['num'].fillna(x)
@@ -201,7 +201,7 @@ def test_isnull(engine):
     values = ['a', 'b', None]
     pdf = pd.DataFrame(data=values, columns=['text_with_null'])
     pdf.set_index('text_with_null', drop=False, inplace=True)
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
     bt['const_not_null'] = 'not_null'
     bt['const_null'] = None
     bt['y'] = bt.text_with_null.isnull()
@@ -497,7 +497,7 @@ def test_series_append_same_dtype_different_index(engine) -> None:
 
 def test_series_dropna(engine) -> None:
     p_series = pd.Series(['a', None, 'c', 'd'], name='nan_series')
-    bt = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).nan_series
+    bt = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).nan_series
     result = bt.dropna()
     pd.testing.assert_series_equal(
         p_series.dropna(),
@@ -589,8 +589,8 @@ def test__set_item_with_merge_aggregated_series(engine) -> None:
         data={'w': [1, 1, 1, 1], 'x': [1, 2, 3, 4], 'y': [2, 2, 4, 4], 'z': [1, 2, 3, 4]},
     )
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     df1 = df1.set_index('a')
     df2 = df2.set_index('x')
@@ -618,8 +618,8 @@ def test__set_item_with_merge_index_data_column_name_conflict(engine) -> None:
     pdf1 = pd.DataFrame(data={'a': [1, 2, 3], 'c': [3, 3, 3]})
     pdf2 = pd.DataFrame(data={'x': [1, 2, 3, 4], 'a': [2, 2, 4, 4]})
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     df1 = df1.set_index('a')
     df2 = df2.set_index('x')
@@ -639,8 +639,8 @@ def test__set_item_with_merge_index_multi_level(engine) -> None:
     pdf1 = pd.DataFrame(data={'a': [1, 2, 3], 'b': [2, 2, 2], 'c': [3, 3, 3]}, )
     pdf2 = pd.DataFrame(data={'a': [1, 2, 3, 4], 'b': [2, 2, 4, 4], 'z': [1, 2, 3, 4]})
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     df1 = df1.set_index(['a', 'b'])
     df2 = df2.set_index(['a', 'b'])
@@ -661,8 +661,8 @@ def test__set_item_with_merge_index_uneven_multi_level(engine) -> None:
     pdf1 = pd.DataFrame(data={'a': [1, 2, 3], 'b': [2, 2, 2], 'c': [3, 3, 3]}, )
     pdf2 = pd.DataFrame(data={'x': [1, 2, 3, 4], 'a': [2, 2, 4, 4], 'z': [1, 2, 3, 4]})
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     df1 = df1.set_index(['a', 'b'])
     df2 = df2.set_index(['x'])
@@ -686,8 +686,8 @@ def test__set_item_with_merge_w_conflict_names(engine) -> None:
     pdf1 = pd.DataFrame(data={'a': [1, 2, 3], 'b': [2, 2, 2], 'c': [3, 3, 3]})
     pdf2 = pd.DataFrame(data={'x': [1, 2, 3, 4], 'a': [2, 2, 4, 4], 'c': [1, 2, 3, 4]})
 
-    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
-    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2)
 
     df1 = df1.set_index('a')
     df2 = df2.set_index('x')
