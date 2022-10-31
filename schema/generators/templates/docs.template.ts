@@ -230,7 +230,7 @@ export type PropertiesDefinition = {
 			
 			if(ruleSummaries.length > 0) {
 				docsWriter.writeH2('Validation Rules');
-				docsWriter.writeLine(type.validation.description);
+				docsWriter.writeLine(type.validation?.description);
 				docsWriter.writeLine();
 				docsWriter.writeLine("Specifically:");
 				// Remove dupes
