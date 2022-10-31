@@ -193,7 +193,7 @@ export type PropertiesDefinition = {
 
 // Generate pages for Types (i.e. LocationStack and GlobalContexts)
 [...getTypes()].forEach((type) => {
-	const primaryDescription = type.getDescription({ type: 'text', target: 'primary' });
+	const markdownDescription = type.getDescription({ type: 'markdown', target: 'primary' });
 	const outputFile = 'types/' + type.name + '.md';
 	typesOverview.push({
 		name: type.name,
@@ -204,7 +204,7 @@ export type PropertiesDefinition = {
 		const docsWriter = new DocusaurusWriter(writer);
 
 		docsWriter.writeH1(type.name);
-		docsWriter.writeLine(primaryDescription);
+		docsWriter.writeLine(markdownDescription);
 		docsWriter.writeLine();
 		
 		if(type.type) {

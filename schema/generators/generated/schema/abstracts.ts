@@ -58,19 +58,14 @@ export interface AbstractEvent {
   */
   _types: Array<string>;
   /**
-  * The LocationStack is an ordered list (a stack) containing a hierarchy of
-  * [LocationContexts](/taxonomy/reference/location-contexts/overview.md), which deterministically
-  * describes where in the UI of an application an [Event](/taxonomy/reference/events/overview.md) took
-  * place.
+  * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which
+  * deterministically describes where in the UI of an application an Event took place.
   */
   location_stack: Array<AbstractLocationContext>;
   /**
-  * GlobalContexts add global/general information about the state in which an
-  * [Event](/taxonomy/reference/events/overview.md) happened, such as a user's
-  * [identity](/taxonomy/reference/global-contexts/IdentityContext.md) and [marketing
-  * information](/taxonomy/reference/global-contexts/MarketingContext.md). They do not carry information
-  * related to where the [Event](/taxonomy/reference/events/overview.md) originated (location), which
-  * instead is captured by the [LocationStack](/taxonomy/reference/types/LocationStack.md).
+  * GlobalContexts add global/general information about the state in which an Event happened, such as a
+  * user's identity and marketing information. They do not carry information related to where the Event
+  * originated (location), which instead is captured by the LocationStack.
   */
   global_contexts: Array<AbstractGlobalContext>;
   /**
