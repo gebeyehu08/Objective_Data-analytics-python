@@ -304,10 +304,6 @@ const getRuleSummaries = (rule, ruleSummaries, entity = null) => {
 				// TODO: show InputValueContext as an optional Context for InputChangeEvent (and PressEvent?), 
 				// and show its rules on the InputValueContext page as well
 				rule.scope.forEach(({ contextA, contextB, property }) => {
-					if(entity && entity.name == 'InputChangeEvent') {
-						console.log(contextA);
-						console.log(contextB);
-					}
 					ruleSummaries.push(`\`${contextA}.${property}\` should equal \`${contextB}.${property}\``);
 				});
 				break;
