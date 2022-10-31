@@ -161,22 +161,22 @@ export type PropertiesDefinition = {
 		docsWriter.writeEndOfLine();
 		
 		// if (entity.ownRules.length) {
-    //   docsWriter.writeH3('Validation Rules');
-    //   // Build a list of own rules summaries
-    //   let ruleSummaries = [];
-    //   entity.ownRules.forEach((entityRule) => {
-    //     getRuleSummaries(entityRule, ruleSummaries);
-    //   });
+		//   docsWriter.writeH3('Validation Rules');
+		//   // Build a list of own rules summaries
+		//   let ruleSummaries = [];
+		//   entity.ownRules.forEach((entityRule) => {
+		//     getRuleSummaries(entityRule, ruleSummaries);
+		//   });
 
-    //   // Remove dupes
-    //   [...new Set(ruleSummaries)]
-    //     // Sort
-    //     .sort((a, b) => a.localeCompare(b))
-    //     // Write a line per rule
-    //     .forEach((ruleSummary) => docsWriter.writeListItem(ruleSummary + "."));
+		//   // Remove dupes
+		//   [...new Set(ruleSummaries)]
+		//     // Sort
+		//     .sort((a, b) => a.localeCompare(b))
+		//     // Write a line per rule
+		//     .forEach((ruleSummary) => docsWriter.writeListItem(ruleSummary + "."));
 
-    //   docsWriter.writeEndOfLine();
-    // }
+		//   docsWriter.writeEndOfLine();
+		// }
 		
 		// final notes
 		docsWriter.writeLine(admonitionDescription);
@@ -208,48 +208,48 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 });
 
 const getRuleSummaries = (rule, ruleSummaries) => {
-  switch (rule.type) {
-    case 'MatchContextProperty':
-      rule.scope.forEach(({ contextA, contextB, property }) => {
-        ruleSummaries.push(`\`${contextA}.${property}\` should equal \`${contextB}.${property}\``);
-      });
-      break;
+	switch (rule.type) {
+		case 'MatchContextProperty':
+			rule.scope.forEach(({ contextA, contextB, property }) => {
+				ruleSummaries.push(`\`${contextA}.${property}\` should equal \`${contextB}.${property}\``);
+			});
+			break;
 
-    case 'RequiresLocationContext':
-      rule.scope.forEach(({ context, position }) => {
-        ruleSummaries.push(
-          `\`LocationStacks\` should contain \`${context}\`${position !== undefined ? ` at index ${position}` : ''}`
-        );
-      });
-      break;
+		case 'RequiresLocationContext':
+			rule.scope.forEach(({ context, position }) => {
+				ruleSummaries.push(
+					`\`LocationStacks\` should contain \`${context}\`${position !== undefined ? ` at index ${position}` : ''}`
+				);
+			});
+			break;
 
-    case 'RequiresGlobalContext':
-      rule.scope.forEach(({ context }) => {
-        ruleSummaries.push(`\`GlobalContexts\` should contain \`${context}\``);
-      });
-      break;
+		case 'RequiresGlobalContext':
+			rule.scope.forEach(({ context }) => {
+				ruleSummaries.push(`\`GlobalContexts\` should contain \`${context}\``);
+			});
+			break;
 
-    case 'UniqueContext':
-      rule.scope.forEach(({ excludeContexts, includeContexts, by }) => {
-        if (!excludeContexts?.length && !includeContexts?.length) {
-          ruleSummaries.push(`Items in \`${rule._inheritedFrom}\` should have a unique combination of \`{${by.join(', ')}}\` properties`);
-        }
-        if (excludeContexts?.length) {
-          ruleSummaries.push(
-            `Items in \`${rule._inheritedFrom}\` should have a unique combination of \`{${by.join(', ')}}\` properties, except for \`${excludeContexts.join(',')}\``
-          );
-        }
-        if (includeContexts?.length) {
-          includeContexts?.forEach((includedContext) => {
-            ruleSummaries.push(`${includedContext} should have a unique combination of \`{${by.join(', ')}}\` properties`);
-          });
-        }
-      });
-      break;
+		case 'UniqueContext':
+			rule.scope.forEach(({ excludeContexts, includeContexts, by }) => {
+				if (!excludeContexts?.length && !includeContexts?.length) {
+					ruleSummaries.push(`Items in \`${rule._inheritedFrom}\` should have a unique combination of \`{${by.join(', ')}}\` properties`);
+				}
+				if (excludeContexts?.length) {
+					ruleSummaries.push(
+						`Items in \`${rule._inheritedFrom}\` should have a unique combination of \`{${by.join(', ')}}\` properties, except for \`${excludeContexts.join(',')}\``
+					);
+				}
+				if (includeContexts?.length) {
+					includeContexts?.forEach((includedContext) => {
+						ruleSummaries.push(`${includedContext} should have a unique combination of \`{${by.join(', ')}}\` properties`);
+					});
+				}
+			});
+			break;
 
-    default:
-      throw new Error(`Cannot summarize rule ${rule.type}`);
-  }
+		default:
+			throw new Error(`Cannot summarize rule ${rule.type}`);
+	}
 
-  return ruleSummaries;
+	return ruleSummaries;
 };
