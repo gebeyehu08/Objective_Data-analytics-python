@@ -5,7 +5,7 @@ slug: /taxonomy/reference/
 # Open analytics taxonomy reference
 
 ## Global Contexts
-[Global Contexts](/taxonomy/reference/global-contexts/overview.md) capture general data for an Event, such as user identity & marketing info.
+[Global Contexts](/taxonomy/reference/global-contexts/overview.md) capture general data about the state in which an [Event](/taxonomy/reference/events/overview.md) happened, such as a user's [identity](/taxonomy/reference/global-contexts/IdentityContext.md) & [marketing information](/taxonomy/reference/global-contexts/MarketingContext.md).
 
 * [ApplicationContext](./global-contexts/ApplicationContext.md)
 * [CookieIdContext](./global-contexts/CookieIdContext.md)
@@ -48,3 +48,7 @@ Describe interactive and non-interactive [Events](/taxonomy/reference/events/ove
 * [MediaStartEvent](./events/MediaStartEvent.md)
 * [MediaStopEvent](./events/MediaStopEvent.md)
 
+## Types
+Describe the possible contents of properties that Events and Contexts can have.
+* [LocationStack](/taxonomy/reference/types/LocationStack.md)
+* [GlobalContexts](/taxonomy/reference/types/GlobalContexts.md)
