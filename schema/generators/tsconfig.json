@@ -6,8 +6,6 @@
     "removeComments": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "lib": [
-      "ES2020.String"
-    ]
+    "lib": ["ES2020.String"]
   }
 }

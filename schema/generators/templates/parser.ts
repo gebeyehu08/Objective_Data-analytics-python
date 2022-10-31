@@ -441,7 +441,7 @@ export function getTypes(options?: {
 
   for (let [_, type] of entitiesMap) {
     if (
-      type.type && 
+      type.type &&
       (isLocationStack === undefined || isLocationStack === type.isContext) &&
       (isGlobalContexts === undefined || isGlobalContexts === type.isEvent) &&
       (exclude === undefined || !exclude.includes(type.name))
