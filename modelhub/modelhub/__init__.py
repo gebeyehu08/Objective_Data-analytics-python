@@ -13,6 +13,7 @@ from modelhub.series import *
 
 # convenience import to allow users to use this without importing anything from bach
 from bach import display_sql_as_markdown
+from bach.utils import athena_construct_engine_url
 
 
 # Here we do a basic version check, to make sure we are on the most recent versions of objectiv-bach and
