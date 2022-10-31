@@ -9,6 +9,7 @@ import { getContexts, getEvents, getTypes } from './parser';
 
 const destination = '../generated/docs/';
 let entitiesOverview = Array();
+let typesOverview = Array();
 
 export type PropertiesDefinition = {
 	name: string;
@@ -188,35 +189,14 @@ export type PropertiesDefinition = {
 	});
 });
 
-// generate reference/overview.md for all the relevant Abstracts
-const outputFile = 'overview.md';
-const frontMatterSlug = '/taxonomy/reference/';
-Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
-	const docsWriter = new DocusaurusWriter(writer);
-		
-	docsWriter.writeFrontmatter(frontMatterSlug);
-	
-	docsWriter.writeH1("Open analytics taxonomy reference");
-	docsWriter.writeLine();
-	
-	entitiesOverview.forEach((category) => {
-		docsWriter.writeH2(category.name);
-		docsWriter.writeLine(category.description);
-		docsWriter.writeLine();
-		category.listOfChildren.forEach((child) => {
-			docsWriter.write('* ');
-			docsWriter.writeLink(child.name, child.url);
-			docsWriter.writeEndOfLine();
-		});
-		docsWriter.writeLine();
-	});
-});
-
 // Generate pages for Types (i.e. LocationStack and GlobalContexts)
-// TODO: Generate Types overview page
 [...getTypes()].forEach((type) => {
 	const primaryDescription = type.getDescription({ type: 'text', target: 'primary' });
 	const outputFile = 'types/' + type.name + '.md';
+	typesOverview.push({
+		name: type.name,
+		url: '/taxonomy/reference/types/' + type.name + '.md'
+	});
 
 	Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
 		const docsWriter = new DocusaurusWriter(writer);
@@ -238,7 +218,6 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 			docsWriter.writeEndOfLine();
 			docsWriter.writeLine();
 		}
-
 
 		if(type.rules.length) {
 			// Build a list of own rules summaries
@@ -262,6 +241,58 @@ Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: Text
 			}
 		}
 	});
+});
+
+// generate overview.md for all the relevant Abstracts and Types
+const outputFile = 'overview.md';
+const frontMatterSlug = '/taxonomy/reference/';
+Generator.generate({ outputFile: `${destination}/${outputFile}` }, (writer: TextWriter) => {
+	const docsWriter = new DocusaurusWriter(writer);
+		
+	docsWriter.writeFrontmatter(frontMatterSlug);
+	
+	docsWriter.writeH1("Open analytics taxonomy reference");
+	docsWriter.writeLine();
+	
+	entitiesOverview.forEach((category) => {
+		docsWriter.writeH2(category.name);
+		docsWriter.writeLine(category.description);
+		docsWriter.writeLine();
+		category.listOfChildren.forEach((child) => {
+			docsWriter.write('* ');
+			docsWriter.writeLink(child.name, child.url);
+			docsWriter.writeEndOfLine();
+		});
+		docsWriter.writeLine();
+	});
+	
+	// also generate the list of types
+	docsWriter.writeH2("Types");
+	docsWriter.writeLine("Describe the possible contents of properties that Events and Contexts can have.")
+	typesOverview.forEach((type) => {
+		docsWriter.write('* ');
+		docsWriter.writeLink(type.name, type.url);
+		docsWriter.writeEndOfLine();
+	});
+});
+
+// generate types/overview.md for all the relevant Types
+const typesOverviewOutputFile = 'types/overview.md';
+const typesFrontMatterSlug = '/taxonomy/types/';
+Generator.generate({ outputFile: `${destination}/${typesOverviewOutputFile}` }, (writer: TextWriter) => {
+	const docsWriter = new DocusaurusWriter(writer);
+		
+	docsWriter.writeFrontmatter(typesFrontMatterSlug);
+	
+	docsWriter.writeH1("Types");
+	docsWriter.writeLine("The possible contents of properties that Events and Contexts can have:");
+	
+	typesOverview.forEach((type) => {
+		docsWriter.write('* ');
+		docsWriter.writeLink(type.name, type.url);
+		docsWriter.writeEndOfLine();
+	});
+	docsWriter.writeLine();
 });
 
 const getRuleSummaries = (rule, ruleSummaries, entity = null) => {
@@ -336,7 +367,6 @@ const getRuleSummaries = (rule, ruleSummaries, entity = null) => {
 					throw new Error(`Cannot summarize rule ${rule.type}`);
 			}
 	}
-
 
   return ruleSummaries;
 };

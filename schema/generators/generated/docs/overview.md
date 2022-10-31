@@ -48,3 +48,7 @@ Describe interactive and non-interactive [Events](/taxonomy/reference/events/ove
 * [MediaStartEvent](./events/MediaStartEvent.md)
 * [MediaStopEvent](./events/MediaStopEvent.md)
 
+## Types
+Describe the possible contents of properties that Events and Contexts can have.
+* [LocationStack](/taxonomy/reference/types/LocationStack.md)
+* [GlobalContexts](/taxonomy/reference/types/GlobalContexts.md)
