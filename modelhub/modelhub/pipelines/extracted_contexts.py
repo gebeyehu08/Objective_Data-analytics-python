@@ -59,6 +59,8 @@ class BaseExtractedContextsPipeline(BaseDataPipeline):
             engine=self._engine,
             table_name=self._table_name,
         )
+        if not dtypes:
+            raise Exception(f'Table is missing or has 0 columns. Table name: {table_name}. ')
 
         self._global_contexts_dtypes = self._get_global_contexts_dtypes_from_db_dtypes(db_dtypes=dtypes)
         self._validate_data_dtypes(
