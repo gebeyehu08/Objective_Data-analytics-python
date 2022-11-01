@@ -42,6 +42,7 @@ This is a complete list of the currently available packages.
 | @objectiv/tracker-react-native                   | tracker   | /trackers/react-native                   | [README](/tracker/trackers/react-native/README.md)                   |
 | @objectiv/transport-debug                        | transport | /transports/browser                      | [README](/tracker/transports/debug/README.md)                        |
 | @objectiv/transport-fetch                        | transport | /transports/browser                      | [README](/tracker/transports/fetch/README.md)                        |
+| @objectiv/transport-snowplow                     | transport | /transports/snowplow                     | [README](/tracker/transports/snowplow/README.md)                     |
 | @objectiv/transport-xhr                          | transport | /transports/browser                      | [README](/tracker/transports/xhr/README.md)                          |
 
 >Note: Packages may be completely independent of each other. Currently, many of them share the same testing framework or bundler but that's not required. Each has its own local configurations and may diverge if needed.
