@@ -12,7 +12,7 @@ from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, \
     DBParams
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def patch_extracted_contexts_validations(monkeypatch, db_params):
     if db_params.format == DBParams.Format.OBJECTIV:
         patch_db_dtypes = {
@@ -38,7 +38,7 @@ def patch_extracted_contexts_validations(monkeypatch, db_params):
     )
 
 
-def test_get_base_dtypes(db_params) -> None:
+def test_get_base_dtypes(db_params, patch_extracted_contexts_validations) -> None:
     engine = create_engine_from_db_params(db_params)
     pipeline = get_extracted_context_pipeline(engine, db_params.table_name, global_contexts=[])
     result = pipeline._base_dtypes
@@ -78,7 +78,7 @@ def test_get_base_dtypes(db_params) -> None:
     assert expected == result
 
 
-def test_convert_dtypes(db_params) -> None:
+def test_convert_dtypes(db_params, patch_extracted_contexts_validations) -> None:
     engine = create_engine_from_db_params(db_params)
 
     pipeline = get_extracted_context_pipeline(engine, db_params.table_name, global_contexts=[])
@@ -105,3 +105,14 @@ def test_convert_dtypes(db_params) -> None:
     assert result['day'].dtype == 'date'
     assert result['moment'].dtype == 'timestamp'
     assert result['user_id'].dtype == 'uuid'
+
+
+def test_get_base_dtypes(db_params, monkeypatch) -> None:
+    monkeypatch.setattr(
+        'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
+        lambda *args, **kwargs: {}   # empty result
+    )
+
+    engine = create_engine_from_db_params(db_params)
+    with pytest.raises(Exception, match='Table is missing'):
+        pipeline = get_extracted_context_pipeline(engine, db_params.table_name, global_contexts=[])

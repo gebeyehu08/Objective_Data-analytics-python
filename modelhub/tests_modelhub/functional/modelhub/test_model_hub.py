@@ -605,8 +605,8 @@ def test_get_objectiv_dataframe_db_connection(db_params: DBParams, monkeypatch):
 
     elif 'bigquery' in db_params.url:
         monkeypatch.delenv('GOOGLE_APPLICATION_CREDENTIALS', raising=False)
-        # Check that we get a nice error to help the user
-        with pytest.raises(ValueError, match="credentials or path is required"):
+        # Check that we get a sort of nice error to help the user
+        with pytest.raises(Exception, match="Could not automatically determine credentials."):
             mh.get_objectiv_dataframe(db_url=db_params.url)
 
         mh.get_objectiv_dataframe(

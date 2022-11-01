@@ -1,29 +1,34 @@
 # MediaPauseEvent
+
 A [MediaEvent](/taxonomy/reference/events/MediaEvent) that's emitted after a media item pauses playback.
 
-### Parent
-MediaEvent
+import Mermaid from '@theme/Mermaid'
 
-### All Parents
-AbstractEvent > NonInteractiveEvent > MediaEvent
+<Mermaid chart={`
+    graph LR
+      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent;
+      NonInteractiveEvent --> MediaEvent["MediaEvent<span class='requires_context'>requires:<br />MediaPlayerContext<br /></span><span class='properties'></span>"] -->       MediaPauseEvent;
+    class MediaPauseEvent diagramActive
+  `}
+  caption="Diagram: MediaPauseEvent inheritance"
+  baseColor="blue"
+  links={[
+{ name: 'AbstractEvent', to: '/taxonomy/events' }, { name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' }, { name: 'MediaEvent', to: '/taxonomy/reference/events/MediaEvent' },   ]}
+/>
+
+### Requires
+
+None.
 
 ### Inherited Properties
-`LocationStack` location_stack: The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-`GlobalContexts` global_contexts: Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-`uuid` id: Unique identifier for a specific instance of an event.
-`integer` time: Timestamp indicating when the event was generated.
 
-### All Properties
-`LocationStack` location_stack: The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-`GlobalContexts` global_contexts: Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-`uuid` id: Unique identifier for a specific instance of an event.
-`integer` time: Timestamp indicating when the event was generated.
+|                      | type                                                       | description                                                                                                                                                                                                                                                                    |
+|:---------------------|:-----------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **location\_stack**  | [LocationStack](/taxonomy/reference/types/LocationStack)   | The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically describes where in the UI of an application an Event took place.                                                                                            |
+| **global\_contexts** | [GlobalContexts](/taxonomy/reference/types/GlobalContexts) | GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and marketing information. They do not carry information related to where the Event originated (location), which instead is captured by the LocationStack. |
+| **id**               | uuid                                                       | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                         |
+| **time**             | integer                                                    | Timestamp indicating when the event was generated.                                                                                                                                                                                                                             |
+
 
 :::info setting of properties
 The tracker will automatically set all the properties.

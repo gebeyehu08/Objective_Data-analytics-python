@@ -8,13 +8,14 @@ If you want the latest and greatest from your local checkout, install objectiv_b
 
 ```
 pip install -e .
-pip install -e .[bigquery] # for bigquery support
+pip install -e .[bigquery] # for Google BigQuery support
+pip install -e .[athena]   # for AWS Athena support
 ```
 
 ## Running Functional and Unit Tests
 In case you are interested on running tests, install all dev requirements through:
 ```bash
-pip install -e .[dev,bigquery]
+pip install -e .[dev,bigquery,athena]
 ```
 
 ### Setting up environmental variables
