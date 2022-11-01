@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the db parameters for
 test functions that require an engine.
-By default such a test function will get a Postgres db parameters. But if --big-query or --all is
+By default such a test function will get a Postgres db parameters. But if --bigquery or --all is
 specified on the commandline, then it will (also) get a BigQuery db parameters. For specific
 tests, it is possible to disable postgres, bigquery or athena testing, see 'marks' section below.
 ### Marks and Test Categorization
@@ -27,10 +27,10 @@ Category 4, 5 and 6 are the exception, these need to be marked with the `skip_po
 
 """
 import os
-from urllib.parse import quote_plus
 
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
+from modelhub import athena_construct_engine_url
 from dotenv import dotenv_values
 
 from tests_modelhub.data_and_utils.utils import DBParams
@@ -71,7 +71,7 @@ def pytest_addoption(parser: Parser):
     # This function will automatically be called by pytest at the start of a test run, see:
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
     parser.addoption('--postgres', action='store_true', help='run the functional tests for Postgres')
-    parser.addoption('--big-query', action='store_true', help='run the functional tests for BigQuery')
+    parser.addoption('--bigquery', action='store_true', help='run the functional tests for BigQuery')
     parser.addoption('--athena', action='store_true', help='run the functional tests for Athena')
 
     parser.addoption('--all', action='store_true', help='run the functional tests for Postgres, BigQuery and Athena.')
@@ -89,7 +89,7 @@ def pytest_generate_tests(metafunc: Metafunc):
     skip_athena = any(mark.name == MARK_SKIP_ATHENA for mark in markers)
     db_params = []
 
-    testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("big_query")
+    testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("bigquery")
     testing_athena = metafunc.config.getoption("all") or metafunc.config.getoption("athena")
     testing_pg = metafunc.config.getoption("all") or not (testing_bq or testing_athena)
 
@@ -131,20 +131,14 @@ def _get_athena_db_params() -> DBParams:
     if _DB_ATHENA_TEST_URL:
         url = _DB_ATHENA_TEST_URL
     else:
-        aws_access_key_id = quote_plus(_DB_ATHENA_AWS_ACCESS_KEY_ID)
-        aws_secret_access_key = quote_plus(_DB_ATHENA_AWS_SECRET_ACCESS_KEY)
-        region_name = quote_plus(_DB_ATHENA_REGION_NAME)
-        schema_name = quote_plus(_DB_ATHENA_SCHEMA_NAME)
-        s3_staging_dir = quote_plus(_DB_ATHENA_S3_STAGING_DIR)
-        athena_work_group = quote_plus(_DB_ATHENA_WORK_GROUP)
-        catalog_name = quote_plus(_DB_ATHENA_CATALOG_NAME)
-
-        url = (
-            f'awsathena+rest://'
-            f'{aws_access_key_id}:{aws_secret_access_key}'
-            f'@athena.{region_name}.amazonaws.com:443/'
-            f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
-            f'&catalog_name={catalog_name}'
+        url = athena_construct_engine_url(
+            aws_access_key_id=_DB_ATHENA_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=_DB_ATHENA_AWS_SECRET_ACCESS_KEY,
+            region_name=_DB_ATHENA_REGION_NAME,
+            schema_name=_DB_ATHENA_SCHEMA_NAME,
+            s3_staging_dir=_DB_ATHENA_S3_STAGING_DIR,
+            athena_work_group=_DB_ATHENA_WORK_GROUP,
+            catalog_name=_DB_ATHENA_CATALOG_NAME,
         )
     return DBParams(
         url=url,

@@ -214,10 +214,6 @@ const ContentContext = z.object({
  */
 const CookieIdContext = z.object({
   /**
-   * Unique identifier from the session cookie.
-   */
-  cookie_id: z.string(),
-  /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
   _types: z.array(z.string()),
@@ -230,6 +226,10 @@ const CookieIdContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.CookieIdContext),
+  /**
+   * Unique identifier from the session cookie.
+   */
+  cookie_id: z.string(),
 }).strict();
 
 /**
@@ -256,18 +256,6 @@ const ExpandableContext = z.object({
  */
 const HttpContext = z.object({
   /**
-   * Full URL to HTTP referrer of the current page.
-   */
-  referrer: z.string(),
-  /**
-   * User-agent of the agent that sent the event.
-   */
-  user_agent: z.string(),
-  /**
-   * (public) IP address of the agent that sent the event.
-   */
-  remote_address: z.string().nullable(),
-  /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
   _types: z.array(z.string()),
@@ -280,6 +268,18 @@ const HttpContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.HttpContext),
+  /**
+   * Full URL to HTTP referrer of the current page.
+   */
+  referrer: z.string(),
+  /**
+   * User-agent of the agent that sent the event.
+   */
+  user_agent: z.string(),
+  /**
+   * (public) IP address of the agent that sent the event.
+   */
+  remote_address: z.string().nullable(),
 }).strict();
 
 /**
@@ -288,10 +288,6 @@ const HttpContext = z.object({
  * The `value` field should contain the unique identifier within that scope.
  */
 const IdentityContext = z.object({
-  /**
-   * The unique identifier for this user/group/entity within the scope defined by `id`.
-   */
-  value: z.string(),
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
@@ -305,6 +301,10 @@ const IdentityContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.IdentityContext),
+  /**
+   * The unique identifier for this user/group/entity within the scope defined by `id`.
+   */
+  value: z.string(),
 }).strict();
 
 /**
@@ -331,10 +331,6 @@ const InputContext = z.object({
  */
 const InputValueContext = z.object({
   /**
-   * The value of the input element.
-   */
-  value: z.string(),
-  /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
   _types: z.array(z.string()),
@@ -347,16 +343,16 @@ const InputValueContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.InputValueContext),
+  /**
+   * The value of the input element.
+   */
+  value: z.string(),
 }).strict();
 
 /**
  * A PressableContext that contains a destination (href).
  */
 const LinkContext = z.object({
-  /**
-   * URL (href) the link points to.
-   */
-  href: z.string(),
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
@@ -370,20 +366,16 @@ const LinkContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.LinkContext),
+  /**
+   * URL (href) the link points to.
+   */
+  href: z.string(),
 }).strict();
 
 /**
  * A GlobalContext describing the users' language (ISO 639-1) and country (ISO 3166-1 alpha-2).
  */
 const LocaleContext = z.object({
-  /**
-   * Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.
-   */
-  language_code: z.string().nullable(),
-  /**
-   * Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.
-   */
-  country_code: z.string().nullable(),
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
@@ -397,6 +389,14 @@ const LocaleContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.LocaleContext),
+  /**
+   * Case sensitive ISO 639-1 language code. E.g. en, nl, fr, de, it, etc.
+   */
+  language_code: z.string().nullable(),
+  /**
+   * Case sensitive ISO 3166-1 alpha-2 country code. E.g. US, NL, FR, DE, IT, etc.
+   */
+  country_code: z.string().nullable(),
 }).strict();
 
 /**
@@ -404,38 +404,6 @@ const LocaleContext = z.object({
  * effectiveness and other models.
  */
 const MarketingContext = z.object({
-  /**
-   * Identifies the advertiser, site, publication, etc.
-   */
-  source: z.string(),
-  /**
-   * Advertising or marketing medium: cpc, banner, email newsletter, etc.
-   */
-  medium: z.string(),
-  /**
-   * Individual campaign name, slogan, promo code, etc.
-   */
-  campaign: z.string(),
-  /**
-   * Search keywords.
-   */
-  term: z.string().nullable(),
-  /**
-   * Used to differentiate similar content, or links within the same ad.
-   */
-  content: z.string().nullable(),
-  /**
-   * To differentiate similar content, or links within the same ad.
-   */
-  source_platform: z.string().nullable(),
-  /**
-   * Identifies the creative used (e.g., skyscraper, banner, etc).
-   */
-  creative_format: z.string().nullable(),
-  /**
-   * Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
-   */
-  marketing_tactic: z.string().nullable(),
   /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
@@ -449,6 +417,38 @@ const MarketingContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.MarketingContext),
+  /**
+   * The advertiser, site, publication, etc.
+   */
+  source: z.string(),
+  /**
+   * Advertising or marketing medium: cpc, banner, email newsletter, etc.
+   */
+  medium: z.string(),
+  /**
+   * Campaign name, slogan, promo code, etc.
+   */
+  campaign: z.string(),
+  /**
+   * Search keywords.
+   */
+  term: z.string().nullable(),
+  /**
+   * To differentiate similar content, or links within the same ad.
+   */
+  content: z.string().nullable(),
+  /**
+   * Identifies the platform where the marketing activity was undertaken.
+   */
+  source_platform: z.string().nullable(),
+  /**
+   * Identifies the creative used (e.g., skyscraper, banner, etc).
+   */
+  creative_format: z.string().nullable(),
+  /**
+   * Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
+   */
+  marketing_tactic: z.string().nullable(),
 }).strict();
 
 /**
@@ -551,10 +551,6 @@ const RootLocationContext = z.object({
  */
 const SessionContext = z.object({
   /**
-   * Hit counter relative to the current session, this event originated in.
-   */
-  hit_number: z.number(),
-  /**
    * An ordered list of the parents of this Context, itself included as the last element.
    */
   _types: z.array(z.string()),
@@ -567,6 +563,10 @@ const SessionContext = z.object({
    * A string literal used during serialization. Hardcoded to the Context name.
    */
   _type: z.literal(ContextTypes.enum.SessionContext),
+  /**
+   * Hit counter relative to the current session, this event originated in.
+   */
+  hit_number: z.number(),
 }).strict();
 
 /**
@@ -613,9 +613,8 @@ const PressableContext = z.discriminatedUnion('_type', [
 ]);
 
 /**
- * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
- * deterministically describes where an event took place from global to specific.
- * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+ * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+ * describes where in the UI of an application an Event took place.
  */
 const LocationStack = z
   .array(
@@ -642,8 +641,9 @@ const LocationStack = z
   );
 
 /**
- * Global contexts add global / general information about the event. They carry information that is not
- * related to where the Event originated (location), such as device, platform or business data.
+ * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+ * marketing information. They do not carry information related to where the Event originated (location), which instead is
+ * captured by the LocationStack.
  */
 const GlobalContexts = z
   .array(
@@ -696,14 +696,14 @@ const ApplicationLoadedEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -726,10 +726,6 @@ const ApplicationLoadedEvent = z.object({
  */
 const FailureEvent = z.object({
   /**
-   * Failure message.
-   */
-  message: z.string(),
-  /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
   _schema_version: z.string().optional(),
@@ -738,14 +734,14 @@ const FailureEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -760,6 +756,10 @@ const FailureEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
+  /**
+   * Failure message.
+   */
+  message: z.string(),
 }).strict();
 
 /**
@@ -775,14 +775,14 @@ const HiddenEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -812,14 +812,14 @@ const InputChangeEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -861,12 +861,6 @@ const InputChangeEvent = z.object({
  */
 const InteractiveEvent = z.object({
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-   */
-  location_stack: LocationStack,
-  /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
   _schema_version: z.string().optional(),
@@ -875,8 +869,14 @@ const InteractiveEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
+   */
+  location_stack: LocationStack,
+  /**
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -926,14 +926,14 @@ const MediaEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -972,14 +972,14 @@ const MediaLoadEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -1009,14 +1009,14 @@ const MediaPauseEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -1046,14 +1046,14 @@ const MediaStartEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -1083,14 +1083,14 @@ const MediaStopEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -1120,14 +1120,14 @@ const NonInteractiveEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -1158,14 +1158,14 @@ const PressEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -1197,10 +1197,6 @@ const PressEvent = z.object({
  */
 const SuccessEvent = z.object({
   /**
-   * Success message.
-   */
-  message: z.string(),
-  /**
    * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
   _schema_version: z.string().optional(),
@@ -1209,14 +1205,14 @@ const SuccessEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**
@@ -1231,6 +1227,10 @@ const SuccessEvent = z.object({
    * Timestamp indicating when the event was generated.
    */
   time: z.number(),
+  /**
+   * Success message.
+   */
+  message: z.string(),
 }).strict();
 
 /**
@@ -1246,14 +1246,14 @@ const VisibleEvent = z.object({
    */
   _types: z.array(z.string()),
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   * deterministically describes where an event took place from global to specific.
-   * The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically
+   * describes where in the UI of an application an Event took place.
    */
   location_stack: LocationStack,
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   * related to where the Event originated (location), such as device, platform or business data.
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and
+   * marketing information. They do not carry information related to where the Event originated (location), which instead is
+   * captured by the LocationStack.
    */
   global_contexts: GlobalContexts,
   /**

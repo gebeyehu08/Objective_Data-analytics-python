@@ -4,7 +4,7 @@ Copyright 2022 Objectiv B.V.
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the 'engine' and 'dialect' parameters for
 test functions that have either of those.
-By default such a test function will get a Postgres dialect or engine. But if --big-query, --athena or --all
+By default such a test function will get a Postgres dialect or engine. But if --bigquery, --athena or --all
 is specified on the commandline, then it will (also) get a BigQuery/Athena dialect or engine. For specific
 tests, it is possible to disable testing for certain databases, see 'marks' section below.
 
@@ -39,7 +39,6 @@ import os
 from collections import defaultdict
 from enum import Enum
 from typing import Dict, List
-from urllib.parse import quote_plus
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -50,6 +49,7 @@ from dotenv import dotenv_values
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
+from bach.utils import athena_construct_engine_url
 from sql_models.util import is_athena
 
 # Load settings from .test_env file, but allow overrides from Environment variables
@@ -137,7 +137,7 @@ def pytest_addoption(parser: Parser):
     # This function will automatically be called by pytest at the start of a test run, see:
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
     parser.addoption('--postgres', action='store_true', help='run the tests for Postgres')
-    parser.addoption('--big-query', action='store_true', help='run the tests for BigQuery')
+    parser.addoption('--bigquery', action='store_true', help='run the tests for BigQuery')
     parser.addoption('--athena', action='store_true', help='run the tests for Athena')
     parser.addoption('--all', action='store_true', help='run the tests for all databases.')
 
@@ -158,7 +158,7 @@ def pytest_sessionstart(session: Session):
     else:
         if session.config.getoption("athena"):
             _ENGINE_CACHE[DB.ATHENA] = _get_athena_engine()
-        if session.config.getoption("big_query"):
+        if session.config.getoption("bigquery"):
             _ENGINE_CACHE[DB.BIGQUERY] = _get_bigquery_engine()
         if session.config.getoption("postgres"):
             _ENGINE_CACHE[DB.POSTGRES] = _get_postgres_engine()
@@ -258,20 +258,15 @@ def _get_bigquery_engine() -> Engine:
 
 def _get_athena_engine() -> Engine:
     if _DB_ATHENA_TEST_URL:
-        return create_engine(_DB_ATHENA_TEST_URL)
-    aws_access_key_id = quote_plus(_DB_ATHENA_AWS_ACCESS_KEY_ID)
-    aws_secret_access_key = quote_plus(_DB_ATHENA_AWS_SECRET_ACCESS_KEY)
-    region_name = quote_plus(_DB_ATHENA_REGION_NAME)
-    schema_name = quote_plus(_DB_ATHENA_SCHEMA_NAME)
-    s3_staging_dir = quote_plus(_DB_ATHENA_S3_STAGING_DIR)
-    athena_work_group = quote_plus(_DB_ATHENA_WORK_GROUP)
-    catalog_name = quote_plus(_DB_ATHENA_CATALOG_NAME)
-
-    url = (
-        f'awsathena+rest://'
-        f'{aws_access_key_id}:{aws_secret_access_key}'
-        f'@athena.{region_name}.amazonaws.com:443/'
-        f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
-        f'&catalog_name={catalog_name}'
-    )
+        url = _DB_ATHENA_TEST_URL
+    else:
+        url = athena_construct_engine_url(
+            aws_access_key_id=_DB_ATHENA_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=_DB_ATHENA_AWS_SECRET_ACCESS_KEY,
+            region_name=_DB_ATHENA_REGION_NAME,
+            schema_name=_DB_ATHENA_SCHEMA_NAME,
+            s3_staging_dir=_DB_ATHENA_S3_STAGING_DIR,
+            athena_work_group=_DB_ATHENA_WORK_GROUP,
+            catalog_name=_DB_ATHENA_CATALOG_NAME,
+        )
     return create_engine(url)

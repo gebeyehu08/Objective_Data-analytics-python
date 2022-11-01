@@ -1,0 +1,33 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+    "description": "The abstract parent of all Global Contexts. Global Contexts capture general data about the state in which an Event happened, such as user's identity & marketing information.",
+    "self": {
+        "vendor": "io.objectiv.context",
+        "name": "AbstractGlobalContext",
+        "format": "jsonschema",
+        "version": "1-0-0"
+    },
+    "type": "object",
+    "properties": {
+        "_types": {
+            "type": [
+                "array"
+            ],
+            "description": "An ordered list of the parents of this Context, itself included as the last element.",
+            "items": {
+                "type": "string"
+            }
+        },
+        "id": {
+            "type": [
+                "string"
+            ],
+            "description": "A unique string identifier to be combined with the Context Type (`_type`) for Context instance uniqueness."
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "_types",
+        "id"
+    ]
+}
