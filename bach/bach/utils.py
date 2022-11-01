@@ -199,25 +199,6 @@ def get_name_to_column_mapping(dialect: Dialect, names: Iterable[str]) -> Dict[s
     }
 
 
-def get_name_from_sql_column_name(sql_column_name: str) -> str:
-    """
-    Given a sql column name, give the Series name.
-
-    This is the reverese operation of :meth:`get_sql_column_name()`.
-    """
-    escape_indicator = '__esc_'
-    if not sql_column_name.startswith(escape_indicator):
-        return sql_column_name
-    rest = sql_column_name[len(escape_indicator):]
-    # In get_sql_column_name() we removed the padding, but b32decode() requires the padding, so add it again.
-    # Padding should make each string a multiple of 8 characters [1].
-    # [1]: https://datatracker.ietf.org/doc/html/rfc4648.html#section-6
-    padding = '=' * (8 - (len(rest) % 8))
-    b32_encoded = (rest + padding).upper()
-    original = base64.b32decode(b32_encoded.encode('utf-8')).decode('utf-8')
-    return original
-
-
 def validate_node_column_references_in_sorting_expressions(
     dialect: Dialect, node: BachSqlModel, order_by: List[SortColumn],
 ) -> None:

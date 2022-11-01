@@ -5,7 +5,7 @@ import pytest
 from bach.expression import Expression
 from bach.sql_model import BachSqlModel
 from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, \
-    validate_node_column_references_in_sorting_expressions, get_name_from_sql_column_name, \
+    validate_node_column_references_in_sorting_expressions, \
     get_sql_column_name, merge_sql_statements, athena_construct_engine_url
 from sql_models.model import Materialization, CustomSqlModelBuilder
 from sql_models.util import is_athena

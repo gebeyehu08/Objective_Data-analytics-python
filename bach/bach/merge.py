@@ -15,7 +15,7 @@ from bach.expression import (
     Expression, join_expressions, TableColumnReferenceToken,  ExpressionToken, ColumnReferenceToken,
 )
 from bach.utils import ResultSeries, get_result_series_dtype_mapping, get_sql_column_name, \
-    get_name_from_sql_column_name, get_name_to_column_mapping
+    get_name_to_column_mapping
 from sql_models.constants import NotSet, not_set
 from sql_models.model import Materialization, CustomSqlModelBuilder, SqlModel, SqlModelSpec
 from bach.sql_model import BachSqlModel, construct_references
@@ -432,7 +432,7 @@ def _determine_series_per_source(
     .. note::
     Series without table column references are added to both final results.
     """
-
+    dialect = base.engine.dialect
     left_series = {}
     right_series = {}
 
@@ -474,8 +474,16 @@ def _determine_series_per_source(
         for sub_expr in expressions:
             table_name, column_name, expr = sub_expr.remove_table_column_references()
 
-            original_series_name = get_name_from_sql_column_name(column_name) if column_name else series_name
             if table_name == _LEFT_NODE_ALIAS or not sub_expr.has_table_column_references:
+                if column_name:
+                    original_series_name = _get_series_name_from_column_name(
+                        model=left_node,
+                        dialect=dialect,
+                        column_name=column_name
+                    )
+                else:
+                    original_series_name = series_name
+
                 left_series[original_series_name] = series.copy_override(
                     base_node=left_node,
                     index=left_index,
@@ -483,6 +491,14 @@ def _determine_series_per_source(
                     expression=expr,
                 )
             if table_name == _RIGHT_NODE_ALIAS or not sub_expr.has_table_column_references:
+                if column_name:
+                    original_series_name = _get_series_name_from_column_name(
+                        model=right_node,
+                        dialect=dialect,
+                        column_name=column_name
+                    )
+                else:
+                    original_series_name = series_name
                 right_series[original_series_name] = series.copy_override(
                     base_node=right_node,
                     index=right_index,
@@ -602,7 +618,11 @@ def _resolve_merge_expression_references(
                 new_tokens.append(token)
                 continue
 
-            token_original_name = get_name_from_sql_column_name(token.column_name)
+            token_original_name = _get_series_name_from_column_name(
+                model=cond.base_node,
+                dialect=dialect,
+                column_name=token.column_name
+            )
             prev_expression = cond.base_node.column_expressions[token_original_name]
             resolved_nested_tokens: List[Union[Expression, ExpressionToken]] = []
 
@@ -628,7 +648,11 @@ def _resolve_merge_expression_references(
                     if nested_token.column_name == get_sql_column_name(dialect, cond.name)
                     else token.column_name
                 )
-                expr_label = get_name_from_sql_column_name(column_name)
+                expr_label = _get_series_name_from_column_name(
+                    model=cond.base_node,
+                    dialect=dialect,
+                    column_name=column_name
+                )
                 resolved_expr = _get_expression(df_series=df_series, label=expr_label)
                 resolved_expr = resolved_expr.resolve_column_references(dialect, table_alias)
                 resolved_nested_tokens.append(resolved_expr)
@@ -638,6 +662,19 @@ def _resolve_merge_expression_references(
         expressions.append(Expression(new_tokens))
 
     return expressions
+
+
+def _get_series_name_from_column_name(model: BachSqlModel, dialect: Dialect, column_name: str) -> str:
+    """
+    Given a column_name, and the BachSqlModel that the column appears in. Determine what the series-name
+    by converting all series-names in the BachSqlModel meta-data to column names and seeing which matches.
+    """
+    series_names = list(model.column_expressions.keys())
+    for series_name in series_names:
+        if column_name == get_sql_column_name(dialect=dialect, name=series_name):
+            return series_name
+    raise ValueError(f'No Series name found matching column name "{column_name}" in series names '
+                     f'{series_names}.')
 
 
 def _get_expression(df_series: DataFrameOrSeries, label: str) -> Expression:
