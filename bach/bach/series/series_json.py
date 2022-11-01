@@ -750,7 +750,7 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
         result = self._series_object.copy_override(expression=expression)
         if as_str:
             from bach.series import SeriesString
-            return result.copy_override_type(SeriesString)
+            return result.astype('string').copy_override_type(SeriesString)
         return result
 
     def get_array_length(self) -> 'SeriesInt64':
