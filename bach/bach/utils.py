@@ -1,5 +1,8 @@
 import base64
+import hashlib
 import re
+import string
+import unicodedata
 from typing import NamedTuple, Dict, List, Set, Iterable, Optional
 from urllib.parse import quote_plus, urlencode
 
@@ -62,6 +65,16 @@ def escape_parameter_characters(conn: Connection, raw_sql: str) -> str:
     return raw_sql.replace('%', '%%')
 
 
+_BQ_COLUMN_NAME_RESERVED_PREFIXES = [
+    '_TABLE_',
+    '_FILE_',
+    '_PARTITION',
+    '_ROW_TIMESTAMP',
+    '__ROOT__',
+    '_COLIDENTIFIER'
+]
+
+
 def is_valid_column_name(dialect: Dialect, name: str) -> bool:
     """
     Check that the given name is a valid column name in the SQL dialect.
@@ -87,17 +100,9 @@ def is_valid_column_name(dialect: Dialect, name: str) -> bool:
 
         # Only allow lower-case a-z, to make sure we don't have duplicate case-insensitive column names
         regex = '^[a-z_][a-z0-9_]*$'
-        reserved_prefixes = [
-            '_TABLE_',
-            '_FILE_',
-            '_PARTITION',
-            '_ROW_TIMESTAMP',
-            '__ROOT__',
-            '_COLIDENTIFIER'
-        ]
         len_ok = 0 < len(name) <= 300
         pattern_ok = bool(re.match(pattern=regex, string=name))
-        prefix_ok = not any(name.startswith(prefix.lower()) for prefix in reserved_prefixes)
+        prefix_ok = not any(name.startswith(prefix.lower()) for prefix in _BQ_COLUMN_NAME_RESERVED_PREFIXES)
         return len_ok and pattern_ok and prefix_ok
     raise DatabaseNotSupportedException(dialect)
 
@@ -108,7 +113,7 @@ def get_sql_column_name(dialect: Dialect, name: str) -> str:
 
     If the name contains no characters that require escaping, for the given dialect, then the same string is
     returned. Otherwise, a column name is that can be safely used with the given dialect. The generated name
-    will be based on the given name, and can be reverted again with :meth:`get_name_from_sql_column_name()`
+    will be based on the given name, but with all non-allowed characters filtered out and a hash added.
 
     **Background**
     Each Bach Series is mapped to a column in queries. Unfortunately, some databases only supported a limited
@@ -116,19 +121,75 @@ def get_sql_column_name(dialect: Dialect, name: str) -> str:
     sql-column name. The former is the name a Bach user will see and use, the latter is the name that will
     appear in SQL queries.
 
-    The algorithm we use to map series names to column names is deterministic and reversible.
+    The algorithm we use to map series names to column names is deterministic, but not reversible. That is,
+    the same input always yields the same output, and it might be impossible to recover the input from a
+    given output.
 
     :raises ValueError: if name cannot be appropriately escaped or is too long for the given dialect
     :return: column name for the given series name.
     """
     if is_valid_column_name(dialect, name):
         return name
-    escaped = base64.b32encode(name.encode('utf-8')).decode('utf-8').lower().replace('=', '')
-    escaped = f'__esc_{escaped}'
+
+    # If name is not a valid column name in itself. Then transform it:
+    # 1) Turn `name` into `cleaned_name`, which only keeps the allowed characters
+    # 2) Add a hash of `name` to make the name unique again
+    #
+    # This process should yield a valid column name for any database, if it's not too long.
+
+    table_upper_to_lower = str.maketrans(string.ascii_uppercase, string.ascii_lowercase)
+    chars_lower = set(string.ascii_lowercase)
+    chars_numbers = set('0123456789')
+    chars_underscore = set('_')
+    allowed_chars = chars_lower | chars_numbers | chars_underscore
+
+    # Convert 'name' into cleaned form, in three steps:
+    # 1) Normalize the name to the decomposed character form. This will split diacritics of the base
+    #    character, e.g. 'ç' will be split in two characters: 'c' and ' ̧'.
+    # 2) Lowercase all characters.
+    # 3) Filter out all characters that are not in [a-z0-9_]. Example: 'c' would be kept, but ' ̧' would
+    #    be filtered out.
+
+    # There are probably better methods, and libraries that have more comprehensive ways of doing this.
+    # But for now this works okayish, and is simple.
+    # In step 2 we lowercase characters using a translation table. We could probably just do .lower(), but I
+    # wasn't 100% sure that works in all locales the same, and the docs were unclear on that.
+
+    decomposed_characters = unicodedata.normalize('NFKD', name)
+    decomposed_lowered = decomposed_characters.translate(table_upper_to_lower)
+    cleaned_name = ''.join(c for c in decomposed_lowered if c in allowed_chars)
+    if not cleaned_name:
+        cleaned_name = 'empty'
+
+    if is_bigquery(dialect):
+        # Additional rules for BigQuery:
+        # 1) Must start with a character a-z or underscore, not with a number
+        if cleaned_name[0] in chars_numbers:
+            cleaned_name = f'_{cleaned_name}'
+        # 2) Cannot start with one of the reserved prefixes:
+        if any(cleaned_name.startswith(prefix.lower()) for prefix in _BQ_COLUMN_NAME_RESERVED_PREFIXES):
+            cleaned_name = f'x_{cleaned_name}'
+
+    # Add a hash of `name` to make the name unique again.
+    # Ten characters of hash (50 bits) should be enough.
+    hash = _get_string_hash(name)[:10]
+    escaped = f'{cleaned_name}__{hash}'
+
     if not is_valid_column_name(dialect, escaped):
         raise ValueError(f'Column name "{name}" is not valid for SQL dialect {dialect.name}, and cannot be '
                          f'escaped. Try making the series name shorter and/or using characters [a-z] only.')
     return escaped
+
+
+def _get_string_hash(input: str) -> str:
+    """ Give md5 hash of the given input strings, encoded as a 26 character long base-32 string. """
+    # .hexdigest() would give the md5 hash encoded with [a-e0-9], which gives 4 bits per character
+    # we'd rather not spend too many characters on the hash, so we base-32 encode the bytes, which gives 5
+    # bits per character. Which makes the 128-bit hash fit in 26 characters instead of 32.
+    input_bytes = input.encode('utf-8')
+    md5_bytes = hashlib.md5(input_bytes).digest()
+    hash = base64.b32encode(md5_bytes).decode('utf-8').lower().replace('=', '')
+    return hash
 
 
 def get_name_to_column_mapping(dialect: Dialect, names: Iterable[str]) -> Dict[str, str]:
