@@ -4,6 +4,7 @@ Copyright 2022 Objectiv B.V.
 from enum import Enum
 from typing import Optional, Union, Sequence, List, Dict
 from bach import DataFrame, Series
+from bach.series.series import WrappedPartition
 
 
 class ValuePropagationMethod(Enum):
@@ -52,7 +53,7 @@ class ValuePropagation:
             self,
             sort_by: Optional[Union[str, Sequence[str]]] = None,
             ascending: Union[bool, List[bool]] = True,
-            window_group: Optional[Union[str, Sequence[str]]] = None
+            window: Optional[WrappedPartition] = None
     ):
         df = self._df.copy()
 
@@ -70,12 +71,14 @@ class ValuePropagation:
         # since bfill is ffill with reversed sort (this might generate different results)
         base_series = df[df.data_columns[0]]
         # order nulls last in window function, else numbering will be wrong
-        window = df.groupby().window(na_position='last')
+        window = window or df.groupby().window(na_position='last')
+        window_group = list(window.index.keys())
+
         df[self.ROW_NUMBER_SERIES_NAME] = base_series.window_row_number(window)
         df = df.materialize(node_name='numbered_fillna')
 
         # sort values by row number
-        by = [self.ROW_NUMBER_SERIES_NAME]
+        by = window_group + [self.ROW_NUMBER_SERIES_NAME]
         ascending = self._method == ValuePropagationMethod.FORWARD_FILL
 
         df = df.sort_values(by=by, ascending=ascending)

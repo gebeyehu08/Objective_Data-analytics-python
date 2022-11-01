@@ -100,32 +100,34 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
 
 
 def test_ffill_propagation_on_groups(engine) -> None:
-    pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"), index=[1,2,3,4,5,6,7,9])
-    pdf['groups'] = pdf.B>0
+    pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
+    pdf['groups'] = pdf.B > 0
 
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
 
-    df_ffill = df.ffill(groupby='groups')
+    df_ffill = df.ffill(window=df.groupby(by='groups').window()).sort_index()
     pdf_ffill = pdf.groupby('groups').ffill()
 
     pd.testing.assert_frame_equal(
         pdf_ffill,
         df_ffill.to_pandas(),
         check_index_type=False,
-        check_names=False)
+        check_names=False,
+    )
 
     # test without index
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
     pdf = pdf.reset_index().rename(columns={'index': '_index_0'})
 
-    df_ffill = df.ffill(groupby='groups')
+    df_ffill = df.ffill(window=df.groupby(by='groups').window()).sort_values('_index_0')
     pdf_ffill = pdf.groupby('groups').ffill()
 
     pd.testing.assert_frame_equal(
         pdf_ffill,
         df_ffill.to_pandas(),
         check_index_type=False,
-        check_names=False)
+        check_names=False,
+    )
 
 
 def test_fillna_w_methods(engine) -> None:
