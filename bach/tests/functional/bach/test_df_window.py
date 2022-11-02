@@ -601,7 +601,7 @@ def test_window_nav_functions_with_nulls(engine):
             'B': [  1,  None,   2,   3,  -1,  2 ],
         }
     )
-    df = DataFrame.from_pandas(engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine, df=pdf)
     df = df.reset_index(drop=True)
 
     gb_asc = df.sort_values(by=['B']).groupby(['A'])

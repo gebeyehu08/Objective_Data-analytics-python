@@ -13,7 +13,7 @@ def test_df_basic_drop_duplicates(engine) -> None:
         }
     )
 
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df.drop_duplicates().sort_index()
 
     expected_pdf = pd.DataFrame(
@@ -57,7 +57,7 @@ def test_df_basic_w_subset_drop_duplicates(engine) -> None:
         }
     )
     subset = ['a', 'b']
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df.drop_duplicates(subset=subset).sort_index()
 
     expected_pdf = pd.DataFrame(
@@ -99,7 +99,7 @@ def test_df_keep_last_drop_duplicates(engine) -> None:
             'b': ['a', 'b', 'b', 'c', 'd', 'a', 'a'],
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df.drop_duplicates(keep='last').sort_index()
 
     expected_df = pd.DataFrame(
@@ -144,7 +144,7 @@ def test_df_drop_all_duplicates(engine) -> None:
             'b': ['a', 'b', 'b', 'c', 'd', 'a', 'a'],
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     result = df.drop_duplicates(keep=False).sort_index()
 
@@ -184,7 +184,7 @@ def test_drop_duplicates_w_sorting(engine) -> None:
         },
     )
 
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df.drop_duplicates(subset=['a', 'b'], sort_by=['c'], ascending=False)
 
     assert_equals_data(
@@ -218,7 +218,7 @@ def test_errors_drop_duplicates(engine) -> None:
             'b': ['a', 'b', 'b', 'c', 'd', 'a', 'a'],
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     with pytest.raises(ValueError, match=r'keep must be either'):
         df.drop_duplicates(keep='random')
 

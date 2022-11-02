@@ -74,7 +74,7 @@ def test_get_pipeline_result(db_params) -> None:
     pdf['user_id'] = pdf['user_id'].astype(str)
     pdf['event_id'] = pdf['event_id'].astype(str)
 
-    context_df = bach.DataFrame.from_pandas(df=pdf, engine=engine, convert_objects=True).reset_index(drop=True)
+    context_df = bach.DataFrame.from_pandas(df=pdf, engine=engine).reset_index(drop=True)
     context_df['user_id'] = context_df['user_id'].astype('uuid')
     context_df['event_id'] = context_df['event_id'].astype('uuid')
 
@@ -119,7 +119,7 @@ def test_calculate_session_start(db_params) -> None:
 
     context_pdf = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_pdf = context_pdf[['user_id', 'event_id', 'moment']]
-    context_df = bach.DataFrame.from_pandas(engine=engine, df=context_pdf, convert_objects=True)
+    context_df = bach.DataFrame.from_pandas(engine=engine, df=context_pdf)
     result = pipeline._calculate_session_start(context_df, session_gap_seconds=_SESSION_GAP_SECONDS)
 
     assert_equals_data(
@@ -141,7 +141,7 @@ def test_calculate_session_start_id(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
     context_pdf_w_session_start = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_df_w_session_start = bach.DataFrame.from_pandas(
-        engine=engine, df=context_pdf_w_session_start, convert_objects=True,
+        engine=engine, df=context_pdf_w_session_start,
     )
 
     result = pipeline._calculate_session_start_id(context_df_w_session_start)
@@ -165,7 +165,7 @@ def test_calculate_session_count(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
     context_pdf_w_session_start = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_df_w_session_start = bach.DataFrame.from_pandas(
-        engine=engine, df=context_pdf_w_session_start, convert_objects=True,
+        engine=engine, df=context_pdf_w_session_start,
     )
 
     result = pipeline._calculate_session_count(context_df_w_session_start)
@@ -189,7 +189,7 @@ def test_calculate_base_session_series(db_params) -> None:
     context_pdf = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_pdf = context_pdf[['user_id', 'event_id', 'moment']]
     context_df = bach.DataFrame.from_pandas(
-        engine=engine, df=context_pdf, convert_objects=True,
+        engine=engine, df=context_pdf,
     ).reset_index(drop=True)
 
     tz_info = datetime.timezone.utc if is_bigquery(engine) else None
@@ -220,7 +220,7 @@ def test_calculate_objectiv_session_series(db_params) -> None:
     context_pdf['is_one_session'] = pd.Series([1, 1, 2, 3, 4, 4])
 
     context_df = bach.DataFrame.from_pandas(
-        engine=engine, df=context_pdf, convert_objects=True,
+        engine=engine, df=context_pdf,
     ).reset_index(drop=True)
 
     tz_info = datetime.timezone.utc if is_bigquery(engine) else None

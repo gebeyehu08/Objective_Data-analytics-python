@@ -42,7 +42,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	>>> # and set the global contexts that will be used in this example
 	>>> from modelhub import ModelHub, display_sql_as_markdown
 	>>> from bach import DataFrame
-	>>> from datetime import datetime, timedelta
+	>>> from sql_models.util import is_bigquery
 	>>> import pandas as pd
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['http', 'marketing', 'application'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
@@ -85,17 +85,18 @@ the `location_stack` and global contexts.
 
 	>>> # define a further selection: which source to select in the below analyses.
 	>>> source_selection = ['twitter', 'reddit']
-	>>> sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}), convert_objects=True).sources
+	>>> sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}).sources
 	>>> # filter on defined list of UTM Sources
 	>>> df_marketing_selection = df_marketing_only[(df_marketing_only.utm_source.isin(sources))]
 
 .. doctest:: marketing-analytics
 	:skipif: engine is None
 
-	>>> # materialize the DataFrame as temporary tables to reduce the complexity of the underlying queries
-	>>> df_acquisition = df_acquisition.materialize(materialization='temp_table')
-	>>> df_marketing_only = df_marketing_only.materialize(materialization='temp_table')
-	>>> df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
+	>>> # for BigQuery materialize the DataFrame as temporary tables to reduce the complexity of the underlying queries
+	>>> if is_bigquery(df.engine):
+	...     df_acquisition = df_acquisition.materialize(materialization='temp_table')
+	...     df_marketing_only = df_marketing_only.materialize(materialization='temp_table')
+	...     df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
 
 **Available dataframes:**
 
@@ -806,7 +807,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	campaign_sessions = df_acquisition[~df_acquisition['utm_source'].isnull()]['session_id'].unique()
 	df_marketing_only = df_acquisition[df_acquisition['session_id'].isin(campaign_sessions)]
 	source_selection = ['twitter', 'reddit']
-	sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}), convert_objects=True).sources
+	sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection})).sources
 	df_marketing_selection = df_marketing_only[(df_marketing_only.utm_source.isin(sources))]
 	df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
 	users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)

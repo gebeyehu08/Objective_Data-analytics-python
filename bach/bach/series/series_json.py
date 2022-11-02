@@ -62,7 +62,7 @@ class SeriesJson(Series):
 
         data = ['["a","b","c"]', '["d","e","f","g"]', '[{"h":"i","j":"k"},{"l":["m","n","o"]},{"p":"q"}]']
         pdf = pd.DataFrame(data=data, columns=['jsonb_column'])
-        df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
+        df = DataFrame.from_pandas(engine, pdf)
         df['jsonb_column'] = df.jsonb_column.astype('json')
 
     .. doctest:: json
@@ -77,7 +77,7 @@ class SeriesJson(Series):
     .. doctest:: json
         :skipif: engine is None
 
-        >>> df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
+        >>> df = DataFrame.from_pandas(engine, pdf)
         >>> df['jsonb_column'] = df.jsonb_column.astype('json')
         >>> # load some json strings and convert them to jsonb type
         >>> # slice and show with .head()

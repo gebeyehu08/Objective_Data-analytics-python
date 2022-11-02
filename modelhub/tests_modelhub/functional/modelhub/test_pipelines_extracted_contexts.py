@@ -176,7 +176,7 @@ def test_apply_filters_duplicated_event_ids(db_params) -> None:
             'contexts_io_objectiv_location_stack_1_0_0': ['{}'] * 7,
         }
     )
-    df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+    df = bach.DataFrame.from_pandas(engine, pdf).reset_index(drop=True)
     result = context_pipeline._process_data(df)
     result = context_pipeline._apply_filters(result)
 
@@ -218,7 +218,7 @@ def test_apply_filters_duplicated_event_ids_n_dates(db_params) -> None:
             'contexts_io_objectiv_location_stack_1_0_0': ['{}'] * 6,
         }
     )
-    df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+    df = bach.DataFrame.from_pandas(engine, pdf).reset_index(drop=True)
     result = context_pipeline._process_data(df)
     result = context_pipeline._apply_filters(result, start_date='2022-01-02', end_date='2022-01-05')
     assert_equals_data(
@@ -240,7 +240,7 @@ def test_apply_filters(db_params) -> None:
     if is_bigquery(engine):
         pdf['event_id'] = pdf['event_id'].astype(str)
 
-    df = bach.DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = bach.DataFrame.from_pandas(engine=engine, df=pdf)
     df = df.reset_index(drop=True)
 
     result = context_pipeline._apply_filters(df)

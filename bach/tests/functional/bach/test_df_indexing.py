@@ -18,7 +18,7 @@ def indexing_dfs(engine) -> Tuple[pd.DataFrame, DataFrame]:
             'D': ['f', 'g', 'h', 'i', 'j'],
         },
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df = df.set_index('A', drop=True)
     pdf = pdf.set_index('A')
 
@@ -153,7 +153,7 @@ def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame
             'C': [11, 12],
         },
     )
-    extra_df = DataFrame.from_pandas(engine, df=extra_pdf, convert_objects=True)
+    extra_df = DataFrame.from_pandas(engine, df=extra_pdf)
     extra_df = extra_df.set_index('A')
 
     # cannot check against Pandas, since pandas checks index lengths when setting items.
@@ -202,7 +202,7 @@ def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engin
             'C': [11, 12],
         },
     )
-    extra_df = DataFrame.from_pandas(engine, df=extra_pdf, convert_objects=True)
+    extra_df = DataFrame.from_pandas(engine, df=extra_pdf)
     extra_df = extra_df.set_index('A')
 
     # cannot check against Pandas, since pandas checks index lengths when setting items.

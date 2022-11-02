@@ -51,7 +51,7 @@ def test_date_format(engine, recwarn):
     date = datetime.date(2022, 1, 1)
 
     pdf = pd.DataFrame({'timestamp_series': [timestamp], 'date_series': [date]})
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf).reset_index(drop=True)
 
     # Create format string that contains all codes that we claim to support.
     # This string will looks like: %%a: %a | %%b: %b | %%c: %c | ...
@@ -178,7 +178,7 @@ def test_date_format_all_supported_pg_codes(engine, recwarn):
 
     timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000, tzinfo=datetime.timezone.utc)
     pdf = pd.DataFrame({'timestamp_series': [timestamp]})
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf).reset_index(drop=True)
 
     for c_code in _C_STANDARD_CODES_X_POSTGRES_DATE_CODES.keys():
         # strrftime does not support quarter, and currently we are not considering timezone info
