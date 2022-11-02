@@ -639,6 +639,8 @@ Top used product features for users from marketing campaigns, before they conver
 	:skipif: engine is None
 
 	>>> # top used product features for users coming from marketing campaigns, before they convert
+	>>> if is_bigquery(df.engine):
+	...     df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
 	>>> top_features_before_conversion_from_marketing = modelhub.agg.top_product_features_before_conversion(df_marketing_selection, name='github_press')
 	>>> top_features_before_conversion_from_marketing.head(20)
 	                                                                                                     unique_users
