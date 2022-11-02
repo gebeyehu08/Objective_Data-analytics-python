@@ -74,8 +74,8 @@ class DateTimeOperation:
         code semantics: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
 
         The subset of codes that are supported across all databases is:
-            `%A`, `%B`, `%F`, `%H`, `%I`, `%M`, `%R`, `%S`, `%T`, `%Y`, `%a`, `%b`, `%d`, `%j`, `%m`, `%y`,
-            `%%`
+            `%A`, `%B`, `%F`, `%H`, `%I`, `%M`, `%R`, `%S`, `%T`, `%V`, %Y`, `%a`, `%b`, `%d`, `%j`, `%m`,
+            `%y`, `%%`
 
         Additionally one specific combination is supported: `%S.%f`
 
