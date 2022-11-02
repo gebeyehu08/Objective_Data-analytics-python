@@ -153,7 +153,7 @@ def test_date_format_week_edge_cases(engine):
             datetime.date(year, 12, 31)
         ])
 
-    df = DataFrame.from_pandas(engine=engine, df=pd.DataFrame({'date': dates}), convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pd.DataFrame({'date': dates}))
     for code in codes:
         df[code] = df['date'].dt.strftime(code)
     df = df.sort_index()
