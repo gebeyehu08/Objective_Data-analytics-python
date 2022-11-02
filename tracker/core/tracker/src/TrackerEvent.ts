@@ -13,22 +13,22 @@ import { cleanObjectFromInternalProperties } from './cleanObjectFromInternalProp
 import { ContextsConfig } from './Context';
 
 /**
- * TrackerEvents can be constructed with simply an Event `type` and, optionally, their Contexts.
- * Contexts are entirely optional, although Collectors will mostly likely enforce minimal requirements around them.
- * E.g. An interactive TrackerEvent without a Location Stack is probably not descriptive enough to be acceptable.
+ * TrackerEvents can be constructed with the result of one of the Event factories.
  */
-export type TrackerEventAttributes = Pick<AbstractEvent, '_type'> & ContextsConfig;
+export type TrackerEventAttributes = Omit<TrackerEvent, 'toJSON'>;
 
 /**
  * The configuration object accepted by TrackerEvent's constructor
  * */
-export type TrackerEventConfig = Pick<AbstractEvent, '_type' | 'id' | 'time'> & ContextsConfig;
+export type TrackerEventConfig = AbstractEvent & ContextsConfig;
 
 /**
  * Our main TrackedEvent interface and basic implementation.
  */
-export class TrackerEvent implements Contexts {
-  readonly _type: string;
+export class TrackerEvent implements AbstractEvent, Contexts {
+  readonly __instance_id: AbstractEvent['__instance_id'];
+  readonly _type: AbstractEvent['_type'];
+  readonly _types: string[];
   readonly id: string;
   readonly time: number;
   readonly location_stack: AbstractLocationContext[];
@@ -41,8 +41,13 @@ export class TrackerEvent implements Contexts {
    * ContextConfigs are used to configure location_stack and global_contexts. If multiple configurations have been
    * provided they will be merged onto each other to produce a single location_stack and global_contexts.
    */
-  constructor({ _type, id, time, ...otherProps }: TrackerEventConfig, ...contextConfigs: ContextsConfig[]) {
+  constructor(
+    { __instance_id, _type, _types, id, time, ...otherProps }: TrackerEventConfig,
+    ...contextConfigs: ContextsConfig[]
+  ) {
+    this.__instance_id = __instance_id;
     this._type = _type;
+    this._types = _types;
     this.id = id;
     this.time = time;
 

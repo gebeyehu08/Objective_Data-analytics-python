@@ -2,469 +2,194 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import {
+  makeApplicationContext,
+  makeApplicationLoadedEvent,
+  makeContentContext,
+  makeHttpContext,
+  makeLinkContext,
+  makeMediaLoadEvent,
+  makeMediaPlayerContext,
+  makeNavigationContext,
+  makeOverlayContext,
+  makePathContext,
+  makePressableContext,
+  makePressEvent,
+  makeRootLocationContext,
+  makeVisibleEvent,
+} from '@objectiv/schema';
 import { expectToThrow } from '@objectiv/testing-tools';
 import { RecordedEvent } from '@objectiv/tracker-core';
 import { RecordedEvents } from '../src/RecordedEvents';
 
 describe('RecordedEvents', () => {
+  // TODO fix this fixture (pun not intended). The new schema is stricter than this
   const events = [
-    {
-      _type: 'ApplicationLoadedEvent',
-      location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-      ],
-      global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
-      ],
+    makeApplicationLoadedEvent({
       id: 'ApplicationLoadedEvent#1',
-    },
-    {
-      _type: 'MediaLoadEvent',
-      location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'video',
-        },
-        {
-          _type: 'ContentContext',
-          id: 'modeling',
-        },
-        {
-          _type: 'MediaPlayerContext',
-          id: '2-minute-video',
-        },
-      ],
+      location_stack: [makeRootLocationContext({ id: 'home' })],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/video',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makeMediaLoadEvent({
       id: 'MediaLoadEvent#1',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'logo',
-          href: '/',
-        },
+        makeRootLocationContext({ id: 'video' }),
+        makeContentContext({ id: 'modeling' }),
+        makeMediaPlayerContext({ id: '2-minute-video' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/video' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#1',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'contact-us',
-          href: 'mailto:hi@objectiv.io',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'logo', href: '/' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#10',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'video',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'about-us',
-          href: '/about',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'contact-us', href: 'mailto:hi@objectiv.io' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/video',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#2',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'blog',
-          href: '/blog',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'about-us', href: '/about' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/video' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#3',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'jobs',
-          href: '/jobs',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'blog', href: '/blog' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#4',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'faq',
-          href: 'http://localhost:3000/docs/home/the-project/faq',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'jobs', href: '/jobs' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#5',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'docs',
-          href: 'http://localhost:3000/docs',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'faq', href: 'http://localhost:3000/docs/home/the-project/faq' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#6',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'video',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'github',
-          href: 'https://github.com/objectiv/objectiv-analytics',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'docs', href: 'http://localhost:3000/docs' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/video',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#7',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'slack',
-          href: '/join-slack',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'github', href: 'https://github.com/objectiv/objectiv-analytics' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/video' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#8',
-    },
-    {
-      _type: 'PressEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'NavigationContext',
-          id: 'navbar-top',
-        },
-        {
-          _type: 'LinkContext',
-          id: 'twitter',
-          href: 'https://twitter.com/objectiv_io',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'slack', href: '/join-slack' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makePressEvent({
       id: 'PressEvent#9',
-    },
-    {
-      _type: 'VisibleEvent',
       location_stack: [
-        {
-          _type: 'RootLocationContext',
-          id: 'home',
-        },
-        {
-          _type: 'PressableContext',
-          id: 'star-us-notification',
-        },
-        {
-          _type: 'OverlayContext',
-          id: 'star-us-notification-overlay',
-        },
+        makeRootLocationContext({ id: 'home' }),
+        makeNavigationContext({ id: 'navbar-top' }),
+        makeLinkContext({ id: 'twitter', href: 'https://twitter.com/objectiv_io' }),
       ],
       global_contexts: [
-        {
-          _type: 'HttpContext',
-          id: 'http_context',
-          referrer: '',
-          user_agent: 'mocked-user-agent',
-          remote_address: null,
-        },
-        {
-          _type: 'ApplicationContext',
-          id: 'objectiv-website-dev',
-        },
-        {
-          _type: 'PathContext',
-          id: 'http://localhost:3000/',
-        },
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
       ],
+    }),
+    makeVisibleEvent({
       id: 'VisibleEvent#1',
-    },
+      location_stack: [
+        makeRootLocationContext({ id: 'home' }),
+        makePressableContext({ id: 'star-us-notification' }),
+        makeOverlayContext({ id: 'star-us-notification-overlay' }),
+      ],
+      global_contexts: [
+        makeApplicationContext({ id: 'objectiv-website-dev' }),
+        makePathContext({ id: 'http://localhost:3000/' }),
+        makeHttpContext({ id: 'http_context', referrer: '', user_agent: 'mocked-user-agent', remote_address: null }),
+      ],
+    }),
   ];
 
   const recordedEvents = new RecordedEvents(events);

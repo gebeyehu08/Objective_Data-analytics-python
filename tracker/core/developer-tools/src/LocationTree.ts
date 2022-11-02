@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { AbstractLocationContext } from '@objectiv/schema';
+import { AbstractContextName, AbstractLocationContext } from '@objectiv/schema';
 import { generateGUID, LocationNode, LocationTreeInterface } from '@objectiv/tracker-core';
 import { EventRecorder } from './EventRecorder';
 import { getLocationPath } from './getLocationPath';
@@ -14,7 +14,8 @@ import { TrackerConsole } from './TrackerConsole';
 export const rootNode: LocationNode = {
   __location_context: true,
   __instance_id: generateGUID(),
-  _type: 'LocationTreeRoot',
+  _type: AbstractContextName.AbstractLocationContext,
+  _types: [AbstractContextName.AbstractContext, AbstractContextName.AbstractLocationContext],
   id: 'location-tree-root',
   parentLocationId: null,
 };

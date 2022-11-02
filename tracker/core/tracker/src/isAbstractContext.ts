@@ -2,8 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { AbstractContext } from '@objectiv/schema';
-import { ContextNames } from './generated/ContextNames';
+import { AbstractContext, ContextNames } from '@objectiv/schema';
 
 /**
  * A type guard to determine if the given object has the shape of an AbstractContext.

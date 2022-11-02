@@ -2,7 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationContextName, makeContentContext, makeMediaPauseEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeMediaPauseEvent } from '@objectiv/schema';
+import { matchUUID } from '@objectiv/testing-tools';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { TrackingContextProvider, trackMediaPauseEvent, useMediaPauseEventTracker } from '../src';
@@ -23,7 +25,16 @@ describe('trackMediaPause', () => {
     trackMediaPauseEvent({ tracker });
 
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
-    expect(tracker.trackEvent).toHaveBeenNthCalledWith(1, expect.objectContaining(makeMediaPauseEvent()), undefined);
+    expect(tracker.trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        ...makeMediaPauseEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
+      undefined
+    );
   });
 
   it('should track a MediaPauseEvent (hook relying on TrackingContextProvider)', () => {
@@ -77,15 +88,18 @@ describe('trackMediaPause', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeMediaPauseEvent({
+      expect.objectContaining({
+        ...makeMediaPauseEvent({
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

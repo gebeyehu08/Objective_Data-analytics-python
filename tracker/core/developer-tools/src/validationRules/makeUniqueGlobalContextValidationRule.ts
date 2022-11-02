@@ -2,13 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { AbstractGlobalContext } from '@objectiv/schema';
-import {
-  GlobalContextErrorType,
-  GlobalContextName,
-  TrackerEvent,
-  UniqueGlobalContextValidationRuleFactory,
-} from '@objectiv/tracker-core';
+import { AbstractGlobalContext, GlobalContextName } from '@objectiv/schema';
+import { GlobalContextErrorType, TrackerEvent, UniqueGlobalContextValidationRuleFactory } from '@objectiv/tracker-core';
 import { EventRecorder } from '../EventRecorder';
 import { GlobalContextErrorMessages } from '../generated/ContextErrorMessages';
 import { TrackerConsole } from '../TrackerConsole';

@@ -3,8 +3,9 @@
  */
 
 import '@objectiv/developer-tools';
+import { LocationContextName } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateGUID, LocationContextName } from '@objectiv/tracker-core';
+import { generateGUID } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackNewElement } from '../src/mutationObserver/trackNewElement';
 import { makeTaggedElement } from './mocks/makeTaggedElement';

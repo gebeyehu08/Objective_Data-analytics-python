@@ -10,8 +10,9 @@ import {
   makeApplicationLoadedEvent,
   makeContentContext,
   makeInputValueContext,
-  Tracker,
-} from '@objectiv/tracker-core';
+} from '@objectiv/schema';
+import { matchUUID } from '@objectiv/testing-tools';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import {
@@ -42,7 +43,12 @@ describe('trackApplicationLoaded', () => {
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(makeApplicationLoadedEvent()),
+      expect.objectContaining({
+        ...makeApplicationLoadedEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });
@@ -56,7 +62,12 @@ describe('trackApplicationLoaded', () => {
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(makeApplicationLoadedEvent()),
+      expect.objectContaining({
+        ...makeApplicationLoadedEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });
@@ -262,15 +273,18 @@ describe('trackApplicationLoaded', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeApplicationLoadedEvent({
+      expect.objectContaining({
+        ...makeApplicationLoadedEvent({
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

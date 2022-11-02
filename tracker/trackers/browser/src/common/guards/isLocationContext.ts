@@ -2,8 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { AbstractLocationContext } from '@objectiv/schema';
-import { LocationContextName } from '@objectiv/tracker-core';
+import { AbstractLocationContext, LocationContextName } from '@objectiv/schema';
 import { AnyLocationContext } from '../../definitions/LocationContext';
 
 /**

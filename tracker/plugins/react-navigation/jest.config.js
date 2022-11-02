@@ -9,6 +9,7 @@ module.exports = {
     '@objectiv/developer-tools': '<rootDir>../../core/developer-tools/src',
     '@objectiv/testing-tools': '<rootDir>../../core/testing-tools/src',
     '@objectiv/tracker-core': '<rootDir>../../core/tracker/src',
+    '@objectiv/schema': '<rootDir>../../core/schema/src',
     '@objectiv/tracker-react-core': '<rootDir>../../core/react/src',
     '@objectiv/tracker-react-native': '<rootDir>../../trackers/react-native/src',
     '@objectiv/plugin-(.*)': '<rootDir>/../../plugins/$1/src',

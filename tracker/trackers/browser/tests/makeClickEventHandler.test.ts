@@ -2,14 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  generateGUID,
-  LocationContextName,
-  makePressEvent,
-  TrackerQueue,
-  TrackerQueueMemoryStore,
-} from '@objectiv/tracker-core';
+import { LocationContextName, makePressEvent } from '@objectiv/schema';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { generateGUID, TrackerQueue, TrackerQueueMemoryStore } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, trackPressEvent } from '../src/';
 import { makeClickEventHandler } from '../src/mutationObserver/makeClickEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -90,11 +85,14 @@ describe('makeClickEventHandler', () => {
     expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
     expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makePressEvent({
+      expect.objectContaining({
+        ...makePressEvent({
           location_stack: [expect.objectContaining({ _type: LocationContextName.PressableContext, id: 'button' })],
-        })
-      )
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      })
     );
   });
 

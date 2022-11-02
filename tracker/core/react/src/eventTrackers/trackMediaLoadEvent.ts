@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeMediaLoadEvent } from '@objectiv/tracker-core';
+import { makeMediaLoadEvent } from '@objectiv/schema';
 import { EventTrackerParameters } from '../types';
 
 /**

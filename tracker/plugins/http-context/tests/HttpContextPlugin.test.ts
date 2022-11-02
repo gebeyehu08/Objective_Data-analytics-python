@@ -2,15 +2,16 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  ContextsConfig,
-  generateGUID,
   GlobalContextName,
+  makeApplicationContext,
+  makeContentContext,
   makeHttpContext,
-  Tracker,
-  TrackerEvent,
-} from '@objectiv/tracker-core';
+  makePathContext,
+  makePressEvent,
+} from '@objectiv/schema';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { ContextsConfig, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { HttpContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -31,19 +32,18 @@ describe('HttpContextPlugin', () => {
 
   it('should TrackerConsole.error when calling `validate` before `initialize`', () => {
     const testHttpContextPlugin = new HttpContextPlugin();
-    const validEvent = new TrackerEvent({
-      _type: 'test',
-      global_contexts: [
-        makeHttpContext({
-          id: '/test',
-          user_agent: 'test',
-          referrer: 'test',
-          remote_address: 'test',
-        }),
-      ],
-      id: generateGUID(),
-      time: Date.now(),
-    });
+    const validEvent = new TrackerEvent(
+      makePressEvent({
+        global_contexts: [
+          makeHttpContext({
+            id: '/test',
+            user_agent: 'test',
+            referrer: 'test',
+            remote_address: 'test',
+          }),
+        ],
+      })
+    );
     testHttpContextPlugin.validate(validEvent);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv:HttpContextPlugin｣ Cannot validate. Make sure to initialize the plugin first.'
@@ -61,16 +61,10 @@ describe('HttpContextPlugin', () => {
       plugins: [new HttpContextPlugin()],
     });
     const eventContexts: ContextsConfig = {
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
-      ],
-      global_contexts: [
-        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
-        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
-      ],
+      location_stack: [makeContentContext({ id: 'A' }), makeContentContext({ id: 'B' })],
+      global_contexts: [makePathContext({ id: 'abc' }), makeApplicationContext({ id: 'def' })],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent(eventContexts));
     expect(testEvent.location_stack).toHaveLength(2);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(2);
@@ -85,6 +79,7 @@ describe('HttpContextPlugin', () => {
           referrer: 'MOCK_REFERRER',
           remote_address: null,
           user_agent: 'MOCK_USER_AGENT',
+          _types: ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
         },
       ])
     );
@@ -103,7 +98,7 @@ describe('HttpContextPlugin', () => {
       applicationId: 'app-id',
       plugins: [new HttpContextPlugin()],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(0);
@@ -118,6 +113,7 @@ describe('HttpContextPlugin', () => {
           referrer: '',
           remote_address: null,
           user_agent: '',
+          _types: ['AbstractContext', 'AbstractGlobalContext', 'HttpContext'],
         },
       ])
     );
@@ -151,19 +147,18 @@ describe('HttpContextPlugin', () => {
 
     it('should return silently  when calling `validate` before `initialize`', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
-      const validEvent = new TrackerEvent({
-        _type: 'test',
-        global_contexts: [
-          makeHttpContext({
-            id: '/test',
-            user_agent: 'test',
-            referrer: 'test',
-            remote_address: 'test',
-          }),
-        ],
-        id: generateGUID(),
-        time: Date.now(),
-      });
+      const validEvent = new TrackerEvent(
+        makePressEvent({
+          global_contexts: [
+            makeHttpContext({
+              id: '/test',
+              user_agent: 'test',
+              referrer: 'test',
+              remote_address: 'test',
+            }),
+          ],
+        })
+      );
       testHttpContextPlugin.validate(validEvent);
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
@@ -171,25 +166,24 @@ describe('HttpContextPlugin', () => {
     it('should not validate', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
       testHttpContextPlugin.initialize(testTracker);
-      const eventWithDuplicatedHttpContext = new TrackerEvent({
-        _type: 'TestEvent',
-        global_contexts: [
-          makeHttpContext({
-            id: '/test',
-            user_agent: 'test',
-            referrer: 'test',
-            remote_address: 'test',
-          }),
-          makeHttpContext({
-            id: '/test',
-            user_agent: 'test',
-            referrer: 'test',
-            remote_address: 'test',
-          }),
-        ],
-        id: generateGUID(),
-        time: Date.now(),
-      });
+      const eventWithDuplicatedHttpContext = new TrackerEvent(
+        makePressEvent({
+          global_contexts: [
+            makeHttpContext({
+              id: '/test',
+              user_agent: 'test',
+              referrer: 'test',
+              remote_address: 'test',
+            }),
+            makeHttpContext({
+              id: '/test',
+              user_agent: 'test',
+              referrer: 'test',
+              remote_address: 'test',
+            }),
+          ],
+        })
+      );
 
       jest.resetAllMocks();
 

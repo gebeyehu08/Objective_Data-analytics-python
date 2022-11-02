@@ -2,6 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { makePressEvent } from '@objectiv/schema';
 import { localStorageMock, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { TrackerEvent } from '@objectiv/tracker-core';
 import { LocalStorageQueueStore } from '../src';
@@ -14,9 +15,9 @@ describe('LocalStorageQueueStore', () => {
     jest.resetAllMocks();
   });
 
-  const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a', time: Date.now() });
-  const TrackerEvent2 = new TrackerEvent({ id: 'b', _type: 'b', time: Date.now() });
-  const TrackerEvent3 = new TrackerEvent({ id: 'c', _type: 'c', time: Date.now() });
+  const TrackerEvent1 = new TrackerEvent(makePressEvent({ id: 'a' }));
+  const TrackerEvent2 = new TrackerEvent(makePressEvent({ id: 'b' }));
+  const TrackerEvent3 = new TrackerEvent(makePressEvent({ id: 'c' }));
 
   describe('Isolation', () => {
     afterEach(() => {

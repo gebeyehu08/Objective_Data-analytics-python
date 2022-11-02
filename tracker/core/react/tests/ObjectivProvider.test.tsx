@@ -3,14 +3,9 @@
  */
 
 import '@objectiv/developer-tools';
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  GlobalContextName,
-  LocationContextName,
-  makeApplicationLoadedEvent,
-  Tracker,
-  TrackerPlatform,
-} from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName, makeApplicationLoadedEvent } from '@objectiv/schema';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { Tracker, TrackerPlatform } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { ObjectivProvider, useTrackingContext } from '../src';
@@ -39,7 +34,6 @@ describe('ObjectivProvider', () => {
       active: true,
       anonymous: false,
       applicationId: 'app-id',
-      generateGUID: expect.any(Function),
       global_contexts: [],
       location_stack: [],
       plugins: [
@@ -150,7 +144,12 @@ describe('ObjectivProvider', () => {
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(makeApplicationLoadedEvent()),
+      expect.objectContaining({
+        ...makeApplicationLoadedEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });
@@ -165,7 +164,12 @@ describe('ObjectivProvider', () => {
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(makeApplicationLoadedEvent()),
+      expect.objectContaining({
+        ...makeApplicationLoadedEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

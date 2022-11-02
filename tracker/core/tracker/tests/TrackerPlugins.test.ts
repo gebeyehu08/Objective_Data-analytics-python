@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { makePressEvent } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateGUID, TrackerEvent, TrackerPluginInterface, TrackerPlugins } from '../src';
+import { TrackerEvent, TrackerPluginInterface, TrackerPlugins } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -45,7 +46,7 @@ describe('Plugin', () => {
     const testPlugins = new TrackerPlugins(plugins);
     expect(pluginA.enrich).not.toHaveBeenCalled();
     expect(pluginB.enrich).not.toHaveBeenCalled();
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     testPlugins.enrich(testEvent);
     expect(pluginA.enrich).toHaveBeenCalledWith(testEvent);
     expect(pluginB.enrich).toHaveBeenCalledWith(testEvent);
@@ -67,7 +68,7 @@ describe('Plugin', () => {
     const testPlugins = new TrackerPlugins(plugins);
     expect(pluginA.validate).not.toHaveBeenCalled();
     expect(pluginB.validate).not.toHaveBeenCalled();
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     testPlugins.validate(testEvent);
     expect(pluginA.validate).toHaveBeenCalledWith(testEvent);
     expect(pluginB.validate).toHaveBeenCalledWith(testEvent);
@@ -94,7 +95,7 @@ describe('Plugin', () => {
     expect(pluginA.enrich).not.toHaveBeenCalled();
     expect(pluginB.enrich).not.toHaveBeenCalled();
     expect(pluginC.enrich).not.toHaveBeenCalled();
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     testPlugins.enrich(testEvent);
     expect(pluginA.enrich).toHaveBeenCalledWith(testEvent);
     expect(pluginB.enrich).not.toHaveBeenCalled();

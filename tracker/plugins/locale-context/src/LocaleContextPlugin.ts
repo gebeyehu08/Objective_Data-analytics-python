@@ -2,7 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { ContextsConfig, makeLocaleContext, TrackerPluginInterface } from '@objectiv/tracker-core';
+import { makeLocaleContext } from '@objectiv/schema';
+import { ContextsConfig, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { CountryCodes } from './generated/CountryCodes';
 import { LanguageCodes } from './generated/LanguageCodes';
 

@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makePressableContext, makeInputContext, makeContentContext } from '@objectiv/tracker-core';
+import { makeContentContext, makeInputContext, makePressableContext } from '@objectiv/schema';
 import { stringifyLocationContext, TaggedElement, TaggingAttribute } from '../../src';
 
 export const makeTaggedElement = (

@@ -3,8 +3,9 @@
  */
 
 import { PathContextFromURLPlugin } from '@objectiv/plugin-path-context-from-url';
+import { LocationStack, makeContentContext } from '@objectiv/schema';
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { generateGUID, LocationStack, makeContentContext, TrackerPluginInterface } from '@objectiv/tracker-core';
+import { generateGUID, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { BrowserTracker, getElementLocationStack, TaggableElement } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 

@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { LocationStack } from '@objectiv/tracker-core';
+import { LocationStack } from '@objectiv/schema';
 
 /**
  * Converts a Location Stack onto its human-readable Location Path

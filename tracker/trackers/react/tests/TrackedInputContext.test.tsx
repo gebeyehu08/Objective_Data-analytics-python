@@ -3,8 +3,8 @@
  */
 
 import { TextField } from '@material-ui/core';
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { ComponentProps, createRef } from 'react';
 import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputContext, TrackedRootLocationContext } from '../src';

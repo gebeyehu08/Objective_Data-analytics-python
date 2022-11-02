@@ -3,7 +3,8 @@
  */
 
 import '@objectiv/developer-tools';
-import { makeContentContext, Tracker } from '@objectiv/tracker-core';
+import { makeContentContext } from '@objectiv/schema';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { LocationContextWrapper, ObjectivProvider } from '../src';

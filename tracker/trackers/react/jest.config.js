@@ -19,5 +19,6 @@ module.exports = {
     '@objectiv/testing-tools': '<rootDir>../../core/testing-tools/src',
     '@objectiv/tracker-react-core': '<rootDir>/../../core/react/src',
     '@objectiv/tracker-core': '<rootDir>/../../core/tracker/src',
+    '@objectiv/schema': '<rootDir>../../core/schema/src',
   },
 };

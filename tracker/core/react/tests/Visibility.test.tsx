@@ -2,13 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import {
-  LocationContextName,
-  makeContentContext,
-  makeHiddenEvent,
-  makeVisibleEvent,
-  Tracker,
-} from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeHiddenEvent, makeVisibleEvent } from '@objectiv/schema';
+import { matchUUID } from '@objectiv/testing-tools';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { TrackingContextProvider, trackVisibility, useVisibilityTracker } from '../src';
@@ -29,7 +25,17 @@ describe('Visibility', () => {
     trackVisibility({ tracker, isVisible: false });
 
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
-    expect(tracker.trackEvent).toHaveBeenNthCalledWith(1, expect.objectContaining(makeHiddenEvent()), undefined);
+    // FIXME
+    expect(tracker.trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        ...makeHiddenEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
+      undefined
+    );
   });
 
   it('should track a HiddenEvent (hook relying on TrackingContextProvider)', () => {
@@ -83,15 +89,18 @@ describe('Visibility', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeHiddenEvent({
+      expect.objectContaining({
+        ...makeHiddenEvent({
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });
@@ -103,7 +112,16 @@ describe('Visibility', () => {
     trackVisibility({ tracker, isVisible: true });
 
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
-    expect(tracker.trackEvent).toHaveBeenNthCalledWith(1, expect.objectContaining(makeVisibleEvent()), undefined);
+    expect(tracker.trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        ...makeVisibleEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
+      undefined
+    );
   });
 
   it('should track a VisibleEvent (hook relying on TrackingContextProvider)', () => {
@@ -157,15 +175,18 @@ describe('Visibility', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeVisibleEvent({
+      expect.objectContaining({
+        ...makeVisibleEvent({
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

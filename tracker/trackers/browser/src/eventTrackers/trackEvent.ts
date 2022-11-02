@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationStack, TrackerEventAttributes } from '@objectiv/tracker-core';
+import { LocationStack } from '@objectiv/schema';
+import { TrackerEventAttributes } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { getElementLocationStack } from '../common/getElementLocationStack';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';

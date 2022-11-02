@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationStack, TrackerPlugins } from '@objectiv/tracker-core';
+import { LocationStack } from '@objectiv/schema';
+import { TrackerPlugins } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { TaggingAttribute } from '../definitions/TaggingAttribute';
 import { TrackedElement } from '../definitions/TrackedElement';

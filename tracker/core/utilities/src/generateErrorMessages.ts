@@ -2,13 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import {
-  GlobalContextErrorType,
-  GlobalContextName,
-  LocationContextErrorType,
-  LocationContextName,
-  TrackerPlatform,
-} from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
+import { GlobalContextErrorType, LocationContextErrorType, TrackerPlatform } from '@objectiv/tracker-core';
 import * as fs from 'fs';
 import { GlobalContextErrorMessagesTemplates, LocationContextErrorMessagesTemplates } from './ErrorMessagesTemplates';
 import { preCompileErrorMessage } from './preCompileErrorMessage';
@@ -81,13 +76,8 @@ fs.writeFileSync(
  * Copyright ${new Date().getFullYear()} Objectiv B.V.
  */
 
-import {
-  ContextErrorMessages,
-  GlobalContextErrorType,
-  GlobalContextName,
-  LocationContextErrorType,
-  LocationContextName
-} from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
+import { ContextErrorMessages, GlobalContextErrorType, LocationContextErrorType } from '@objectiv/tracker-core';
 
 `
 );

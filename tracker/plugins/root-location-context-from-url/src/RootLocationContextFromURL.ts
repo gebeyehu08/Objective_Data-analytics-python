@@ -1,4 +1,9 @@
-import { ContextsConfig, makeRootLocationContext, TrackerPluginInterface } from '@objectiv/tracker-core';
+/*
+ * Copyright 2021-2022 Objectiv B.V.
+ */
+
+import { makeRootLocationContext } from '@objectiv/schema';
+import { ContextsConfig, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { makeRootLocationId } from './makeRootLocationId';
 
 /**

@@ -5,13 +5,10 @@
 export enum AbstractContextName {
   AbstractContext = 'AbstractContext',
   AbstractGlobalContext = 'AbstractGlobalContext',
-  AbstractLocationContext = 'AbstractLocationContext'
+  AbstractLocationContext = 'AbstractLocationContext',
 }
 
-export type AnyAbstractContextName =
-  | 'AbstractContext'
-  | 'AbstractGlobalContext'
-  | 'AbstractLocationContext';
+export type AnyAbstractContextName = 'AbstractContext' | 'AbstractGlobalContext' | 'AbstractLocationContext';
 
 export enum GlobalContextName {
   ApplicationContext = 'ApplicationContext',
@@ -22,7 +19,7 @@ export enum GlobalContextName {
   LocaleContext = 'LocaleContext',
   MarketingContext = 'MarketingContext',
   PathContext = 'PathContext',
-  SessionContext = 'SessionContext'
+  SessionContext = 'SessionContext',
 }
 
 export type AnyGlobalContextName =
@@ -45,7 +42,7 @@ export enum LocationContextName {
   NavigationContext = 'NavigationContext',
   OverlayContext = 'OverlayContext',
   PressableContext = 'PressableContext',
-  RootLocationContext = 'RootLocationContext'
+  RootLocationContext = 'RootLocationContext',
 }
 
 export type AnyLocationContextName =
@@ -60,3 +57,42 @@ export type AnyLocationContextName =
   | 'RootLocationContext';
 
 export const ContextNames = new Set([...Object.keys(LocationContextName), ...Object.keys(GlobalContextName)]);
+
+export enum AbstractEventName {
+  AbstractEvent = 'AbstractEvent',
+}
+
+export type AnyAbstractEventName = 'AbstractEvent';
+
+export enum EventName {
+  ApplicationLoadedEvent = 'ApplicationLoadedEvent',
+  FailureEvent = 'FailureEvent',
+  HiddenEvent = 'HiddenEvent',
+  InputChangeEvent = 'InputChangeEvent',
+  InteractiveEvent = 'InteractiveEvent',
+  MediaEvent = 'MediaEvent',
+  MediaLoadEvent = 'MediaLoadEvent',
+  MediaPauseEvent = 'MediaPauseEvent',
+  MediaStartEvent = 'MediaStartEvent',
+  MediaStopEvent = 'MediaStopEvent',
+  NonInteractiveEvent = 'NonInteractiveEvent',
+  PressEvent = 'PressEvent',
+  SuccessEvent = 'SuccessEvent',
+  VisibleEvent = 'VisibleEvent',
+}
+
+export type AnyEventName =
+  | 'ApplicationLoadedEvent'
+  | 'FailureEvent'
+  | 'HiddenEvent'
+  | 'InputChangeEvent'
+  | 'InteractiveEvent'
+  | 'MediaEvent'
+  | 'MediaLoadEvent'
+  | 'MediaPauseEvent'
+  | 'MediaStartEvent'
+  | 'MediaStopEvent'
+  | 'NonInteractiveEvent'
+  | 'PressEvent'
+  | 'SuccessEvent'
+  | 'VisibleEvent';

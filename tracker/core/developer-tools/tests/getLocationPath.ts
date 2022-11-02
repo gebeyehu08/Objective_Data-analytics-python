@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { LocationStack, makeContentContext } from '@objectiv/tracker-core';
+import { LocationStack, makeContentContext } from '@objectiv/schema';
 import { getLocationPath } from '../src/getLocationPath';
 
 describe('getLocationPath', () => {

@@ -2,10 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
 import {
   EventToValidate,
-  GlobalContextName,
-  LocationContextName,
   TrackerEvent,
   TrackerInterface,
   TrackerPluginInterface,

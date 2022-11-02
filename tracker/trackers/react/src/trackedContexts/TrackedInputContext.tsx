@@ -2,7 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { GlobalContexts, makeId, makeInputValueContext } from '@objectiv/tracker-core';
+import { GlobalContexts, makeInputValueContext } from '@objectiv/schema';
+import { makeId } from '@objectiv/tracker-core';
 import {
   EventTrackerParameters,
   InputContextWrapper,
