@@ -72,7 +72,7 @@ def test__split_format_string_V():
     assert _split_format_string_V('%V-%Y-%m-%d-%V') == ['%V', '-%Y-%m-%d-', '%V']
     assert _split_format_string_V('%V-%V-%V') == ['%V', '-', '%V', '-', '%V']
     assert _split_format_string_V('%%V-%V-%%V') == ['%%V-', '%V', '-%%V']
-    assert _split_format_string_V('xxx%V-%m-%%V') == ['xxx', '%V', '-%m-%%V']
+    assert _split_format_string_V('xxx%V-%m-%%V%V') == ['xxx', '%V', '-%m-%%V', '%V']
     assert _split_format_string_V('%') == ['%']
     assert _split_format_string_V('') == ['']
 

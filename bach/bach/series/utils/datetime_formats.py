@@ -221,7 +221,7 @@ def _parse_c_code_to_athena_code(date_format: str) -> str:
     Some python format codes are different on Athena, or might even raise an error. Such codes are converted
     or escaped; using the returned string with Athena's date_format will never raise an error.
 
-    Does not support '%V', but besides that All codes in CODES_SUPPORTED_IN_ALL_DIALECTS are guaranteed to
+    Does not support '%V', but besides that all codes in CODES_SUPPORTED_IN_ALL_DIALECTS are guaranteed to
     be correctly represented in the returned format string. If date_format contains codes that are not
     supported, then the returned format might evaluate to a different string than the original date_format
     would with python's strftime() function.
@@ -240,8 +240,8 @@ def _parse_c_code_to_athena_code(date_format: str) -> str:
         '%B': '%M',
         '%F': '%Y-%m-%d',
         '%R': '%H:%i',
-        # List not-supported codes that are in CODES_SUPPORTED_IN_ALL_DIALECTS and will trigger an error
-        # See also inline comments below
+        # List not-supported codes that are in CODES_SUPPORTED_IN_ALL_DIALECTS and will trigger an error if
+        # not escaped. See also inline comments below.
         '%V': '%%V'
     }
     codes_to_consider = set(string.ascii_letters + '%')
@@ -275,10 +275,11 @@ def _parse_c_code_to_athena_code(date_format: str) -> str:
 def _split_format_string_V(date_format: str) -> List[str]:
     """
     Split the date format string in a list of format strings. Each occurrence of the format code `%V` will
-    be a separate format string in the resulting list, the rest of the format string is split as little as
-    possible.
+    be a separate format string in the resulting list, otherwise the format string is not split up.
 
-    Example: _split_format_string_V('xxx%V-%m-%%V') == ['xxx', '%V', '-%m-%%V']
+    Examples:
+    _split_format_string_V('%Y-%m-%d') == ['%Y-%m-%d']                          # zero '%V': no splits
+    _split_format_string_V('xxx%V-%m-%%V%V') == ['xxx', '%V', '-%m-%%V', '%V']  # two '%V': split in four
 
     :param date_format: C date format string.
     :return: list of sub format strings.
