@@ -76,7 +76,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	:skipif: engine is None
 
 	>>> from modelhub import ModelHub, display_sql_as_markdown
-	>>> from sql_models.util import is_athena
+	>>> from sql_models.util import is_bigquery
 	>>> # instantiate the model hub and set the default time aggregation to daily
 	>>> # and set the global contexts that will be used in this example
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['application'])
@@ -282,12 +282,11 @@ the open model hub and Bach work seamlessly together.
 	:skipif: engine is None
 
 	>>> # We'll do a lot of operations on the data in the df DataFrame. To make this easier for the
-	>>> # database (especially BigQuery), we tell Bach to materialize the current DataFrame as temporary
-	>>> # table. This statement has no direct effect, but any invocation of head() on the DataFrame later
+	>>> # BigQuery, we tell Bach to materialize the current DataFrame as temporary table.
+	>>> # This statement has no direct effect, but any invocation of head() on the DataFrame later
 	>>> # on will consist of two queries: one to create a temporary table with the current state of the
 	>>> # DataFrame, and one that queries that table and does subsequent operations.
-	>>> # N.B. Athena doesn't support temporary tables.
-	>>> if not is_athena(df.engine):
+	>>> if is_bigquery(df.engine):
 	...     df = df.materialize(materialization='temp_table')
 
 .. doctest:: modelhub
