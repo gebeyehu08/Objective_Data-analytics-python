@@ -35,7 +35,7 @@ def test_time_to_str(engine):
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df['column'].astype('time').astype('string')
     assert_equals_data(
         result,

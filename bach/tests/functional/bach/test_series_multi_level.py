@@ -20,7 +20,7 @@ def interval_data_pdf() -> pd.DataFrame:
 
 
 def test_series_numeric_interval_to_pandas(engine, interval_data_pdf: pd.DataFrame) -> None:
-    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf)
     df['range'] = SeriesNumericInterval.from_value(
         base=df,
         name='num_interval',
@@ -52,7 +52,7 @@ def test_series_numeric_interval_to_pandas(engine, interval_data_pdf: pd.DataFra
 
 
 def test_series_numeric_interval_sort_values(engine, interval_data_pdf: pd.DataFrame) -> None:
-    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf)
     df['range'] = SeriesNumericInterval.from_value(
         base=df,
         name='num_interval',
@@ -84,7 +84,7 @@ def test_series_numeric_interval_sort_values(engine, interval_data_pdf: pd.DataF
 
 def test_series_numeric_interval_append(engine, interval_data_pdf: pd.DataFrame) -> None:
     interval_data_pdf[['lower', 'upper']] = interval_data_pdf[['lower', 'upper']] .astype(int)
-    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf)
     df['range_1'] = SeriesNumericInterval.from_value(
         base=df,
         name='range_1',
@@ -131,7 +131,7 @@ def test_series_numeric_interval_append(engine, interval_data_pdf: pd.DataFrame)
 
 def test_series_numeric_interval_dropna(engine, interval_data_pdf: pd.DataFrame) -> None:
     interval_data_pdf.loc[2, ['upper', 'lower', 'bounds']] = None
-    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf)
     range = SeriesNumericInterval.from_value(
         base=df,
         name='range',
@@ -162,7 +162,7 @@ def test_series_numeric_interval_dropna(engine, interval_data_pdf: pd.DataFrame)
 
 
 def test_series_numeric_value_counts(engine, interval_data_pdf: pd.DataFrame) -> None:
-    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=interval_data_pdf)
     range = SeriesNumericInterval.from_value(
         base=df,
         name='range',

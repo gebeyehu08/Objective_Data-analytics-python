@@ -26,7 +26,7 @@ DATA = [
 def test_basic_fillna(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
     pdf = pdf[list("ABCDE")]
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df = df.astype('int64')
 
     result = df.fillna(value=0)
@@ -55,7 +55,7 @@ def test_basic_fillna(engine) -> None:
 
 def test_fillna_w_methods_against_pandas(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     sort_by = ['A', 'B', 'C']
     ascending = [False, True, False]
@@ -132,7 +132,7 @@ def test_ffill_propagation_on_groups(engine) -> None:
 
 def test_fillna_w_methods(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     sort_by = ['A', 'B', 'C']
     ascending = [False, True, False]
@@ -193,7 +193,7 @@ def test_fillna_w_methods(engine) -> None:
 
 def test_fillna_w_methods_w_sorted_df(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
+    df = DataFrame.from_pandas(engine=engine, df=pdf).sort_index()
 
     result_ffill = df.fillna(method='ffill')
     assert_equals_data(
@@ -232,7 +232,7 @@ def test_fillna_w_methods_w_sorted_df(engine) -> None:
 
 def test_fillna_errors(engine):
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     with pytest.raises(ValueError, match=r'cannot specify both "method" and "value".'):
         df.fillna(value=0, method='ffill')
 

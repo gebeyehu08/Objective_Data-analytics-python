@@ -30,7 +30,7 @@ def test_categorical_describe(engine) -> None:
 
 def test_numerical_describe(engine) -> None:
     p_series = pd.Series(data=[1, 2, 3, 4, 5, 6, 7, 8, 1], name='numbers')
-    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).numbers
+    series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame()).numbers
     result = series.describe(percentiles=[0.88, 0.5, 0.75])
 
     assert isinstance(result, Series)
@@ -52,7 +52,7 @@ def test_describe_datetime(engine) -> None:
         data=[np.datetime64("2000-01-01"), np.datetime64("2010-01-01"), np.datetime64("2010-01-01")],
         name='dt',
     )
-    df = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=p_series.to_frame())
 
     result = df.dt.describe()
 
@@ -75,7 +75,7 @@ def test_describe_timedelta(engine) -> None:
         data=[np.datetime64("2000-01-01"), np.datetime64("2010-01-01"), np.datetime64("2010-01-01")],
         name='dt',
     )
-    df = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=p_series.to_frame())
     df['dt'] = df['dt'] - np.datetime64("2022-01-01")
     result = df.dt.describe()
 

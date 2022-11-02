@@ -153,7 +153,7 @@ Here we construct a simple dataframe for illustrating the label selection functi
 		}
 		pdf = pandas.DataFrame(data)
 
-		df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+		df = DataFrame.from_pandas(engine=engine, df=pdf)
 		df = df.set_index('city')
 		df.to_pandas()
 

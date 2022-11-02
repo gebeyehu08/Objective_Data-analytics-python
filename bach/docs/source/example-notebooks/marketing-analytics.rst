@@ -85,7 +85,7 @@ the `location_stack` and global contexts.
 
 	>>> # define a further selection: which source to select in the below analyses.
 	>>> source_selection = ['twitter', 'reddit']
-	>>> sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}), convert_objects=True).sources
+	>>> sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}).sources
 	>>> # filter on defined list of UTM Sources
 	>>> df_marketing_selection = df_marketing_only[(df_marketing_only.utm_source.isin(sources))]
 
@@ -807,7 +807,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	campaign_sessions = df_acquisition[~df_acquisition['utm_source'].isnull()]['session_id'].unique()
 	df_marketing_only = df_acquisition[df_acquisition['session_id'].isin(campaign_sessions)]
 	source_selection = ['twitter', 'reddit']
-	sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}), convert_objects=True).sources
+	sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection})).sources
 	df_marketing_selection = df_marketing_only[(df_marketing_only.utm_source.isin(sources))]
 	df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
 	users_from_marketing_daily = modelhub.aggregate.unique_users(df_marketing_selection).sort_index(ascending=False)
