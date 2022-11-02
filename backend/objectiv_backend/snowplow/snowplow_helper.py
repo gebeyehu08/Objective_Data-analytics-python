@@ -195,7 +195,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     if cookie_source == CookieIdSource.CLIENT:
         # only set domain_sessionid if we have a client_side id
         data["sid"] = cookie_id
-    elif cookie_source == CookieIdSource.BACKEND:
+    else:
         # Unique identifier for a user, based on a cookie from the collector, so only set if the source was a cookie
         data["nuid"] = cookie_id
 
@@ -217,7 +217,7 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
         headers=[],
         contentType='application/json',
         hostname='',
-        networkUserId=cookie_id if cookie_source == CookieIdSource.BACKEND else None
+        networkUserId=cookie_id if cookie_source != CookieIdSource.CLIENT else None
     )
 
 
@@ -459,16 +459,37 @@ def write_data_to_aws_pipeline(events: EventDataList, config: SnowplowConfig,
 def write_data_to_sp_collector(events: EventDataList, config: SnowplowConfig):
     collector_url = config.collector_url
 
+    # same headers for all events
+    headers = {'Content-Type': 'application/json'}
+
     for event in events:
+        # if in anonymous mode, lets tell snowplow
+        try:
+            cookie_context = get_context(event, 'CookieIdContext')
+        except ValueError:
+            cookie_context = {}
+
+        if cookie_context.get('id') == 'client':
+            headers['SP-Anonymous'] = '*'
+            print('enabling anonymous mode for event')
+
         payload = objectiv_event_to_snowplow_payload(event=event, config=config)
-        headers = {'Content-Type': 'application/json'}
 
         print(f'obj: {json.dumps(event, indent=4)}')
         print(f'sp_raw: {payload}')
-        print(f'sp: {json.dumps(json.loads(payload.body), indent=4)}')
+
+        body = json.loads(payload.body)
+        del body['data'][0]['ip']
+
+        print(f'sp: {json.dumps(body, indent=4)}')
 
         url = f'{collector_url}{payload.path}'
-        r = requests.post(url, headers=headers, data=payload.body)
+        r = requests.post(url, headers=headers, data=json.dumps(body))
+
+        print(headers)
+        print(r)
+        print(r.text)
+        print(r.headers)
 
         if r.status_code != 200:
             print(f'Failed to post to collector @ {url}')
