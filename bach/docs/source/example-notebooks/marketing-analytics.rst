@@ -42,7 +42,7 @@ We first have to instantiate the model hub and an Objectiv DataFrame object.
 	>>> # and set the global contexts that will be used in this example
 	>>> from modelhub import ModelHub, display_sql_as_markdown
 	>>> from bach import DataFrame
-	>>> from datetime import datetime, timedelta
+	>>> from sql_models.util import is_athena
 	>>> import pandas as pd
 	>>> modelhub = ModelHub(time_aggregation='%Y-%m-%d', global_contexts=['http', 'marketing', 'application'])
 	>>> # get an Objectiv DataFrame within a defined timeframe
@@ -93,9 +93,11 @@ the `location_stack` and global contexts.
 	:skipif: engine is None
 
 	>>> # materialize the DataFrame as temporary tables to reduce the complexity of the underlying queries
-	>>> df_acquisition = df_acquisition.materialize(materialization='temp_table')
-	>>> df_marketing_only = df_marketing_only.materialize(materialization='temp_table')
-	>>> df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
+	>>> # N.B. Athena doesn't support temporary tables
+	>>> if not is_athena(df.engine):
+	...     df_acquisition = df_acquisition.materialize(materialization='temp_table')
+	...     df_marketing_only = df_marketing_only.materialize(materialization='temp_table')
+	...     df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
 
 **Available dataframes:**
 
