@@ -666,8 +666,9 @@ def _resolve_merge_expression_references(
 
 def _get_series_name_from_column_name(model: BachSqlModel, dialect: Dialect, column_name: str) -> str:
     """
-    Given a column_name, and the BachSqlModel that the column appears in. Determine what the series-name
-    by converting all series-names in the BachSqlModel meta-data to column names and seeing which matches.
+    Given a column_name and the BachSqlModel that the column appears in, determine what the series-name
+    of the column name was. This is done by converting all series names in the BachSqlModel meta-data to
+    column names, and seeing which matches the given column name.
     """
     series_names = list(model.column_expressions.keys())
     for series_name in series_names:
