@@ -122,6 +122,54 @@ def test_date_format(engine, recwarn):
     )
 
 
+def test_date_format_week_edge_cases(engine):
+    # Test for strftime() that tests a lot of dates, to make sure we cover edge cases around particular dates
+    # for the formatting codes %a/%A (day of week), %j (day of year), and (%V) week number
+    codes = ['%a', '%A', '%j', '%V']
+    years = [
+        (2000, True),   # Starts on Saturday  - leap year
+        (2019, False),  # Starts on Tuesday   - non leap year
+        (2020, True),   # Starts on Wednesday - leap year
+        (2021, False),  # Starts on Friday    - non leap year
+        (2022, False),  # Starts on Saturday  - non leap year
+        (2023, False),  # Starts on Sunday    - non leap year
+        (2024, True),   # Starts on Monday    - leap year
+        (2025, False),  # Starts on Wednesday - non leap year
+        (2026, False),  # Starts on Thursday  - non leap year
+    ]
+    dates = []
+    for year, is_leap_year in years:
+        last_day_february = 29 if is_leap_year else 28
+        dates.extend([
+            datetime.date(year, 1, 1),
+            datetime.date(year, 1, 2),
+            datetime.date(year, 1, 3),
+            datetime.date(year, 1, 4),
+            datetime.date(year, 1, 5),
+            datetime.date(year, 1, 6),
+            datetime.date(year, 1, 7),
+            datetime.date(year, 2, last_day_february),
+            datetime.date(year, 3, 1),
+            datetime.date(year, 12, 31)
+        ])
+
+    df = DataFrame.from_pandas(engine=engine, df=pd.DataFrame({'date': dates}), convert_objects=True)
+    for code in codes:
+        df[code] = df['date'].dt.strftime(code)
+    df = df.sort_index()
+
+    expected_data = [
+        [index, date] + [date.strftime(code) for code in codes]
+        for index, date in enumerate(dates)
+    ]
+    assert_equals_data(
+        df,
+        use_to_pandas=True,
+        expected_columns=['_index_0', 'date'] + codes,
+        expected_data=expected_data
+    )
+
+
 @pytest.mark.skip_bigquery('Postgres specific test')
 @pytest.mark.skip_athena('Postgres specific test')
 def test_date_format_all_supported_pg_codes(engine, recwarn):

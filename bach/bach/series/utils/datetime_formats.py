@@ -329,7 +329,7 @@ def parse_c_code_to_athena_expression(series_expression: Expression, date_format
     for sub_df in split_date_formats:
         if sub_df == '%V':
             expression = Expression.construct(
-                "format_datetime({}, 'w')", series_expression
+                "format_datetime({}, 'ww')", series_expression
             )
         else:
             parsed_format_str = _parse_c_code_to_athena_code(sub_df)
