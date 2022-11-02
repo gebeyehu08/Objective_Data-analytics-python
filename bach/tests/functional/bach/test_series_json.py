@@ -444,3 +444,23 @@ def test_json_str_as_str(engine, dtype) -> None:
             [3, '"hola"'],
         ],
     )
+
+
+def test_json_concat_scalar_str(engine, dtype) -> None:
+    bt = get_df_with_json_data(engine=engine, dtype='json')
+    bt['a'] = bt.dict_column.json.get_value('_type', as_str=True)
+    bt['b'] = bt.dict_column.json.get_value('id', as_str=True)
+
+    bt['c'] = bt.a + bt.b
+
+    assert_equals_data(
+        bt.c,
+        expected_columns=['_index_row', 'c'],
+        expected_data=[
+            [0, None],
+            [1, 'SectionContexthome'],
+            [2, None],
+            [3, None],
+            [4, None]
+        ]
+    )

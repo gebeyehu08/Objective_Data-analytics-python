@@ -4,6 +4,7 @@ Copyright 2022 Objectiv B.V.
 from enum import Enum
 from typing import Optional, Union, Sequence, List, Dict
 from bach import DataFrame, Series
+from bach.series.series import WrappedPartition
 
 
 class ValuePropagationMethod(Enum):
@@ -46,19 +47,19 @@ class ValuePropagation:
 
     def __init__(self, df: DataFrame, method: str):
         self._df = df
-        vp_method = ValuePropagationMethod.get_method(method)
-        self._row_sorting = {
-            'by': self.ROW_NUMBER_SERIES_NAME,
-            'ascending': vp_method == ValuePropagationMethod.FORWARD_FILL,
-        }
+        self._method = ValuePropagationMethod.get_method(method)
 
     def propagate(
-        self,
-        sort_by: Optional[Union[str, Sequence[str]]] = None,
-        ascending: Union[bool, List[bool]] = True,
-        window_group: Optional[Union[str, Sequence[str]]] = None
+            self,
+            sort_by: Optional[Union[str, Sequence[str]]] = None,
+            ascending: Union[bool, List[bool]] = True,
+            window: Optional[WrappedPartition] = None
     ):
         df = self._df.copy()
+
+        if df.group_by:
+            raise ValueError('ffill/bfill cannot be applied on grouped DataFrame. '
+                             'please materialize first.')
 
         if sort_by:
             df = df.sort_values(by=sort_by, ascending=ascending)
@@ -70,21 +71,36 @@ class ValuePropagation:
         # since bfill is ffill with reversed sort (this might generate different results)
         base_series = df[df.data_columns[0]]
         # order nulls last in window function, else numbering will be wrong
-        window = df.groupby().window(na_position='last')
+        window = window or df.groupby().window(na_position='last')
+        window_group = list(window.index.keys())
+
         df[self.ROW_NUMBER_SERIES_NAME] = base_series.window_row_number(window)
         df = df.materialize(node_name='numbered_fillna')
 
         # sort values by row number
-        df = df.sort_values(**self._row_sorting)
+        by = window_group + [self.ROW_NUMBER_SERIES_NAME]
+        ascending = self._method == ValuePropagationMethod.FORWARD_FILL
+
+        df = df.sort_values(by=by, ascending=ascending)
         df = self._add_partition_per_data_columns(df, window_group=window_group)
 
         # sorting is lost due to materialization, still requires it
-        df = df.sort_values(**self._row_sorting)
+        df = df.sort_values(by=by, ascending=ascending)
         df = self._propagate_first_value_per_partition(df, window_group=window_group)
 
         # sort values, this way we respect the provided order by
         df = df.sort_values(by=self.ROW_NUMBER_SERIES_NAME)
-        return df[self._df.data_columns].materialize(node_name='nafilled')
+
+        df = df[self._df.data_columns].materialize(node_name='nafilled')
+
+        gb: List[Union[str, Series]] = []
+        if window_group:
+            if isinstance(window_group, str):
+                gb = [window_group]
+            elif isinstance(window_group, list):
+                gb = window_group
+
+        return df.drop(columns=gb)
 
     def _add_partition_per_data_columns(
         self,

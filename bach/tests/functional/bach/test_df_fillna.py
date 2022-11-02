@@ -99,28 +99,36 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
     )
 
 
-def test_ffill_propagation(engine) -> None:
+def test_ffill_propagation_on_groups(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    pdf['groups'] = pdf.B>0
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
-    pdf = pdf.reset_index().rename(columns={'index': '_index_0'})
+    pdf['groups'] = pdf.B > 0
 
-    pd.testing.assert_frame_equal(
-        pdf, df.to_pandas(), check_index_type=False, check_names=False,
-    )
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
 
-    from bach.operations.value_propagation import ValuePropagation
-    vp = ValuePropagation(df, method='ffill')
-    df_ffill = vp.propagate(window_group='groups')
-
-    pdf_ffill = pdf.groupby('groups').fillna(method='ffill')
-    pdf_ffill['groups'] = pdf.groups
+    df_ffill = df.ffill(window=df.groupby(by='groups').window()).sort_index()
+    pdf_ffill = pdf.groupby('groups').ffill()
 
     pd.testing.assert_frame_equal(
         pdf_ffill,
         df_ffill.to_pandas(),
         check_index_type=False,
-        check_names=False)
+        check_names=False,
+    )
+
+    # test without index
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
+    pdf = pdf.reset_index().rename(columns={'index': '_index_0'})
+
+    df_ffill = df.ffill(window=df.groupby(by='groups').window()).sort_values('_index_0')
+    pdf_ffill = pdf.groupby('groups').ffill()
+
+    pd.testing.assert_frame_equal(
+        pdf_ffill,
+        df_ffill.to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
 
 def test_fillna_w_methods(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
@@ -152,13 +160,13 @@ def test_fillna_w_methods(engine) -> None:
         use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [ANY,  1,    3,    1] + [ANY] * 4,
+            [0,  1,    3,    1] + [ANY] * 4,
             [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
             [2,    1,    3, None,    4,    1,  'b', datetime(2022, 1, 5)],
             [3,    1,    2, None,    0,    1,  'c', datetime(2022, 1, 5)],
-            [ANY,  1,    3,    1] + [ANY] * 4,
+            [4,  1,    3,    1] + [ANY] * 4,
             [5,    1,    4, None,    1,    1,  'd', datetime(2022, 1, 5)],
-            [ANY,  1,    3,    1] + [ANY] * 4,
+            [6,  1,    3,    1] + [ANY] * 4,
             [7,    1,    3,    1,    4,    1,  'f', datetime(2022, 1, 5)],
         ],
     )
@@ -171,13 +179,13 @@ def test_fillna_w_methods(engine) -> None:
         use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [ANY, None, None, None] + [ANY] * 4,
+            [0, None, None, None] + [ANY] * 4,
             [1,    3,    4,    1,    1,    1,  'd', datetime(2022, 1, 2)],
             [2, None,    3,    1,    4,  ANY,  'b',                 ANY],
             [3, None,    2,    1,    0,  ANY,  'c',                 ANY],
-            [ANY, None, None, None] + [ANY] * 4,
+            [4, None, None, None] + [ANY] * 4,
             [5,    1,    2,    1,    0,  ANY,  'd', datetime(2022, 1, 5)],
-            [ANY, None, None, None] + [ANY] * 4,
+            [6, None, None, None] + [ANY] * 4,
             [7, None, None,    1,  ANY,  ANY,  'f',                 ANY],
         ],
     )

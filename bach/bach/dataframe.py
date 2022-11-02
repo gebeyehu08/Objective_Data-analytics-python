@@ -202,7 +202,7 @@ class DataFrame:
                                  f'key: {key}, series.name: {value.name}')
             if not dict_name_series_equals(value.index, index):
                 raise ValueError(f'Indices in `series` should match dataframe. '
-                                 f'df: {value.index}, series.index: {index}')
+                                 f'df: {index}, series.index: {value.index}')
             if value.group_by != group_by:
                 raise ValueError(f'Group_by in `series` should match dataframe. '
                                  f'df: {group_by}, series.group_by: {value.group_by}')
@@ -3139,6 +3139,7 @@ class DataFrame:
         axis: int = 0,
         sort_by: Optional[Union[str, Sequence[str]]] = None,
         ascending: Union[bool, List[bool]] = True,
+        window: Optional[Union['Window', 'DataFrame']] = None
     ) -> 'DataFrame':
         """
         Fill any NULL value using a method or with a given value.
@@ -3156,6 +3157,9 @@ class DataFrame:
             yield different results affecting the values to be propagated when using a filling method.
         :param ascending: Whether to sort ascending (True) or descending (False). If this is a list, then the
             `sort_by` must also be a list and ``len(ascending) == len(sort_by)``.
+        :param window: If provided, values are propagated within each partitioning group only, otherwise
+            values are propagated in the entire DataFrame. Considered only when `method` param
+            is provided.
 
         :return: a new dataframe with filled missing values.
 
@@ -3172,7 +3176,7 @@ class DataFrame:
 
         if method:
             from bach.operations.value_propagation import ValuePropagation
-            df = ValuePropagation(df=df, method=method).propagate(sort_by, ascending)
+            df = ValuePropagation(df=df, method=method).propagate(sort_by, ascending, window=window)
 
         if value is not None:
             series_to_fill = list(value.keys()) if isinstance(value, dict) else self.data_columns
@@ -3186,6 +3190,7 @@ class DataFrame:
         self,
         sort_by: Optional[Union[str, Sequence[str]]] = None,
         ascending: Union[bool, List[bool]] = True,
+        window: Optional[Union['Window', 'DataFrame']] = None
     ) -> 'DataFrame':
         """
         Fill missing values by propagating the last non-nullable value in each series.
@@ -3195,6 +3200,8 @@ class DataFrame:
             yield different results affecting the values to be propagated when using a filling method.
         :param ascending: Whether to sort ascending (True) or descending (False). If this is a list, then the
             `sort_by` must also be a list and ``len(ascending) == len(sort_by)``.
+        :param window: If provided, values are propagated within each partitioning group only, otherwise
+            values are propagated in the entire DataFrame.
 
         :return: a new dataframe with filled missing values.
 
@@ -3207,12 +3214,13 @@ class DataFrame:
         """
         from bach.operations.value_propagation import ValuePropagation
         v_propagation = ValuePropagation(df=self, method='ffill')
-        return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
+        return v_propagation.propagate(sort_by=sort_by, ascending=ascending, window=window)
 
     def bfill(
         self,
         sort_by: Optional[Union[str, Sequence[str]]] = None,
         ascending: Union[bool, List[bool]] = True,
+        window: Optional[Union['Window', 'DataFrame']] = None
     ) -> 'DataFrame':
         """
         Fill missing values by using the next non-nullable value in each series.
@@ -3222,6 +3230,8 @@ class DataFrame:
             yield different results affecting the values to be propagated when using a filling method.
         :param ascending: Whether to sort ascending (True) or descending (False). If this is a list, then the
             `sort_by` must also be a list and ``len(ascending) == len(sort_by)``.
+        :param window: If provided, values are propagated within each partitioning group only, otherwise
+            values are propagated in the entire DataFrame.
 
         :return: a new dataframe with filled missing values.
 
@@ -3234,7 +3244,7 @@ class DataFrame:
         """
         from bach.operations.value_propagation import ValuePropagation
         v_propagation = ValuePropagation(df=self, method='bfill')
-        return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
+        return v_propagation.propagate(sort_by=sort_by, ascending=ascending, window=window)
 
     def _get_parsed_subset_of_data_columns(
         self, subset: Optional[Union[str, Sequence[str]]],
