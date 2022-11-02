@@ -60,9 +60,9 @@ def test_append_w_ignore_index_n_sort(engine) -> None:
     other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
     other_df = other_df.set_index(['d'])
 
-    result = caller_df.append(other_df, ignore_index=True).sort_values('a')
+    result = caller_df.append(other_df, ignore_index=True).sort_values(['a', 'c'])
 
-    expected = pd.concat([caller_pdf, other_pdf.set_index(['d'])], ignore_index=True).sort_values('a')
+    expected = pd.concat([caller_pdf, other_pdf.set_index(['d'])], ignore_index=True).sort_values(['a', 'c'])
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
     assert_equals_data(
