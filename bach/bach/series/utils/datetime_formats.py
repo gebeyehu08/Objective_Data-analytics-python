@@ -4,18 +4,23 @@ Copyright 2022 Objectiv B.V.
 import re
 import string
 import warnings
+from typing import List
 
+from bach.expression import Expression, join_expressions
 
 CODES_SUPPORTED_IN_ALL_DIALECTS = {
     # These are the codes that we support for all database dialects.
 
-    # week codes
+    # weekday codes
     '%a',  # WEEKDAY_ABBREVIATED
     '%A',  # WEEKDAY_FULL_NAME
 
     # day codes
     '%d',  # DAY_OF_MONTH
     '%j',  # DAY_OF_YEAR
+
+    # week codes
+    '%V',  # ISO_8601_WEEK_NUMBER_OF_YEAR
 
     # month codes
     '%b',  # MONTH_ABBREVIATED
@@ -209,18 +214,19 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
     return ''.join(new_date_format_tokens)
 
 
-def parse_c_code_to_athena_code(date_format: str) -> str:
+def _parse_c_code_to_athena_code(date_format: str) -> str:
     """
     Parses a date format string, and return a string that's compatible with Athena's date_format() function.
 
     Some python format codes are different on Athena, or might even raise an error. Such codes are converted
     or escaped; using the returned string with Athena's date_format will never raise an error.
 
-    Codes in CODES_SUPPORTED_IN_ALL_DIALECTS are guaranteed to be correctly represented in the returned
-    format string. If date_format contains codes that are not in that set, then the returned format might
-    evaluate to a different string than the original date_format would with python's strftime() function.
+    Does not support '%V', but besides that All codes in CODES_SUPPORTED_IN_ALL_DIALECTS are guaranteed to
+    be correctly represented in the returned format string. If date_format contains codes that are not
+    supported, then the returned format might evaluate to a different string than the original date_format
+    would with python's strftime() function.
     """
-    # Athena code spec: https://prestodb.io/docs/0.217/functions/datetime.html
+    # Athena code spec: https://trino.io/docs/current/functions/datetime.html#mysql-date-functions
     # Python code spec: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
     c_code_to_athena_mapping = {
         # if there is no code, i.e. a lone '%' that's not followed by an alphabetic character, then that
@@ -234,6 +240,9 @@ def parse_c_code_to_athena_code(date_format: str) -> str:
         '%B': '%M',
         '%F': '%Y-%m-%d',
         '%R': '%H:%i',
+        # List not-supported codes that are in CODES_SUPPORTED_IN_ALL_DIALECTS and will trigger an error
+        # See also inline comments below
+        '%V': '%%V'
     }
     codes_to_consider = set(string.ascii_letters + '%')
     result = []
@@ -263,10 +272,83 @@ def parse_c_code_to_athena_code(date_format: str) -> str:
     return ''.join(result)
 
 
+def _split_format_string_V(date_format: str) -> List[str]:
+    """
+    Split the date format string in a list of format strings. Each occurrence of the format code `%V` will
+    be a separate format string in the resulting list, the rest of the format string is split as little as
+    possible.
+
+    Example: _split_format_string_V('xxx%V-%m-%%V') == ['xxx', '%V', '-%m-%%V']
+
+    :param date_format: C date format string.
+    :return: list of sub format strings.
+    """
+    result = []
+    current_date_format = []
+    i = 0
+    while i < len(date_format):
+        current = date_format[i]
+        i += 1
+        if current != '%' or i == len(date_format):
+            current_date_format.append(current)
+        else:
+            # This is the start of a code sequence.
+            code = current + date_format[i]
+            i += 1
+            if code != '%V':
+                current_date_format.append(code)
+            else:
+                if current_date_format:
+                    result.append(''.join(current_date_format))
+                    current_date_format = []
+                result.append('%V')
+    if current_date_format or not result:
+        result.append(''.join(current_date_format))
+    return result
+
+
+def parse_c_code_to_athena_expression(series_expression: Expression, date_format: str) -> Expression:
+    """
+    Parses a date format string, and return an Expression that represents the formatted date/timestamp/time.
+    Depending on the date_format, the expression might combine calls to the Athena functions
+    `date_format()` and `format_datetime()`.
+
+    Codes in CODES_SUPPORTED_IN_ALL_DIALECTS are guaranteed to be correctly represented in the returned
+    expression. If date_format contains codes that are not in that set, then the returned format might
+    evaluate to a different string than the original date_format would with python's strftime() function.
+
+    :param series_expression: The expression of the Date/Time/Timestamp/Timedelta Series that needs to be
+        formatted
+    :param date_format: C date format string
+    """
+    # Athena docs
+    # format_datetime(): https://trino.io/docs/current/functions/datetime.html#java-date-functions
+    # date_format():     https://trino.io/docs/current/functions/datetime.html#mysql-date-functions
+    split_date_formats = _split_format_string_V(date_format)
+    expressions: List[Expression] = []
+    for sub_df in split_date_formats:
+        if sub_df == '%V':
+            expression = Expression.construct(
+                "format_datetime({}, 'w')", series_expression
+            )
+        else:
+            parsed_format_str = _parse_c_code_to_athena_code(sub_df)
+            if not parsed_format_str:
+                expression = Expression.string_value('')
+            else:
+                expression = Expression.construct(
+                    'date_format({}, {})', series_expression, Expression.string_value(parsed_format_str)
+                )
+        expressions.append(expression)
+    return join_expressions(expressions, ' || ')
+
+
 def parse_c_code_to_bigquery_code(date_format: str) -> str:
     """
     Replaces all '%S.%f' with '%E6S', since BigQuery does not support microseconds c-code.
     """
+    # See BigQuery docs for more information:
+    # https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_elements_date_time
     if '%S.%f' in date_format:
         date_format = re.sub(r'%S\.%f', '%E6S', date_format)
     return date_format

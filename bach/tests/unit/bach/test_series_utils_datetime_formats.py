@@ -4,7 +4,8 @@ Copyright 2022 Objectiv B.V.
 import pytest
 
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
-    parse_c_code_to_bigquery_code, parse_c_code_to_athena_code, warn_non_supported_format_codes
+    parse_c_code_to_bigquery_code, _parse_c_code_to_athena_code, warn_non_supported_format_codes, \
+    _split_format_string_V
 
 pytestmark = [pytest.mark.db_independent]  # mark all tests here as database independent.
 # Better would be to have a mark called 'db_specific' or something like that.
@@ -54,14 +55,26 @@ def test_parse_c_code_to_bigquery_code():
     assert parse_c_code_to_bigquery_code('%H:%M:%S.%f %f %S.%f') == '%H:%M:%E6S %f %E6S'
 
 
-def test_parse_c_code_to_athena_code():
-    assert parse_c_code_to_athena_code('%Y-%m-%d') == '%Y-%m-%d'
-    assert parse_c_code_to_athena_code('%M-%B') == '%i-%M'
+def test__parse_c_code_to_athena_code():
+    assert _parse_c_code_to_athena_code('%Y-%m-%d') == '%Y-%m-%d'
+    assert _parse_c_code_to_athena_code('%M-%B') == '%i-%M'
     # Escape not supported codes:
-    assert parse_c_code_to_athena_code('%V') == '%%V'
-    assert parse_c_code_to_athena_code('%q %1 %_') == '%%q %%1 %%_'
+    assert _parse_c_code_to_athena_code('%V') == '%%V'
+    assert _parse_c_code_to_athena_code('%q %1 %_') == '%%q %%1 %%_'
     # Handle double quotes correctly
-    assert parse_c_code_to_athena_code('%%%m') == '%%%m'
+    assert _parse_c_code_to_athena_code('%%%m') == '%%%m'
+
+
+def test__split_format_string_V():
+    assert _split_format_string_V('%Y-%m-%d') == ['%Y-%m-%d']
+    assert _split_format_string_V('%M-%B') == ['%M-%B']
+    assert _split_format_string_V('%Y-%V-%d') == ['%Y-', '%V', '-%d']
+    assert _split_format_string_V('%V-%Y-%m-%d-%V') == ['%V', '-%Y-%m-%d-', '%V']
+    assert _split_format_string_V('%V-%V-%V') == ['%V', '-', '%V', '-', '%V']
+    assert _split_format_string_V('%%V-%V-%%V') == ['%%V-', '%V', '-%%V']
+    assert _split_format_string_V('xxx%V-%m-%%V') == ['xxx', '%V', '-%m-%%V']
+    assert _split_format_string_V('%') == ['%']
+    assert _split_format_string_V('') == ['']
 
 
 def test_warn_non_supported_format_codes(recwarn):

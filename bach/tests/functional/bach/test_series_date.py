@@ -64,7 +64,9 @@ def test_date_format(engine, recwarn):
 
     all_formats = [
         # tuple, types: (str, bool). Content: format, whether the format should raise a warning
+        ('', False),
         ('Year: %Y', False),
+        ('ISO Week: %V', False),
         ('%Y', False),
         ('%y%Y', False),
         ('%Y-%m-%d', False),
@@ -97,7 +99,9 @@ def test_date_format(engine, recwarn):
         expected_columns=expected_columns,
         expected_data=[
             [
+                '', '',
                 'Year: 2022', 'Year: 2021',
+                'ISO Week: 52', 'ISO Week: 18',
                 '2022', '2021',
                 '222022', '212021',
                 '2022-01-01', '2021-05-03',
@@ -110,8 +114,8 @@ def test_date_format(engine, recwarn):
                 'HH24:MI:SS MS', 'HH24:MI:SS MS',
                 '00:00:00.000000', '11:28:36.388000',
                 '%q %1 %_', '%q %1 %_',
-                '%: % | A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
-                '%: % | A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
+                '%: % | A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | V: 52 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
+                '%: % | A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | V: 18 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
                 '00.000000', '36.388000'
             ],
         ],
