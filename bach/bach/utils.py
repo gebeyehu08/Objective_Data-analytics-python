@@ -66,6 +66,7 @@ def escape_parameter_characters(conn: Connection, raw_sql: str) -> str:
 
 
 _BQ_COLUMN_NAME_RESERVED_PREFIXES = [
+    # https://cloud.google.com/bigquery/docs/schemas#column_names
     '_TABLE_',
     '_FILE_',
     '_PARTITION',

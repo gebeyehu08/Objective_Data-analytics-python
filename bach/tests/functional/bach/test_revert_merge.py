@@ -28,7 +28,6 @@ def test_revert_merge_columns_special_chars(engine):
     mt = mt.materialize('https://github.com/objectiv/objectiv-analytics/issues/1430')
     merged = bt.merge(mt)
 
-    print(mt.view_sql())
     result_bt, result_mt = revert_merge(merged)
 
     _compare_source_with_replicate(bt, result_bt)
