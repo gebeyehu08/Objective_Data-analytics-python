@@ -18,6 +18,23 @@ def test_revert_merge_basic(engine):
         _compare_source_with_replicate(expected, result)
 
 
+def test_revert_merge_columns_special_chars(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    bt['city'] = bt['city'] + 'test'
+    bt = bt.rename(columns={'city': 'C1TŸ'})
+    bt = bt.materialize('https://github.com/objectiv/objectiv-analytics/issues/1430')
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
+    mt = mt.rename(columns={'food': 'FÖÔD'})
+    mt = mt.materialize('https://github.com/objectiv/objectiv-analytics/issues/1430')
+    merged = bt.merge(mt)
+
+    print(mt.view_sql())
+    result_bt, result_mt = revert_merge(merged)
+
+    _compare_source_with_replicate(bt, result_bt)
+    _compare_source_with_replicate(mt, result_mt)
+
+
 def test_revert_merge_basic_on(engine):
     bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
     mt = get_df_with_food_data(engine)[['skating_order', 'food']]
@@ -148,12 +165,12 @@ def test_revert_merge_grouped(engine):
 
 
 def _compare_source_with_replicate(original_source: DataFrame, replicate: DataFrame) -> None:
-    assert original_source.base_node == replicate.base_node
-    assert original_source.data_columns == replicate.data_columns
-    assert original_source.index == replicate.index
+    assert replicate.base_node == original_source.base_node
+    assert replicate.data_columns == original_source.data_columns
+    assert replicate.index == original_source.index
 
     dialect = original_source.engine.dialect
     for series_name in original_source.all_series:
         expected_sql = original_source.all_series[series_name].expression.to_sql(dialect)
         result_sql = replicate.all_series[series_name].expression.to_sql(dialect)
-        assert expected_sql == result_sql
+        assert result_sql == expected_sql
