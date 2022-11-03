@@ -9,7 +9,7 @@ import {
   makePressEvent,
   makeRootLocationContext,
 } from '@objectiv/schema';
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import { TrackerEvent } from '@objectiv/tracker-core';
 import { SnowplowTransport } from '../src';
 
