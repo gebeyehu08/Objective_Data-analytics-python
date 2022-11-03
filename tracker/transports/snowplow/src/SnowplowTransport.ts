@@ -25,6 +25,7 @@ export class SnowplowTransport implements TrackerTransportInterface {
       window.snowplow('trackStructEvent', {
         action: event._type,
         category: `[${event._types.map((_type) => `"${_type}"`).join(',')}]`,
+        property: event.id,
         context: makeSnowplowContexts(event),
       });
     });

@@ -9,7 +9,7 @@ import {
   makePressEvent,
   makeRootLocationContext,
 } from '@objectiv/schema';
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { TrackerEvent } from '@objectiv/tracker-core';
 import { SnowplowTransport } from '../src';
 
@@ -41,6 +41,7 @@ describe('SnowplowTransport', () => {
     expect(window.snowplow).toHaveBeenCalledWith('trackStructEvent', {
       action: 'PressEvent',
       category: '["AbstractEvent","InteractiveEvent","PressEvent"]',
+      property: testEvent.id,
       context: [
         {
           data: {
