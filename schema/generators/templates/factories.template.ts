@@ -161,31 +161,26 @@ Generator.generate({ outputFile: `${destinationFolder}factories.ts` }, (writer: 
           }
         });
 
+        const processDefaultValue = (defaultValue) => {
+          switch(defaultValue) {
+            case 'timestamp':
+              return 'Date.now()';
+            case 'uuid':
+              return 'uuidv4()';
+            default:
+              return JSON.stringify(defaultValue);
+          }
+        }
+
         event.properties
           .map((property) => {
-            let propertyValue = property.value;
-            // Some properties have default values
-            if (property.automatically_set || property.default_value) {
-              switch(property.name) {
-                case 'id':
-                  propertyValue = `props${areAllPropsOptional ? '?' : ''}.id ?? uuidv4()`
-                  break;
-                case 'time':
-                  propertyValue = `props${areAllPropsOptional ? '?' : ''}.time ?? Date.now()`
-                  break;
-                case 'location_stack':
-                  propertyValue = `props${areAllPropsOptional ? '?' : ''}.location_stack ?? ${JSON.stringify(property.default_value)}`
-                  break;
-                case 'global_contexts':
-                  propertyValue = `props${areAllPropsOptional ? '?' : ''}.global_contexts ?? ${JSON.stringify(property.default_value)}`
-                  break;
-              }
-            }
+            const propertyValue = `props${areAllPropsOptional ? '?' : ''}.${property.name}`;
+            const defaultValue = ` ?? ${processDefaultValue(property.default_value)}`;
             return {
               name: property.name,
               isOptional: property.optional,
               isNullable: property.nullable,
-              value: propertyValue,
+              value: `${propertyValue}${property.default_value ? defaultValue : ''}`,
             }
           })
           .forEach((property) => writeObjectProperty(tsWriter, event, property, areAllPropsOptional));

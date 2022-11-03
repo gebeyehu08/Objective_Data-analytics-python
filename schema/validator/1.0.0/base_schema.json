@@ -227,12 +227,12 @@
         "id": {
           "description": "Unique identifier for a specific instance of an event.",
           "type": "uuid",
-          "automatically_set": true
+          "default_value": "uuid"
         },
         "time": {
           "description": "Timestamp indicating when the event was generated.",
           "type": "integer",
-          "automatically_set": true
+          "default_value": "timestamp"
         }
       }
     },
