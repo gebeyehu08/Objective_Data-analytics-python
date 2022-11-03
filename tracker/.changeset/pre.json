@@ -27,6 +27,7 @@
     "@objectiv/transport-xhr": "0.0.26"
   },
   "changesets": [
+    "hungry-birds-care",
     "three-hairs-sleep"
   ]
 }
