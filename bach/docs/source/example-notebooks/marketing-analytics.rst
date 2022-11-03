@@ -85,7 +85,7 @@ the `location_stack` and global contexts.
 
 	>>> # define a further selection: which source to select in the below analyses.
 	>>> source_selection = ['twitter', 'reddit']
-	>>> sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection}).sources
+	>>> sources = DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'sources': source_selection})).sources
 	>>> # filter on defined list of UTM Sources
 	>>> df_marketing_selection = df_marketing_only[(df_marketing_only.utm_source.isin(sources))]
 
