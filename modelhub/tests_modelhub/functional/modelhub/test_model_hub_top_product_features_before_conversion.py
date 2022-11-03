@@ -17,16 +17,21 @@ def test_top_product_features_before_conversion(objectiv_df):
     name = 'clicks'
 
     # name checks
-    modelhub.add_conversion_event(name=name,
-                                  event_type=event_type)
+    objectiv_df[name] = modelhub.add_conversion_event(
+        objectiv_df,
+        name=name,
+        event_type=event_type
+    )
     with pytest.raises(ValueError, match='Conversion event label is not provided.'):
         modelhub.aggregate.top_product_features_before_conversion(objectiv_df, name=None)
 
-    with pytest.raises(KeyError, match='Key some_name is not labeled as a conversion'):
+    with pytest.raises(ValueError, match='some_name does not exist in objectiv dataframe'):
         modelhub.aggregate.top_product_features_before_conversion(objectiv_df, name='some_name')
 
     # without location_stack
-    modelhub.add_conversion_event(event_type=event_type, name=name)
+    objectiv_df[name] = modelhub.add_conversion_event(
+        objectiv_df, event_type=event_type, name=name
+    )
     cdf = modelhub.aggregate.top_product_features_before_conversion(objectiv_df, name=name)
 
     # index checks
@@ -41,9 +46,12 @@ def test_top_product_features_before_conversion(objectiv_df):
 
     # with location_stack
     location_stack = objectiv_df.location_stack.json[{'id': 'main'}:]
-    modelhub.add_conversion_event(location_stack=location_stack,
-                                  event_type=event_type,
-                                  name=name)
+    objectiv_df[name] = modelhub.add_conversion_event(
+        objectiv_df,
+        location_stack=location_stack,
+        event_type=event_type,
+        name=name
+    )
     cdf = modelhub.aggregate.top_product_features_before_conversion(objectiv_df, name=name)
     assert len(cdf.index) == 3
 
@@ -58,6 +66,6 @@ def test_top_product_features_before_conversion(objectiv_df):
         use_to_pandas=True
     )
 
-    # check if any new column is added to the original dataframe
-    assert sorted(initial_columns) == sorted(objectiv_df.data_columns)
+    # check if any new column is added to the original dataframe, besides `name`
+    assert sorted(initial_columns) == [x for x in sorted(objectiv_df.data_columns) if x != name]
 

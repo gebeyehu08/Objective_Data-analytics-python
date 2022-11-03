@@ -128,13 +128,10 @@ def test_add_conversion_event(objectiv_df):
     location_stack = objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     event_type = 'ClickEvent'
     conversion = 'github_clicks'
-    modelhub.add_conversion_event(location_stack=location_stack,
-                                  event_type=event_type,
-                                  name=conversion)
-
-    assert isinstance(modelhub._conversion_events, dict)
-    assert len(modelhub._conversion_events) == 1
-    assert modelhub._conversion_events[conversion] == (location_stack, event_type)
+    objectiv_df[conversion] = modelhub.add_conversion_event(objectiv_df,
+                                                            location_stack=location_stack,
+                                                            event_type=event_type,
+                                                            name=conversion)
 
     ser = modelhub.map.is_conversion_event(objectiv_df, 'github_clicks')
     assert_equals_data(
@@ -164,8 +161,9 @@ def test_add_conversion_event_wo_location_stack(objectiv_df):
     event_type = 'ClickEvent'
     conversion = 'github_clicks'
 
-    modelhub.add_conversion_event(event_type=event_type, name=conversion)
-    assert modelhub._conversion_events[conversion] == (None, event_type)
+    objectiv_df[conversion] = modelhub.add_conversion_event(objectiv_df,
+                                                            event_type=event_type,
+                                                            name=conversion)
 
     ser = modelhub.map.is_conversion_event(objectiv_df, 'github_clicks')
 
@@ -195,10 +193,9 @@ def test_add_conversion_event_wo_event_type(objectiv_df):
     modelhub = ModelHub(time_aggregation='%Y-%m-%d')
     location_stack = objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     conversion = 'github_clicks'
-    modelhub.add_conversion_event(location_stack=location_stack, name=conversion)
-
-    assert len(modelhub._conversion_events) == 1
-    assert modelhub._conversion_events[conversion] == (location_stack, None)
+    objectiv_df[conversion] = modelhub.add_conversion_event(objectiv_df,
+                                                            location_stack=location_stack,
+                                                            name=conversion)
 
     ser = modelhub.map.is_conversion_event(objectiv_df, conversion)
 
@@ -228,11 +225,11 @@ def test_add_conversion_event_wo_name(objectiv_df):
     modelhub = ModelHub(time_aggregation='%Y-%m-%d')
     event_type = 'ClickEvent'
     # name not set
-    modelhub.add_conversion_event(event_type=event_type)
-    assert len(modelhub._conversion_events) == 1
-    assert modelhub._conversion_events['conversion_1'] == (None, event_type)
+    objectiv_df['conversion'] = modelhub.add_conversion_event(objectiv_df,
+                                                            event_type=event_type)
 
-    ser = modelhub.map.is_conversion_event(objectiv_df, 'conversion_1')
+
+    ser = modelhub.map.is_conversion_event(objectiv_df, 'conversion')
 
     assert_equals_data(
         ser,
@@ -259,9 +256,13 @@ def test_add_conversion_event_wo_name(objectiv_df):
 def test_is_conversion_event(objectiv_df):
     modelhub = ModelHub(time_aggregation='%Y-%m-%d')
     # add conversion event
-    modelhub.add_conversion_event(location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext',
-                                                                         'id': 'cta-repo-button'}:],
-                                  event_type='ClickEvent', name='github_clicks')
+
+    objectiv_df['github_clicks'] = modelhub.add_conversion_event(objectiv_df,
+                                                            objectiv_df.location_stack.json[
+                                                            {'_type': 'LinkContext',
+                                                             'id': 'cta-repo-button'}:],
+                                                            event_type='ClickEvent', name='github_clicks')
+
     s = modelhub.map.is_conversion_event(objectiv_df, 'github_clicks')
 
     assert_equals_data(
@@ -298,19 +299,13 @@ def test_is_conversion_event(objectiv_df):
         convert_uuid=True,
     )
 
-    # wrong conversion_event name
-    with pytest.raises(KeyError, match="not labeled as a conversion"):
-        modelhub.map.is_conversion_event(objectiv_df, 'some_clicks')
-
-    with pytest.raises(KeyError, match="not labeled as a conversion"):
-        modelhub.map.is_conversion_event(objectiv_df, None)
-
 
 def test_conversions_counter(objectiv_df):
     modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(
+    objectiv_df['github_clicks'] = modelhub.add_conversion_event(
+        objectiv_df,
         location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
         event_type='ClickEvent',
         name='github_clicks',
@@ -382,7 +377,8 @@ def test_conversions_in_time(objectiv_df):
     modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(
+    objectiv_df['github_clicks'] = modelhub.add_conversion_event(
+        objectiv_df,
         location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
         event_type='ClickEvent',
         name='github_clicks')
@@ -427,7 +423,8 @@ def test_pre_conversion_hit_number(objectiv_df):
     modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(
+    objectiv_df['github_clicks'] = modelhub.add_conversion_event(
+        objectiv_df,
         location_stack=objectiv_df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
         event_type='ClickEvent',
         name='github_clicks',

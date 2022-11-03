@@ -109,7 +109,7 @@ class Map:
         is_new_user_series = is_new_user_series.copy_override_type(bach.SeriesBoolean)
         return is_new_user_series.copy_override(name='is_new_user').materialize()
 
-    @use_only_required_objectiv_series(required_series=['event_type'])
+    @use_only_required_objectiv_series(include_series_from_params=['name'])
     def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.SeriesBoolean:
         """
         Labels a hit True if it is a conversion event, all other hits are labeled False.
@@ -136,7 +136,7 @@ class Map:
 
     @use_only_required_objectiv_series(
         required_series=['session_id', 'moment', 'event_type'],
-        include_series_from_params=['partition'],
+        include_series_from_params=['partition', 'name'],
     )
     def conversions_counter(self,
                             data: bach.DataFrame,
@@ -173,7 +173,7 @@ class Map:
 
     @use_only_required_objectiv_series(
         required_series=['session_id', 'moment', 'event_type'],
-        include_series_from_params=['partition'],
+        include_series_from_params=['partition', 'name'],
     )
     def conversions_in_time(self,
                             data: bach.DataFrame,
@@ -207,7 +207,7 @@ class Map:
 
     @use_only_required_objectiv_series(
         required_series=['session_id', 'session_hit_number', 'moment', 'event_type'],
-        include_series_from_params=['partition'],
+        include_series_from_params=['partition', 'name'],
     )
     def pre_conversion_hit_number(
         self,
@@ -294,20 +294,11 @@ class Map:
 
         series_to_calculate = _CalculatedConversionSeries.IS_CONVERSION_EVENT
         self._check_conversion_dependencies(data, series_to_calculate)
-
-        if name not in self._mh._conversion_events:
+        if name not in data.data_columns:
             raise KeyError(f"Key {name} is not labeled as a conversion")
-
-        conversion_stack, conversion_event = self._mh._conversion_events[name]
-
-        if conversion_stack is None:
-            series = data.event_type == conversion_event
-        elif conversion_event is None:
-            series = conversion_stack.json.get_array_length() > 0
-        else:
-            series = ((conversion_stack.json.get_array_length() > 0) & (data.event_type == conversion_event))
-
+        series = data[name]
         data[series_to_calculate.private_name] = series
+
         return data
 
     def _calculate_conversions_in_time(

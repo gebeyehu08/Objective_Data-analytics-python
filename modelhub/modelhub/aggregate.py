@@ -205,6 +205,7 @@ class Aggregate:
             # required by Map.conversions_in_time and Map.conversions_counter
             'session_id', 'moment', 'event_type',
         ],
+        include_series_from_params=['name'],
         required_global_contexts=['application']
     )
     def top_product_features_before_conversion(self,

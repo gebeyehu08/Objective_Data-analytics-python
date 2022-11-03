@@ -61,7 +61,6 @@ class ModelHub:
         """
 
         self._time_aggregation = time_aggregation
-        self._conversion_events = cast(Dict[str, ConversionEventDefinitionType], {})
         self._global_contexts = global_contexts or []
 
         # init metabase
@@ -73,15 +72,6 @@ class ModelHub:
         Time aggregation used for aggregation models, set when object is instantiated.
         """
         return self._time_aggregation
-
-    @property
-    def conversion_events(self):
-        """
-        Dictionary of all events that are labeled as conversion.
-
-        Set with :py:meth:`add_conversion_event`
-        """
-        return self._conversion_events
 
     @staticmethod
     def _get_db_engine(db_url: Optional[str],
@@ -191,12 +181,12 @@ class ModelHub:
         return data
 
     def add_conversion_event(self,
+                             data: bach.DataFrame,
                              location_stack: 'SeriesLocationStack' = None,
                              event_type: str = None,
                              name: str = None):
         """
-        Label events that are used as conversions. All labeled conversion events are set in
-        :py:attr:`conversion_events`.
+        Label events that can be used as conversions.
 
         :param location_stack: the location stack that is labeled as conversion. Can be any slice in of a
             :py:class:`modelhub.SeriesLocationStack` type column. Optionally use in conjunction with
@@ -205,15 +195,21 @@ class ModelHub:
             ``objectiv_location_stack`` to label a conversion.
         :param name: the name to use for the labeled conversion event. If None it will use 'conversion_#',
             where # is the number of the added conversion.
+
+        :returns: SeriesBoolean
         """
 
         if location_stack is None and event_type is None:
             raise ValueError('At least one of conversion_stack or conversion_event should be set.')
 
-        if not name:
-            name = f'conversion_{len(self._conversion_events) + 1}'
+        if location_stack is None:
+            series = data.event_type == event_type
+        elif event_type is None:
+            series = location_stack.json.get_array_length() > 0
+        else:
+            series = ((location_stack.json.get_array_length() > 0) & (data.event_type == event_type))
 
-        self._conversion_events[name] = location_stack, event_type
+        return series.copy_override(name=name)
 
     def time_agg(self, data: bach.DataFrame, time_aggregation: str = None) -> bach.SeriesString:
         """
