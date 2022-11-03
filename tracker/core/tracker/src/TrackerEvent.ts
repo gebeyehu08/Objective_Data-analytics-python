@@ -29,6 +29,7 @@ export class TrackerEvent implements AbstractEvent, Contexts {
   readonly __instance_id: AbstractEvent['__instance_id'];
   readonly _type: AbstractEvent['_type'];
   readonly _types: string[];
+  readonly _schema_version: string;
   readonly id: string;
   readonly time: number;
   readonly location_stack: AbstractLocationContext[];
@@ -42,12 +43,13 @@ export class TrackerEvent implements AbstractEvent, Contexts {
    * provided they will be merged onto each other to produce a single location_stack and global_contexts.
    */
   constructor(
-    { __instance_id, _type, _types, id, time, ...otherProps }: TrackerEventConfig,
+    { __instance_id, _type, _types, _schema_version, id, time, ...otherProps }: TrackerEventConfig,
     ...contextConfigs: ContextsConfig[]
   ) {
     this.__instance_id = __instance_id;
     this._type = _type;
     this._types = _types;
+    this._schema_version = _schema_version ?? '1.0.0';
     this.id = id;
     this.time = time;
 

@@ -12,7 +12,7 @@ globalThis.objectiv.versions.set(pkg.name, pkg.version);
 
 declare global {
   interface Window {
-    snowplow: (method: 'trackStructEvent', event: unknown) => void
+    snowplow: (method: 'trackStructEvent', event: unknown) => void;
   }
 }
 

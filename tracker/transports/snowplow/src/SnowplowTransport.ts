@@ -1,5 +1,5 @@
 import { NonEmptyArray, TrackerTransportInterface, TransportableEvent } from '@objectiv/tracker-core';
-import { makeSnowplowContexts } from "./makeSnowplowContexts";
+import { makeSnowplowContexts } from './makeSnowplowContexts';
 
 /**
  * SnowplowTransport converts incoming events from Objectiv's TrackerEvent instances to Snowplow's Tracker Protocol.
@@ -21,13 +21,12 @@ export class SnowplowTransport implements TrackerTransportInterface {
    * Converts incoming TrackerEvents to Snowplow's payloads and sends them via snowplow's 'trackStructEvent'
    */
   async handle(...args: NonEmptyArray<TransportableEvent>): Promise<Response | void> {
-    (await Promise.all(args)).forEach(event => {
+    (await Promise.all(args)).forEach((event) => {
       window.snowplow('trackStructEvent', {
         action: event._type,
-        // TODO category: serialized event._types, we don't have this yet in FE. We need the new factories
-        category: `["${event._type}"]`,
+        category: `[${event._types.map((_type) => `"${_type}"`).join(',')}]`,
         context: makeSnowplowContexts(event),
-      })
+      });
     });
   }
 
