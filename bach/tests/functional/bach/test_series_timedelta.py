@@ -125,7 +125,7 @@ def test_timedelta_operations(engine):
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']
@@ -159,7 +159,7 @@ def test_timedelta_dt_properties(engine) -> None:
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']
@@ -223,7 +223,7 @@ def test_timedelta_dt_components(engine) -> None:
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']
@@ -251,7 +251,7 @@ def test_mean_bigquery_remove_nano_precision(engine) -> None:
             ]
         }
     )
-    df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine, pdf)
 
     pandas_timedelta_mean = pdf.mean()
     assert pandas_timedelta_mean.dt.nanoseconds.values[0] > 0
@@ -279,7 +279,7 @@ def test_from_total_seconds(engine) -> None:
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = SeriesTimedelta.from_total_seconds(df['total_seconds'])
 
     assert_equals_data(
@@ -308,7 +308,7 @@ def test_timedelta_to_str(engine):
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     result = df['timedelta'].astype('string')
 
     row_3 = "0 days, 00:00:00.646540"

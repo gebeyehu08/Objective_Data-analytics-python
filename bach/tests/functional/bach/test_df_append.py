@@ -9,8 +9,8 @@ def test_append_w_aligned_columns(engine) -> None:
     caller_pdf = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'A': [6, 7, 8, 9], 'B': ['f', 'g', 'h', 'i']})
 
-    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
-    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
+    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf)
+    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf)
 
     result = caller_df.append(other_df).sort_values('A').reset_index(drop=False)
     expected = pd.concat([caller_pdf, other_pdf]).sort_values('A').reset_index(drop=False)
@@ -23,8 +23,8 @@ def test_append_w_non_aligned_columns(engine) -> None:
     caller_pdf = pd.DataFrame({'A#': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'a#': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
 
-    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
-    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
+    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf)
+    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf)
     result = caller_df.append(other_df).sort_values(['A#', 'a#']).reset_index(drop=False)
 
     expected = pd.concat([caller_pdf, other_pdf]).sort_values(['A#', 'a#']).reset_index(drop=False)
@@ -55,14 +55,14 @@ def test_append_w_ignore_index_n_sort(engine) -> None:
     caller_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'d': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
 
-    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
+    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf)
 
-    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
+    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf)
     other_df = other_df.set_index(['d'])
 
-    result = caller_df.append(other_df, ignore_index=True).sort_values('a')
+    result = caller_df.append(other_df, ignore_index=True).sort_values(['a', 'c'])
 
-    expected = pd.concat([caller_pdf, other_pdf.set_index(['d'])], ignore_index=True).sort_values('a')
+    expected = pd.concat([caller_pdf, other_pdf.set_index(['d'])], ignore_index=True).sort_values(['a', 'c'])
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
     assert_equals_data(
@@ -81,7 +81,7 @@ def test_append_w_ignore_index_n_sort(engine) -> None:
         ],
     )
 
-    other_df2 = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
+    other_df2 = DataFrame.from_pandas(engine=engine, df=other_pdf)
     result2 = caller_df.append(other_df2, ignore_index=True, sort=True).sort_values('a')
 
     expected2 = pd.concat([caller_pdf, other_pdf], ignore_index=True, sort=True)
@@ -107,9 +107,9 @@ def test_append_w_list_dfs(engine) -> None:
     caller_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'d': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
 
-    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
+    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf)
     other_dfs = [
-        DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True, name=f'other_{i}_df')
+        DataFrame.from_pandas(engine=engine, df=other_pdf, name=f'other_{i}_df')
         for i in range(3)
     ]
 
@@ -148,8 +148,8 @@ def test_append_w_different_dtypes(engine) -> None:
     caller_pdf = pd.DataFrame({'a': ['f', 'g', 'h', 'i'], 'b': [1, 2, 3, 4], 'c': [1, 2, 3, 4]})
     other_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': [1.1, 2.2, 3.3, 4.4, 5.5], 'c': [5, 6, 7, 8, 9]})
 
-    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
-    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
+    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf)
+    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf)
 
     result = caller_df.append(other_df).sort_values('a')
 
@@ -174,8 +174,8 @@ def test_append_w_non_materialized_df(engine) -> None:
     caller_pdf = pd.DataFrame({'b': [1, 2, 3, 4], 'c': [1, 2, 3, 4]})
     other_pdf = pd.DataFrame({'b': [1.1, 2.2, 3.3, 4.4, 5.5], 'c': [5, 6, 7, 8, 9]})
 
-    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf, convert_objects=True)
-    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf, convert_objects=True)
+    caller_df = DataFrame.from_pandas(engine=engine, df=caller_pdf)
+    other_df = DataFrame.from_pandas(engine=engine, df=other_pdf)
 
     caller_df['d'] = caller_df['b'] + caller_df['c']
 

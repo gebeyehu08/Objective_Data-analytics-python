@@ -158,7 +158,36 @@ def test_uuid_compare(engine):
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['a'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
+    bt['b'] = None
+    bt.loc[bt['skating_order'] == 2, 'b'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668265')
+    bt['b'] = bt['b'].astype('uuid')
     bt['c'] = SeriesUuid.random(bt)
-    result_pdf = bt[['a', 'c']].to_pandas()
-    assert result_pdf[['a']].to_numpy()[0] == [uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')]
-    assert type(result_pdf[['a']].to_numpy()[0][0]) == type(uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'))
+    result = assert_equals_data(
+        bt[['a', 'b', 'c']],
+        expected_columns=['_index_skating_order', 'a', 'b', 'c'],
+        expected_data=[
+            [
+                1,
+                uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
+                None,
+                ANY,
+            ],
+            [
+                2,
+                uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
+                uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668265'),
+                ANY,
+            ],
+            [
+                3,
+                uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
+                None,
+                ANY,
+            ]
+        ],
+        use_to_pandas=True,
+    )
+    # check if random uuids are UUID type
+    for vals in result:
+        assert isinstance(vals[3], uuid.UUID)
+

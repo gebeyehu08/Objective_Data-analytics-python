@@ -32,7 +32,9 @@ A number of [example notebooks](https://objectiv.io/docs/modeling/example-notebo
 
 All the necessary infrastructure comes ready to go. Pre-built notebooks, models & dashboards are included for common product & marketing use cases, so you can get to work directly. A demo app & data are included for testing.
 
-![objectiv-up-included](https://user-images.githubusercontent.com/82152911/194336454-e51de234-0975-442b-8d1a-8971657bc27f.svg)
+![objectiv-up-included](https://user-images.githubusercontent.com/82152911/199248251-436f1c70-31c8-4ed7-a488-4e3d09d290ed.svg#gh-light-mode-only)
+![objectiv-up-included](https://user-images.githubusercontent.com/82152911/199248622-217ccfb6-7cd7-4cda-844b-b8ccbae460d6.svg#gh-dark-mode-only)
+
 
 > As a result of [strictly structured data collection](https://objectiv.io/docs/taxonomy), you can simply replace the demo app with your own app when you’re ready, and reuse all the notebooks and dashboards on your own data. They have been battle-tested and are ready to be used in production.
 

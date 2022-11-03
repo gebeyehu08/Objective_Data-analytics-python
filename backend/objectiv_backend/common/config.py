@@ -155,14 +155,14 @@ class CollectorConfig(NamedTuple):
 
 
 def get_config_anonymous_mode() -> AnonymousModeConfig:
-    return AnonymousModeConfig({
-        'to_hash': {
+    return AnonymousModeConfig(
+        to_hash={
             'HttpContext': {
                 'remote_address',
                 'user_agent'
             }
         }
-    })
+    )
 
 
 def get_config_output_aws() -> Optional[AwsOutputConfig]:

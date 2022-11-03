@@ -28,7 +28,7 @@ def dataframes_sort(engine) -> Tuple[pd.DataFrame, DataFrame]:
         ],
         columns=['A', 'B', 'C']
     )
-    df = DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+    df = DataFrame.from_pandas(engine, pdf).reset_index(drop=True)
 
     return pdf, df
 
