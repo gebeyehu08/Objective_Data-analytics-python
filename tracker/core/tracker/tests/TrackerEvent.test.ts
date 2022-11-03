@@ -102,9 +102,9 @@ describe('TrackerEvent', () => {
     "MediaEvent",
     "MediaLoadEvent"
   ],
+  "_schema_version": "1.0.0",
   "id": "${testEvent.id}",
   "time": ${testEvent.time},
-  "_schema_version": "1.0.0",
   "location_stack": [
     {
       "_types": [

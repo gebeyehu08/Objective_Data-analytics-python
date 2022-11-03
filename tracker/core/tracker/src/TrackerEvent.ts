@@ -29,7 +29,7 @@ export class TrackerEvent implements AbstractEvent, Contexts {
   readonly __instance_id: AbstractEvent['__instance_id'];
   readonly _type: AbstractEvent['_type'];
   readonly _types: string[];
-  readonly _schema_version: string;
+  readonly _schema_version?: string;
   readonly id: string;
   readonly time: number;
   readonly location_stack: AbstractLocationContext[];
