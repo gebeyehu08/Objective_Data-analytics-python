@@ -25,10 +25,19 @@
       "url": "https://github.com/sdirosa"
     }
   ],
-  "types": "src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "src"
+    "dist"
   ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/esm/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "deploy:verdaccio": "npm publish",
     "prettify": "prettier --write .",

@@ -52,7 +52,7 @@ describe('TrackerEvent', () => {
   });
 
   it('should instantiate without custom location_stack and global_contexts', () => {
-    const {location_stack, global_contexts, ...pressEvent } = makePressEvent();
+    const { location_stack, global_contexts, ...pressEvent } = makePressEvent();
     // @ts-ignore this happens only when devs don't use TS and make a manual mistake
     const testEvent = new TrackerEvent(pressEvent);
     expect(testEvent).toBeInstanceOf(TrackerEvent);

@@ -17,7 +17,7 @@ import { ContextsConfig } from './Context';
  */
 export type TrackerEventAttributes = Omit<TrackerEvent, 'toJSON' | '_schema_version'> & {
   // This is necessary exclusively for backwards compatibility with older events that did not have _schema_version
-  _schema_version?: string
+  _schema_version?: string;
 };
 
 /**
