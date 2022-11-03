@@ -27,6 +27,7 @@
     "@objectiv/transport-xhr": "0.0.26"
   },
   "changesets": [
+    "curly-ears-run",
     "hungry-birds-care",
     "orange-scissors-chew",
     "three-hairs-sleep"

@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/schema",
-  "version": "0.0.27-experimental.1",
+  "version": "0.0.27-experimental.2",
   "description": "Objectiv TypeScript implementation of the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -39,6 +39,7 @@
     }
   },
   "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --legacy-output --minify --dts --sourcemap --clean",
     "deploy:verdaccio": "npm publish",
     "prettify": "prettier --write .",
     "prettify:generated": "yarn prettier --write ./src",
@@ -49,10 +50,11 @@
     "depcheck": "npx depcheck"
   },
   "devDependencies": {
-    "@objectiv/testing-tools": "^0.0.27-experimental.1",
+    "@objectiv/testing-tools": "^0.0.27-experimental.2",
     "jest": "^28.1.3",
     "prettier": "^2.7.1",
     "ts-jest": "^28.0.7",
+    "tsup": "^6.2.1",
     "typescript": "^4.7.4"
   }
 }
