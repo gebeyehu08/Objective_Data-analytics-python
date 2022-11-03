@@ -1,4 +1,4 @@
-import { TrackerEvent } from '@objectiv/tracker-core';
+import { cleanObjectFromInternalProperties, TrackerEvent } from '@objectiv/tracker-core';
 import { GLOBAL_CONTEXT_SCHEMA_BASE, LOCATION_STACK_SCHEMA_BASE } from "./index";
 
 /**
@@ -27,6 +27,6 @@ export const makeSnowplowContexts = (event: TrackerEvent) => {
     }
   });
 
-  return snowplowContexts;
+  return snowplowContexts.map(cleanObjectFromInternalProperties);
 }
 
