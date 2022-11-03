@@ -2,7 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationContextName, makeContentContext, makeMediaStopEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeMediaStopEvent } from '@objectiv/schema';
+import { matchUUID } from '@objectiv/testing-tools';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { TrackingContextProvider, trackMediaStopEvent, useMediaStopEventTracker } from '../src';
@@ -23,7 +25,16 @@ describe('trackMediaStop', () => {
     trackMediaStopEvent({ tracker });
 
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
-    expect(tracker.trackEvent).toHaveBeenNthCalledWith(1, expect.objectContaining(makeMediaStopEvent()), undefined);
+    expect(tracker.trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        ...makeMediaStopEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
+      undefined
+    );
   });
 
   it('should track a MediaStopEvent (hook relying on TrackingContextProvider)', () => {
@@ -77,15 +88,18 @@ describe('trackMediaStop', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeMediaStopEvent({
+      expect.objectContaining({
+        ...makeMediaStopEvent({
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

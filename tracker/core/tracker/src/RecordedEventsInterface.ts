@@ -2,9 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { AnyEventName, AnyGlobalContextName, AnyLocationContextName } from '@objectiv/schema';
 import { RecordedEvent } from './EventRecorderInterface';
-import { AnyGlobalContextName, AnyLocationContextName } from './generated/ContextNames';
-import { AnyEventName } from './generated/EventNames';
 
 /**
  * Predicate that can be passed to `filter`. Receives a recordedEvent as parameter.

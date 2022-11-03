@@ -2,7 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { ContextsConfig, makeIdentityContext, TrackerPluginInterface } from '@objectiv/tracker-core';
+import { makeIdentityContext } from '@objectiv/schema';
+import { ContextsConfig, TrackerPluginInterface } from '@objectiv/tracker-core';
 
 /**
  * The required attributes of IdentityContext.

@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  * @jest-environment node
  */
+import { makePressEvent } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateGUID, TrackerEvent } from '@objectiv/tracker-core';
 import { RootLocationContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -22,9 +22,7 @@ describe('RootLocationContextFromURLPlugin - node', () => {
 
   it('when unusable, should not enrich and log an error message', () => {
     const testRootLocationContextFromURLPlugin = new RootLocationContextFromURLPlugin();
-    testRootLocationContextFromURLPlugin.enrich(
-      new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() })
-    );
+    testRootLocationContextFromURLPlugin.enrich(makePressEvent());
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv:RootLocationContextFromURLPlugin｣ Cannot enrich. Plugin is not usable (document: undefined).'
     );
@@ -44,9 +42,7 @@ describe('RootLocationContextFromURLPlugin - node', () => {
 
     it('when unusable, should not enrich and not log', () => {
       const testRootLocationContextFromURLPlugin = new RootLocationContextFromURLPlugin();
-      testRootLocationContextFromURLPlugin.enrich(
-        new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() })
-      );
+      testRootLocationContextFromURLPlugin.enrich(makePressEvent());
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
   });

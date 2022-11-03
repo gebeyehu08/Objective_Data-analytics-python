@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeHiddenEvent, makeVisibleEvent, Tracker } from '@objectiv/tracker-core';
+import { makeHiddenEvent, makeVisibleEvent } from '@objectiv/schema';
+import { Tracker } from '@objectiv/tracker-core';
 import { fireEvent, render, renderHook, screen } from '@testing-library/react';
 import React from 'react';
 import { useEffect, useState } from 'react';

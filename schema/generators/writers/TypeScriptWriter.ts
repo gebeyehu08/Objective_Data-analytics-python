@@ -15,6 +15,14 @@ type ES6FunctionDefinition = Omit<FunctionDefinition, 'description'> & {
   export?: boolean;
 };
 
+type TypeDefinition = {
+  name: string,
+  description?: string[];
+  typeName: string;
+  typeValue?: string;
+  export?: boolean;
+};
+
 export class TypeScriptWriter extends OriginalTypeScriptWriter {
   constructor(writer: TextWriter) {
     super(writer);
@@ -66,7 +74,8 @@ export class TypeScriptWriter extends OriginalTypeScriptWriter {
   }
 
   public writeProps({ propsName, parameters }: { propsName: string; parameters: ParameterDefinition[] }) {
-    this.writeLine(`${propsName}: {`);
+    const optionalParametersCount = parameters.filter(parameter => parameter.isOptional).length;
+    this.writeLine(`${propsName}${optionalParametersCount === parameters.length ? '?' : ''}: {`);
     this.increaseIndent();
 
     parameters.forEach((parameter) => {
@@ -75,6 +84,23 @@ export class TypeScriptWriter extends OriginalTypeScriptWriter {
 
     this.decreaseIndent();
     this.write(`}`);
+  }
+
+  public writeTypeDefinition(definition: TypeDefinition): this {
+    if (definition.description) {
+      this.writeJsDocLines(definition.description);
+    }
+    if (definition.export) {
+      this.write(`export `);
+    }
+    this.write(`type ${definition.name}`);
+    if(definition.typeName === 'array') {
+      this.write(` = Array<${definition.typeValue}>`);
+    } else {
+      this.write(` = ${definition.typeName}`);
+    }
+    this.writeLine(`;`);
+    return this;
   }
 }
 

@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { LocationContextName } from '@objectiv/schema';
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
 import { ObjectivProvider, ReactTracker, TrackedButton } from '../src';

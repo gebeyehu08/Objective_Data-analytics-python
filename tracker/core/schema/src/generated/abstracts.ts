@@ -3,35 +3,97 @@
  */
 
 /**
- * This is the abstract parent of all Events.
- * Inheritance: AbstractEvent
+ * AbstractContext defines the bare minimum properties for every Context. All Contexts inherit from it.
+ */
+export interface AbstractContext {
+  /**
+   * An internal unique identifier used to compare instances with the same _type & id.
+   */
+  __instance_id: string;
+  /**
+   * An ordered list of the parents of this Context, itself included as the last element.
+   */
+  _types: Array<string>;
+  /**
+   * A unique string identifier to be combined with the Context Type (`_type`)
+   * for Context instance uniqueness.
+   */
+  id: string;
+  /**
+   * A string literal used during serialization. Hardcoded to the Context name.
+   */
+  _type:
+    | 'AbstractGlobalContext'
+    | 'AbstractLocationContext'
+    | 'ApplicationContext'
+    | 'CookieIdContext'
+    | 'HttpContext'
+    | 'IdentityContext'
+    | 'InputValueContext'
+    | 'LocaleContext'
+    | 'MarketingContext'
+    | 'PathContext'
+    | 'SessionContext'
+    | 'ContentContext'
+    | 'ExpandableContext'
+    | 'InputContext'
+    | 'MediaPlayerContext'
+    | 'NavigationContext'
+    | 'OverlayContext'
+    | 'PressableContext'
+    | 'RootLocationContext'
+    | 'LinkContext';
+}
+
+/**
+ * The abstract parent of all Events.
  */
 export interface AbstractEvent {
   /**
-   * The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
-   *deterministically describes where an event took place from global to specific.
-   *The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+   * An internal unique identifier used to compare instances with the same _type & id.
    */
-  location_stack: AbstractLocationContext[];
-
+  __instance_id: string;
   /**
-   * Global contexts add global / general information about the event. They carry information that is not
-   *related to where the Event originated (location), such as device, platform or business data.
+   * The version of the Objectiv Taxonomy Schema used to generate this event.
    */
-  global_contexts: AbstractGlobalContext[];
-
+  _schema_version?: string;
   /**
-   * String containing the name of the event type. (eg. ClickEvent).
+   * An ordered list of the parents of this Event, itself included as the last element.
    */
-  _type: string;
-
+  _types: Array<string>;
   /**
-   * Unique identifier for a specific instance of an event. Typically UUID's are a good way of
-   *implementing this. On the collector side, events should be unique, this means duplicate id's result
-   *in `not ok` events.
+   * The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which
+   * deterministically describes where in the UI of an application an Event took place.
+   */
+  location_stack: Array<AbstractLocationContext>;
+  /**
+   * GlobalContexts add global/general information about the state in which an Event happened, such as a
+   * user's identity and marketing information. They do not carry information related to where the Event
+   * originated (location), which instead is captured by the LocationStack.
+   */
+  global_contexts: Array<AbstractGlobalContext>;
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type:
+    | 'InteractiveEvent'
+    | 'NonInteractiveEvent'
+    | 'InputChangeEvent'
+    | 'PressEvent'
+    | 'ApplicationLoadedEvent'
+    | 'FailureEvent'
+    | 'HiddenEvent'
+    | 'MediaEvent'
+    | 'SuccessEvent'
+    | 'VisibleEvent'
+    | 'MediaLoadEvent'
+    | 'MediaPauseEvent'
+    | 'MediaStartEvent'
+    | 'MediaStopEvent';
+  /**
+   * Unique identifier for a specific instance of an event.
    */
   id: string;
-
   /**
    * Timestamp indicating when the event was generated.
    */
@@ -39,72 +101,24 @@ export interface AbstractEvent {
 }
 
 /**
- * AbstractContext defines the bare minimum properties for every Context. All Contexts inherit from it.
- * Inheritance: AbstractContext
- */
-export interface AbstractContext {
-  /**
-   * A unique identifier to discriminate Context instances across Location Stacks.
-   */
-  __instance_id: string;
-
-  /**
-   * A unique string identifier to be combined with the Context Type (`_type`)
-   *for Context instance uniqueness.
-   */
-  id: string;
-
-  /**
-   * A string literal used during serialization. Should always match the Context interface name.
-   */
-  _type: string;
-}
-
-/**
- * This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.
- * Inheritance: AbstractGlobalContext -> AbstractContext
+ * The abstract parent of all Global Contexts. Global Contexts capture general data about the state in
+ * which an Event happened, such as user's identity & marketing information.
  */
 export interface AbstractGlobalContext extends AbstractContext {
+  /**
+   * An internal discriminator relating entities of the same hierarchical branch.
+   */
   __global_context: true;
 }
 
 /**
- * AbstractLocationContext are the abstract parents of all Location Contexts.
- * Location Contexts are meant to describe where an event originated from in the visual UI.
- * Inheritance: AbstractLocationContext -> AbstractContext
+ * The abstract parent of all Location Contexts. Location Contexts describe the exact position in an
+ * application's UI from where an Event was triggered. A location stack is composed of a hierarchical
+ * stack of LocationContexts; the order defines the hierarchy.
  */
 export interface AbstractLocationContext extends AbstractContext {
+  /**
+   * An internal discriminator relating entities of the same hierarchical branch.
+   */
   __location_context: true;
-}
-
-/**
- *
- * Inheritance: AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface AbstractNonInteractiveEvent extends AbstractEvent {
-  __non_interactive_event: true;
-}
-
-/**
- *
- * Inheritance: AbstractInteractiveEvent -> AbstractEvent
- */
-export interface AbstractInteractiveEvent extends AbstractEvent {
-  __interactive_event: true;
-}
-
-/**
- *
- * Inheritance: AbstractMediaEvent -> AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface AbstractMediaEvent extends AbstractNonInteractiveEvent {
-  __media_event: true;
-}
-
-/**
- *
- * Inheritance: AbstractPressableContext -> AbstractLocationContext -> AbstractContext
- */
-export interface AbstractPressableContext extends AbstractLocationContext {
-  __pressable_context: true;
 }

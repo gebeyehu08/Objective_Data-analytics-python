@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { GlobalContexts, LocationStack, Optional, Tracker, TrackEventOptions } from '@objectiv/tracker-core';
+import { GlobalContexts, LocationStack } from '@objectiv/schema';
+import { Optional, Tracker, TrackEventOptions } from '@objectiv/tracker-core';
 import { useEffect } from 'react';
 
 /**

@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { LocationContextName } from '@objectiv/schema';
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { LocationContextName, Tracker } from '@objectiv/tracker-core';
+import { Tracker } from '@objectiv/tracker-core';
 import {
   ObjectivProvider,
   TrackedDiv,

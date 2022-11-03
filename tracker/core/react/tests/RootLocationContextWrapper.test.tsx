@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationContextName, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/schema';
+import { Tracker } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
 import { RootLocationContextWrapper, ObjectivProvider, trackPressEvent, usePressEventTracker } from '../src';

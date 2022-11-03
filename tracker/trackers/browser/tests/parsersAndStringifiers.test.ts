@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { makeContentContext } from '@objectiv/schema';
 import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makeContentContext } from '@objectiv/tracker-core';
 import {
   ChildrenTaggingQueries,
   parseJson,

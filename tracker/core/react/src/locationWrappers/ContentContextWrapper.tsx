@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeContentContext } from '@objectiv/tracker-core';
+import { makeContentContext } from '@objectiv/schema';
 import React from 'react';
 import { LocationContextWrapper, LocationContextWrapperProps } from './LocationContextWrapper';
 

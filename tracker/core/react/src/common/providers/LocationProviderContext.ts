@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationStack } from '@objectiv/tracker-core';
+import { LocationStack } from '@objectiv/schema';
 import { createContext } from 'react';
 
 /**

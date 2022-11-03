@@ -8,9 +8,7 @@ import Objectiv from '../../base_schema.json';
 import { TypeScriptWriter } from '../writers/TypeScriptWriter';
 import { getContexts, getEvents } from './parser';
 
-// TODO temporarily generate this in the /generated folder, as we need TS to be finished before we can use it
-//const destinationFolder = '../../../tracker/core/tracker/src/generated/';
-const destinationFolder = '../generated/';
+const destinationFolder = '../../../tracker/core/schema/src/generated/';
 
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
@@ -32,21 +30,31 @@ const SchemaToTypeScriptPropertyTypeMap = {
 export type PropertyDefinition = {
   name: string;
   isOptional?: boolean;
+  isNullable?: boolean;
   value?: string;
 };
 
-Generator.generate({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}factories.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
-  tsWriter.writeMultiLineImports(
-    '@objectiv/schema',
-    nonAbstractContexts.map(({ name }) => name)
-  );
-  tsWriter.writeImports('./ContextNames', ['AbstractContextName', 'GlobalContextName', 'LocationContextName']);
-  tsWriter.writeImports('../helpers', ['generateGUID']);
+  tsWriter.writeMultiLineImports('./contexts', nonAbstractContexts.map(({ name }) => name));
+  tsWriter.writeMultiLineImports('./events', nonAbstractEvents.map(({ name }) => name));
+  tsWriter.writeMultiLineImports('./types', ['LocationStack', 'GlobalContexts'].sort());
+  tsWriter.writeImports('./names', [
+    'AbstractContextName',
+    'AbstractEventName',
+    'EventName',
+    'GlobalContextName',
+    'LocationContextName'
+  ]);
+  tsWriter.writeImports('../uuidv4', ['uuidv4']);
   tsWriter.writeEndOfLine();
 
   nonAbstractContexts.forEach((context) => {
+    const parameters = getParametersFromProperties(context);
+    const optionalsCount = parameters.filter(parameter => parameter.isOptional).length;
+    const areAllPropsOptional = optionalsCount === parameters.length;
+
     tsWriter.writeES6FunctionBlock(
       {
         export: true,
@@ -61,14 +69,14 @@ Generator.generate({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (
 
         writeObjectProperty(tsWriter, context, {
           name: '__instance_id',
-          value: 'generateGUID()',
-        });
+          value: 'uuidv4()',
+        }, areAllPropsOptional);
 
         if (context.isParent) {
           writeObjectProperty(tsWriter, context, {
             name: `__${NameUtility.camelToKebabCase(context.name).replace(/-/g, '_')}`,
             value: 'true',
-          });
+          }, areAllPropsOptional);
         }
 
         context.parents.forEach((parent) => {
@@ -76,7 +84,7 @@ Generator.generate({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (
             writeObjectProperty(tsWriter, context, {
               name: `__${NameUtility.camelToKebabCase(parent.name).replace(/-/g, '_')}`,
               value: 'true',
-            });
+            }, areAllPropsOptional);
           }
         });
 
@@ -84,23 +92,24 @@ Generator.generate({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (
           writeObjectProperty(tsWriter, context, {
             name: '__location_context',
             value: 'true',
-          });
+          }, areAllPropsOptional);
         }
 
         if (context.isGlobalContext) {
           writeObjectProperty(tsWriter, context, {
             name: '__global_context',
             value: 'true',
-          });
+          }, areAllPropsOptional);
         }
 
         context.properties
           .map((property) => ({
             name: property.name,
             isOptional: property.optional,
+            isNullable: property.nullable,
             value: property.value,
           }))
-          .forEach((property) => writeObjectProperty(tsWriter, context, property));
+          .forEach((property) => writeObjectProperty(tsWriter, context, property, areAllPropsOptional));
 
         tsWriter.writeLine('});');
       }
@@ -111,20 +120,14 @@ Generator.generate({ outputFile: `${destinationFolder}/ContextFactories.ts` }, (
 
   tsWriter.writeJsDocLines([`A factory to generate any Context.`]);
   writeEntityFactory(tsWriter, 'makeContext', nonAbstractContexts);
-});
 
-Generator.generate({ outputFile: `${destinationFolder}/EventFactories.ts` }, (writer: TextWriter) => {
-  const tsWriter = new TypeScriptWriter(writer);
-
-  tsWriter.writeMultiLineImports(
-    '@objectiv/schema',
-    [...nonAbstractEvents.map(({ name }) => name), 'LocationStack', 'GlobalContexts'].sort()
-  );
-  tsWriter.writeImports('./EventNames', ['AbstractEventName', 'EventName']);
-  tsWriter.writeImports('../helpers', ['generateGUID']);
   tsWriter.writeEndOfLine();
 
   nonAbstractEvents.forEach((event) => {
+    const parameters = getParametersFromProperties(event);
+    const optionalsCount = parameters.filter(parameter => parameter.isOptional).length;
+    const areAllPropsOptional = optionalsCount === parameters.length;
+
     tsWriter.writeES6FunctionBlock(
       {
         export: true,
@@ -132,21 +135,21 @@ Generator.generate({ outputFile: `${destinationFolder}/EventFactories.ts` }, (wr
         name: `make${event.name}`,
         returnTypeName: event.name,
         multiLineSignature: true,
-        parameters: getParametersFromProperties(event),
+        parameters,
       },
       (tsWriter: TypeScriptWriter) => {
         tsWriter.writeLine('({');
 
         writeObjectProperty(tsWriter, event, {
           name: '__instance_id',
-          value: 'generateGUID()',
-        });
+          value: 'uuidv4()',
+        }, areAllPropsOptional);
 
         if (event.isParent) {
           writeObjectProperty(tsWriter, event, {
             name: `__${NameUtility.camelToKebabCase(event.name).replace(/-/g, '_')}`,
             value: 'true',
-          });
+          }, areAllPropsOptional);
         }
 
         event.parents.forEach((parent) => {
@@ -154,17 +157,33 @@ Generator.generate({ outputFile: `${destinationFolder}/EventFactories.ts` }, (wr
             writeObjectProperty(tsWriter, event, {
               name: `__${NameUtility.camelToKebabCase(parent.name).replace(/-/g, '_')}`,
               value: 'true',
-            });
+            }, areAllPropsOptional);
           }
         });
 
+        const processDefaultValue = (defaultValue) => {
+          switch(defaultValue) {
+            case 'timestamp':
+              return 'Date.now()';
+            case 'uuid':
+              return 'uuidv4()';
+            default:
+              return defaultValue;
+          }
+        }
+
         event.properties
-          .map((property) => ({
-            name: property.name,
-            isOptional: property.optional,
-            value: property.value,
-          }))
-          .forEach((property) => writeObjectProperty(tsWriter, event, property));
+          .map((property) => {
+            const propertyValue = `props${areAllPropsOptional ? '?' : ''}.${property.name}`;
+            const defaultValue = ` ?? ${processDefaultValue(property.default_value)}`;
+            return {
+              name: property.name,
+              isOptional: property.optional,
+              isNullable: property.nullable,
+              value: `${propertyValue}${property.default_value ? defaultValue : ''}`,
+            }
+          })
+          .forEach((property) => writeObjectProperty(tsWriter, event, property, areAllPropsOptional));
 
         tsWriter.writeLine('});');
       }
@@ -173,7 +192,8 @@ Generator.generate({ outputFile: `${destinationFolder}/EventFactories.ts` }, (wr
     tsWriter.writeLine();
   });
 
-  writeEntityFactory(tsWriter, 'Event', nonAbstractEvents);
+  tsWriter.writeJsDocLines([`A factory to generate any Event.`]);
+  writeEntityFactory(tsWriter, 'makeEvent', nonAbstractEvents);
 });
 
 const getParametersFromProperties = (entity) =>
@@ -186,7 +206,7 @@ const getParametersFromProperties = (entity) =>
       name: property.name,
       description: property.description,
       typeName: getTypeForProperty(property),
-      isOptional: property.optional,
+      isOptional: property.optional || property.nullable || property.default_value !== undefined,
       value: property.value,
     });
 
@@ -216,6 +236,8 @@ const writeEntityFactory = (tsWriter: TypeScriptWriter, factoryName, entities) =
     tsWriter.writeLine(`${tsWriter.indentString}case '${entity.name}':`);
     tsWriter.writeLine(`${tsWriter.indentString.repeat(2)}return make${entity.name}(props);`);
   });
+  tsWriter.writeLine(`${tsWriter.indentString}default:`);
+  tsWriter.writeLine(`${tsWriter.indentString.repeat(2)}throw new Error(\`Unknown entity \${_type}\`);`);
   tsWriter.writeLine(`}`);
   tsWriter.decreaseIndent();
   tsWriter.writeLine(`}`);
@@ -224,7 +246,8 @@ const writeEntityFactory = (tsWriter: TypeScriptWriter, factoryName, entities) =
 const getTypeForProperty = (property) => {
   const mappedType = SchemaToTypeScriptPropertyTypeMap[property.type];
   const mappedSubType = property.type === 'array' ? SchemaToTypeScriptPropertyTypeMap[property.items.type] : undefined;
-  return `${mappedType ?? property.type}${mappedSubType ? `<${mappedSubType}>` : ''}`;
+  const nullable = property.nullable ? ' | null' : '';
+  return `${mappedType ?? property.type}${mappedSubType ? `<${mappedSubType}>` : ''}${nullable}`;
 };
 
 const mapInternalTypeToEnum = (entity) => {
@@ -251,7 +274,7 @@ const mapInternalTypeToEnum = (entity) => {
   }
 };
 
-const writeObjectProperty = (tsWriter: TypeScriptWriter, entity, property: PropertyDefinition) => {
+const writeObjectProperty = (tsWriter: TypeScriptWriter, entity, property: PropertyDefinition, areAllPropsOptional) => {
   tsWriter.increaseIndent();
 
   tsWriter.writeIndent();
@@ -274,12 +297,15 @@ const writeObjectProperty = (tsWriter: TypeScriptWriter, entity, property: Prope
       propertyValue = `'${schemaVersion}'`;
       break;
     default:
-      propertyValue = property.value ?? `props.${property.name}`;
+      const parameters = getParametersFromProperties(entity);
+      const optionalsCount = parameters.filter(parameter => parameter.isOptional).length;
+      const areAllPropsOptional = optionalsCount === parameters.length;
+      propertyValue = property.value ?? `props${areAllPropsOptional ? '?' : ''}.${property.name}`;
   }
 
   tsWriter.write(`: ${propertyValue}`);
 
-  if (property.isOptional) {
+  if (property.isNullable) {
     tsWriter.write(' ?? null');
   }
 

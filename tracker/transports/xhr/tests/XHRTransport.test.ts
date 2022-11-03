@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { makePressEvent } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateGUID, makeTransportSendError, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { makeTransportSendError, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import xhrMock from 'xhr-mock';
 import { XHRTransport } from '../src';
 
@@ -25,11 +26,7 @@ afterEach(() => {
 describe('XHRTransport', () => {
   const MOCK_ENDPOINT = '/test-endpoint';
 
-  const testEvent = new TrackerEvent({
-    _type: 'test-event',
-    id: generateGUID(),
-    time: Date.now(),
-  });
+  const testEvent = new TrackerEvent(makePressEvent());
 
   const testTracker = new Tracker({ applicationId: 'test', endpoint: MOCK_ENDPOINT });
 

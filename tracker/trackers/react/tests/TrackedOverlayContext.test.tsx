@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { EventName, LocationContextName } from '@objectiv/schema';
 import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React, { ComponentProps, createRef } from 'react';
 import {
@@ -57,13 +57,13 @@ describe('TrackedOverlayContext', () => {
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        _type: 'ApplicationLoadedEvent',
+        _type: EventName.ApplicationLoadedEvent,
       })
     );
     expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        _type: 'PressEvent',
+        _type: EventName.PressEvent,
         location_stack: expect.arrayContaining([
           expect.objectContaining({
             _type: LocationContextName.OverlayContext,

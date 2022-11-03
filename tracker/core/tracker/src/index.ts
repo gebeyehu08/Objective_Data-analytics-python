@@ -22,11 +22,6 @@ globalThis.objectiv.versions.set(pkg.name, pkg.version);
  */
 globalThis.objectiv.clientSessionId = generateGUID();
 
-export * from './generated/ContextFactories';
-export * from './generated/ContextNames';
-export * from './generated/EventFactories';
-export * from './generated/EventNames';
-
 export * from './cleanObjectFromInternalProperties';
 export * from './Context';
 export * from './ContextValidationRules';
@@ -58,4 +53,3 @@ export * from './TrackerTransportRetryAttempt';
 export * from './TrackerTransportSwitch';
 export * from './TrackerValidationRuleInterface';
 export * from './TrackerValidationLifecycleInterface';
-export * from './uuidv4';

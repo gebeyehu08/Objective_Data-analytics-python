@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
+  AbstractContextName,
   LocationContextName,
   makeContentContext,
   makeExpandableContext,
@@ -13,7 +13,8 @@ import {
   makeNavigationContext,
   makeOverlayContext,
   makePressableContext,
-} from '@objectiv/tracker-core';
+} from '@objectiv/schema';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { tagContent, TaggingAttribute, tagLocation, tagOverlay } from '../src';
 
 require('@objectiv/developer-tools');
@@ -122,8 +123,13 @@ describe('tagLocation', () => {
           ? JSON.parse(taggingAttributesA[TaggingAttribute.context]).__instance_id
           : null,
         __location_context: true,
-        _type: LocationContextName.ContentContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.ContentContext,
+        ],
         id: 'test',
+        _type: LocationContextName.ContentContext,
       }),
     });
 
@@ -140,8 +146,13 @@ describe('tagLocation', () => {
           ? JSON.parse(taggingAttributesB[TaggingAttribute.context]).__instance_id
           : null,
         __location_context: true,
-        _type: LocationContextName.OverlayContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.OverlayContext,
+        ],
         id: 'test',
+        _type: LocationContextName.OverlayContext,
       }),
     });
 
@@ -160,8 +171,13 @@ describe('tagLocation', () => {
           ? JSON.parse(taggingAttributesC[TaggingAttribute.context]).__instance_id
           : null,
         __location_context: true,
-        _type: LocationContextName.ContentContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.ContentContext,
+        ],
         id: 'test',
+        _type: LocationContextName.ContentContext,
       }),
       [TaggingAttribute.trackClicks]: 'false',
       [TaggingAttribute.trackBlurs]: 'true',
@@ -179,8 +195,13 @@ describe('tagLocation', () => {
           ? JSON.parse(taggingAttributesA[TaggingAttribute.context]).__instance_id
           : null,
         __location_context: true,
-        _type: LocationContextName.ContentContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.ContentContext,
+        ],
         id: 'test',
+        _type: LocationContextName.ContentContext,
       }),
     });
     const taggingAttributesB = tagContent({ id: 'test', options: { parent } });
@@ -193,8 +214,13 @@ describe('tagLocation', () => {
           ? JSON.parse(taggingAttributesB[TaggingAttribute.context]).__instance_id
           : null,
         __location_context: true,
-        _type: LocationContextName.ContentContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.ContentContext,
+        ],
         id: 'test',
+        _type: LocationContextName.ContentContext,
       }),
     });
   });
@@ -208,10 +234,15 @@ describe('tagLocation', () => {
       [TaggingAttribute.elementId]: matchUUID,
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
-        __location_context: true,
         __pressable_context: true,
-        _type: LocationContextName.PressableContext,
+        __location_context: true,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.PressableContext,
+        ],
         id: 'test-button',
+        _type: LocationContextName.PressableContext,
       }),
       [TaggingAttribute.trackClicks]: 'true',
     };
@@ -227,8 +258,13 @@ describe('tagLocation', () => {
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
         __location_context: true,
-        _type: LocationContextName.ContentContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.ContentContext,
+        ],
         id: 'test-section',
+        _type: LocationContextName.ContentContext,
       }),
     };
 
@@ -245,8 +281,13 @@ describe('tagLocation', () => {
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
         __location_context: true,
-        _type: LocationContextName.ExpandableContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.ExpandableContext,
+        ],
         id: 'test-expandable',
+        _type: LocationContextName.ExpandableContext,
       }),
       [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };
@@ -262,8 +303,13 @@ describe('tagLocation', () => {
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
         __location_context: true,
-        _type: LocationContextName.InputContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.InputContext,
+        ],
         id: 'test-input',
+        _type: LocationContextName.InputContext,
       }),
       [TaggingAttribute.trackBlurs]: 'true',
     };
@@ -280,10 +326,16 @@ describe('tagLocation', () => {
       [TaggingAttribute.elementId]: matchUUID,
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
-        __location_context: true,
         __pressable_context: true,
-        _type: LocationContextName.LinkContext,
+        __location_context: true,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.PressableContext,
+          LocationContextName.LinkContext,
+        ],
         id: 'link',
+        _type: LocationContextName.LinkContext,
         href: '/test',
       }),
       [TaggingAttribute.trackClicks]: 'true',
@@ -300,8 +352,13 @@ describe('tagLocation', () => {
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
         __location_context: true,
-        _type: LocationContextName.MediaPlayerContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.MediaPlayerContext,
+        ],
         id: 'test-media-player',
+        _type: LocationContextName.MediaPlayerContext,
       }),
     };
 
@@ -316,8 +373,13 @@ describe('tagLocation', () => {
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
         __location_context: true,
-        _type: LocationContextName.NavigationContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.NavigationContext,
+        ],
         id: 'test-nav',
+        _type: LocationContextName.NavigationContext,
       }),
     };
 
@@ -332,8 +394,13 @@ describe('tagLocation', () => {
       [TaggingAttribute.context]: JSON.stringify({
         __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
         __location_context: true,
-        _type: LocationContextName.OverlayContext,
+        _types: [
+          AbstractContextName.AbstractContext,
+          AbstractContextName.AbstractLocationContext,
+          LocationContextName.OverlayContext,
+        ],
         id: 'test-overlay',
+        _type: LocationContextName.OverlayContext,
       }),
       [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };

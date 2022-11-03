@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makePressableContext } from '@objectiv/tracker-core';
+import { makePressableContext } from '@objectiv/schema';
 import React from 'react';
 import { ContentContextWrapperProps } from './ContentContextWrapper';
 import { LocationContextWrapper } from './LocationContextWrapper';

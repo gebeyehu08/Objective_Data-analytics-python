@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makePressableContext } from '@objectiv/tracker-core';
+import { makePressableContext } from '@objectiv/schema';
 import { renderHook } from '@testing-library/react';
 import { useOnContextChange } from '../src/';
 

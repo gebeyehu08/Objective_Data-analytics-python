@@ -2,7 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationContextName, makeContentContext, makeNonInteractiveEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeNonInteractiveEvent } from '@objectiv/schema';
+import { matchUUID } from '@objectiv/testing-tools';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { TrackingContextProvider, trackNonInteractiveEvent, useNonInteractiveEventTracker } from '../src';
@@ -25,7 +27,12 @@ describe('NonInteractiveEvent', () => {
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(makeNonInteractiveEvent()),
+      expect.objectContaining({
+        ...makeNonInteractiveEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });
@@ -81,15 +88,18 @@ describe('NonInteractiveEvent', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeNonInteractiveEvent({
+      expect.objectContaining({
+        ...makeNonInteractiveEvent({
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

@@ -7,15 +7,15 @@ import { Generator } from '@yellicode/templating';
 import { TypeScriptWriter } from '../writers/TypeScriptWriter';
 import { getContexts, getEvents } from './parser';
 
-// TODO temporarily generate this in the /generated folder, as we need TS to be finished before we can use it
-//const destinationFolder = '../../../tracker/core/tracker/src/generated/';
-const destinationFolder = '../generated/';
+const destinationFolder = '../../../tracker/core/schema/src/generated/';
 
-Generator.generate({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}names.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
   const abstractContexts = getContexts({ isAbstract: true, sortBy: 'name' });
+  const abstractEvents = getEvents({ isAbstract: true, sortBy: 'name' });
   const globalContexts = getContexts({ isGlobalContext: true, sortBy: 'name' });
   const locationContexts = getContexts({ isLocationContext: true, sortBy: 'name' });
+  const events = getEvents({ isAbstract: false, sortBy: 'name' });
 
   // AbstractContextName enum
   tsWriter.writeEnumeration({
@@ -75,12 +75,8 @@ Generator.generate({ outputFile: `${destinationFolder}/ContextNames.ts` }, (writ
   tsWriter.writeLines([
     'export const ContextNames = new Set([...Object.keys(LocationContextName), ...Object.keys(GlobalContextName)]);',
   ]);
-});
 
-Generator.generate({ outputFile: `${destinationFolder}/EventNames.ts` }, (writer: TextWriter) => {
-  const tsWriter = new TypeScriptWriter(writer);
-  const abstractEvents = getEvents({ isAbstract: true, sortBy: 'name' });
-  const events = getEvents({ isAbstract: false, sortBy: 'name' });
+  tsWriter.writeEndOfLine();
 
   // AbstractEventName enum
   tsWriter.writeEnumeration({

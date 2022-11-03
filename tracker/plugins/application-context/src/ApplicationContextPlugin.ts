@@ -2,13 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { ApplicationContext } from '@objectiv/schema';
-import {
-  ContextsConfig,
-  makeApplicationContext,
-  TrackerInterface,
-  TrackerPluginInterface,
-} from '@objectiv/tracker-core';
+import { ApplicationContext, makeApplicationContext } from '@objectiv/schema';
+import { ContextsConfig, TrackerInterface, TrackerPluginInterface } from '@objectiv/tracker-core';
 
 /**
  * The ApplicationContextPlugin adds an ApplicationContext as GlobalContext before events are transported.

@@ -8,8 +8,8 @@ import {
   makeContentContext,
   makeInputContext,
   makeInputValueContext,
-  Tracker,
-} from '@objectiv/tracker-core';
+} from '@objectiv/schema';
+import { Tracker } from '@objectiv/tracker-core';
 import { mergeEventTrackerHookAndCallbackParameters } from '../src';
 
 describe('mergeEventTrackerHookAndCallbackParameters', () => {

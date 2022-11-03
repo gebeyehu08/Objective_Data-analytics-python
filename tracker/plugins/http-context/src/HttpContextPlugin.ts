@@ -2,11 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { HttpContext } from '@objectiv/schema';
+import { GlobalContextName, HttpContext, makeHttpContext } from '@objectiv/schema';
 import {
   ContextsConfig,
-  GlobalContextName,
-  makeHttpContext,
   TrackerEvent,
   TrackerInterface,
   TrackerPluginInterface,

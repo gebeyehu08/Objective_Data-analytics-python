@@ -57,6 +57,7 @@
   },
   "devDependencies": {
     "@objectiv/developer-tools": "^0.0.26",
+    "@objectiv/schema": "^0.0.26",
     "@objectiv/testing-tools": "^0.0.26",
     "@react-navigation/bottom-tabs": "^6.3.2",
     "@react-navigation/core": "^6.2.2",

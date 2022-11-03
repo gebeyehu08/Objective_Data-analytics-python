@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeMediaStopEvent } from '@objectiv/tracker-core';
+import { makeMediaStopEvent } from '@objectiv/schema';
 import { EventTrackerParameters } from '../types';
 
 /**

@@ -2,52 +2,26 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { AbstractInteractiveEvent, AbstractNonInteractiveEvent, AbstractMediaEvent } from './abstracts';
-
+import { AbstractEvent } from './abstracts';
 /**
- * The parent of Events that are the direct result of a user interaction, e.g. a button click.
- * Inheritance: InteractiveEvent -> AbstractInteractiveEvent -> AbstractEvent
+ * A NonInteractive event that is emitted after an application (e.g. SPA) has finished loading.
  */
-export interface InteractiveEvent extends AbstractInteractiveEvent {
+export interface ApplicationLoadedEvent extends NonInteractiveEvent {
   /**
-   * Typescript discriminator
-   */
-  _type: 'InteractiveEvent';
-}
-
-/**
- * The parent of Events that are not directly triggered by a user action.
- * Inheritance: NonInteractiveEvent -> AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface NonInteractiveEvent extends AbstractNonInteractiveEvent {
-  /**
-   * Typescript discriminator
-   */
-  _type: 'NonInteractiveEvent';
-}
-
-/**
- * A NonInteractive event that is emitted after an application (eg. SPA) has finished loading.
- * Inheritance: ApplicationLoadedEvent -> AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface ApplicationLoadedEvent extends AbstractNonInteractiveEvent {
-  /**
-   * Typescript discriminator
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: 'ApplicationLoadedEvent';
 }
 
 /**
- * A NonInteractiveEvent that is sent when a user action results in a error,
+ * A NonInteractiveEvent that is sent when a user action results in an error,
  * like an invalid email when sending a form.
- * Inheritance: FailureEvent -> AbstractNonInteractiveEvent -> AbstractEvent
  */
-export interface FailureEvent extends AbstractNonInteractiveEvent {
+export interface FailureEvent extends NonInteractiveEvent {
   /**
-   * Typescript discriminator
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: 'FailureEvent';
-
   /**
    * Failure message.
    */
@@ -55,61 +29,139 @@ export interface FailureEvent extends AbstractNonInteractiveEvent {
 }
 
 /**
- * Event triggered when user input is modified.
- * Inheritance: InputChangeEvent -> AbstractInteractiveEvent -> AbstractEvent
- */
-export interface InputChangeEvent extends AbstractInteractiveEvent {
-  /**
-   * Typescript discriminator
-   */
-  _type: 'InputChangeEvent';
-}
-
-/**
- * An InteractiveEvent that is sent when a user presses on a pressable element
- * (like a link, button, icon).
- * Inheritance: PressEvent -> AbstractInteractiveEvent -> AbstractEvent
- */
-export interface PressEvent extends AbstractInteractiveEvent {
-  /**
-   * Typescript discriminator
-   */
-  _type: 'PressEvent';
-}
-
-/**
  * A NonInteractiveEvent that's emitted after a LocationContext has become invisible.
- * Inheritance: HiddenEvent -> AbstractNonInteractiveEvent -> AbstractEvent
  */
-export interface HiddenEvent extends AbstractNonInteractiveEvent {
+export interface HiddenEvent extends NonInteractiveEvent {
   /**
-   * Typescript discriminator
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: 'HiddenEvent';
 }
 
 /**
- * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
- * Inheritance: VisibleEvent -> AbstractNonInteractiveEvent -> AbstractEvent
+ * Event triggered when user input is modified.
  */
-export interface VisibleEvent extends AbstractNonInteractiveEvent {
+export interface InputChangeEvent extends InteractiveEvent {
   /**
-   * Typescript discriminator
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
-  _type: 'VisibleEvent';
+  _type: 'InputChangeEvent';
+}
+
+/**
+ * The parent of Events that are the direct result of a user interaction, e.g. a button click.
+ */
+export interface InteractiveEvent extends AbstractEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type: 'InteractiveEvent' | 'InputChangeEvent' | 'PressEvent';
+  /**
+   * An internal discriminator relating entities of the same hierarchical branch.
+   */
+  __interactive_event: true;
+}
+
+/**
+ * The parent of non-interactive events that are triggered by a media player.
+ * It requires a MediaPlayerContext to detail the origin of the event.
+ */
+export interface MediaEvent extends NonInteractiveEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type: 'MediaEvent' | 'MediaLoadEvent' | 'MediaPauseEvent' | 'MediaStartEvent' | 'MediaStopEvent';
+  /**
+   * An internal discriminator relating entities of the same hierarchical branch.
+   */
+  __media_event: true;
+}
+
+/**
+ * A MediaEvent that's emitted after a media item completes loading.
+ */
+export interface MediaLoadEvent extends MediaEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type: 'MediaLoadEvent';
+}
+
+/**
+ * A MediaEvent that's emitted after a media item pauses playback.
+ */
+export interface MediaPauseEvent extends MediaEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type: 'MediaPauseEvent';
+}
+
+/**
+ * A MediaEvent that's emitted after a media item starts playback.
+ */
+export interface MediaStartEvent extends MediaEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type: 'MediaStartEvent';
+}
+
+/**
+ * A MediaEvent that's emitted after a media item stops playback.
+ */
+export interface MediaStopEvent extends MediaEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type: 'MediaStopEvent';
+}
+
+/**
+ * The parent of Events that are not directly triggered by a user action.
+ */
+export interface NonInteractiveEvent extends AbstractEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type:
+    | 'NonInteractiveEvent'
+    | 'ApplicationLoadedEvent'
+    | 'FailureEvent'
+    | 'HiddenEvent'
+    | 'MediaEvent'
+    | 'SuccessEvent'
+    | 'VisibleEvent'
+    | 'MediaLoadEvent'
+    | 'MediaPauseEvent'
+    | 'MediaStartEvent'
+    | 'MediaStopEvent';
+  /**
+   * An internal discriminator relating entities of the same hierarchical branch.
+   */
+  __non_interactive_event: true;
+}
+
+/**
+ * An InteractiveEvent that is sent when a user presses on a pressable element
+ * (like a link, button, icon).
+ */
+export interface PressEvent extends InteractiveEvent {
+  /**
+   * A string literal used during serialization. Hardcoded to the Event name.
+   */
+  _type: 'PressEvent';
 }
 
 /**
  * A NonInteractiveEvent that is sent when a user action is successfully completed,
  * like sending an email form.
- * Inheritance: SuccessEvent -> AbstractNonInteractiveEvent -> AbstractEvent
  */
-export interface SuccessEvent extends AbstractNonInteractiveEvent {
+export interface SuccessEvent extends NonInteractiveEvent {
   /**
-   * Typescript discriminator
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
   _type: 'SuccessEvent';
-
   /**
    * Success message.
    */
@@ -117,57 +169,11 @@ export interface SuccessEvent extends AbstractNonInteractiveEvent {
 }
 
 /**
- * The parent of non-interactive events that are triggered by a media player.
- * It requires a MediaPlayerContext to detail the origin of the event.
- * Inheritance: MediaEvent -> AbstractMediaEvent -> AbstractNonInteractiveEvent -> AbstractEvent
+ * A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
  */
-export interface MediaEvent extends AbstractMediaEvent {
+export interface VisibleEvent extends NonInteractiveEvent {
   /**
-   * Typescript discriminator
+   * A string literal used during serialization. Hardcoded to the Event name.
    */
-  _type: 'MediaEvent';
-}
-
-/**
- * A MediaEvent that's emitted after a media item completes loading.
- * Inheritance: MediaLoadEvent -> AbstractMediaEvent -> AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface MediaLoadEvent extends AbstractMediaEvent {
-  /**
-   * Typescript discriminator
-   */
-  _type: 'MediaLoadEvent';
-}
-
-/**
- * A MediaEvent that's emitted after a media item pauses playback.
- * Inheritance: MediaPauseEvent -> AbstractMediaEvent -> AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface MediaPauseEvent extends AbstractMediaEvent {
-  /**
-   * Typescript discriminator
-   */
-  _type: 'MediaPauseEvent';
-}
-
-/**
- * A MediaEvent that's emitted after a media item starts playback.
- * Inheritance: MediaStartEvent -> AbstractMediaEvent -> AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface MediaStartEvent extends AbstractMediaEvent {
-  /**
-   * Typescript discriminator
-   */
-  _type: 'MediaStartEvent';
-}
-
-/**
- * A MediaEvent that's emitted after a media item stops playback.
- * Inheritance: MediaStopEvent -> AbstractMediaEvent -> AbstractNonInteractiveEvent -> AbstractEvent
- */
-export interface MediaStopEvent extends AbstractMediaEvent {
-  /**
-   * Typescript discriminator
-   */
-  _type: 'MediaStopEvent';
+  _type: 'VisibleEvent';
 }

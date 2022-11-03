@@ -2,7 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { generateGUID, TrackerEvent } from '@objectiv/tracker-core';
+import { makePressEvent, makeSuccessEvent, makeVisibleEvent } from '@objectiv/schema';
+import { TrackerEvent } from '@objectiv/tracker-core';
 import { EventRecorder } from '../src/EventRecorder';
 
 describe('EventRecorder', () => {
@@ -36,9 +37,9 @@ describe('EventRecorder', () => {
   });
 
   it('should store the events in `events` and sort them up', async () => {
-    const testPressEvent = new TrackerEvent({ _type: 'PressEvent', id: 'test-press-event', time: Date.now() });
-    const testVisibleEvent = new TrackerEvent({ _type: 'VisibleEvent', id: 'test-visible-event', time: Date.now() });
-    const testSuccessEvent = new TrackerEvent({ _type: 'SuccessEvent', id: 'test-success-event', time: Date.now() });
+    const testPressEvent = new TrackerEvent(makePressEvent({ id: 'test-press-event' }));
+    const testVisibleEvent = new TrackerEvent(makeVisibleEvent({ id: 'test-visible-event' }));
+    const testSuccessEvent = new TrackerEvent(makeSuccessEvent({ id: 'test-success-event', message: 'test-message' }));
 
     expect(EventRecorder._events).toStrictEqual([]);
 
@@ -72,9 +73,9 @@ describe('EventRecorder', () => {
   });
 
   it('should automatically assign a predictable identifier to Events of the same type', async () => {
-    const testPressEvent1 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
-    const testPressEvent2 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
-    const testPressEvent3 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
+    const testPressEvent1 = new TrackerEvent(makePressEvent());
+    const testPressEvent2 = new TrackerEvent(makePressEvent());
+    const testPressEvent3 = new TrackerEvent(makePressEvent());
 
     expect(EventRecorder._events).toStrictEqual([]);
 
@@ -88,9 +89,9 @@ describe('EventRecorder', () => {
   });
 
   it('should remove time information from recorded Events', async () => {
-    const testPressEvent1 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
-    const testPressEvent2 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
-    const testPressEvent3 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
+    const testPressEvent1 = new TrackerEvent(makePressEvent());
+    const testPressEvent2 = new TrackerEvent(makePressEvent());
+    const testPressEvent3 = new TrackerEvent(makePressEvent());
 
     expect(testPressEvent1.time).not.toBeUndefined();
     expect(testPressEvent2.time).not.toBeUndefined();
@@ -109,9 +110,9 @@ describe('EventRecorder', () => {
   });
 
   it('should clear the recorded events', async () => {
-    const testPressEvent = new TrackerEvent({ _type: 'PressEvent', id: 'test-press-event', time: Date.now() });
-    const testVisibleEvent = new TrackerEvent({ _type: 'VisibleEvent', id: 'test-visible-event', time: Date.now() });
-    const testSuccessEvent = new TrackerEvent({ _type: 'SuccessEvent', id: 'test-success-event', time: Date.now() });
+    const testPressEvent = new TrackerEvent(makePressEvent({ id: 'test-press-event' }));
+    const testVisibleEvent = new TrackerEvent(makeVisibleEvent({ id: 'test-visible-event' }));
+    const testSuccessEvent = new TrackerEvent(makeSuccessEvent({ id: 'test-success-event', message: 'test-message' }));
 
     await EventRecorder.handle(testPressEvent, testVisibleEvent, testSuccessEvent);
     expect(EventRecorder._events.length).toBe(3);
@@ -125,9 +126,9 @@ describe('EventRecorder', () => {
     EventRecorder.configure({ autoStart: false });
     expect(EventRecorder.recording).toBe(false);
 
-    const testPressEvent = new TrackerEvent({ _type: 'PressEvent', id: 'test-press-event', time: Date.now() });
-    const testVisibleEvent = new TrackerEvent({ _type: 'VisibleEvent', id: 'test-visible-event', time: Date.now() });
-    const testSuccessEvent = new TrackerEvent({ _type: 'SuccessEvent', id: 'test-success-event', time: Date.now() });
+    const testPressEvent = new TrackerEvent(makePressEvent({ id: 'test-press-event' }));
+    const testVisibleEvent = new TrackerEvent(makeVisibleEvent({ id: 'test-visible-event' }));
+    const testSuccessEvent = new TrackerEvent(makeSuccessEvent({ id: 'test-success-event', message: 'test-message' }));
 
     await EventRecorder.handle(testPressEvent, testVisibleEvent, testSuccessEvent);
 
@@ -143,9 +144,9 @@ describe('EventRecorder', () => {
   });
 
   it('should stop recording', async () => {
-    const testPressEvent = new TrackerEvent({ _type: 'PressEvent', id: 'test-press-event', time: Date.now() });
-    const testVisibleEvent = new TrackerEvent({ _type: 'VisibleEvent', id: 'test-visible-event', time: Date.now() });
-    const testSuccessEvent = new TrackerEvent({ _type: 'SuccessEvent', id: 'test-success-event', time: Date.now() });
+    const testPressEvent = new TrackerEvent(makePressEvent({ id: 'test-press-event' }));
+    const testVisibleEvent = new TrackerEvent(makeVisibleEvent({ id: 'test-visible-event' }));
+    const testSuccessEvent = new TrackerEvent(makeSuccessEvent({ id: 'test-success-event', message: 'test-message' }));
 
     expect(EventRecorder.recording).toBe(true);
 

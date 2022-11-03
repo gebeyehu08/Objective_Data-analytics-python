@@ -2,6 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { makeApplicationContext, makeContentContext, makePressEvent } from '@objectiv/schema';
 import {
   ConfigurableMockTransport,
   expectToThrow,
@@ -10,7 +11,6 @@ import {
 } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
-  generateGUID,
   makeTransportSendError,
   Tracker,
   TrackerEvent,
@@ -20,12 +20,11 @@ import {
   TrackerTransportSwitch,
 } from '../src';
 
-const testEventName = 'test-event';
 const testContexts: ContextsConfig = {
-  location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'test' }],
-  global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'test' }],
+  location_stack: [makeContentContext({ id: 'test' })],
+  global_contexts: [makeApplicationContext({ id: 'test' })],
 };
-const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts, id: generateGUID(), time: Date.now() });
+const testEvent = new TrackerEvent(makePressEvent(testContexts));
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);

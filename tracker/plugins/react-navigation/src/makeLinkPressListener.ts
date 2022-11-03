@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { makeLinkContext } from '@objectiv/tracker-core';
+import { makeLinkContext } from '@objectiv/schema';
 import { TrackingContext, trackPressEvent } from '@objectiv/tracker-react-core';
 import { findFocusedRoute, NavigationState } from '@react-navigation/native';
 
