@@ -42,6 +42,25 @@ describe('TrackerEvent', () => {
     expect(testEvent.global_contexts).toEqual(testContexts.global_contexts);
   });
 
+  it('should instantiate without _schema_version and default to 1.0.0', () => {
+    const pressEvent = makePressEvent(testContexts);
+    delete pressEvent._schema_version;
+    const testEvent = new TrackerEvent(pressEvent);
+    expect(testEvent).toBeInstanceOf(TrackerEvent);
+    expect(testEvent._type).toBe(testEventName);
+    expect(testEvent._schema_version).toBe('1.0.0');
+  });
+
+  it('should instantiate without custom location_stack and global_contexts', () => {
+    const {location_stack, global_contexts, ...pressEvent } = makePressEvent();
+    // @ts-ignore this happens only when devs don't use TS and make a manual mistake
+    const testEvent = new TrackerEvent(pressEvent);
+    expect(testEvent).toBeInstanceOf(TrackerEvent);
+    expect(testEvent._type).toBe(testEventName);
+    expect(testEvent.location_stack).toEqual([]);
+    expect(testEvent.global_contexts).toEqual([]);
+  });
+
   it('should instantiate with the given properties as multiple Configs', () => {
     const testEvent = new TrackerEvent(makePressEvent(), testContexts);
     expect(testEvent).toBeInstanceOf(TrackerEvent);
@@ -102,9 +121,9 @@ describe('TrackerEvent', () => {
     "MediaEvent",
     "MediaLoadEvent"
   ],
+  "_schema_version": "1.0.0",
   "id": "${testEvent.id}",
   "time": ${testEvent.time},
-  "_schema_version": "1.0.0",
   "location_stack": [
     {
       "_types": [
