@@ -23,6 +23,7 @@
     "@objectiv/tracker-react-native": "0.0.26",
     "@objectiv/transport-debug": "0.0.26",
     "@objectiv/transport-fetch": "0.0.26",
+    "@objectiv/transport-snowplow": "0.0.26",
     "@objectiv/transport-xhr": "0.0.26"
   },
   "changesets": [

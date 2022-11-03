@@ -20,6 +20,7 @@
 "@objectiv/tracker-react-native": patch
 "@objectiv/transport-debug": patch
 "@objectiv/transport-fetch": patch
+"@objectiv/transport-snowplow": patch
 "@objectiv/transport-xhr": patch
 ---
 
