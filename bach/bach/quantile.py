@@ -35,8 +35,7 @@ def _add_quantiles_as_series(df: DataFrame, q: Union[float, List[float]]) -> Dat
     else:
         quantiles_to_calculate = DataFrame.from_pandas(
             engine=df.engine,
-            df=pandas.DataFrame({_QUANTILES_SERIES_NAME: q}),
-            convert_objects=True,
+            df=pandas.DataFrame({_QUANTILES_SERIES_NAME: q})
         )
         quantiles_to_calculate = quantiles_to_calculate.reset_index(drop=True)
 

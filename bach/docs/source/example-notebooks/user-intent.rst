@@ -195,7 +195,7 @@ Using our intent definitions above, we can now assign a stage of intent to each 
 	:skipif: engine is None
 
 	>>> # select the root_locations to use for each of the intent stages
-	>>> roots = bach.DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'roots': ['modeling', 'taxonomy', 'tracking', 'home', 'docs']}), convert_objects=True).roots
+	>>> roots = bach.DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'roots': ['modeling', 'taxonomy', 'tracking', 'home', 'docs']})).roots
 
 .. doctest:: user-intent
 	:skipif: engine is None
@@ -287,7 +287,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-03-01', end_date='2022-05-01')
 	df['application_id'] = df.application.context.id
 	df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
-	roots = bach.DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'roots': ['modeling', 'taxonomy', 'tracking', 'home', 'docs']}), convert_objects=True).roots
+	roots = bach.DataFrame.from_pandas(engine=df.engine, df=pd.DataFrame({'roots': ['modeling', 'taxonomy', 'tracking', 'home', 'docs']})).roots
 	user_intent_buckets = modelhub.agg.session_duration(df, groupby=['user_id'], method='sum', exclude_bounces=False).to_frame()
 	selector = (df.root_location.isin(roots)) & (df.application_id=='objectiv-docs')
 	explore_inform_users_session_duration = modelhub.agg.session_duration(df[selector], groupby='user_id', method='sum')

@@ -137,7 +137,7 @@ def test_round(engine):
             'd': [1, 2, 3, 4, 5, 6, 7, 8],
         },
     )
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
 
     result = bt.copy()
     expected = pdf.copy()
@@ -175,7 +175,7 @@ def test_quantile(engine) -> None:
             'c': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
         },
     )
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
     quantiles = [[0.2, 0.4], 0.5, [0.25, 0.3, 0.5, 0.75, 0.86]]
 
     for q in quantiles:
@@ -194,7 +194,7 @@ def test_quantile_no_numeric_columns(engine) -> None:
             'c': ['e', 'f', 'g', 'h'],
         },
     )
-    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf)
     bt = bt.reset_index(drop=True)
 
     with pytest.raises(ValueError, match=r'Cannot calculate quantiles, DataFrame has no numeric'):

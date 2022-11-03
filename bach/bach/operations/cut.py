@@ -225,8 +225,7 @@ class CutOperation:
         from bach.dataframe import DataFrame
         range_df = DataFrame.from_pandas(
             engine=self.series.engine,
-            df=pandas.DataFrame(data={'bucket': range(1, self.bins + 1)}),
-            convert_objects=True,
+            df=pandas.DataFrame(data={'bucket': range(1, self.bins + 1)})
         ).reset_index(drop=True)
 
         range_df = range_df.merge(bucket_properties_df, how='cross')

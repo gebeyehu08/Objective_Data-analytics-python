@@ -125,24 +125,21 @@ def get_df_with_test_data(engine: Engine, full_data_set: bool = False) -> DataFr
     dataset = TEST_DATA_CITIES_FULL if full_data_set else TEST_DATA_CITIES
     return DataFrame.from_pandas(
         engine=engine,
-        df=get_pandas_df(dataset, CITIES_COLUMNS),
-        convert_objects=True
+        df=get_pandas_df(dataset, CITIES_COLUMNS)
     )
 
 
 def get_df_with_food_data(engine: Engine) -> DataFrame:
     return DataFrame.from_pandas(
         engine=engine,
-        df=get_pandas_df(TEST_DATA_FOOD, FOOD_COLUMNS),
-        convert_objects=True,
+        df=get_pandas_df(TEST_DATA_FOOD, FOOD_COLUMNS)
     )
 
 
 def get_df_with_railway_data(engine: Engine) -> DataFrame:
     return DataFrame.from_pandas(
         engine=engine,
-        df=get_pandas_df(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS),
-        convert_objects=True,
+        df=get_pandas_df(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS)
     )
 
 
@@ -150,8 +147,7 @@ def get_df_with_json_data(engine: Engine, dtype='json') -> DataFrame:
     assert dtype in ('string', 'json', 'json_postgres')
     df = DataFrame.from_pandas(
         engine=engine,
-        df=get_pandas_df(TEST_DATA_JSON, JSON_COLUMNS),
-        convert_objects=True,
+        df=get_pandas_df(TEST_DATA_JSON, JSON_COLUMNS)
     )
     if dtype:
         df['dict_column'] = df.dict_column.astype(dtype)

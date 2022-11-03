@@ -23,8 +23,7 @@ def objectiv_df(db_params, request) -> bach.DataFrame:
     engine = create_engine_from_db_params(db_params)
     sessionized_df = bach.DataFrame.from_pandas(
         engine=engine,
-        df=pandas.DataFrame(TEST_SESSIONIZED_DATA),
-        convert_objects=True,
+        df=pandas.DataFrame(TEST_SESSIONIZED_DATA)
     )
     sessionized_df['stack_event_types'] = sessionized_df['stack_event_types'].astype('json')
     sessionized_df['location_stack'] = sessionized_df['location_stack'].astype('objectiv_location_stack')

@@ -196,7 +196,7 @@ class TimedeltaOperation(DateTimeOperation):
                 },
             ]
         )
-        convert_df = DataFrame.from_pandas(df=conversion_df, engine=self._series.engine, convert_objects=True)
+        convert_df = DataFrame.from_pandas(df=conversion_df, engine=self._series.engine)
         return convert_df.reset_index(drop=True)
 
     @staticmethod

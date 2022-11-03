@@ -209,7 +209,7 @@ def test_init_conditions(dialect, monkeypatch) -> None:
         FakeSeries(**params_w_agg_expression_wo_gb)
 
     params_w_wrong_name = base_params.copy()
-    params_w_wrong_name['name'] = '-' * 300
+    params_w_wrong_name['name'] = 'a' * 301
     # invalid name: it is too long for all databases and/or cannot be encoded short enough
     with pytest.raises(ValueError, match=r'not valid for SQL dialect'):
         FakeSeries(**params_w_wrong_name)
