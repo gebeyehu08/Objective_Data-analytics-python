@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { makePressableContext } from '@objectiv/schema';
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makePressableContext } from '@objectiv/tracker-core';
 import { isTaggedElement, processTagChildrenElement, tagContent, TaggingAttribute, tagPressable } from '../src';
 
 require('@objectiv/developer-tools');

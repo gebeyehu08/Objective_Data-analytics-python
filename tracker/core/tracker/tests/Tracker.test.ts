@@ -3,17 +3,20 @@
  */
 
 import {
-  ConfigurableMockTransport,
-  LogTransport,
-  matchUUID,
-  MockConsoleImplementation,
-  UUIDV4_REGEX,
-} from '@objectiv/testing-tools';
+  EventName,
+  GlobalContextName,
+  LocationContextName,
+  makeApplicationContext,
+  makeContentContext,
+  makeIdentityContext,
+  makePathContext,
+  makePressEvent,
+  makeRootLocationContext,
+} from '@objectiv/schema';
+import { ConfigurableMockTransport, LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
   generateGUID,
-  GlobalContextName,
-  LocationContextName,
   Tracker,
   TrackerConfig,
   TrackerEvent,
@@ -32,8 +35,6 @@ describe('Tracker', () => {
   });
 
   it('should instantiate with just applicationId', () => {
-    jest.spyOn(console, 'log');
-    expect(console.log).not.toHaveBeenCalled();
     const trackerConfig: TrackerConfig = { applicationId: 'app-id' };
     const testTracker = new Tracker(trackerConfig);
     expect(testTracker).toBeInstanceOf(Tracker);
@@ -80,7 +81,6 @@ describe('Tracker', () => {
     expect(testTracker.applicationId).toBe('app-id');
     expect(testTracker.location_stack).toStrictEqual([]);
     expect(testTracker.global_contexts).toStrictEqual([]);
-    expect(console.log).not.toHaveBeenCalled();
   });
 
   it('should instantiate with tracker config', async () => {
@@ -139,16 +139,15 @@ describe('Tracker', () => {
   });
 
   it('should instantiate with another Tracker, inheriting its state, yet being independent instances', () => {
+    const rootContext = makeRootLocationContext({ id: 'root' });
+    const contentContextA = makeContentContext({ id: 'A' });
+    const contentContextX = makeContentContext({ id: 'X' });
+    const pathContext = makePathContext({ id: 'A' });
+    const applicationContext = makeApplicationContext({ id: 'B' });
     const initialContextsState: TrackerConfig = {
       applicationId: 'app-id',
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
-      ],
-      global_contexts: [
-        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'A' },
-        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'B' },
-      ],
+      location_stack: [rootContext, contentContextA],
+      global_contexts: [pathContext, applicationContext],
     };
 
     const testTracker = new Tracker(initialContextsState);
@@ -162,40 +161,29 @@ describe('Tracker', () => {
     expect(newTestTracker).toEqual(testTracker);
 
     // Refine Location Stack of the new Tracker with an extra Section
-    newTestTracker.location_stack.push({
-      __instance_id: generateGUID(),
-      __location_context: true,
-      _type: 'section',
-      id: 'X',
-    });
+    newTestTracker.location_stack.push(contentContextX);
 
     // The old tracker should be unaffected
     expect(testTracker.location_stack).toEqual(initialContextsState.location_stack);
     expect(testTracker.global_contexts).toEqual(initialContextsState.global_contexts);
 
     // While the new Tracker should now have a deeper Location Stack
-    expect(newTestTracker.location_stack).toEqual([
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'X' },
-    ]);
-    expect(newTestTracker.global_contexts).toEqual([
-      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'A' },
-      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'B' },
-    ]);
+    expect(newTestTracker.location_stack).toEqual([rootContext, contentContextA, contentContextX]);
+    expect(newTestTracker.global_contexts).toEqual([pathContext, applicationContext]);
   });
 
   it('should allow complex compositions of multiple Tracker instances and Configs', () => {
+    const rootContext = makeRootLocationContext({ id: 'root' });
+    const contentContextA = makeContentContext({ id: 'A' });
+    const contentContextB = makeContentContext({ id: 'B' });
+    const contentContextC = makeContentContext({ id: 'C' });
+    const pathContext = makePathContext({ id: 'X' });
+    const identityContext = makeIdentityContext({ id: 'Z', value: 'test' });
+    const applicationContext = makeApplicationContext({ id: 'Y' });
     const mainTrackerContexts: TrackerConfig = {
       applicationId: 'app-id',
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
-      ],
-      global_contexts: [
-        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'X' },
-        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Y' },
-      ],
+      location_stack: [rootContext, contentContextA],
+      global_contexts: [pathContext, applicationContext],
     };
     const mainTracker = new Tracker(mainTrackerContexts);
 
@@ -203,11 +191,11 @@ describe('Tracker', () => {
     const sectionTracker = new Tracker(
       mainTracker,
       {
-        location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' }],
-        global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Z' }],
+        location_stack: [contentContextB],
+        global_contexts: [identityContext],
       },
       {
-        location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'C' }],
+        location_stack: [contentContextC],
       },
       // These last two configurations are useless, but we want to make sure nothing breaks with them
       {
@@ -220,58 +208,34 @@ describe('Tracker', () => {
     expect(mainTracker.location_stack).toEqual(mainTrackerContexts.location_stack);
     expect(mainTracker.global_contexts).toEqual(mainTrackerContexts.global_contexts);
 
-    // The new Tracker, instead, should have all of the Contexts of the mainTracker + the extra Config provided
-    expect(sectionTracker.location_stack).toEqual([
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'B' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'C' },
-    ]);
-    expect(sectionTracker.global_contexts).toEqual([
-      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'X' },
-      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Y' },
-      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Z' },
-    ]);
+    // The new Tracker, instead, should have all the Contexts of the mainTracker + the extra Config provided
+    expect(sectionTracker.location_stack).toEqual([rootContext, contentContextA, contentContextB, contentContextC]);
+    expect(sectionTracker.global_contexts).toEqual([pathContext, applicationContext, identityContext]);
   });
 
   describe('trackEvent', () => {
+    const contentContextB = makeContentContext({ id: 'B' });
+    const contentContextC = makeContentContext({ id: 'C' });
+    const pathContext = makePathContext({ id: 'W' });
+    const applicationContext = makeApplicationContext({ id: 'X' });
     const eventContexts: ContextsConfig = {
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'item', id: 'C' },
-      ],
-      global_contexts: [
-        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'W' },
-        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'X' },
-      ],
+      location_stack: [contentContextB, contentContextC],
+      global_contexts: [pathContext, applicationContext],
     };
-    const testEvent = {
-      _type: 'test-event',
-      ...eventContexts,
-    };
+    const testEvent = makePressEvent(eventContexts);
     const trackerConfig: TrackerConfig = { applicationId: 'app-id' };
 
-    it('should allow overriding the generateGUID function', async () => {
-      const testTracker1 = new Tracker({ applicationId: 'app-id' });
-      const testTracker2 = new Tracker({ applicationId: 'app-id', generateGUID: () => 'not-so-unique-after-all' });
-      const trackedEvent1 = await testTracker1.trackEvent(testEvent);
-      const trackedEvent2 = await testTracker2.trackEvent(testEvent);
-      expect(trackedEvent1.id).toMatch(UUIDV4_REGEX);
-      expect(trackedEvent2.id).toBe('not-so-unique-after-all');
-    });
-
     it('should merge Tracker Location Stack and Global Contexts with the Event ones', async () => {
+      const rootContext = makeRootLocationContext({ id: 'root' });
+      const contentContextA = makeContentContext({ id: 'A' });
+      const identityContextY = makeIdentityContext({ id: 'Y', value: 'test' });
+      const identityContextZ = makeIdentityContext({ id: 'Z', value: 'test' });
+
       const trackerContexts: TrackerConfig = {
         transport: new LogTransport(),
         applicationId: 'app-id',
-        location_stack: [
-          { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
-          { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
-        ],
-        global_contexts: [
-          { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Y' },
-          { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Z' },
-        ],
+        location_stack: [rootContext, contentContextA],
+        global_contexts: [identityContextY, identityContextZ],
       };
       const testTracker = new Tracker(trackerContexts);
       expect(testEvent.location_stack).toStrictEqual(eventContexts.location_stack);
@@ -282,16 +246,16 @@ describe('Tracker', () => {
       expect(testTracker.location_stack).toStrictEqual(trackerContexts.location_stack);
       expect(testTracker.global_contexts).toStrictEqual(trackerContexts.global_contexts);
       expect(trackedEvent.location_stack).toStrictEqual([
-        { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
-        { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'B' },
-        { __instance_id: matchUUID, __location_context: true, _type: 'item', id: 'C' },
+        rootContext,
+        contentContextA,
+        contentContextB,
+        contentContextC,
       ]);
       expect(trackedEvent.global_contexts).toStrictEqual([
-        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'W' },
-        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'X' },
-        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Y' },
-        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Z' },
+        pathContext,
+        applicationContext,
+        identityContextY,
+        identityContextZ,
       ]);
     });
 
@@ -330,8 +294,8 @@ describe('Tracker', () => {
         plugins: [pluginE, pluginF],
       });
       testTracker.trackEvent(testEvent);
-      expect(pluginE.enrich).toHaveBeenCalledWith(expect.objectContaining({ _type: 'test-event' }));
-      expect(pluginF.enrich).toHaveBeenCalledWith(expect.objectContaining({ _type: 'test-event' }));
+      expect(pluginE.enrich).toHaveBeenCalledWith(expect.objectContaining({ _type: EventName.PressEvent }));
+      expect(pluginF.enrich).toHaveBeenCalledWith(expect.objectContaining({ _type: EventName.PressEvent }));
     });
 
     it('should execute all plugins implementing the validate callback', () => {
@@ -347,8 +311,8 @@ describe('Tracker', () => {
       };
       const testTracker = new Tracker({ applicationId: 'app-id', plugins: [pluginE, pluginF] });
       testTracker.trackEvent(testEvent);
-      expect(pluginE.validate).toHaveBeenCalledWith(expect.objectContaining({ _type: 'test-event' }));
-      expect(pluginF.validate).toHaveBeenCalledWith(expect.objectContaining({ _type: 'test-event' }));
+      expect(pluginE.validate).toHaveBeenCalledWith(expect.objectContaining({ _type: EventName.PressEvent }));
+      expect(pluginF.validate).toHaveBeenCalledWith(expect.objectContaining({ _type: EventName.PressEvent }));
     });
 
     it('should send the Event via the given TrackerTransport', () => {
@@ -555,13 +519,12 @@ describe('Tracker', () => {
   });
 
   describe('TrackerQueue', () => {
-    const testEventName = 'test-event';
     const testContexts: ContextsConfig = {
-      location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'test' }],
-      global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'test' }],
+      location_stack: [makeContentContext({ id: 'test' })],
+      global_contexts: [makePathContext({ id: 'test' })],
     };
-    const testEvent1 = { _type: testEventName, ...testContexts };
-    const testEvent2 = { _type: testEventName, ...testContexts };
+    const testEvent1 = makePressEvent(testContexts);
+    const testEvent2 = makePressEvent(testContexts);
     const processFunctionSpy = jest.fn(() => Promise.resolve());
 
     beforeEach(() => {

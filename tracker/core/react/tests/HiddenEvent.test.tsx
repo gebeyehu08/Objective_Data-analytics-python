@@ -2,7 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationContextName, makeContentContext, makeHiddenEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeHiddenEvent } from '@objectiv/schema';
+import { matchUUID } from '@objectiv/testing-tools';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { TrackingContextProvider, trackHiddenEvent, useHiddenEventTracker } from '../src';
@@ -15,7 +17,16 @@ describe('HiddenEvent', () => {
     trackHiddenEvent({ tracker });
 
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
-    expect(tracker.trackEvent).toHaveBeenNthCalledWith(1, expect.objectContaining(makeHiddenEvent()), undefined);
+    expect(tracker.trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        ...makeHiddenEvent(),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
+      undefined
+    );
   });
 
   it('should track an HiddenEvent (hook relying on TrackingContextProvider)', () => {
@@ -69,15 +80,18 @@ describe('HiddenEvent', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeHiddenEvent({
+      expect.objectContaining({
+        ...makeHiddenEvent({
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

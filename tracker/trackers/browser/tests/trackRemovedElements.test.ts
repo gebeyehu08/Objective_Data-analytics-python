@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { LocationContextName } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateGUID, LocationContextName } from '@objectiv/tracker-core';
+import { generateGUID } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackRemovedElements } from '../src/mutationObserver/trackRemovedElements';
 import { makeTaggedElement } from './mocks/makeTaggedElement';

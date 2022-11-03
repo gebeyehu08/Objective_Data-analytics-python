@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ContextsConfig, makePathContext, TrackerPluginInterface } from '@objectiv/tracker-core';
+import { makePathContext } from '@objectiv/schema';
+import { ContextsConfig, TrackerPluginInterface } from '@objectiv/tracker-core';
 
 /**
  * The PathContextFromURL Plugin gathers the current URL using the Location API.

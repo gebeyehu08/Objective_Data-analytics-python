@@ -7,10 +7,31 @@ import { Generator } from '@yellicode/templating';
 import { TypeScriptWriter } from '../writers/TypeScriptWriter';
 import { getContexts, getEntities, getEvents } from './parser';
 
+const destinationFolder = '../../../tracker/core/schema/src/generated/';
 const descriptionsType = 'text';
 const descriptionsTarget = 'primary';
 
-Generator.generate({ outputFile: '../generated/schema/abstracts.ts' }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}types.ts` }, (writer: TextWriter) => {
+  const tsWriter = new TypeScriptWriter(writer);
+  const types = getEntities({ isType: true });
+
+  tsWriter.writeImports('./abstracts', types.map(type => type.items.type));
+
+  tsWriter.writeEndOfLine();
+
+  types.forEach((type) => {
+    tsWriter.writeTypeDefinition({
+      export: true,
+      description: type.getDescription({ type: descriptionsType, target: descriptionsTarget }).split('\n'),
+      name: type.name,
+      typeName: type.type,
+      typeValue: type.items.type
+    });
+    tsWriter.writeEndOfLine();
+  });
+});
+
+Generator.generate({ outputFile: `${destinationFolder}abstracts.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
   getEntities({ isAbstract: true, sortBy: 'name' }).forEach((entity) => {
@@ -22,7 +43,7 @@ Generator.generate({ outputFile: '../generated/schema/abstracts.ts' }, (writer: 
         extends: entity._parent ? [entity._parent] : undefined,
       },
       (tsWriter: TypeScriptWriter) => {
-        if (!entity._parent && entity.isContext) {
+        if (!entity._parent) {
           tsWriter.writeProperty({
             name: '__instance_id',
             typeName: 'string',
@@ -47,10 +68,10 @@ Generator.generate({ outputFile: '../generated/schema/abstracts.ts' }, (writer: 
   });
 });
 
-Generator.generate({ outputFile: '../generated/schema/events.ts' }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}events.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
-  tsWriter.writeImports('./abstracts', ['AbstractEvent', 'AbstractLocationContext']);
+  tsWriter.writeImports('./abstracts', ['AbstractEvent']);
 
   getEvents({ isAbstract: false, sortBy: 'name' }).forEach((entity) => {
     tsWriter.writeInterfaceBlock(
@@ -86,7 +107,7 @@ Generator.generate({ outputFile: '../generated/schema/events.ts' }, (writer: Tex
   });
 });
 
-Generator.generate({ outputFile: '../generated/schema/contexts.ts' }, (writer: TextWriter) => {
+Generator.generate({ outputFile: `${destinationFolder}contexts.ts` }, (writer: TextWriter) => {
   const tsWriter = new TypeScriptWriter(writer);
 
   tsWriter.writeImports('./abstracts', ['AbstractGlobalContext', 'AbstractLocationContext']);
@@ -160,7 +181,7 @@ const schemaToTypeScriptProperty = (tsWriter, entity, property) => {
     name: property.name,
     description: property.description.split('\n'),
     typeName: mappedType,
-    isOptional: property.optional,
+    isOptional: property.nullable ?? property.optional,
     hasNullUnionType: property.nullable,
   };
 };

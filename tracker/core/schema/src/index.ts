@@ -4,3 +4,4 @@
 
 export * from './generated';
 export * from './static';
+export * from './uuidv4';

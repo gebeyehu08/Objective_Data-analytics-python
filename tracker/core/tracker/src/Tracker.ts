@@ -2,9 +2,15 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
+import {
+  AbstractGlobalContext,
+  AbstractLocationContext,
+  Contexts,
+  GlobalContexts,
+  LocationStack,
+} from '@objectiv/schema';
 import { ContextsConfig } from './Context';
-import { generateGUID, waitForPromise } from './helpers';
+import { waitForPromise } from './helpers';
 import { TrackerEvent, TrackerEventAttributes } from './TrackerEvent';
 import { TrackerPlatform } from './TrackerPlatform';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
@@ -21,41 +27,6 @@ export type TrackerConfig = ContextsConfig & {
    * Application ID. Used to generate ApplicationContext (global context).
    */
   applicationId: string;
-
-  /**
-   * Optional. Function to generate unique identifiers used by the Tracker to set the `id` of TrackerEvents.
-   *
-   * Format
-   *  The current format we use for these identifiers is Universally Unique Identifier version 4 (UUID v4).
-   *
-   * Default implementation
-   *  The default implementation uses `v4` from the `uuid` js module. See: https://github.com/uuidjs/uuid.
-   *
-   * Why are unique identifiers so important?
-   *  TrackerEvents must have globally unique identifiers, at the very least in the same session, for deduplication.
-   *
-   *  This is because Trackers may send the same events multiple times to the Collector in several situations:
-   *
-   *   - Tracker gets destroyed before receiving a response from the Collector.
-   *   - Tracker gets destroyed before having the time to clean the persistent Queue.
-   *   - Flaky connectivity may lead to timeouts and remote responses being lost, which results in retries.
-   *
-   *  In general, Trackers will always re-send events when it's not 100% certain whether they were delivered or not.
-   *
-   *  Unique identifiers are also essential across devices/platforms. E.g. web vs mobile, to ensure data may be
-   *  correlated across them without collisions.
-   *
-   * What if the target platform doesn't have a GUID/UUID generator?
-   *  On platforms that don't have a native method to generate a UUID/GUID but have native random generators, such as
-   *  React Native, a polyfill may be used to gain access to the native random generators. These implementations
-   *  usually expose the underlying system's SecureRandom (Android) or SecRandomCopyBytes (iOS).
-   *  For example https://github.com/LinusU/react-native-get-random-values.
-   *
-   * What if the platform has no secure generator?
-   *  Worst case scenario, the uuidv4 module included in Core Tracker can be used. It comes with a generator that uses
-   *  Date.now() & Math.random as rng source. While not ideal, it's also not that bad: https://v8.dev/blog/math-random
-   */
-  generateGUID?: () => string;
 
   /**
    * Optional. The platform of the Tracker Instance. This affects error logging. Defaults to Core.
@@ -152,7 +123,6 @@ export class Tracker implements TrackerInterface {
   readonly queue?: TrackerQueueInterface;
   readonly transport?: TrackerTransportInterface;
   readonly plugins: TrackerPluginInterface[];
-  readonly generateGUID: () => string;
 
   // _endpoint is the original value received at construction. Never use this value, instead use the endpoint getter.
   readonly _endpoint?: string;
@@ -164,8 +134,8 @@ export class Tracker implements TrackerInterface {
   anonymous: boolean = false;
 
   // Contexts interface
-  readonly location_stack: AbstractLocationContext[];
-  readonly global_contexts: AbstractGlobalContext[];
+  readonly location_stack: LocationStack;
+  readonly global_contexts: GlobalContexts;
 
   /**
    * Configures the Tracker instance via one TrackerConfig and optionally one or more ContextConfig.
@@ -183,7 +153,6 @@ export class Tracker implements TrackerInterface {
     this.transport = trackerConfig.transport;
     this._endpoint = trackerConfig.endpoint;
     this.plugins = makeCoreTrackerDefaultPluginsList();
-    this.generateGUID = trackerConfig.generateGUID ?? generateGUID;
     this.active = trackerConfig.active ?? true;
     this.anonymous = trackerConfig.anonymous ?? false;
 
@@ -354,7 +323,7 @@ export class Tracker implements TrackerInterface {
    */
   async trackEvent(event: TrackerEventAttributes, options?: TrackEventOptions): Promise<TrackerEvent> {
     // TrackerEvent and Tracker share the ContextsConfig interface. Combine them and Set id and time.
-    const trackerEvent = new TrackerEvent({ ...event, id: this.generateGUID(), time: Date.now() }, this);
+    const trackerEvent = new TrackerEvent(event, this);
 
     // Do nothing if the TrackerInstance is inactive
     if (!this.active) {

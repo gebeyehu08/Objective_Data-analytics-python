@@ -2,8 +2,15 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import {
+  LocationContextName,
+  makeApplicationContext,
+  makeContentContext,
+  makePathContext,
+  makePressEvent,
+} from '@objectiv/schema';
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, generateGUID, LocationContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { ContextsConfig, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { RootLocationContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -22,16 +29,10 @@ describe('RootLocationContextFromURLPlugin', () => {
       plugins: [new RootLocationContextFromURLPlugin()],
     });
     const eventContexts: ContextsConfig = {
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
-      ],
-      global_contexts: [
-        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
-        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
-      ],
+      location_stack: [makeContentContext({ id: 'A' }), makeContentContext({ id: 'B' })],
+      global_contexts: [makePathContext({ id: 'abc' }), makeApplicationContext({ id: 'def' })],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent(eventContexts));
     expect(testEvent.location_stack).toHaveLength(2);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(3);
@@ -40,6 +41,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       __location_context: true,
       _type: LocationContextName.RootLocationContext,
       id: 'home',
+      _types: ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext'],
     });
     expect(trackedEvent.global_contexts).toHaveLength(2);
   });
@@ -56,7 +58,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       applicationId: 'app-id',
       plugins: [new RootLocationContextFromURLPlugin()],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
@@ -65,6 +67,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       __location_context: true,
       _type: LocationContextName.RootLocationContext,
       id: 'home',
+      _types: ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext'],
     });
   });
 
@@ -80,7 +83,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       applicationId: 'app-id',
       plugins: [new RootLocationContextFromURLPlugin()],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
@@ -89,6 +92,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       __location_context: true,
       _type: LocationContextName.RootLocationContext,
       id: 'home',
+      _types: ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext'],
     });
   });
 
@@ -104,7 +108,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       applicationId: 'app-id',
       plugins: [new RootLocationContextFromURLPlugin()],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
@@ -113,6 +117,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       __location_context: true,
       _type: LocationContextName.RootLocationContext,
       id: 'dashboard',
+      _types: ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext'],
     });
   });
 
@@ -129,7 +134,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       applicationId: 'app-id',
       plugins: [new RootLocationContextFromURLPlugin()],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(0);
@@ -155,7 +160,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       applicationId: 'app-id',
       plugins: [new RootLocationContextFromURLPlugin({ idFactoryFunction: makeRootLocationIdFromHash })],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
@@ -164,6 +169,7 @@ describe('RootLocationContextFromURLPlugin', () => {
       __location_context: true,
       _type: LocationContextName.RootLocationContext,
       id: 'welcome',
+      _types: ['AbstractContext', 'AbstractLocationContext', 'RootLocationContext'],
     });
   });
 
@@ -192,7 +198,7 @@ describe('RootLocationContextFromURLPlugin', () => {
         applicationId: 'app-id',
         plugins: [new RootLocationContextFromURLPlugin()],
       });
-      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+      const testEvent = new TrackerEvent(makePressEvent());
       expect(testEvent.location_stack).toHaveLength(0);
       const trackedEvent = await testTracker.trackEvent(testEvent);
       expect(trackedEvent.location_stack).toHaveLength(0);

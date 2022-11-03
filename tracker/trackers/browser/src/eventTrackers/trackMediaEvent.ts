@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeMediaEvent } from '@objectiv/tracker-core';
+import { makeMediaEvent } from '@objectiv/schema';
 import { InteractiveEventTrackerParameters } from '../definitions/InteractiveEventTrackerParameters';
 import { trackEvent } from './trackEvent';
 

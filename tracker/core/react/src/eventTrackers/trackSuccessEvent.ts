@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeSuccessEvent } from '@objectiv/tracker-core';
+import { makeSuccessEvent } from '@objectiv/schema';
 import { EventTrackerParameters } from '../types';
 
 /**

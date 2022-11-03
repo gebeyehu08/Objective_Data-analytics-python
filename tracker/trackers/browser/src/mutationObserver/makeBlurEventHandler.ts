@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { GlobalContexts, makeInputValueContext } from '@objectiv/tracker-core';
+import { GlobalContexts, makeInputValueContext } from '@objectiv/schema';
 import { BrowserTracker } from '../BrowserTracker';
 import { isTaggedElement } from '../common/guards/isTaggedElement';
 import { TaggedElement } from '../definitions/TaggedElement';

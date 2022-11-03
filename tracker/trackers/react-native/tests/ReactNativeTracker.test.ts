@@ -3,14 +3,9 @@
  */
 
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
+import { GlobalContextName, makePressEvent } from '@objectiv/schema';
 import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  generateGUID,
-  GlobalContextName,
-  TrackerEvent,
-  TrackerQueue,
-  TrackerTransportRetry,
-} from '@objectiv/tracker-core';
+import { TrackerEvent, TrackerQueue, TrackerTransportRetry } from '@objectiv/tracker-core';
 import { DebugTransport } from '@objectiv/transport-debug';
 import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
@@ -182,7 +177,7 @@ describe('ReactNativeTracker', () => {
 
     it('should auto-track Application Context by default', async () => {
       const testTracker = new ReactNativeTracker({ applicationId: 'app-id', transport: new DebugTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+      const testEvent = new TrackerEvent(makePressEvent());
       expect(testTracker).toBeInstanceOf(ReactNativeTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
 

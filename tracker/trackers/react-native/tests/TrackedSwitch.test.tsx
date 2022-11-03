@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import {

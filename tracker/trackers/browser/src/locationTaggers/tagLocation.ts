@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { generateGUID, getObjectKeys, LocationContextName } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/schema';
+import { generateGUID, getObjectKeys } from '@objectiv/tracker-core';
 import { isPressableContext } from '../common/guards/isPressableContext';
 import { isShowableContext } from '../common/guards/isShowableContext';
 import { isTagLocationParameters } from '../common/guards/isTagLocationParameters';

@@ -2,24 +2,15 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { makePressEvent } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  generateGUID,
-  isTransportSendError,
-  makeTransportSendError,
-  Tracker,
-  TrackerEvent,
-} from '@objectiv/tracker-core';
+import { isTransportSendError, makeTransportSendError, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { defaultFetchFunction, defaultFetchOptions, FetchTransport } from '../src';
 
 const MOCK_ENDPOINT = 'http://test-endpoint';
 
-const testEvent = new TrackerEvent({
-  _type: 'test-event',
-  id: generateGUID(),
-  time: Date.now(),
-});
+const testEvent = new TrackerEvent(makePressEvent());
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);

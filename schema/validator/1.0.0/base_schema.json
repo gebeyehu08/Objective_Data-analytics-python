@@ -212,10 +212,12 @@
           "internal": true
         },
         "location_stack": {
-          "type": "LocationStack"
+          "type": "LocationStack",
+          "default_value": "[]"
         },
         "global_contexts": {
-          "type": "GlobalContexts"
+          "type": "GlobalContexts",
+          "default_value": "[]"
         },
         "_type": {
           "description": "A string literal used during serialization. Hardcoded to the Event name.",
@@ -224,11 +226,13 @@
         },
         "id": {
           "description": "Unique identifier for a specific instance of an event.",
-          "type": "uuid"
+          "type": "uuid",
+          "default_value": "uuid"
         },
         "time": {
           "description": "Timestamp indicating when the event was generated.",
-          "type": "integer"
+          "type": "integer",
+          "default_value": "timestamp"
         }
       }
     },

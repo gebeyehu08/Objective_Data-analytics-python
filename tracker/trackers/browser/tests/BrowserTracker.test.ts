@@ -3,15 +3,9 @@
  */
 
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
+import { GlobalContextName, makePressEvent } from '@objectiv/schema';
 import { expectToThrow, LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  generateGUID,
-  GlobalContextName,
-  TrackerEvent,
-  TrackerQueue,
-  TrackerQueueMemoryStore,
-  TrackerTransportRetry,
-} from '@objectiv/tracker-core';
+import { TrackerEvent, TrackerQueue, TrackerQueueMemoryStore, TrackerTransportRetry } from '@objectiv/tracker-core';
 import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
@@ -197,7 +191,7 @@ describe('BrowserTracker', () => {
 
     it('should auto-track Application and Path Contexts by default', async () => {
       const testTracker = new BrowserTracker({ applicationId: 'app-id', transport: new LogTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+      const testEvent = new TrackerEvent(makePressEvent());
       expect(testTracker).toBeInstanceOf(BrowserTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
       expect(testEvent.location_stack).toHaveLength(0);

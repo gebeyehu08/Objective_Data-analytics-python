@@ -4,18 +4,15 @@
 
 import { IdentityContextAttributes, IdentityContextPlugin } from '@objectiv/plugin-identity-context';
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
-import { AbstractGlobalContext } from '@objectiv/schema';
-import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  generateGUID,
+  AbstractGlobalContext,
   GlobalContextName,
   makeIdentityContext,
+  makePressEvent,
   makeSuccessEvent,
-  TrackerEvent,
-  TrackerQueue,
-  TrackerQueueMemoryStore,
-  TrackerTransportRetry,
-} from '@objectiv/tracker-core';
+} from '@objectiv/schema';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { TrackerEvent, TrackerQueue, TrackerQueueMemoryStore, TrackerTransportRetry } from '@objectiv/tracker-core';
 import { DebugTransport } from '@objectiv/transport-debug';
 import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
@@ -194,7 +191,7 @@ describe('ReactTracker', () => {
 
     it('should auto-track Application Context by default', async () => {
       const testTracker = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+      const testEvent = new TrackerEvent(makePressEvent());
       expect(testTracker).toBeInstanceOf(ReactTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
 

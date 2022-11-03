@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName, Tracker, TrackerPlatform } from '@objectiv/tracker-core';
+import { Tracker, TrackerPlatform } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { TrackerProvider, useTracker } from '../src';
@@ -30,7 +31,6 @@ describe('TrackerProvider', () => {
       active: true,
       anonymous: false,
       applicationId: 'app-id',
-      generateGUID: expect.any(Function),
       global_contexts: [],
       location_stack: [],
       plugins: [

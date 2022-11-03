@@ -2,16 +2,19 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID } from '@objectiv/testing-tools';
-import MockDate from 'mockdate';
 import {
-  ContextsConfig,
-  generateGUID,
+  EventName,
   makeApplicationContext,
+  makeContentContext,
   makeMediaLoadEvent,
   makeOverlayContext,
-  TrackerEvent,
-} from '../src';
+  makePathContext,
+  makePressableContext,
+  makePressEvent,
+  makeRootLocationContext,
+} from '@objectiv/schema';
+import MockDate from 'mockdate';
+import { ContextsConfig, TrackerEvent } from '../src';
 
 const mockedMs = 1434319925275;
 
@@ -25,14 +28,14 @@ afterEach(() => {
 });
 
 describe('TrackerEvent', () => {
-  const testEventName = 'test-event';
+  const testEventName = EventName.PressEvent;
   const testContexts: ContextsConfig = {
-    location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'test' }],
-    global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'test' }],
+    location_stack: [makeContentContext({ id: 'test' })],
+    global_contexts: [makePathContext({ id: 'test' })],
   };
 
   it('should instantiate with the given properties as one Config', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...testContexts, id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent(testContexts));
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual(testContexts.location_stack);
@@ -40,7 +43,7 @@ describe('TrackerEvent', () => {
   });
 
   it('should instantiate with the given properties as multiple Configs', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() }, testContexts);
+    const testEvent = new TrackerEvent(makePressEvent(), testContexts);
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual(testContexts.location_stack);
@@ -48,10 +51,7 @@ describe('TrackerEvent', () => {
   });
 
   it('should instantiate without location_stack', () => {
-    const testEvent = new TrackerEvent(
-      { _type: 'test-event', id: generateGUID(), time: Date.now() },
-      { global_contexts: testContexts.global_contexts }
-    );
+    const testEvent = new TrackerEvent(makePressEvent(), { global_contexts: testContexts.global_contexts });
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual([]);
@@ -59,10 +59,7 @@ describe('TrackerEvent', () => {
   });
 
   it('should instantiate without global_contexts', () => {
-    const testEvent = new TrackerEvent(
-      { _type: 'test-event', id: generateGUID(), time: Date.now() },
-      { location_stack: testContexts.location_stack }
-    );
+    const testEvent = new TrackerEvent(makePressEvent(), { location_stack: testContexts.location_stack });
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual(testContexts.location_stack);
@@ -70,70 +67,71 @@ describe('TrackerEvent', () => {
   });
 
   it('should allow compositions with multiple configs or instances and produce a valid location_stack', () => {
+    const rootContext = makeRootLocationContext({ id: 'root' });
+    const contextA = makeContentContext({ id: 'A' });
+    const contextB = makeContentContext({ id: 'B' });
+    const contextC = makeContentContext({ id: 'C' });
+    const contextD = makeContentContext({ id: 'D' });
+    const contextX = makePressableContext({ id: 'X' });
     const eventContexts: ContextsConfig = {
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'D' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'item', id: 'X' },
-      ],
+      location_stack: [contextD, contextX],
     };
     const sectionContexts1: ContextsConfig = {
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
-      ],
+      location_stack: [rootContext, contextA],
     };
     const sectionContexts2: ContextsConfig = {
-      location_stack: [
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
-        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'C' },
-      ],
+      location_stack: [contextB, contextC],
     };
-    const composedEvent = new TrackerEvent(
-      { _type: 'test-event', id: generateGUID(), time: Date.now(), ...eventContexts },
-      sectionContexts1,
-      sectionContexts2
-    );
-    expect(composedEvent.location_stack).toEqual([
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'B' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'C' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'D' },
-      { __instance_id: matchUUID, __location_context: true, _type: 'item', id: 'X' },
-    ]);
+    const composedEvent = new TrackerEvent(makePressEvent(eventContexts), sectionContexts1, sectionContexts2);
+    expect(composedEvent.location_stack).toEqual([rootContext, contextA, contextB, contextC, contextD, contextX]);
   });
 
   it('should serialize to JSON without internal properties', () => {
-    const testEvent = new TrackerEvent({
-      id: generateGUID(),
-      time: Date.now(),
-      ...makeMediaLoadEvent({
+    const testEvent = new TrackerEvent(
+      makeMediaLoadEvent({
         location_stack: [makeOverlayContext({ id: 'player' })],
         global_contexts: [makeApplicationContext({ id: 'test-app' })],
-      }),
-    });
+      })
+    );
     const jsonStringEvent = JSON.stringify(testEvent, null, 2);
     expect(jsonStringEvent).toEqual(`{
   "_type": "MediaLoadEvent",
+  "_types": [
+    "AbstractEvent",
+    "NonInteractiveEvent",
+    "MediaEvent",
+    "MediaLoadEvent"
+  ],
   "id": "${testEvent.id}",
   "time": ${testEvent.time},
+  "_schema_version": "1.0.0",
   "location_stack": [
     {
-      "_type": "OverlayContext",
-      "id": "player"
+      "_types": [
+        "AbstractContext",
+        "AbstractLocationContext",
+        "OverlayContext"
+      ],
+      "id": "player",
+      "_type": "OverlayContext"
     }
   ],
   "global_contexts": [
     {
-      "_type": "ApplicationContext",
-      "id": "test-app"
+      "_types": [
+        "AbstractContext",
+        "AbstractGlobalContext",
+        "ApplicationContext"
+      ],
+      "id": "test-app",
+      "_type": "ApplicationContext"
     }
   ]
 }`);
   });
 
   it('should clone without generating a new id', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
+    const testEvent = new TrackerEvent(makePressEvent());
     expect(testEvent.id).not.toBeUndefined();
     const testEventClone1 = new TrackerEvent(testEvent);
     const testEventClone1_1 = new TrackerEvent(testEventClone1);

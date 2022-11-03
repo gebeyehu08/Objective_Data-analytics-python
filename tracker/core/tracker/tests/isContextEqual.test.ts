@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { isAbstractContext, isContextEqual, makePressableContext } from '../src';
+import { makePressableContext } from '@objectiv/schema';
+import { isAbstractContext, isContextEqual } from '../src';
 
 describe('isContextEqual', () => {
   it(`should return false: wrong inputs`, () => {

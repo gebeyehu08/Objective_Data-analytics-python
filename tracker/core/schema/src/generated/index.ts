@@ -3,7 +3,9 @@
  */
 
 export * from './abstracts';
+export * from './contexts';
 export * from './discriminators';
 export * from './events';
-export * from './global_contexts';
-export * from './location_contexts';
+export * from './factories';
+export * from './names';
+export * from './types';

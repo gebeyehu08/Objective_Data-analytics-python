@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeFailureEvent } from '@objectiv/tracker-core';
+import { makeFailureEvent } from '@objectiv/schema';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { TrackFailureEventParameters } from '../definitions/TrackFailureEventParameters';
 import { trackEvent } from './trackEvent';

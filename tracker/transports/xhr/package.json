@@ -61,6 +61,7 @@
     "xhr-mock": "^2.5.1"
   },
   "dependencies": {
-    "@objectiv/tracker-core": "~0.0.26"
+    "@objectiv/schema": "^0.0.26",
+    "@objectiv/tracker-core": "^0.0.26"
   }
 }

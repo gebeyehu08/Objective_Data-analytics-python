@@ -2,12 +2,11 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
 import {
   ContextErrorMessagesTemplates,
   GlobalContextErrorType,
-  GlobalContextName,
   LocationContextErrorType,
-  LocationContextName,
   TrackerPlatform,
 } from '@objectiv/tracker-core';
 

@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { uuidv4 } from './uuidv4';
+import { uuidv4 } from '@objectiv/schema';
 
 /**
  * A TypeScript friendly Object.keys

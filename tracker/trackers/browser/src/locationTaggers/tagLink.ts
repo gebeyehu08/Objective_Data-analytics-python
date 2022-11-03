@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeLinkContext } from '@objectiv/tracker-core';
+import { makeLinkContext } from '@objectiv/schema';
 import { isLocationTaggerParameters } from '../common/guards/isLocationTaggerParameters';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { TagLinkParameters } from '../definitions/TagLinkParameters';

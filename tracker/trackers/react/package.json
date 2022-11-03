@@ -74,8 +74,8 @@
     "@objectiv/plugin-path-context-from-url": "^0.0.26",
     "@objectiv/plugin-root-location-context-from-url": "^0.0.26",
     "@objectiv/queue-local-storage": "^0.0.26",
-    "@objectiv/tracker-core": "~0.0.26",
-    "@objectiv/tracker-react-core": "~0.0.26",
+    "@objectiv/tracker-core": "^0.0.26",
+    "@objectiv/tracker-react-core": "^0.0.26",
     "@objectiv/transport-fetch": "^0.0.26",
     "@objectiv/transport-xhr": "^0.0.26"
   },

@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { GlobalContextName, LocationContextName } from './generated/ContextNames';
+import { GlobalContextName, LocationContextName } from '@objectiv/schema';
 import { TrackerPlatform } from './TrackerPlatform';
 
 /**

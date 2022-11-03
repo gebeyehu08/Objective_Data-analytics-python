@@ -2,8 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { AbstractContextName, GlobalContextName, makePathContext, makePressEvent } from '@objectiv/schema';
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, generateGUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { ContextsConfig, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { ApplicationContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -28,6 +29,11 @@ describe('ApplicationContextPlugin', () => {
           __global_context: true,
           _type: GlobalContextName.ApplicationContext,
           id: 'app-id',
+          _types: [
+            AbstractContextName.AbstractContext,
+            AbstractContextName.AbstractGlobalContext,
+            GlobalContextName.ApplicationContext,
+          ],
         },
       })
     );
@@ -43,15 +49,12 @@ describe('ApplicationContextPlugin', () => {
 
   it('should add the ApplicationContext to the Event when `enrich` is executed by the Tracker', async () => {
     const eventContexts: ContextsConfig = {
-      global_contexts: [
-        { __instance_id: generateGUID(), __global_context: true, _type: 'Context', id: 'X' },
-        { __instance_id: generateGUID(), __global_context: true, _type: 'Context', id: 'Y' },
-      ],
+      global_contexts: [makePathContext({ id: 'X' })],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateGUID(), time: Date.now() });
-    expect(testEvent.global_contexts).toHaveLength(2);
+    const testEvent = new TrackerEvent(makePressEvent(eventContexts));
+    expect(testEvent.global_contexts).toHaveLength(1);
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(3);
+    expect(trackedEvent.global_contexts).toHaveLength(2);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         {
@@ -59,6 +62,11 @@ describe('ApplicationContextPlugin', () => {
           __global_context: true,
           _type: GlobalContextName.ApplicationContext,
           id: 'app-id',
+          _types: [
+            AbstractContextName.AbstractContext,
+            AbstractContextName.AbstractGlobalContext,
+            GlobalContextName.ApplicationContext,
+          ],
         },
       ])
     );

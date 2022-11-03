@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { LocationStack } from './Context';
+import { LocationStack } from '@objectiv/schema';
 import {
   LocationContextValidationRuleFactory,
   MissingGlobalContextValidationRuleFactory,

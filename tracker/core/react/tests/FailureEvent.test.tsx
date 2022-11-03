@@ -2,7 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationContextName, makeContentContext, makeFailureEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeFailureEvent } from '@objectiv/schema';
+import { matchUUID } from '@objectiv/testing-tools';
+import { Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { trackFailureEvent, TrackingContextProvider, useFailureEventTracker } from '../src';
@@ -16,7 +18,7 @@ describe('FailureEvent', () => {
     jest.resetAllMocks();
   });
 
-  it('should track an FailureEvent (programmatic)', () => {
+  it('should track a FailureEvent (programmatic)', () => {
     const tracker = new Tracker({ applicationId: 'app-id' });
     jest.spyOn(tracker, 'trackEvent');
 
@@ -25,12 +27,17 @@ describe('FailureEvent', () => {
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(makeFailureEvent({ message: 'ko' })),
+      expect.objectContaining({
+        ...makeFailureEvent({ message: 'ko' }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });
 
-  it('should track an FailureEvent (hook relying on TrackingContextProvider)', () => {
+  it('should track a FailureEvent (hook relying on TrackingContextProvider)', () => {
     const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
     const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
@@ -51,7 +58,7 @@ describe('FailureEvent', () => {
     expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'FailureEvent' }));
   });
 
-  it('should track an FailureEvent (hook with custom tracker and location)', () => {
+  it('should track a FailureEvent (hook with custom tracker and location)', () => {
     const tracker = new Tracker({ applicationId: 'app-id' });
     jest.spyOn(tracker, 'trackEvent');
 
@@ -81,16 +88,19 @@ describe('FailureEvent', () => {
     expect(customTracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(customTracker.trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeFailureEvent({
+      expect.objectContaining({
+        ...makeFailureEvent({
           message: 'ko',
           location_stack: [
             expect.objectContaining({ _type: location1._type, id: location1.id }),
             expect.objectContaining({ _type: location2._type, id: location2.id }),
             expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' }),
           ],
-        })
-      ),
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      }),
       undefined
     );
   });

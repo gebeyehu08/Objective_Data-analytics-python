@@ -2,9 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { AnyGlobalContextName, AnyLocationContextName } from '@objectiv/schema';
 import {
-  AnyGlobalContextName,
-  AnyLocationContextName,
   RecordedAbstractGlobalContext,
   RecordedAbstractLocationContext,
   RecordedEvent,

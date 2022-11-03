@@ -2,15 +2,12 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { generateGUID, TrackerEvent } from '@objectiv/tracker-core';
+import { makePressEvent } from '@objectiv/schema';
+import { cleanObjectFromInternalProperties, TrackerEvent } from '@objectiv/tracker-core';
 import { DebugTransport } from '../src/';
 
 describe('DebugTransport', () => {
-  const testEvent = new TrackerEvent({
-    _type: 'test-event',
-    id: generateGUID(),
-    time: Date.now(),
-  });
+  const testEvent = new TrackerEvent(makePressEvent());
 
   it('should `console.debug` the event', async () => {
     jest.spyOn(console, 'debug');
@@ -22,6 +19,6 @@ describe('DebugTransport', () => {
     jest.spyOn(console, 'debug');
     await testTransport.handle(testEvent);
     await testTransportWithConsole.handle(testEvent);
-    expect(console.debug).toHaveBeenCalledWith(testEvent);
+    expect(console.debug).toHaveBeenCalledWith(cleanObjectFromInternalProperties(testEvent));
   });
 });

@@ -18,6 +18,7 @@ export type PropertiesDefinition = {
   internal: boolean;
   optional: boolean;
   nullable: boolean;
+  default_value: any;
   items: {
     type: string;
   };

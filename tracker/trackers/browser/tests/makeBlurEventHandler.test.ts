@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateGUID, GlobalContextName, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName, makeInputChangeEvent } from '@objectiv/schema';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { generateGUID } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker } from '../src/';
 import { makeBlurEventHandler } from '../src/mutationObserver/makeBlurEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -143,11 +144,14 @@ describe('makeBlurEventHandler', () => {
     expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
     expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining(
-        makeInputChangeEvent({
+      expect.objectContaining({
+        ...makeInputChangeEvent({
           location_stack: [expect.objectContaining({ _type: LocationContextName.InputContext, id: 'input' })],
-        })
-      )
+        }),
+        id: matchUUID,
+        __instance_id: matchUUID,
+        time: expect.any(Number),
+      })
     );
   });
 });

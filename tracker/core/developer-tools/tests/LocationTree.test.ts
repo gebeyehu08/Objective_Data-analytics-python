@@ -10,7 +10,7 @@ import {
   makeNavigationContext,
   makePressableContext,
   makeRootLocationContext,
-} from '@objectiv/tracker-core';
+} from '@objectiv/schema';
 import { locationNodes, LocationTree, rootNode } from '../src/LocationTree';
 import { TrackerConsole } from '../src/TrackerConsole';
 
@@ -48,10 +48,7 @@ describe('LocationTree', () => {
 
     expect(locationNodes).toHaveLength(5);
     expect(locationNodes).toStrictEqual([
-      expect.objectContaining({
-        _type: 'LocationTreeRoot',
-        id: 'location-tree-root',
-      }),
+      rootNode,
       expect.objectContaining({
         __instance_id: root.__instance_id,
         _type: LocationContextName.RootLocationContext,
@@ -95,10 +92,7 @@ describe('LocationTree', () => {
 
     expect(locationNodes).toHaveLength(4);
     expect(locationNodes).toStrictEqual([
-      expect.objectContaining({
-        _type: 'LocationTreeRoot',
-        id: 'location-tree-root',
-      }),
+      rootNode,
       expect.objectContaining({
         __instance_id: root.__instance_id,
         _type: LocationContextName.RootLocationContext,
@@ -137,10 +131,7 @@ describe('LocationTree', () => {
 
     expect(locationNodes).toHaveLength(3);
     expect(locationNodes).toStrictEqual([
-      expect.objectContaining({
-        _type: 'LocationTreeRoot',
-        id: 'location-tree-root',
-      }),
+      rootNode,
       expect.objectContaining({
         __instance_id: root.__instance_id,
         _type: LocationContextName.RootLocationContext,
@@ -183,10 +174,7 @@ describe('LocationTree', () => {
 
     expect(locationNodes).toHaveLength(4);
     expect(locationNodes).toStrictEqual([
-      expect.objectContaining({
-        _type: 'LocationTreeRoot',
-        id: 'location-tree-root',
-      }),
+      rootNode,
       expect.objectContaining({
         __instance_id: root.__instance_id,
         _type: LocationContextName.RootLocationContext,

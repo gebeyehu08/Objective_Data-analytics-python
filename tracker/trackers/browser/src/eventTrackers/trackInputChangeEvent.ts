@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeInputChangeEvent } from '@objectiv/tracker-core';
+import { makeInputChangeEvent } from '@objectiv/schema';
 import { InteractiveEventTrackerParameters } from '../definitions/InteractiveEventTrackerParameters';
 import { trackEvent } from './trackEvent';
 
