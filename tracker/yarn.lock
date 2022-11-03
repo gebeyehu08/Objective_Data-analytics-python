@@ -2368,70 +2368,70 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@objectiv/developer-tools@^0.0.27-experimental.2, @objectiv/developer-tools@workspace:core/developer-tools":
+"@objectiv/developer-tools@^0.0.27-experimental.3, @objectiv/developer-tools@workspace:core/developer-tools":
   version: 0.0.0-use.local
   resolution: "@objectiv/developer-tools@workspace:core/developer-tools"
   dependencies:
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-application-context@^0.0.27-experimental.2, @objectiv/plugin-application-context@workspace:plugins/application-context":
+"@objectiv/plugin-application-context@^0.0.27-experimental.3, @objectiv/plugin-application-context@workspace:plugins/application-context":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-application-context@workspace:plugins/application-context"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-http-context@^0.0.27-experimental.2, @objectiv/plugin-http-context@workspace:plugins/http-context":
+"@objectiv/plugin-http-context@^0.0.27-experimental.3, @objectiv/plugin-http-context@workspace:plugins/http-context":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-http-context@workspace:plugins/http-context"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-identity-context@^0.0.27-experimental.2, @objectiv/plugin-identity-context@workspace:plugins/identity-context":
+"@objectiv/plugin-identity-context@^0.0.27-experimental.3, @objectiv/plugin-identity-context@workspace:plugins/identity-context":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-identity-context@workspace:plugins/identity-context"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
@@ -2439,8 +2439,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-locale-context@workspace:plugins/locale-context"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     "@types/jest": ^28.1.6
     jest: ^28.1.3
     jest-environment-jsdom: ^28.1.3
@@ -2449,25 +2449,25 @@ __metadata:
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-path-context-from-url@^0.0.27-experimental.2, @objectiv/plugin-path-context-from-url@workspace:plugins/path-context-from-url":
+"@objectiv/plugin-path-context-from-url@^0.0.27-experimental.3, @objectiv/plugin-path-context-from-url@workspace:plugins/path-context-from-url":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-path-context-from-url@workspace:plugins/path-context-from-url"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
@@ -2475,11 +2475,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-react-navigation@workspace:plugins/react-navigation"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-react-core": ^0.0.27-experimental.2
-    "@objectiv/tracker-react-native": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-react-core": ^0.0.27-experimental.3
+    "@objectiv/tracker-react-native": ^0.0.27-experimental.3
     "@react-navigation/bottom-tabs": ^6.3.2
     "@react-navigation/core": ^6.2.2
     "@react-navigation/native": ^6.0.11
@@ -2496,7 +2496,7 @@ __metadata:
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/tracker-core": ">=0.0.27-experimental.2"
+    "@objectiv/tracker-core": ">=0.0.27-experimental.3"
     "@react-navigation/native": ">=6"
     react: ">=16.8"
     react-native: ">=0.6"
@@ -2507,11 +2507,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-react-router-tracked-components@workspace:plugins/react-router-tracked-components"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
-    "@objectiv/tracker-react": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
+    "@objectiv/tracker-react": ^0.0.27-experimental.3
     "@testing-library/react": ^13.3.0
     jest: ^28.1.3
     prettier: ^2.7.1
@@ -2526,31 +2526,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-root-location-context-from-url@^0.0.27-experimental.2, @objectiv/plugin-root-location-context-from-url@workspace:plugins/root-location-context-from-url":
+"@objectiv/plugin-root-location-context-from-url@^0.0.27-experimental.3, @objectiv/plugin-root-location-context-from-url@workspace:plugins/root-location-context-from-url":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-root-location-context-from-url@workspace:plugins/root-location-context-from-url"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
-"@objectiv/queue-local-storage@^0.0.27-experimental.2, @objectiv/queue-local-storage@workspace:queues/local-storage":
+"@objectiv/queue-local-storage@^0.0.27-experimental.3, @objectiv/queue-local-storage@workspace:queues/local-storage":
   version: 0.0.0-use.local
   resolution: "@objectiv/queue-local-storage@workspace:queues/local-storage"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
@@ -2559,11 +2559,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/schema@^0.0.27-experimental.2, @objectiv/schema@workspace:core/schema":
+"@objectiv/schema@^0.0.27-experimental.3, @objectiv/schema@workspace:core/schema":
   version: 0.0.0-use.local
   resolution: "@objectiv/schema@workspace:core/schema"
   dependencies:
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
@@ -2572,14 +2572,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/testing-tools@^0.0.27-experimental.2, @objectiv/testing-tools@workspace:core/testing-tools":
+"@objectiv/testing-tools@^0.0.27-experimental.3, @objectiv/testing-tools@workspace:core/testing-tools":
   version: 0.0.0-use.local
   resolution: "@objectiv/testing-tools@workspace:core/testing-tools"
   dependencies:
     prettier: ^2.7.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
@@ -2590,7 +2590,7 @@ __metadata:
     "@angular/compiler": ~9.1.13
     "@angular/compiler-cli": ~9.1.13
     "@angular/core": ~9.1.13
-    "@objectiv/tracker-browser": ^0.0.27-experimental.2
+    "@objectiv/tracker-browser": ^0.0.27-experimental.3
     ng-packagr: ^9.1.5
     prettier: ^2.7.1
     rxjs: ~6.5.5
@@ -2600,26 +2600,26 @@ __metadata:
   peerDependencies:
     "@angular/common": ">=9.0.0"
     "@angular/core": ">=9.0.0"
-    "@objectiv/tracker-browser": ^0.0.27-experimental.2
+    "@objectiv/tracker-browser": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
-"@objectiv/tracker-browser@^0.0.27-experimental.2, @objectiv/tracker-browser@workspace:trackers/browser":
+"@objectiv/tracker-browser@^0.0.27-experimental.3, @objectiv/tracker-browser@workspace:trackers/browser":
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-browser@workspace:trackers/browser"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/plugin-application-context": ^0.0.27-experimental.2
-    "@objectiv/plugin-http-context": ^0.0.27-experimental.2
-    "@objectiv/plugin-path-context-from-url": ^0.0.27-experimental.2
-    "@objectiv/plugin-root-location-context-from-url": ^0.0.27-experimental.2
-    "@objectiv/queue-local-storage": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
-    "@objectiv/transport-debug": ^0.0.27-experimental.2
-    "@objectiv/transport-fetch": ^0.0.27-experimental.2
-    "@objectiv/transport-xhr": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/plugin-application-context": ^0.0.27-experimental.3
+    "@objectiv/plugin-http-context": ^0.0.27-experimental.3
+    "@objectiv/plugin-path-context-from-url": ^0.0.27-experimental.3
+    "@objectiv/plugin-root-location-context-from-url": ^0.0.27-experimental.3
+    "@objectiv/queue-local-storage": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
+    "@objectiv/transport-debug": ^0.0.27-experimental.3
+    "@objectiv/transport-fetch": ^0.0.27-experimental.3
+    "@objectiv/transport-xhr": ^0.0.27-experimental.3
     jest: ^28.1.3
     jest-fetch-mock: ^3.0.3
     jest-useragent-mock: ^0.1.1
@@ -2630,13 +2630,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/tracker-core@^0.0.27-experimental.2, @objectiv/tracker-core@workspace:core/tracker":
+"@objectiv/tracker-core@^0.0.27-experimental.3, @objectiv/tracker-core@workspace:core/tracker":
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-core@workspace:core/tracker"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     mockdate: ^3.0.5
     prettier: ^2.7.1
@@ -2646,16 +2646,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/tracker-react-core@^0.0.27-experimental.2, @objectiv/tracker-react-core@workspace:core/react":
+"@objectiv/tracker-react-core@^0.0.27-experimental.3, @objectiv/tracker-react-core@workspace:core/react":
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-react-core@workspace:core/react"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/plugin-application-context": ^0.0.27-experimental.2
-    "@objectiv/plugin-path-context-from-url": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/plugin-application-context": ^0.0.27-experimental.3
+    "@objectiv/plugin-path-context-from-url": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
     "@testing-library/react": ^13.3.0
     "@types/react": ^17.0.48
     jest: ^28.1.3
@@ -2671,19 +2671,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/tracker-react-native@^0.0.27-experimental.2, @objectiv/tracker-react-native@workspace:trackers/react-native":
+"@objectiv/tracker-react-native@^0.0.27-experimental.3, @objectiv/tracker-react-native@workspace:trackers/react-native":
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-react-native@workspace:trackers/react-native"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/plugin-application-context": ^0.0.27-experimental.2
-    "@objectiv/plugin-root-location-context-from-url": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
-    "@objectiv/tracker-react-core": ^0.0.27-experimental.2
-    "@objectiv/transport-debug": ^0.0.27-experimental.2
-    "@objectiv/transport-fetch": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/plugin-application-context": ^0.0.27-experimental.3
+    "@objectiv/plugin-root-location-context-from-url": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
+    "@objectiv/tracker-react-core": ^0.0.27-experimental.3
+    "@objectiv/transport-debug": ^0.0.27-experimental.3
+    "@objectiv/transport-fetch": ^0.0.27-experimental.3
     "@testing-library/react-native": ^11.0.0
     "@types/react-native": ^0.69.5
     jest: ^28.1.3
@@ -2700,25 +2700,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/tracker-react@^0.0.27-experimental.2, @objectiv/tracker-react@workspace:trackers/react":
+"@objectiv/tracker-react@^0.0.27-experimental.3, @objectiv/tracker-react@workspace:trackers/react":
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-react@workspace:trackers/react"
   dependencies:
     "@material-ui/core": ^4.12.4
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/plugin-application-context": ^0.0.27-experimental.2
-    "@objectiv/plugin-http-context": ^0.0.27-experimental.2
-    "@objectiv/plugin-identity-context": ^0.0.27-experimental.2
-    "@objectiv/plugin-path-context-from-url": ^0.0.27-experimental.2
-    "@objectiv/plugin-root-location-context-from-url": ^0.0.27-experimental.2
-    "@objectiv/queue-local-storage": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
-    "@objectiv/tracker-react-core": ^0.0.27-experimental.2
-    "@objectiv/transport-debug": ^0.0.27-experimental.2
-    "@objectiv/transport-fetch": ^0.0.27-experimental.2
-    "@objectiv/transport-xhr": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/plugin-application-context": ^0.0.27-experimental.3
+    "@objectiv/plugin-http-context": ^0.0.27-experimental.3
+    "@objectiv/plugin-identity-context": ^0.0.27-experimental.3
+    "@objectiv/plugin-path-context-from-url": ^0.0.27-experimental.3
+    "@objectiv/plugin-root-location-context-from-url": ^0.0.27-experimental.3
+    "@objectiv/queue-local-storage": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
+    "@objectiv/tracker-react-core": ^0.0.27-experimental.3
+    "@objectiv/transport-debug": ^0.0.27-experimental.3
+    "@objectiv/transport-fetch": ^0.0.27-experimental.3
+    "@objectiv/transport-xhr": ^0.0.27-experimental.3
     "@testing-library/react": ^13.3.0
     "@testing-library/user-event": ^14.4.3
     "@types/react": ^17.0.48
@@ -2737,12 +2737,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/transport-debug@^0.0.27-experimental.2, @objectiv/transport-debug@workspace:transports/debug":
+"@objectiv/transport-debug@^0.0.27-experimental.3, @objectiv/transport-debug@workspace:transports/debug":
   version: 0.0.0-use.local
   resolution: "@objectiv/transport-debug@workspace:transports/debug"
   dependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
@@ -2751,14 +2751,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/transport-fetch@^0.0.27-experimental.2, @objectiv/transport-fetch@workspace:transports/fetch":
+"@objectiv/transport-fetch@^0.0.27-experimental.3, @objectiv/transport-fetch@workspace:transports/fetch":
   version: 0.0.0-use.local
   resolution: "@objectiv/transport-fetch@workspace:transports/fetch"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
     jest: ^28.1.3
     jest-fetch-mock: ^3.0.3
     prettier: ^2.7.1
@@ -2772,27 +2772,27 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/transport-snowplow@workspace:transports/snowplow"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
     tsup: ^6.2.1
     typescript: ^4.7.4
   peerDependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
   languageName: unknown
   linkType: soft
 
-"@objectiv/transport-xhr@^0.0.27-experimental.2, @objectiv/transport-xhr@workspace:transports/xhr":
+"@objectiv/transport-xhr@^0.0.27-experimental.3, @objectiv/transport-xhr@workspace:transports/xhr":
   version: 0.0.0-use.local
   resolution: "@objectiv/transport-xhr@workspace:transports/xhr"
   dependencies:
-    "@objectiv/developer-tools": ^0.0.27-experimental.2
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/testing-tools": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
@@ -2806,8 +2806,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/utilities@workspace:core/utilities"
   dependencies:
-    "@objectiv/schema": ^0.0.27-experimental.2
-    "@objectiv/tracker-core": ^0.0.27-experimental.2
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
     axios: ^0.27.2
     cheerio: ^1.0.0-rc.12
     json5: ^2.2.1
