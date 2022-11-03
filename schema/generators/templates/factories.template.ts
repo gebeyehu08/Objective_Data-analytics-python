@@ -206,7 +206,7 @@ const getParametersFromProperties = (entity) =>
       name: property.name,
       description: property.description,
       typeName: getTypeForProperty(property),
-      isOptional: property.optional || property.nullable || property.automatically_set || property.default_value !== undefined,
+      isOptional: property.optional || property.nullable || property.default_value !== undefined,
       value: property.value,
     });
 
