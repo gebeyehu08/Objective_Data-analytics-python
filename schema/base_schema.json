@@ -213,11 +213,11 @@
         },
         "location_stack": {
           "type": "LocationStack",
-          "default_value": []
+          "default_value": "[]"
         },
         "global_contexts": {
           "type": "GlobalContexts",
-          "default_value": []
+          "default_value": "[]"
         },
         "_type": {
           "description": "A string literal used during serialization. Hardcoded to the Event name.",

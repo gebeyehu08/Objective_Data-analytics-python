@@ -168,7 +168,7 @@ Generator.generate({ outputFile: `${destinationFolder}factories.ts` }, (writer: 
             case 'uuid':
               return 'uuidv4()';
             default:
-              return JSON.stringify(defaultValue);
+              return defaultValue;
           }
         }
 
