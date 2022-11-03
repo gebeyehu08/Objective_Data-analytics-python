@@ -27,8 +27,8 @@ export const trackEvent = (parameters: {
     const { event, element, tracker = getTracker(parameters.trackerId) } = parameters;
 
     // If the Location Stack of the given Event is empty, and we have an Element, attempt to generate one from the DOM
-    let locationStack: LocationStack | undefined = event.location_stack;
-    if (locationStack?.length === 0 && element) {
+    let locationStack: LocationStack = event.location_stack;
+    if (locationStack.length === 0 && element) {
       locationStack = getElementLocationStack({ element });
     }
 

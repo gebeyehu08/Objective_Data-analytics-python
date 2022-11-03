@@ -15,7 +15,10 @@ import { ContextsConfig } from './Context';
 /**
  * TrackerEvents can be constructed with the result of one of the Event factories.
  */
-export type TrackerEventAttributes = Omit<TrackerEvent, 'toJSON'>;
+export type TrackerEventAttributes = Omit<TrackerEvent, 'toJSON' | '_schema_version'> & {
+  // This is necessary exclusively for backwards compatibility with older events that did not have _schema_version
+  _schema_version?: string
+};
 
 /**
  * The configuration object accepted by TrackerEvent's constructor
@@ -29,7 +32,7 @@ export class TrackerEvent implements AbstractEvent, Contexts {
   readonly __instance_id: AbstractEvent['__instance_id'];
   readonly _type: AbstractEvent['_type'];
   readonly _types: string[];
-  readonly _schema_version?: string;
+  readonly _schema_version: string;
   readonly id: string;
   readonly time: number;
   readonly location_stack: AbstractLocationContext[];
