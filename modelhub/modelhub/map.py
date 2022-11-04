@@ -115,8 +115,7 @@ class Map:
         Labels a hit True if it is a conversion event, all other hits are labeled False.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param name: the name of the conversion to label as set in
-            :py:attr:`ModelHub.conversion_events`.
+        :param name: the name of the SeriesBoolean conversion column.
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
 
@@ -146,8 +145,8 @@ class Map:
         Counts the total number of conversions given a partition (ie session_id
         or user_id).
 
-        :param name: the name of the conversion to label as set in
-            :py:attr:`ModelHub.conversion_events`.
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param name: the name of the SeriesBoolean conversion column.
         :param partition: the partition over which the number of conversions are counted. Can be any column
             of the ObjectivFrame
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
@@ -184,8 +183,7 @@ class Map:
         or 'user_id').
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param name: the name of the conversion to label as set in
-            :py:attr:`ModelHub.conversion_events`.
+        :param name: the name of the SeriesBoolean conversion column.
         :param partition: the partition over which the number of conversions are counted. Can be any column
             in ``data``.
         :returns: :py:class:`bach.SeriesInt64` with the same index as ``data``.
@@ -221,8 +219,7 @@ class Map:
         in the partition or after the first conversion.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param name: the name of the conversion to label as set in
-            :py:attr:`ModelHub.conversion_events`.
+        :param name: the name of the SeriesBoolean conversion column.
         :param partition: the partition over which the number of conversions are counted. Can be any column
             in ``data``.
         :returns: :py:class:`bach.SeriesInt64` with the same index as ``data``.

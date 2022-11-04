@@ -182,15 +182,16 @@ class ModelHub:
 
     def add_conversion_event(self,
                              data: bach.DataFrame,
-                             location_stack: 'SeriesLocationStack' = None,
+                             location_stack: Union[str, SeriesLocationStack] = None,
                              event_type: str = None,
                              name: str = None):
         """
         Label events that can be used as conversions.
 
-        :param location_stack: the location stack that is labeled as conversion. Can be any slice in of a
-            :py:class:`modelhub.SeriesLocationStack` type column. Optionally use in conjunction with
-            ``event_type`` to label a conversion.
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param location_stack: the (name of the) location stack (column) that is labeled as conversion. Can be
+            any slice in of a :py:class:`modelhub.SeriesLocationStack` type column. Optionally use in
+            conjunction with ``event_type`` to label a conversion.
         :param event_type: the event type that is labeled as conversion. Optionally use in conjunction with
             ``objectiv_location_stack`` to label a conversion.
         :param name: the name to use for the labeled conversion event. If None it will use 'conversion_#',
@@ -204,10 +205,15 @@ class ModelHub:
 
         if location_stack is None:
             series = data.event_type == event_type
-        elif event_type is None:
-            series = location_stack.json.get_array_length() > 0
         else:
-            series = ((location_stack.json.get_array_length() > 0) & (data.event_type == event_type))
+            if isinstance(location_stack, str):
+                column = cast(SeriesLocationStack, data['location_stack'])
+            if isinstance(location_stack, SeriesLocationStack):
+                column = location_stack
+            if event_type is None:
+                series = column.json.get_array_length() > 0
+            else:
+                series = ((column.json.get_array_length() > 0) & (data.event_type == event_type))
 
         return series.copy_override(name=name)
 

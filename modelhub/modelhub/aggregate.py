@@ -218,7 +218,7 @@ class Aggregate:
         combining several models from the model hub.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param name: label of the conversion event.
+        :param name: the name of the SeriesBoolean conversion column.
         :param location_stack: the location stack
 
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
