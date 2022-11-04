@@ -23,15 +23,10 @@ class AsyncChecklockKernelManager(AsyncKernelManager):
     @staticmethod
     def _get_kernel_spec(kernel_config: ChecklockKernelConfig) -> KernelSpec:
         argv = [
-<<<<<<< HEAD
-            "python", "-m", "checklock_holmes.checklock_kernel.kernel", "-f", "{connection_file}",
+            "python3", "-m", "checklock_holmes.checklock_kernel.kernel", "-f", "{connection_file}",
             "--notebook", kernel_config.notebook_name,
             "--db_engine", kernel_config.db_engine.value,
             "--check_id", str(kernel_config.check_id)
-=======
-            "python3", "-m", "checklock_holmes.checklock_kernel.kernel", "-f", "{connection_file}",
-            "--notebook", notebook_name, "--db_engine", db_engine.value, "--check_id", str(check_id)
->>>>>>> 21f56981c5f0fde83a7b9e36f9d091a46f6676ce
         ]
         if kernel_config.store_outputs:
             argv.append("--store-outputs")
