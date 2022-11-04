@@ -11,7 +11,7 @@ import {
 } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import { Tracker, TrackerEvent } from '@objectiv/tracker-core';
-import { SnowplowJavaScriptTransport } from '../src/SnowplowJavascriptTransport';
+import { SnowplowJavaScriptTransport } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);

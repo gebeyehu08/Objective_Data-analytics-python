@@ -1,7 +1,7 @@
 {
   "name": "@objectiv/transport-snowplow-common",
   "version": "0.0.27-experimental.3",
-  "description": "Common logic between Snowplow's Browser and Javascript Transports",
+  "description": "Common logic between Snowplow's Browser and JavaScript Transports",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
   "keywords": [
