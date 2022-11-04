@@ -48,7 +48,7 @@ class Settings(BaseSettings):
         }
 
     @root_validator()
-    def _validate_db_env(
+    def _validate_env_variables(
         cls, values: Dict[str, Optional[Union[BaseDBEnvModel, BigQueryEnvModel]]],
     ) -> Dict[str, Optional[Union[BaseDBEnvModel, BigQueryEnvModel]]]:
         warnings.simplefilter('always')
@@ -75,6 +75,16 @@ class Settings(BaseSettings):
                 category=UserWarning,
             )
             values['bq_db'] = None
+
+        aws_env = values.get('aws_bucket')
+        if not aws_env:
+            warnings.warn(
+                message=(
+                    'Cannot store cell outputs. '
+                    'Please define AWS variables in .env file'
+                ),
+                category=UserWarning,
+            )
 
         warnings.simplefilter('ignore')
         return values
