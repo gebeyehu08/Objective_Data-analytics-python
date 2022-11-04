@@ -1,51 +1,51 @@
-# Objectiv Snowplow Transport for Web
+# Objectiv Snowplow Browser Tracker Transport
 
-Allows sending events directly via Snowplow's JavaScript Tracker without the need of the Objectiv Collector. 
+Allows sending events directly via Snowplow's Browser Tracker without the need of the Objectiv Collector. 
 
 ---
 ## Package Installation
 To install the most recent stable version:
 
 ```sh
-yarn add @objectiv/transport-snowplow
+yarn add @objectiv/transport-snowplow-browser
 ```
 
 ### or
 ```sh
-npm install @objectiv/transport-snowplow
+npm install @objectiv/transport-snowplow-browser
 ```
 
 # Usage
-To enable SnowplowTransport, and stop using Objectiv's Collector, simply:
+To enable SnowplowBrowserTransport, and stop using Objectiv's Collector, simply:
 1. Remove the Objectiv's Collector `endpoint` configuration option. 
-2. Add the `transport` configuration option, set to a new instance of `SnowplowTransport`.
+2. Add the `transport` configuration option, set to a new instance of `SnowplowBrowserTransport`.
 
 ### Browser SDK example
 ```ts
 import { makeTracker } from "@objectiv/tracker-browser";
-import { SnowplowTransport } from "@objectiv/transport-snowplow";
+import { SnowplowBrowserTransport } from "@objectiv/transport-snowplow-browser";
 
 makeTracker({
   applicationId: 'app-id',
-  transport: new SnowplowTransport()
+  transport: new SnowplowBrowserTransport()
 });
 ```
 
 ### React SDK example
 ```ts
 import { ReactTracker } from '@objectiv/tracker-react';
-import { SnowplowTransport } from "@objectiv/transport-snowplow";
+import { SnowplowBrowserTransport } from "@objectiv/transport-snowplow-browser";
 
 const tracker = new ReactTracker({
   applicationId: 'app-id',
-  transport: new SnowplowTransport()
+  transport: new SnowplowBrowserTransport()
 })
 ```
 
 ### Angular SDK example
 ```ts
 import { ObjectivTrackerModule } from '@objectiv/tracker-angular';
-import { SnowplowTransport } from "@objectiv/transport-snowplow";
+import { SnowplowBrowserTransport } from "@objectiv/transport-snowplow-browser";
 
 ...
 
@@ -55,7 +55,7 @@ import { SnowplowTransport } from "@objectiv/transport-snowplow";
     ...
     ObjectivTrackerModule.forRoot({
       applicationId: 'app-id',
-      transport: new SnowplowTransport()
+      transport: new SnowplowBrowserTransport()
     })
   ],
   ...
