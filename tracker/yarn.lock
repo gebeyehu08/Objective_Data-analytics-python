@@ -2768,12 +2768,50 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/transport-snowplow@workspace:transports/snowplow":
+"@objectiv/transport-snowplow-browser@workspace:transports/snowplow-browser":
   version: 0.0.0-use.local
-  resolution: "@objectiv/transport-snowplow@workspace:transports/snowplow"
+  resolution: "@objectiv/transport-snowplow-browser@workspace:transports/snowplow-browser"
   dependencies:
     "@objectiv/developer-tools": ^0.0.27-experimental.3
     "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/transport-snowplow-common": ^0.0.27-experimental.3
+    "@snowplow/browser-tracker": ^3.7.0
+    jest: ^28.1.3
+    prettier: ^2.7.1
+    ts-jest: ^28.0.7
+    tsup: ^6.2.1
+    typescript: ^4.7.4
+  peerDependencies:
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
+    "@snowplow/browser-tracker": ">=3.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@objectiv/transport-snowplow-common@^0.0.27-experimental.3, @objectiv/transport-snowplow-common@workspace:transports/snowplow-common":
+  version: 0.0.0-use.local
+  resolution: "@objectiv/transport-snowplow-common@workspace:transports/snowplow-common"
+  dependencies:
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    jest: ^28.1.3
+    prettier: ^2.7.1
+    ts-jest: ^28.0.7
+    tsup: ^6.2.1
+    typescript: ^4.7.4
+  peerDependencies:
+    "@objectiv/schema": ^0.0.27-experimental.3
+    "@objectiv/tracker-core": ^0.0.27-experimental.3
+  languageName: unknown
+  linkType: soft
+
+"@objectiv/transport-snowplow-javascript@workspace:transports/snowplow-javascript":
+  version: 0.0.0-use.local
+  resolution: "@objectiv/transport-snowplow-javascript@workspace:transports/snowplow-javascript"
+  dependencies:
+    "@objectiv/developer-tools": ^0.0.27-experimental.3
+    "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@objectiv/transport-snowplow-common": ^0.0.27-experimental.3
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
@@ -3230,6 +3268,39 @@ __metadata:
   dependencies:
     "@sinonjs/commons": ^1.7.0
   checksum: 7d3aef54e17c1073101cb64d953157c19d62a40e261a30923fa1ee337b049c5f29cc47b1f0c477880f42b5659848ba9ab897607ac8ea4acd5c30ddcfac57fca6
+  languageName: node
+  linkType: hard
+
+"@snowplow/browser-tracker-core@npm:3.7.0":
+  version: 3.7.0
+  resolution: "@snowplow/browser-tracker-core@npm:3.7.0"
+  dependencies:
+    "@snowplow/tracker-core": 3.7.0
+    sha1: ^1.1.1
+    tslib: ^2.3.1
+    uuid: ^3.4.0
+  checksum: 59fbc6994f013b4271b70996ddfa6ac6d6b1cd3ee42692c7c0308057228d5360a694ce711fea949bfc41707ca97c03c4a9f0d146c48b00e77a67baa1fcc48648
+  languageName: node
+  linkType: hard
+
+"@snowplow/browser-tracker@npm:^3.7.0":
+  version: 3.7.0
+  resolution: "@snowplow/browser-tracker@npm:3.7.0"
+  dependencies:
+    "@snowplow/browser-tracker-core": 3.7.0
+    "@snowplow/tracker-core": 3.7.0
+    tslib: ^2.3.1
+  checksum: 8871912d85038614159b28cbac03d31a2fb99cdaf30c2d71dd0342346d1275cab34502faed9b470dd5e770ea30db22071972ed179b2cc9f475acd8019b065e41
+  languageName: node
+  linkType: hard
+
+"@snowplow/tracker-core@npm:3.7.0":
+  version: 3.7.0
+  resolution: "@snowplow/tracker-core@npm:3.7.0"
+  dependencies:
+    tslib: ^2.3.1
+    uuid: ^3.4.0
+  checksum: 80a1317d2648736b3cf1b565c3fa846ce43d362b0aa1fd3a29cd1e6a54f9ac7199934207fd8bb947100b95701111eb88ecbd7a4c1637835c677757c8cb2292f1
   languageName: node
   linkType: hard
 
@@ -4618,6 +4689,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"charenc@npm:>= 0.0.1":
+  version: 0.0.2
+  resolution: "charenc@npm:0.0.2"
+  checksum: 81dcadbe57e861d527faf6dd3855dc857395a1c4d6781f4847288ab23cffb7b3ee80d57c15bba7252ffe3e5e8019db767757ee7975663ad2ca0939bb8fcaf2e5
+  languageName: node
+  linkType: hard
+
 "cheerio-select@npm:^2.1.0":
   version: 2.1.0
   resolution: "cheerio-select@npm:2.1.0"
@@ -5110,6 +5188,13 @@ __metadata:
     shebang-command: ^2.0.0
     which: ^2.0.1
   checksum: 671cc7c7288c3a8406f3c69a3ae2fc85555c04169e9d611def9a675635472614f1c0ed0ef80955d5b6d4e724f6ced67f0ad1bb006c2ea643488fcfef994d7f52
+  languageName: node
+  linkType: hard
+
+"crypt@npm:>= 0.0.1":
+  version: 0.0.2
+  resolution: "crypt@npm:0.0.2"
+  checksum: baf4c7bbe05df656ec230018af8cf7dbe8c14b36b98726939cef008d473f6fe7a4fad906cfea4062c93af516f1550a3f43ceb4d6615329612c6511378ed9fe34
   languageName: node
   linkType: hard
 
@@ -11636,6 +11721,16 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"sha1@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "sha1@npm:1.1.1"
+  dependencies:
+    charenc: ">= 0.0.1"
+    crypt: ">= 0.0.1"
+  checksum: da9f47e949988e2f595ef19733fd1dc736866ef6de4e421a55c13b444c03ae532e528b7350ae6ea55d9fb053be61d4648ec2cd5250d46cfdbdf4f6b4e763713d
+  languageName: node
+  linkType: hard
+
 "shallow-clone@npm:^3.0.0":
   version: 3.0.1
   resolution: "shallow-clone@npm:3.0.1"
@@ -12598,6 +12693,13 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"tslib@npm:^2.3.1":
+  version: 2.4.1
+  resolution: "tslib@npm:2.4.1"
+  checksum: 19480d6e0313292bd6505d4efe096a6b31c70e21cf08b5febf4da62e95c265c8f571f7b36fcc3d1a17e068032f59c269fab3459d6cd3ed6949eafecf64315fca
+  languageName: node
+  linkType: hard
+
 "tsup@npm:^6.2.1":
   version: 6.2.1
   resolution: "tsup@npm:6.2.1"
@@ -13124,6 +13226,15 @@ typescript@~3.8.3:
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "uuid@npm:3.4.0"
+  bin:
+    uuid: ./bin/uuid
+  checksum: 58de2feed61c59060b40f8203c0e4ed7fd6f99d42534a499f1741218a1dd0c129f4aa1de797bcf822c8ea5da7e4137aa3673431a96dae729047f7aca7b27866f
   languageName: node
   linkType: hard
 

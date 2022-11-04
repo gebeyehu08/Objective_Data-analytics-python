@@ -1,5 +1,5 @@
 {
-  "name": "@objectiv/transport-snowplow",
+  "name": "@objectiv/transport-snowplow-javascript",
   "version": "0.0.27-experimental.3",
   "description": "Allows sending events directly via Snowplow's JavaScript Tracker without the need of the Objectiv Collector",
   "license": "Apache-2.0",
@@ -12,12 +12,14 @@
     "events",
     "taxonomy",
     "transport",
-    "snowplow"
+    "snowplow",
+    "javascript",
+    "tracker"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/objectiv/objectiv-analytics.git",
-    "directory": "tracker/transports/snowplow"
+    "directory": "tracker/transports/snowplow-javascript"
   },
   "bugs": "https://github.com/objectiv/objectiv-analytics/issues",
   "contributors": [
@@ -62,5 +64,8 @@
   "peerDependencies": {
     "@objectiv/schema": "^0.0.27-experimental.3",
     "@objectiv/tracker-core": "^0.0.27-experimental.3"
+  },
+  "dependencies": {
+    "@objectiv/transport-snowplow-common": "^0.0.27-experimental.3"
   }
 }

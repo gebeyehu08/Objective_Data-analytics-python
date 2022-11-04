@@ -16,8 +16,4 @@ declare global {
   }
 }
 
-export const GLOBAL_CONTEXT_SCHEMA_BASE = 'iglu:io.objectiv.context';
-export const LOCATION_STACK_SCHEMA_BASE = 'iglu:io.objectiv/location_stack';
-
-export * from './makeSnowplowContexts';
-export * from './SnowplowTransport';
+export * from './SnowplowJavaScriptTransport';
