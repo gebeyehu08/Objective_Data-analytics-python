@@ -10,7 +10,7 @@ import {
   makeRootLocationContext,
 } from '@objectiv/schema';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { TrackerEvent } from '@objectiv/tracker-core';
+import { Tracker, TrackerEvent, TrackerPlatform } from '@objectiv/tracker-core';
 import { SnowplowTransport } from '../src';
 
 require('@objectiv/developer-tools');
@@ -30,8 +30,36 @@ describe('SnowplowTransport', () => {
     })
   );
 
+  it('should not be usable when the Tracker platform is not supported', async () => {
+    const testTransport = new SnowplowTransport();
+    const mockReactNativeTracker = new Tracker({ applicationId: 'test', platform: TrackerPlatform.REACT_NATIVE });
+    testTransport.initialize(mockReactNativeTracker);
+    expect(testTransport.isUsable()).toBe(false);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '%c｢objectiv:SnowplowTransport｣ This transport is not compatible with REACT_NATIVE.',
+      'font-weight: bold'
+    );
+  });
+
+  it('should warn about anonymous mode not being supported', async () => {
+    const testTransport = new SnowplowTransport();
+    const tracker = new Tracker({ applicationId: 'test', anonymous: true });
+    testTransport.initialize(tracker);
+    expect(testTransport.isUsable()).toBe(true);
+    expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
+      '%c｢objectiv:SnowplowTransport｣ Tracker `anonymous` option is not supported. Anonymous tracking should be configured in Snowplow. Check this blog post for more info: https://snowplow.io/blog/cookieless-and-anonymous-tracking-with-snowplow/',
+      'font-weight: bold'
+    );
+  });
+
+  it('should not be usable when the Transport has not been initialized', async () => {
+    const testTransport = new SnowplowTransport();
+    expect(testTransport.isUsable()).toBe(false);
+  });
+
   it('should send using Snowplow `trackStructEvent`', async () => {
     const testTransport = new SnowplowTransport();
+    testTransport.initialize(new Tracker({ applicationId: 'test' }));
 
     expect(testTransport.isUsable()).toBe(true);
 
@@ -92,8 +120,23 @@ describe('Without developer tools', () => {
   });
 
   it('should not TrackerConsole.log', () => {
-    new SnowplowTransport();
+    const testTransport = new SnowplowTransport();
+    testTransport.initialize(new Tracker({ applicationId: 'test' }));
 
     expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+  });
+
+  it('should not TrackerConsole.error', async () => {
+    const testTransport = new SnowplowTransport();
+    const mockReactNativeTracker = new Tracker({ applicationId: 'test', platform: TrackerPlatform.REACT_NATIVE });
+    testTransport.initialize(mockReactNativeTracker);
+    expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+  });
+
+  it('should not TrackerConsole.warn', async () => {
+    const testTransport = new SnowplowTransport();
+    const tracker = new Tracker({ applicationId: 'test', anonymous: true });
+    testTransport.initialize(tracker);
+    expect(MockConsoleImplementation.warn).not.toHaveBeenCalled();
   });
 });
