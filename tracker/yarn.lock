@@ -2564,6 +2564,7 @@ __metadata:
   resolution: "@objectiv/schema@workspace:core/schema"
   dependencies:
     "@objectiv/testing-tools": ^0.0.27-experimental.3
+    "@swc/core": ^1.3.14
     jest: ^28.1.3
     prettier: ^2.7.1
     ts-jest: ^28.0.7
@@ -3301,6 +3302,117 @@ __metadata:
     tslib: ^2.3.1
     uuid: ^3.4.0
   checksum: 80a1317d2648736b3cf1b565c3fa846ce43d362b0aa1fd3a29cd1e6a54f9ac7199934207fd8bb947100b95701111eb88ecbd7a4c1637835c677757c8cb2292f1
+  languageName: node
+  linkType: hard
+
+"@swc/core-darwin-arm64@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-darwin-arm64@npm:1.3.14"
+  checksum: 46287ee9d9d62cc8eccbfbe8b4e4b6a83c551ff98a59fb6f6bf1cce1eb85e8aa78af7f334c6833be6f1f185d5417aaa0890396213bf4f70eaa03a76c05bb0f79
+  languageName: node
+  linkType: hard
+
+"@swc/core-darwin-x64@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-darwin-x64@npm:1.3.14"
+  checksum: 25204b18366752ad89fa06ebc6e3f386401f14e8db3497b7a066922e66402efa7264e6a13e6683626519eaec99b7755403769339775cfcba256e12bbc10ed6a0
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-arm-gnueabihf@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.14"
+  checksum: f465e0d142100ab331b7e238810fb84022231082eaf397a3f75ac52e8362e30e93c3e0e90a880042b83e4ae7107e17e4a2a785cba167ca5168419b8e7be7f27d
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-arm64-gnu@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.14"
+  checksum: 2fc9e0c3b9c28b5d477ab23cd6c6d5ded674ece9d075491bf289f5a72a092a6971f0b1a19c23238c73a4edbdf40e1d2c80b2ddf84660522aedb72d7a70b36e38
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-arm64-musl@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-linux-arm64-musl@npm:1.3.14"
+  checksum: 9ae136b876d543b778f6243122bca0a106b6b1d917386b19f965151105a317bad9561c07bda4df500eb7dd80a80d605a84a34587263ac93cd9a4d9ed514d6d92
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-x64-gnu@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-linux-x64-gnu@npm:1.3.14"
+  checksum: 61a07cad0703e215ba60178087e441009afc4e44d66d67d81ecaefb67e510cdae69ec7bb92a7f4f89a0dab249408ca542c87036165cb309840f727a44af6b84d
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-x64-musl@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-linux-x64-musl@npm:1.3.14"
+  checksum: 6c7a323c1572860630cfe485959d613dbc7d438c44cbc428f2a288c9efd85014436496347c8f8a3029835e38fe1f74f65c5cde07562e312147d108455193759f
+  languageName: node
+  linkType: hard
+
+"@swc/core-win32-arm64-msvc@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.14"
+  checksum: f3fa2f94412afaf53a8836eb1d8f6612cefbf14133eab71e91cc871bae00cad8f52c1e9bb7a6324ab3b07937a0c28e6e36608764717583603aa9c2cf2bdef134
+  languageName: node
+  linkType: hard
+
+"@swc/core-win32-ia32-msvc@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.14"
+  checksum: b83ee3a3d7979f3d16166bd0b688037686433f78a010b654595dcf841192ecc284629e64f04e11d3435ec74758aff146ada1c75495bb285c5eab5c341bfb71bb
+  languageName: node
+  linkType: hard
+
+"@swc/core-win32-x64-msvc@npm:1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core-win32-x64-msvc@npm:1.3.14"
+  checksum: 18f6a35001957dd72abb4bb5c79569318ff8b63cb45ad665ac872afae0c37f48b6336b17de88ba74075e5638e4e99ab669c48e9354658b0007be3acc58abbcf7
+  languageName: node
+  linkType: hard
+
+"@swc/core@npm:^1.3.14":
+  version: 1.3.14
+  resolution: "@swc/core@npm:1.3.14"
+  dependencies:
+    "@swc/core-darwin-arm64": 1.3.14
+    "@swc/core-darwin-x64": 1.3.14
+    "@swc/core-linux-arm-gnueabihf": 1.3.14
+    "@swc/core-linux-arm64-gnu": 1.3.14
+    "@swc/core-linux-arm64-musl": 1.3.14
+    "@swc/core-linux-x64-gnu": 1.3.14
+    "@swc/core-linux-x64-musl": 1.3.14
+    "@swc/core-win32-arm64-msvc": 1.3.14
+    "@swc/core-win32-ia32-msvc": 1.3.14
+    "@swc/core-win32-x64-msvc": 1.3.14
+  dependenciesMeta:
+    "@swc/core-darwin-arm64":
+      optional: true
+    "@swc/core-darwin-x64":
+      optional: true
+    "@swc/core-linux-arm-gnueabihf":
+      optional: true
+    "@swc/core-linux-arm64-gnu":
+      optional: true
+    "@swc/core-linux-arm64-musl":
+      optional: true
+    "@swc/core-linux-x64-gnu":
+      optional: true
+    "@swc/core-linux-x64-musl":
+      optional: true
+    "@swc/core-win32-arm64-msvc":
+      optional: true
+    "@swc/core-win32-ia32-msvc":
+      optional: true
+    "@swc/core-win32-x64-msvc":
+      optional: true
+  bin:
+    swcx: run_swcx.js
+  checksum: 79e9857ee3d5af22d9a6e644d7608594fa8ccd9102dbc088addc0f6ee9e1e8e3fc8835545730707395aa47197ab119fa323aedf4184cf51892379b307aedddc0
   languageName: node
   linkType: hard
 
