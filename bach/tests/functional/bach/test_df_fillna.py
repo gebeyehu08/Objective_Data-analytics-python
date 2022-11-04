@@ -129,7 +129,6 @@ def test_fillna_w_methods(engine) -> None:
         use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            # last 3 rows are non-deterministic because A, B, C were initially all nulls
             [0,  1,    3,    1] + [ANY] * 4,
             [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
             [2,    1,    3, None,    4,    1,  'b', datetime(2022, 1, 5)],
@@ -149,7 +148,6 @@ def test_fillna_w_methods(engine) -> None:
         use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            # last 3 rows are non-deterministic because A, B, C are all nulls
             [0, None, None, None] + [ANY] * 4,
             [1,    3,    4,    1,    1,    1,  'd', datetime(2022, 1, 2)],
             [2, None,    3,    1,    4,  ANY,  'b',                 ANY],
