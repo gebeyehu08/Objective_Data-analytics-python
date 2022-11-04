@@ -1,7 +1,7 @@
 """
 CHECKLOCK HOLMES CLI
 Usage:
-    checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit] [--start_date=<start_date>] [--end_date=<end_date>] [--update-history]
+    checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--output_reports_dir=<out_dir>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit] [--start_date=<start_date>] [--end_date=<end_date>] [--compare-outputs] [--update-history]
     checklock-holmes.py -h | --help
 
 Options:
@@ -10,10 +10,12 @@ Options:
     -e --engine=<engine>...         Engines to run checks. Current supported engines: [{supported_engines}] [default: all].
     --nb=<file>...                  Notebooks to be checked [default: {default_nb_dir}].
     --gh_issues_dir=<ghi>           Directory for logging github issues [default: {default_github_issues_dir}].
+    --output_reports_dir=<out_dir>  Directory for logging output comparison reports [default: {default_output_comparison_dir}].
     --dump_nb_scripts_dir<nbs_dir>  Directory where to dump notebook scripts.
     -t --timeit                     Time each cell
     --start_date=<start_date>       First date for which objectiv data is loaded for Modelhub. Format as 'YYYY-MM-DD'.
     --end_date=<end_date>           Last date for which objectiv data is loaded for Modelhub. Format as 'YYYY-MM-DD'.
+    --compare-outputs               Compare all notebook outputs versus the engine's "source of truth" pandas outputs.
     --update-history                Replaces current "source of truth" pandas outputs for each checked notebook based on engine.
 
 Before running checks, please define .env file. Must include the following variables per engine:
@@ -26,6 +28,13 @@ PG_DB__DSN
 - BigQuery
 BQ_DB__DSN
 BQ_DB__CREDENTIALS_PATH
+
+For comparing report outputs, please define AWS env variables in .env file and make sure
+IAM user has permissions for reading and writing objects:
+AWS_BUCKET__NAME=
+AWS_BUCKET__REGION_NAME=
+AWS_BUCKET__ACCESS_KEY_ID=
+AWS_BUCKET__SECRET_ACCESS_KEY=
 
 Copyright 2022 Objectiv B.V.
 """
@@ -43,12 +52,14 @@ from checklock_holmes.models.nb_checker_models import (
 from checklock_holmes.nb_checker import NoteBookChecker
 from checklock_holmes.output_history.handler import OutputHistoryHandler
 from checklock_holmes.reporting.utils import (
-    display_check_results, get_github_issue_filename, store_github_issue,
+    display_check_results, display_comparison_results,
+    get_github_issue_filename, get_output_reports_filename, store_github_issue,
     store_nb_script
 )
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
-    DATE_FORMAT, DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR
+    DATE_FORMAT, DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR,
+    DEFAULT_OUTPUT_REPORTS_DIR
 )
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
@@ -91,7 +102,11 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
         return
 
     github_issues_file_path = f'{check_settings.github_issues_dir}/{get_github_issue_filename()}'
-    store_outputs = settings.aws_bucket is not None and check_settings.update_history
+    output_reports_file_path = f'{check_settings.compared_outputs_dir}/{get_output_reports_filename()}'
+    store_outputs = (
+        settings.aws_bucket is not None
+        and (check_settings.compare_notebook_outputs or check_settings.update_history)
+    )
 
     all_checks = await asyncio.gather(
         *[
@@ -106,10 +121,6 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
     )
     all_checks = list(itertools.chain.from_iterable(all_checks))
 
-    if store_outputs:
-        history_handler = OutputHistoryHandler()
-        history_handler.update_history(all_checks)
-
     # display final check report
     display_check_results(
         nb_checks=all_checks,
@@ -117,12 +128,24 @@ async def async_check_notebooks(check_settings: NoteBookCheckSettings, exit_on_f
         display_cell_timings=check_settings.display_cell_timing,
     )
 
+    if store_outputs:
+        history_handler = OutputHistoryHandler()
+        if check_settings.compare_notebook_outputs:
+            comparison_reports = history_handler.compare_outputs(all_checks)
+            display_comparison_results(
+                comparison_reports, output_reports_file_path=output_reports_file_path
+            )
+
+        if check_settings.update_history:
+            history_handler.update_history(all_checks)
+
 
 if __name__ == '__main__':
     cli_docstring = __doc__.format(
         supported_engines=', '.join([engine for engine in SupportedDBEngine]),
         default_nb_dir=DEFAULT_NOTEBOOKS_DIR,
         default_github_issues_dir=DEFAULT_GITHUB_ISSUES_DIR,
+        default_output_comparison_dir=DEFAULT_OUTPUT_REPORTS_DIR,
     )
     arguments = docopt(cli_docstring, help=True, options_first=False)
     start_date = None
@@ -135,11 +158,13 @@ if __name__ == '__main__':
     nb_check_settings = NoteBookCheckSettings(
         engines_to_check=arguments['--engine'],
         github_issues_dir=arguments['--gh_issues_dir'],
+        compared_outputs_dir=arguments['--output_reports_dir'],
         dump_nb_scripts_dir=arguments['--dump_nb_scripts_dir'],
         notebooks_to_check=arguments['--nb'],
         display_cell_timing=arguments['--timeit'],
         start_date=start_date,
         end_date=end_date,
+        compare_notebook_outputs=arguments['--compare-outputs'],
         update_history=arguments['--update-history'],
     )
     asyncio.run(
