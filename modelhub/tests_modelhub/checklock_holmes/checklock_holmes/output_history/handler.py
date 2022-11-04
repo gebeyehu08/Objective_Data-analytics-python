@@ -105,9 +105,7 @@ class OutputHistoryHandler:
         try:
             obj = self._client.get_object(Bucket=self.bucket_name, Key=OUTPUT_FILE_HISTORY_PATH)
             return json.loads(obj['Body'].read())
-        except ClientError as exc:
-            if exc.response['Error']['Code'] == 'NoSuchKey':
-                return {}
-            raise exc
         except Exception as exc:
+            if isinstance(exc, ClientError) and exc.response['Error']['Code'] == 'NoSuchKey':
+                return {}
             raise OutputHistoryException(exc)
