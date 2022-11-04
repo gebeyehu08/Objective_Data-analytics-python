@@ -6,6 +6,7 @@ from uuid import UUID
 from jupyter_client.kernelspec import KernelSpec
 from jupyter_client.manager import AsyncKernelManager
 
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
@@ -15,26 +16,21 @@ class AsyncChecklockKernelManager(AsyncKernelManager):
     it dynamically creates the spec for ChecklockKernel, providing the notebook_name, db_engine
     and check_id.
     """
-    def __init__(
-        self,
-        notebook_name: str,
-        db_engine: SupportedDBEngine,
-        check_id: UUID,
-        **kwargs,
-    ):
+    def __init__(self, kernel_config: ChecklockKernelConfig, **kwargs,):
         super().__init__(**kwargs)
-        self._kernel_spec = self._get_kernel_spec(
-            notebook_name, db_engine, check_id,
-        )
+        self._kernel_spec = self._get_kernel_spec(kernel_config)
 
     @staticmethod
-    def _get_kernel_spec(
-        notebook_name: str, db_engine: SupportedDBEngine, check_id: UUID
-    ) -> KernelSpec:
+    def _get_kernel_spec(kernel_config: ChecklockKernelConfig) -> KernelSpec:
         argv = [
             "python3", "-m", "checklock_holmes.checklock_kernel.kernel", "-f", "{connection_file}",
-            "--notebook", notebook_name, "--db_engine", db_engine.value, "--check_id", str(check_id)
+            "--notebook", kernel_config.notebook_name,
+            "--db_engine", kernel_config.db_engine.value,
+            "--check_id", str(kernel_config.check_id)
         ]
+        if kernel_config.store_outputs:
+            argv.append("--store-outputs")
+
         return KernelSpec(
             argv=argv,
             env={},

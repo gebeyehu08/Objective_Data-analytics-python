@@ -9,6 +9,7 @@ from checklock_holmes.checklock_nb_client.execution_manager import (
 from checklock_holmes.checklock_nb_client.notebook_client import (
     ChecklockNBClient
 )
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
@@ -19,9 +20,7 @@ class ChecklockNBEngine(NBClientEngine):
     async def async_execute_notebook(
         cls,
         nb: nbformat.NotebookNode,
-        notebook_name: str,
-        db_engine: SupportedDBEngine,
-        check_id: UUID,
+        kernel_config: ChecklockKernelConfig,
     ) -> nbformat.NotebookNode:
         """
         A wrapper to handle notebook execution tasks.
@@ -42,9 +41,7 @@ class ChecklockNBEngine(NBClientEngine):
         try:
             await cls.async_execute_managed_notebook(
                 nb_man=nb_man,
-                notebook_name=notebook_name,
-                db_engine=db_engine,
-                check_id=check_id,
+                kernel_config=kernel_config,
             )
         finally:
             nb_man.cleanup_pbar()
@@ -56,15 +53,11 @@ class ChecklockNBEngine(NBClientEngine):
     async def async_execute_managed_notebook(
         cls,
         nb_man: WatsonExecutionManager,
-        notebook_name: str,
-        db_engine: SupportedDBEngine,
-        check_id: UUID,
+        kernel_config: ChecklockKernelConfig,
     ) -> nbformat.NotebookNode:
         nb_client = ChecklockNBClient(
             nb_man=nb_man,
-            notebook_name=notebook_name,
-            db_engine=db_engine,
-            check_id=check_id,
+            kernel_config=kernel_config,
             timeout=cls.EXECUTION_TIMEOUT,
             interrupt_on_timeout=True,
             allow_errors=True,
