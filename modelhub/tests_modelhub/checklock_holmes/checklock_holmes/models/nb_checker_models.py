@@ -12,6 +12,7 @@ from pydantic import BaseModel, validator
 from pydantic.fields import Field
 
 from checklock_holmes.utils.constants import NOTEBOOK_EXTENSION
+from checklock_holmes.utils.helpers import create_dir_if_not_exists
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
@@ -23,14 +24,6 @@ class CellError(BaseModel):
 class CellTiming(BaseModel):
     number: int
     time: float
-
-
-def _check_dir(dir_name: Optional[str]) -> None:
-    """
-    Helper for creating provided issues/scripts directory if it does not exist
-    """
-    if dir_name and not os.path.exists(dir_name):
-        os.makedirs(dir_name)
 
 
 class NoteBookCheckSettings(BaseModel):
@@ -74,7 +67,7 @@ class NoteBookCheckSettings(BaseModel):
         """
         Creates issue directory if provided dir does not exist
         """
-        _check_dir(dir)
+        create_dir_if_not_exists(dir)
         return dir
 
     @validator('compared_outputs_dir')
@@ -90,7 +83,7 @@ class NoteBookCheckSettings(BaseModel):
         """
         Creates scripts directory if provided dir does not exist
         """
-        _check_dir(dir)
+        create_dir_if_not_exists(dir)
         return dir
 
 

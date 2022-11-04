@@ -19,6 +19,7 @@ venv.bak/
 github_nb_issues/
 output_reports/
 .notebook_scripts
+.output_files
 
 # mypy stuff
 .mypy_cache
