@@ -147,6 +147,8 @@ class DocusaurusTranslator(Translator):
         """The root of the tree.
         https://docutils.sourceforge.io/docs/ref/doctree.html#document"""
         self.title = getattr(self.builder, 'current_docname')
+        if ('explore-data' in self.title):
+            print("DOCUMENT:", node)
 
 
     def depart_document(self, node):
@@ -588,7 +590,9 @@ class DocusaurusTranslator(Translator):
                 self.add('\n<div className="jupyter-notebook-in-output">\n\n')
                 self.add('\n<div className="jupyter-notebook-in">In:</div>\n\n')
                 self.add('<div className="jupyter-notebook-input">\n\n')
-                if node['language'] == 'pycon3' or node['language'] == 'jupyter-notebook':
+                if (node['language'] == 'pycon'
+                    or node['language'] == 'pycon3' 
+                    or node['language'] == 'jupyter-notebook'):
                     self.add('```python\n')
                 else:
                     self.add('```\n')
