@@ -130,13 +130,13 @@ def test_fillna_w_methods(engine) -> None:
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
             # last 3 rows are non-deterministic because A, B, C were initially all nulls
-            [ANY,  1,    3,    1] + [ANY] * 4,
+            [0,  1,    3,    1] + [ANY] * 4,
             [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
             [2,    1,    3, None,    4,    1,  'b', datetime(2022, 1, 5)],
             [3,    1,    2, None,    0,    1,  'c', datetime(2022, 1, 5)],
-            [ANY, 1, 3, 1] + [ANY] * 4,
+            [4, 1, 3, 1] + [ANY] * 4,
             [5,    1,    4, None,    1,    1,  'd', datetime(2022, 1, 5)],
-            [ANY,  1,    3,    1] + [ANY] * 4,
+            [6,  1,    3,    1] + [ANY] * 4,
             [7,    1,    3,    1,    4,    1,  'f', datetime(2022, 1, 5)],
         ]
     )
@@ -150,13 +150,13 @@ def test_fillna_w_methods(engine) -> None:
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
             # last 3 rows are non-deterministic because A, B, C are all nulls
-            [ANY, None, None, None] + [ANY] * 4,
+            [0, None, None, None] + [ANY] * 4,
             [1,    3,    4,    1,    1,    1,  'd', datetime(2022, 1, 2)],
             [2, None,    3,    1,    4,  ANY,  'b',                 ANY],
             [3, None,    2,    1,    0,  ANY,  'c',                 ANY],
-            [ANY, None, None, None] + [ANY] * 4,
+            [4, None, None, None] + [ANY] * 4,
             [5,    1,    2,    1,    0,  ANY,  'd', datetime(2022, 1, 5)],
-            [ANY, None, None, None] + [ANY] * 4,
+            [6, None, None, None] + [ANY] * 4,
             [7, None, None,    1,  ANY,  ANY,  'f',                 ANY],
         ],
     )
