@@ -562,11 +562,12 @@ class DocusaurusTranslator(Translator):
 
             if node['language'] != 'jupyter-notebook-out':
                 for i, line in enumerate(node_lines):
-                    if((line[0:3] == ">>>") or (node['language'] == 'jupyter-notebook')):
+                    if((line[0:3] == ">>>") or (line[0:3] == '...') 
+                        or (node['language'] == 'jupyter-notebook')):
                         if (i != 0): 
                             node_input += "\n"
-                        if (line[0:3] == '>>>'):
-                            node_input += line[3:]
+                        if (line[0:3] == '>>>' or line[0:3] == '...'):
+                            node_input += line[4:]
                         else:
                             node_input += line
                         output_index = i+1
@@ -856,6 +857,8 @@ class DocusaurusTranslator(Translator):
     def visit_desc_parameter(self, node):
         """Single method/class parameter."""
         self.add('<span className="parameter" id="'+ node[0].astext() + '">')
+        # do not escape the parameters printed in visit_Text(), by setting self._escape_text to False
+        self._escape_text = False
 
 
     def depart_desc_parameter(self, node):

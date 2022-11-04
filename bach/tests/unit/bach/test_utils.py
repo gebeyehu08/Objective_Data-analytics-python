@@ -5,8 +5,8 @@ import pytest
 from bach.expression import Expression
 from bach.sql_model import BachSqlModel
 from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, \
-    validate_node_column_references_in_sorting_expressions, get_name_from_sql_column_name, \
-    get_sql_column_name, merge_sql_statements
+    validate_node_column_references_in_sorting_expressions, \
+    get_sql_column_name, merge_sql_statements, athena_construct_engine_url
 from sql_models.model import Materialization, CustomSqlModelBuilder
 from sql_models.util import is_athena
 
@@ -71,8 +71,8 @@ def test_get_sql_column_name(dialect):
                        'test'),
         ColNameEncoded('Test',
                        'Test',
-                       '__esc_krsxg5a',
-                       '__esc_krsxg5a'),
+                       'test__bs6gmepvkq',
+                       'test__bs6gmepvkq'),
         ColNameEncoded('test_test',
                        'test_test',
                        'test_test',
@@ -84,7 +84,7 @@ def test_get_sql_column_name(dialect):
         ColNameEncoded('012345test',
                        '012345test',
                        '012345test',
-                       '__esc_gaytemzugv2gk43u'),
+                       '_012345test__kozpee4by6'),
         ColNameEncoded('_',
                        '_',
                        '_',
@@ -95,20 +95,36 @@ def test_get_sql_column_name(dialect):
                        '__column0'),
         ColNameEncoded('0_00.1%',
                        '0_00.1%',
-                       '__esc_gbptambogesq',
-                       '__esc_gbptambogesq'),
+                       '0_001__bgc5mnmich',
+                       '_0_001__bgc5mnmich'),
         ColNameEncoded('_X!@',
                        '_X!@',
-                       '__esc_l5mccqa',
-                       '__esc_l5mccqa'),
+                       '_x__owpedgg7pz',
+                       '_x__owpedgg7pz'),
         ColNameEncoded('test_X!@_test_123',
                        'test_X!@_test_123',
-                       '__esc_orsxg5c7laquax3umvzxixzrgizq',
-                       '__esc_orsxg5c7laquax3umvzxixzrgizq'),
+                       'test_x_test_123__bdsu7fgwbz',
+                       'test_x_test_123__bdsu7fgwbz'),
+        ColNameEncoded('¼ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ',
+                       '¼ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ',
+                       '14aaaaaaceeeeiiiinooooouuuuyaaaaaaceeeeiiiinooooouuuuy__7ix4q3jx7f',
+                       '_14aaaaaaceeeeiiiinooooouuuuyaaaaaaceeeeiiiinooooouuuuy__7ix4q3jx7f'),
+        ColNameEncoded('¶',
+                       '¶',
+                       'empty__prnak4rr43',
+                       'empty__prnak4rr43'),
+        ColNameEncoded('¶¶',
+                       '¶¶',
+                       'empty__z4ywntjpwq',
+                       'empty__z4ywntjpwq'),
         ColNameEncoded('Aa_!#!$*(aA®Řﬦ‎	⛔',
                        'Aa_!#!$*(aA®Řﬦ‎	⛔',
-                       '__esc_ifqv6ijdeescukdbihbk5rmy56wknyuarye6fg4u',
-                       '__esc_ifqv6ijdeescukdbihbk5rmy56wknyuarye6fg4u')
+                       'aa_aar__ad4drrvdk2',
+                       'aa_aar__ad4drrvdk2'),
+        ColNameEncoded('__ROOT__test',
+                       '__ROOT__test',
+                       '__root__test__b44plskaze',
+                       'x___root__test__b44plskaze')
     ]
     for test in tests:
         expected = getattr(test, dialect.name)
@@ -148,10 +164,9 @@ def test_get_sql_column_name_raises_exception(dialect):
             assert error is not None, f'Expected error not raised; {case_msg}.'
 
 
-def test_get_sql_column_name_back_and_forth(dialect):
-    # Test that:
-    # 1. get_sql_column_name() can turn series names into valid column name.
-    # 2. get_name_from_sql_column_name() can translate the column names back to series names.
+def test_get_sql_column_name_more_names(dialect):
+    # Just test some additional names, to make sure they can be encoded with all dialects. Without
+    # going to the trouble of defining expected outputs
     names = [
         'test',
         'test' * 15 + 'tes',
@@ -176,9 +191,7 @@ def test_get_sql_column_name_back_and_forth(dialect):
     ]
     for name in names:
         sql_column_name = get_sql_column_name(dialect, name)
-        reverted_name = get_name_from_sql_column_name(name)
         assert is_valid_column_name(dialect, sql_column_name)
-        assert name == reverted_name
 
 
 def test_validate_sorting_expressions(dialect) -> None:
@@ -225,3 +238,59 @@ def test_merge_sql_statements(dialect):
     if is_athena(dialect):
         expected = ['select test', 'select x', 'drop table y']
     assert merge_sql_statements(dialect, ['select test', 'select x', 'drop table y']) == expected
+
+
+@pytest.mark.db_independent('Does not take a dialect/engine as parameter')
+def test_athena_construct_engine_url():
+    # test that all parts of the url are properly escaped. Even if the test string is not valid for a lot
+    # of these parameters. The test string contains two characters that need to be escaped: `+` and `%`
+    result = athena_construct_engine_url(
+        aws_access_key_id='+test%',
+        aws_secret_access_key='+test%',
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+        athena_work_group='+test%',
+        catalog_name='+test%',
+    )
+    assert result == (
+        'awsathena+rest://%2Btest%25:%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25&work_group=%2Btest%25&catalog_name=%2Btest%25'
+    )
+
+    result = athena_construct_engine_url(
+        aws_access_key_id='+test%',
+        aws_secret_access_key='+test%',
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+    )
+    assert result == (
+        'awsathena+rest://%2Btest%25:%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25'
+    )
+
+    result = athena_construct_engine_url(
+        aws_access_key_id='+test%',
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+    )
+    assert result == (
+        'awsathena+rest://%2Btest%25@athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25'
+    )
+
+    result = athena_construct_engine_url(
+        region_name='+test%',
+        schema_name='+test%',
+        s3_staging_dir='+test%',
+    )
+    assert result == (
+        'awsathena+rest://athena.%2Btest%25.amazonaws.com:443/'
+        '%2Btest%25'
+        '?s3_staging_dir=%2Btest%25'
+    )

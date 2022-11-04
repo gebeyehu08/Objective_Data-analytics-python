@@ -30,10 +30,12 @@ class NoteBookCheckSettings(BaseModel):
     engines_to_check: List[SupportedDBEngine]
     notebooks_to_check: List[str]
     github_issues_dir: str
+    compared_outputs_dir: str
     dump_nb_scripts_dir: Optional[str] = None
     display_cell_timing: bool = False
     start_date: Optional[datetime.date] = None
     end_date: Optional[datetime.date] = None
+    compare_notebook_outputs: bool = False
     update_history: bool = False
 
     @validator('engines_to_check')
@@ -66,6 +68,14 @@ class NoteBookCheckSettings(BaseModel):
         Creates issue directory if provided dir does not exist
         """
         create_dir_if_not_exists(dir)
+        return dir
+
+    @validator('compared_outputs_dir')
+    def _check_cout_dir(cls, dir: str) -> str:
+        """
+        Creates issue directory if provided dir does not exist
+        """
+        _check_dir(dir)
         return dir
 
     @validator('dump_nb_scripts_dir')

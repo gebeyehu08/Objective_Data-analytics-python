@@ -129,7 +129,8 @@
 
   "LocationStack": {
     "documentation": [
-      { "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \ndeterministically describes where an event took place from global to specific. \nThe whole stack (list) is needed to exactly pinpoint where in the UI the event originated.", "type": "text", "target": "primary" }
+      { "description": "The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically describes where in the UI of an application an Event took place.", "type": "text", "target": "primary" },
+      { "description": "The LocationStack is an ordered list (a stack) containing a hierarchy of [LocationContexts](/taxonomy/reference/location-contexts/overview.md), which deterministically describes where in the UI of an application an [Event](/taxonomy/reference/events/overview.md) took place.", "type": "markdown", "target": "primary" }
     ],
     "type": "array",
     "items": {
@@ -137,7 +138,7 @@
       "discriminator": "_type"
     },
     "validation": {
-      "description": "TODO explain the basic requirements of a valid Location Stack",
+      "description": "LocationStack items are uniquely identified by a set of `{_type, id}` properties.",
       "rules": [
         {
           "type": "UniqueContext",
@@ -153,7 +154,8 @@
 
   "GlobalContexts": {
     "documentation": [
-      { "description": "Global contexts add global / general information about the event. They carry information that is not \nrelated to where the Event originated (location), such as device, platform or business data.", "type": "text", "target": "primary" }
+      { "description": "GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and marketing information. They do not carry information related to where the Event originated (location), which instead is captured by the LocationStack.", "type": "text", "target": "primary" },
+      { "description": "GlobalContexts add global/general information about the state in which an [Event](/taxonomy/reference/events/overview.md) happened, such as a user's [identity](/taxonomy/reference/global-contexts/IdentityContext.md) and [marketing information](/taxonomy/reference/global-contexts/MarketingContext.md). They do not carry information related to where the [Event](/taxonomy/reference/events/overview.md) originated (location), which instead is captured by the [LocationStack](/taxonomy/reference/types/LocationStack.md).", "type": "markdown", "target": "primary" }
     ],
     "type": "array",
     "items": {
@@ -161,7 +163,7 @@
       "discriminator":"_type"
     },
     "validation": {
-      "description": "TODO explain the basic requirements of a valid Global Contexts",
+      "description": "GlobalContexts require an `ApplicationContext`, and its items are uniquely identified by a set of `{_type, id}` properties.",
       "rules": [
         {
           "type": "RequiresGlobalContext",
@@ -191,7 +193,8 @@
   "events": {
     "AbstractEvent": {
       "documentation": [
-        { "description": "This is the abstract parent of all Events.", "type": "text", "target": "primary" }
+        { "description": "The abstract parent of all Events.", "type": "text", "target": "primary" },
+        { "description": "Describe interactive and non-interactive [Events](/taxonomy/reference/events/overview.md).", "type": "markdown", "target": "secondary" }
       ],
       "properties":{
         "_schema_version": {
@@ -262,7 +265,7 @@
     "InputChangeEvent": {
       "documentation": [
         { "description": "Event triggered when user input is modified.", "type": "text", "target": "primary" },
-        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that's triggered when user input is modified. Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value from the user.", "type": "markdown", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that's triggered when user input is modified. Optionally, add an [InputValueContext](/taxonomy/reference/global-contexts/InputValueContext.md) to track the input value from the user.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "InteractiveEvent",
@@ -295,12 +298,6 @@
         { "description": "The parent of [Events](/taxonomy/events) that are the direct result of a user interaction, e.g. a button click.", "type": "markdown", "target": "primary" }
       ],
       "parent": "AbstractEvent",
-      "properties": {
-        "location_stack": {
-          "type": "LocationStack",
-          "optional": false
-        }
-      },
       "validation": {
         "description": "TODO: explain why PathContext is validated, for example",
         "rules": [
@@ -386,7 +383,7 @@
     "PressEvent": {
       "documentation": [
         { "description": "An InteractiveEvent that is sent when a user presses on a pressable element \n(like a link, button, icon).", "type": "text", "target": "primary" },
-        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is sent when a user presses on a pressable element (like a link, button, icon). Optionally, add an [InputValueContext](../global-contexts/InputValueContext.md) to track the input value(s) from the user.", "type": "markdown", "target": "primary" },
+        { "description": "An [InteractiveEvent](/taxonomy/reference/events/InteractiveEvent.md) that is sent when a user presses on a pressable element (like a link, button, icon). Optionally, add an [InputValueContext](/taxonomy/reference/global-contexts/InputValueContext.md) to track the input value(s) from the user.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all the properties.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "InteractiveEvent",
@@ -453,13 +450,15 @@
     },
     "AbstractGlobalContext": {
       "documentation": [
-        { "description": "This is the abstract parent of all Global Contexts. Global contexts add general information to an Event.", "type": "text", "target": "primary" }
+        { "description": "The abstract parent of all Global Contexts. Global Contexts capture general data about the state in which an Event happened, such as user's identity & marketing information.", "type": "text", "target": "primary" },
+        { "description": "[Global Contexts](/taxonomy/reference/global-contexts/overview.md) capture general data about the state in which an [Event](/taxonomy/reference/events/overview.md) happened, such as a user's [identity](/taxonomy/reference/global-contexts/IdentityContext.md) & [marketing information](/taxonomy/reference/global-contexts/MarketingContext.md).", "type": "markdown", "target": "secondary" }
       ],
       "parent": "AbstractContext"
     },
     "AbstractLocationContext": {
       "documentation": [
-        { "description": "AbstractLocationContext are the abstract parents of all Location Contexts.\nLocation Contexts are meant to describe where an event originated from in the visual UI.", "type": "text", "target": "primary" }
+        { "description": "The abstract parent of all Location Contexts. Location Contexts describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "text", "target": "primary" },
+        { "description": "[Location Contexts](/taxonomy/reference/location-contexts/overview.md) describe the exact position in an application's UI from where an Event was triggered. A location stack is composed of a hierarchical stack of LocationContexts; the order defines the hierarchy.", "type": "markdown", "target": "secondary" }
       ],
       "parent": "AbstractContext"
     },
@@ -527,7 +526,7 @@
     "IdentityContext": {
       "documentation": [
         { "description": "A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "text", "target": "primary" },
-        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md)  to track the identity of users across sessions, platforms, devices. Multiple can be present.", "type": "markdown", "target": "primary" },
+        { "description": "A [GlobalContext](/taxonomy/reference/global-contexts/overview.md)  to track the identity of users across sessions, platforms, devices. Multiple can be present.\nThe `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.\nThe `value` field should contain the unique identifier within that scope.", "type": "markdown", "target": "primary" },
         { "description": ":::info setting of properties\nThe tracker will automatically set all properties when using the official Plugin. On manual creation, `id` and `value` must be provided.\n:::", "type": "markdown", "target": "admonition" }
       ],
       "parent": "AbstractGlobalContext",
@@ -604,7 +603,7 @@
       "parent": "AbstractGlobalContext",
       "properties": {
         "source": {
-          "description": "Identifies the advertiser, site, publication, etc.",
+          "description": "The advertiser, site, publication, etc.",
           "type": "string"
         },
         "medium": {
@@ -612,7 +611,7 @@
           "type": "string"
         },
         "campaign": {
-          "description": "Individual campaign name, slogan, promo code, etc.",
+          "description": "Campaign name, slogan, promo code, etc.",
           "type": "string"
         },
         "term": {
@@ -621,12 +620,12 @@
           "nullable": true
         },
         "content": {
-          "description": "Used to differentiate similar content, or links within the same ad.",
+          "description": "To differentiate similar content, or links within the same ad.",
           "type": "string",
           "nullable": true
         },
         "source_platform": {
-          "description": "To differentiate similar content, or links within the same ad.",
+          "description": "Identifies the platform where the marketing activity was undertaken.",
           "type": "string",
           "nullable": true
         },

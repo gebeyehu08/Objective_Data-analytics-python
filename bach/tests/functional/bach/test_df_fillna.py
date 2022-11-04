@@ -26,7 +26,7 @@ DATA = [
 def test_basic_fillna(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
     pdf = pdf[list("ABCDE")]
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     df = df.astype('int64')
 
     result = df.fillna(value=0)
@@ -55,7 +55,7 @@ def test_basic_fillna(engine) -> None:
 
 def test_fillna_w_methods_against_pandas(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     sort_by = ['A', 'B', 'C']
     ascending = [False, True, False]
@@ -81,6 +81,14 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
         check_names=False,
     )
 
+    # test selecting from ffilled df
+    pd.testing.assert_frame_equal(
+        fillna_check_ffill_expected[fillna_check_ffill_expected.F=='f'],
+        fillna_check_ffill_result[fillna_check_ffill_result.F=='f'].to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
     fillna_check_bfill_expected = check_sort_expected.fillna(method='bfill')
     fillna_check_bfill_result = check_sort_result.fillna(method='bfill')
     pd.testing.assert_frame_equal(
@@ -91,9 +99,40 @@ def test_fillna_w_methods_against_pandas(engine) -> None:
     )
 
 
+def test_ffill_propagation_on_groups(engine) -> None:
+    pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
+    pdf['groups'] = pdf.B > 0
+
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
+
+    df_ffill = df.ffill(window=df.groupby(by='groups').window()).sort_index()
+    pdf_ffill = pdf.groupby('groups').ffill()
+
+    pd.testing.assert_frame_equal(
+        pdf_ffill,
+        df_ffill.to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
+    # test without index
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index().sort_values('_index_0')
+    pdf = pdf.reset_index().rename(columns={'index': '_index_0'})
+
+    df_ffill = df.ffill(window=df.groupby(by='groups').window()).sort_values('_index_0')
+    pdf_ffill = pdf.groupby('groups').ffill()
+
+    pd.testing.assert_frame_equal(
+        pdf_ffill,
+        df_ffill.to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
+
 def test_fillna_w_methods(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
 
     sort_by = ['A', 'B', 'C']
     ascending = [False, True, False]
@@ -117,19 +156,18 @@ def test_fillna_w_methods(engine) -> None:
 
     result_ffill = df.fillna(method='ffill', sort_by=sort_by, ascending=ascending)
     assert_equals_data(
-        result_ffill,
+        result_ffill.sort_index(),
         use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
+            [0,  1,    3,    1] + [ANY] * 4,
             [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
-            [5,    1,    4, None,    1,    1,  'd', datetime(2022, 1, 5)],
-            [3,    1,    2, None,    0,    1,  'c', datetime(2022, 1, 5)],
             [2,    1,    3, None,    4,    1,  'b', datetime(2022, 1, 5)],
+            [3,    1,    2, None,    0,    1,  'c', datetime(2022, 1, 5)],
+            [4,  1,    3,    1] + [ANY] * 4,
+            [5,    1,    4, None,    1,    1,  'd', datetime(2022, 1, 5)],
+            [6,  1,    3,    1] + [ANY] * 4,
             [7,    1,    3,    1,    4,    1,  'f', datetime(2022, 1, 5)],
-            # last 3 rows are non-deterministic because A, B, C were initially all nulls
-            [ANY,  1,    3,    1] + [ANY] * 4,
-            [ANY,  1,    3,    1] + [ANY] * 4,
-            [ANY,  1,    3,    1] + [ANY] * 4,
         ],
     )
 
@@ -141,22 +179,21 @@ def test_fillna_w_methods(engine) -> None:
         use_to_pandas=True,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
+            [0, None, None, None] + [ANY] * 4,
             [1,    3,    4,    1,    1,    1,  'd', datetime(2022, 1, 2)],
-            [5,    1,    2,    1,    0,  ANY,  'd', datetime(2022, 1, 5)],
-            [3, None,    2,    1,    0,  ANY,  'c',                 ANY],
             [2, None,    3,    1,    4,  ANY,  'b',                 ANY],
+            [3, None,    2,    1,    0,  ANY,  'c',                 ANY],
+            [4, None, None, None] + [ANY] * 4,
+            [5,    1,    2,    1,    0,  ANY,  'd', datetime(2022, 1, 5)],
+            [6, None, None, None] + [ANY] * 4,
             [7, None, None,    1,  ANY,  ANY,  'f',                 ANY],
-            # last 3 rows are non-deterministic because A, B, C are all nulls
-            [ANY, None, None, None] + [ANY] * 4,
-            [ANY, None, None, None] + [ANY] * 4,
-            [ANY, None, None, None] + [ANY] * 4,
         ],
     )
 
 
 def test_fillna_w_methods_w_sorted_df(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
+    df = DataFrame.from_pandas(engine=engine, df=pdf).sort_index()
 
     result_ffill = df.fillna(method='ffill')
     assert_equals_data(
@@ -195,7 +232,7 @@ def test_fillna_w_methods_w_sorted_df(engine) -> None:
 
 def test_fillna_errors(engine):
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf)
     with pytest.raises(ValueError, match=r'cannot specify both "method" and "value".'):
         df.fillna(value=0, method='ffill')
 

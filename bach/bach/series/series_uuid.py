@@ -136,7 +136,7 @@ class SeriesUuid(Series):
 
     def to_pandas_info(self) -> Optional[ToPandasInfo]:
         if is_athena(self.engine) or is_bigquery(self.engine):
-            return ToPandasInfo('object', UUID)
+            return ToPandasInfo('object', lambda val: val if val is None else UUID(val))
         return None
 
     def _comparator_operation(self, other, comparator, other_dtypes=('uuid', 'string')):

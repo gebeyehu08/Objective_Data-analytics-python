@@ -175,8 +175,14 @@ interactive and non-interactive events in a standardized way. Together with the 
 .. doctest:: open-taxonomy
 	:skipif: engine is None
 
-	>>> df[df.day == '2022-01-10'].event_type.head()
-	Series([], Name: event_type, dtype: object)
+	>>> df[df.day == '2022-06-01'].event_type.head()
+	event_id
+	d1c72d21-4233-40dc-b93d-3323dbf4cf75                PressEvent
+	0928c734-8b6b-489d-905e-1c7a36257799            MediaLoadEvent
+	6a447240-dc52-4087-9fb7-65608479887d              VisibleEvent
+	2dd0c6d1-9973-4c77-979e-9a9f2fb26d9b    ApplicationLoadedEvent
+	bbebf1f5-46c7-4497-8edb-20b44ca458d9            MediaLoadEvent
+	Name: event_type, dtype: object
 
 .. _location-stack-and-global-contexts:
 

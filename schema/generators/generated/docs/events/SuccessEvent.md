@@ -1,33 +1,39 @@
 # SuccessEvent
+
 A [NonInteractiveEvent](/taxonomy/reference/events/NonInteractiveEvent.md) that is sent when a user action is successfully completed, like sending an email form.
 
-### Parent
-NonInteractiveEvent
+import Mermaid from '@theme/Mermaid'
 
-### All Parents
-AbstractEvent > NonInteractiveEvent
+<Mermaid chart={`
+    graph LR
+      AbstractEvent["AbstractEvent<span class='requires_context_and_properties'><span class='requires_context'>requires:<br />ApplicationContext<br /></span><span class='properties'>location_stack: LocationStack<br />global_contexts: GlobalContexts<br />id: uuid<br />time: integer<br /></span></span>"] --> NonInteractiveEvent;
+      NonInteractiveEvent -->       SuccessEvent["SuccessEvent<span class='properties'>message: string<br /></span>"];
+    class SuccessEvent diagramActive
+  `}
+  caption="Diagram: SuccessEvent inheritance"
+  baseColor="blue"
+  links={[
+{ name: 'AbstractEvent', to: '/taxonomy/events' }, { name: 'NonInteractiveEvent', to: '/taxonomy/reference/events/NonInteractiveEvent' },   ]}
+/>
 
-### Own Properties
-`string` message: Success message.
+### Requires
 
+None.
+
+### Properties
+
+|             | type   | description      |
+|:------------|:-------|:-----------------|
+| **message** | string | Success message. |
 ### Inherited Properties
-`LocationStack` location_stack: The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-`GlobalContexts` global_contexts: Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-`uuid` id: Unique identifier for a specific instance of an event.
-`integer` time: Timestamp indicating when the event was generated.
 
-### All Properties
-`LocationStack` location_stack: The location stack is an ordered list (stack), that contains a hierarchy of location contexts that 
-deterministically describes where an event took place from global to specific. 
-The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-`GlobalContexts` global_contexts: Global contexts add global / general information about the event. They carry information that is not 
-related to where the Event originated (location), such as device, platform or business data.
-`uuid` id: Unique identifier for a specific instance of an event.
-`integer` time: Timestamp indicating when the event was generated.
-`string` message: Success message.
+|                      | type                                                       | description                                                                                                                                                                                                                                                                    |
+|:---------------------|:-----------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **location\_stack**  | [LocationStack](/taxonomy/reference/types/LocationStack)   | The LocationStack is an ordered list (a stack) containing a hierarchy of LocationContexts, which deterministically describes where in the UI of an application an Event took place.                                                                                            |
+| **global\_contexts** | [GlobalContexts](/taxonomy/reference/types/GlobalContexts) | GlobalContexts add global/general information about the state in which an Event happened, such as a user's identity and marketing information. They do not carry information related to where the Event originated (location), which instead is captured by the LocationStack. |
+| **id**               | uuid                                                       | Unique identifier for a specific instance of an event.                                                                                                                                                                                                                         |
+| **time**             | integer                                                    | Timestamp indicating when the event was generated.                                                                                                                                                                                                                             |
+
 
 :::info setting of properties
 The tracker will automatically set all the properties. The message is an error code or short message captured from the occurring success event. This is purely for descriptive purposes.

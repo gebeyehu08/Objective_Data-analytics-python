@@ -27,10 +27,10 @@ Category 4, 5 and 6 are the exception, these need to be marked with the `skip_po
 
 """
 import os
-from urllib.parse import quote_plus
 
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
+from modelhub import athena_construct_engine_url
 from dotenv import dotenv_values
 
 from tests_modelhub.data_and_utils.utils import DBParams
@@ -131,20 +131,14 @@ def _get_athena_db_params() -> DBParams:
     if _DB_ATHENA_TEST_URL:
         url = _DB_ATHENA_TEST_URL
     else:
-        aws_access_key_id = quote_plus(_DB_ATHENA_AWS_ACCESS_KEY_ID)
-        aws_secret_access_key = quote_plus(_DB_ATHENA_AWS_SECRET_ACCESS_KEY)
-        region_name = quote_plus(_DB_ATHENA_REGION_NAME)
-        schema_name = quote_plus(_DB_ATHENA_SCHEMA_NAME)
-        s3_staging_dir = quote_plus(_DB_ATHENA_S3_STAGING_DIR)
-        athena_work_group = quote_plus(_DB_ATHENA_WORK_GROUP)
-        catalog_name = quote_plus(_DB_ATHENA_CATALOG_NAME)
-
-        url = (
-            f'awsathena+rest://'
-            f'{aws_access_key_id}:{aws_secret_access_key}'
-            f'@athena.{region_name}.amazonaws.com:443/'
-            f'{schema_name}?s3_staging_dir={s3_staging_dir}&work_group={athena_work_group}'
-            f'&catalog_name={catalog_name}'
+        url = athena_construct_engine_url(
+            aws_access_key_id=_DB_ATHENA_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=_DB_ATHENA_AWS_SECRET_ACCESS_KEY,
+            region_name=_DB_ATHENA_REGION_NAME,
+            schema_name=_DB_ATHENA_SCHEMA_NAME,
+            s3_staging_dir=_DB_ATHENA_S3_STAGING_DIR,
+            athena_work_group=_DB_ATHENA_WORK_GROUP,
+            catalog_name=_DB_ATHENA_CATALOG_NAME,
         )
     return DBParams(
         url=url,

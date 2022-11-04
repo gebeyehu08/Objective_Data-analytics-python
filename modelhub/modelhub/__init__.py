@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-__version__ = '0.0.26'
+__version__ = '0.0.27'
 
 from modelhub.modelhub import ModelHub
 from modelhub.aggregate import Aggregate
@@ -13,6 +13,7 @@ from modelhub.series import *
 
 # convenience import to allow users to use this without importing anything from bach
 from bach import display_sql_as_markdown
+from bach.utils import athena_construct_engine_url
 
 
 # Here we do a basic version check, to make sure we are on the most recent versions of objectiv-bach and

@@ -194,7 +194,9 @@ def objectiv_event_to_snowplow_payload(event: EventData, config: SnowplowConfig)
     if cookie_source == CookieIdSource.CLIENT:
         # only set domain_sessionid if we have a client_side id
         data["sid"] = cookie_id
-    elif cookie_source == CookieIdSource.BACKEND:
+    else:
+        # default user id is the backend one, in older data, the id is not set to either backend or client
+        # in that case we assume it's backend.
         # Unique identifier for a user, based on a cookie from the collector, so only set if the source was a cookie
         data["nuid"] = cookie_id
 

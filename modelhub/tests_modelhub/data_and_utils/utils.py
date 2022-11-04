@@ -30,11 +30,7 @@ def get_df_with_json_data_real(db_params: DBParams) -> bach.DataFrame:
     pdf = pd.DataFrame.from_records(TEST_DATA_JSON_REAL, columns=JSON_COLUMNS_REAL)
     pdf.set_index(pdf.columns[0], drop=False, inplace=True)
 
-    df = bach.DataFrame.from_pandas(
-        engine=engine,
-        df=pdf,
-        convert_objects=True,
-    )
+    df = bach.DataFrame.from_pandas(engine=engine, df=pdf)
     df['global_contexts'] = df.global_contexts.astype('json')
     df['location_stack'] = df.location_stack.astype('json')
     return df

@@ -39,6 +39,7 @@ entityNames.forEach((entityName) => {
       private readonly _properties;
       private readonly _rules;
       readonly documentation;
+      readonly type;
 
       /**
        * To ease working with arrays of entities we set their name in a new `name` property.
@@ -146,6 +147,13 @@ entityNames.forEach((entityName) => {
       }
 
       /**
+       * Gets whether this entity is a Type.
+       */
+      get isType() {
+        return this.type !== undefined;
+      }
+
+      /**
        * Gets the list of properties directly defined in this entity, not inherited.
        */
       get ownProperties() {
@@ -175,6 +183,13 @@ entityNames.forEach((entityName) => {
           );
         });
 
+        inheritedProperties = inheritedProperties.map((inheritedProperty) => ({
+          ...inheritedProperty,
+          _overridden: Object.keys(this._properties ?? []).find(
+            (propertyName) => propertyName === inheritedProperty.name
+          ),
+        }));
+
         return this._hydrateTypes(inheritedProperties);
       }
 
@@ -182,24 +197,37 @@ entityNames.forEach((entityName) => {
        * Gets all the properties of this entity, both inherited and its own.
        */
       get properties() {
-        return this._mergeBy('name', this.inheritedProperties, this.ownProperties);
+        return this._mergeBy(
+          'name',
+          this.inheritedProperties.map((inheritedProperty) => ({
+            ...inheritedProperty,
+            _inherited: true,
+          })),
+          this.ownProperties
+        );
       }
 
       /**
        * Gets the list of rules directly defined in this entity, not inherited.
        */
       get ownRules() {
-        return this._rules;
+        return [
+          ...this._rules,
+          ...this.properties.reduce((rules, property) => {
+            rules.push(...(property._rules ?? []));
+            return rules;
+          }, []),
+        ];
       }
 
       /**
-       * Gets the list of rules inherited from parents.
+       * Gets the list of rules inherited from parents and properties.
        */
       get inheritedRules() {
         let inheritedRules = [];
 
         this.parents.forEach((parent) => {
-          inheritedRules = [...inheritedRules, ...parent._rules];
+          inheritedRules = [...inheritedRules, ...parent.ownRules];
         });
 
         return inheritedRules;
@@ -260,6 +288,9 @@ entityNames.forEach((entityName) => {
                 ...property,
                 // Enrich with description from type definition. Text primary, since properties have no markdowns.
                 description: typeDefinition.getDescription({ type: 'text', target: 'primary' }),
+                // Flatten validation.rules block onto _rules.
+                _rules:
+                  typeDefinition?.validation?.rules.map((rule) => ({ ...rule, _inheritedFrom: property.type })) ?? [],
               };
             default:
               return property;
@@ -340,12 +371,23 @@ export function getEntities(options?: {
   isParent?: boolean;
   isLocationContext?: boolean;
   isGlobalContext?: boolean;
+  isType?: boolean;
   exclude?: Array<string>;
   include?: Array<string>;
   sortBy?: string;
 }) {
-  const { isContext, isEvent, isAbstract, isParent, isLocationContext, isGlobalContext, exclude, include, sortBy } =
-    options ?? {};
+  const {
+    isContext,
+    isEvent,
+    isAbstract,
+    isParent,
+    isLocationContext,
+    isGlobalContext,
+    isType,
+    exclude,
+    include,
+    sortBy,
+  } = options ?? {};
   const entities = [];
 
   for (let [_, entity] of entitiesMap) {
@@ -356,6 +398,7 @@ export function getEntities(options?: {
       (isParent === undefined || isParent === entity.isParent) &&
       (isLocationContext === undefined || isLocationContext === entity.isLocationContext) &&
       (isGlobalContext === undefined || isGlobalContext === entity.isGlobalContext) &&
+      (isType === undefined || isType === entity.isType) &&
       (exclude === undefined || !exclude.includes(entity.name))
     ) {
       entities.push(entity);
@@ -401,4 +444,17 @@ export function getEvents(options?: {
   sortBy?: string;
 }) {
   return getEntities({ ...options, isEvent: true });
+}
+
+/**
+ * Gets a list of enriched types from the BaseSchema. By default, returns all supported types.
+ */
+export function getTypes(options?: {
+  isLocationStack?: boolean;
+  isGlobalContexts?: boolean;
+  exclude?: Array<string>;
+  include?: Array<string>;
+  sortBy?: string;
+}) {
+  return getEntities({ ...options, isType: true });
 }

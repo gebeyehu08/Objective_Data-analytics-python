@@ -17,6 +17,7 @@ venv.bak/
 
 # generated scripts and issues for notebooks
 github_nb_issues/
+output_reports/
 .notebook_scripts
 .output_files
 
