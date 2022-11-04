@@ -247,6 +247,17 @@ Below the share of new users per day is calculated.
 .. doctest:: modelhub
 	:skipif: engine is None
 
+	>>> # We'll do a lot of operations on the data in the df DataFrame. To make this easier for the
+	>>> # BigQuery, we tell Bach to materialize the current DataFrame as temporary table.
+	>>> # This statement has no direct effect, but any invocation of head() on the DataFrame later
+	>>> # on will consist of two queries: one to create a temporary table with the current state of the
+	>>> # DataFrame, and one that queries that table and does subsequent operations.
+	>>> if is_bigquery(df.engine):
+	...     df = df.materialize(materialization='temp_table')
+
+.. doctest:: modelhub
+	:skipif: engine is None
+
 	>>> # calculate the share of new users per day using results from two aggregation models
 	>>> new_user_share = modelhub.agg.unique_users(df[df.is_new_user]) / modelhub.agg.unique_users(df)
 	>>> new_user_share.sort_index(ascending=False).head(10)
@@ -277,17 +288,6 @@ Crunch data further with the Bach modeling library
 All results from the model hub are in the form of a Bach :doc:`DataFrame 
 <../bach/api-reference/DataFrame/index>` or :doc:`Series <../bach/api-reference/Series/index>`. This makes 
 the open model hub and Bach work seamlessly together.
-
-.. doctest:: modelhub
-	:skipif: engine is None
-
-	>>> # We'll do a lot of operations on the data in the df DataFrame. To make this easier for the
-	>>> # BigQuery, we tell Bach to materialize the current DataFrame as temporary table.
-	>>> # This statement has no direct effect, but any invocation of head() on the DataFrame later
-	>>> # on will consist of two queries: one to create a temporary table with the current state of the
-	>>> # DataFrame, and one that queries that table and does subsequent operations.
-	>>> if is_bigquery(df.engine):
-	...     df = df.materialize(materialization='temp_table')
 
 .. doctest:: modelhub
 	:skipif: engine is None
