@@ -22,3 +22,4 @@ export const SUPPORTED_PLATFORMS = [
 
 export * from './initializeTransport';
 export * from './makeSnowplowContexts';
+export * from './makeSnowplowStructuredEvent';

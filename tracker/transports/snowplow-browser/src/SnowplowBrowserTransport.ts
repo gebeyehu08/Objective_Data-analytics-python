@@ -1,5 +1,5 @@
 import { NonEmptyArray, TrackerInterface, TrackerTransportInterface, TransportableEvent } from '@objectiv/tracker-core';
-import { initializeTransport, makeSnowplowContexts } from '@objectiv/transport-snowplow-common';
+import { initializeTransport, makeSnowplowStructuredEvent } from '@objectiv/transport-snowplow-common';
 import { trackStructEvent } from '@snowplow/browser-tracker';
 
 /**
@@ -20,12 +20,7 @@ export class SnowplowBrowserTransport implements TrackerTransportInterface {
    */
   async handle(...args: NonEmptyArray<TransportableEvent>): Promise<Response | void> {
     (await Promise.all(args)).forEach((event) => {
-      trackStructEvent({
-        action: event._type,
-        category: `[${event._types.map((_type) => `"${_type}"`).join(',')}]`,
-        property: event.id,
-        context: makeSnowplowContexts(event),
-      });
+      trackStructEvent(makeSnowplowStructuredEvent(event));
     });
   }
 
