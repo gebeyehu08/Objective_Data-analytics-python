@@ -147,8 +147,6 @@ class DocusaurusTranslator(Translator):
         """The root of the tree.
         https://docutils.sourceforge.io/docs/ref/doctree.html#document"""
         self.title = getattr(self.builder, 'current_docname')
-        if ('explore-data' in self.title):
-            print("DOCUMENT:", node)
 
 
     def depart_document(self, node):
