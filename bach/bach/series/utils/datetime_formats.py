@@ -276,6 +276,7 @@ def _split_format_string_V(date_format: str) -> List[str]:
     """
     Split the date format string in a list of format strings. Each occurrence of the format code `%V` will
     be a separate format string in the resulting list, otherwise the format string is not split up.
+    See inline comments of parse_c_code_to_athena_expression() on why one would like to do this.
 
     Examples:
     _split_format_string_V('%Y-%m-%d') == ['%Y-%m-%d']                          # zero '%V': no splits
@@ -325,6 +326,16 @@ def parse_c_code_to_athena_expression(series_expression: Expression, date_format
     # Athena docs
     # format_datetime(): https://trino.io/docs/current/functions/datetime.html#java-date-functions
     # date_format():     https://trino.io/docs/current/functions/datetime.html#mysql-date-functions
+
+    # Athena's date_format() supports most of the formatting codes that we are interested in.
+    # Most non-supported codes can be directly translated to a supported one or a combination of supported
+    # codes. Example: date_format() doesn't support '%R', but it does support '%H:%i', so we translate that.
+    # These translations are handle in _parse_c_code_to_athena_code().
+    # There is one exception to this, the code '%V' cannot be handled by date_format(), and there is no
+    # alternative supported code either. However, a different function, format_datetime(), can return the
+    # value of '%V'`. Therefore, we split the date_format string into parts: strings made up of '%V', and
+    # all other strings. For the parts that contain just '%V' we'll call format_datetime, for all other parts
+    # we'll call date_format. The results are all concatenated together.
     split_date_formats = _split_format_string_V(date_format)
     expressions: List[Expression] = []
     for sub_df in split_date_formats:
