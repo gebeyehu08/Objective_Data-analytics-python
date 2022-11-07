@@ -12,6 +12,7 @@ from pydantic import BaseModel, validator
 from pydantic.fields import Field
 
 from checklock_holmes.utils.constants import NOTEBOOK_EXTENSION
+from checklock_holmes.utils.helpers import create_dir_if_not_exists
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
@@ -25,22 +26,17 @@ class CellTiming(BaseModel):
     time: float
 
 
-def _check_dir(dir_name: Optional[str]) -> None:
-    """
-    Helper for creating provided issues/scripts directory if it does not exist
-    """
-    if dir_name and not os.path.exists(dir_name):
-        os.makedirs(dir_name)
-
-
 class NoteBookCheckSettings(BaseModel):
     engines_to_check: List[SupportedDBEngine]
     notebooks_to_check: List[str]
     github_issues_dir: str
+    compared_outputs_dir: str
     dump_nb_scripts_dir: Optional[str] = None
     display_cell_timing: bool = False
     start_date: Optional[datetime.date] = None
     end_date: Optional[datetime.date] = None
+    compare_notebook_outputs: bool = False
+    update_history: bool = False
 
     @validator('engines_to_check')
     def _process_engines_to_check(cls, engines_to_check: List[str]) -> List[SupportedDBEngine]:
@@ -71,6 +67,14 @@ class NoteBookCheckSettings(BaseModel):
         """
         Creates issue directory if provided dir does not exist
         """
+        create_dir_if_not_exists(dir)
+        return dir
+
+    @validator('compared_outputs_dir')
+    def _check_cout_dir(cls, dir: str) -> str:
+        """
+        Creates issue directory if provided dir does not exist
+        """
         _check_dir(dir)
         return dir
 
@@ -79,7 +83,7 @@ class NoteBookCheckSettings(BaseModel):
         """
         Creates scripts directory if provided dir does not exist
         """
-        _check_dir(dir)
+        create_dir_if_not_exists(dir)
         return dir
 
 
@@ -111,3 +115,4 @@ class NoteBookCheck(BaseModel):
     failing_block: Optional[str] = None
     elapsed_time: Optional[float] = None
     elapsed_time_per_cell: Optional[List[CellTiming]] = None
+    update_history: bool = False

@@ -11,6 +11,7 @@ from checklock_holmes.checklock_nb_client.notebook_engine import (
     ChecklockNBEngine
 )
 from checklock_holmes.errors.exceptions import CuriousIncident
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.models.nb_checker_models import (
     CellTiming, NoteBookCheck, NoteBookMetadata
 )
@@ -31,7 +32,9 @@ class NoteBookChecker:
     }
     _ENV_VAR_CELL_TAG = 'injected-engine-variables'
 
-    async def async_check_notebook(self, engine: SupportedDBEngine) -> NoteBookCheck:
+    async def async_check_notebook(
+        self, engine: SupportedDBEngine, store_outputs: bool = False,
+    ) -> NoteBookCheck:
         """
         Creates and executes the notebook's script for the provided engine.
 
@@ -46,11 +49,15 @@ class NoteBookChecker:
             )
 
         try:
-            executed_nb = await ChecklockNBEngine.async_execute_notebook(
-                nb=self._load_notebook_node(engine),
+            kernel_config = ChecklockKernelConfig(
                 notebook_name=self.metadata.name,
                 db_engine=engine,
                 check_id=self.metadata.check_id,
+                store_outputs=store_outputs,
+            )
+            executed_nb = await ChecklockNBEngine.async_execute_notebook(
+                nb=self._load_notebook_node(engine),
+                kernel_config=kernel_config,
             )
         except Exception as exc:
             raise CuriousIncident(notebook_name=self.metadata.name, exc=exc)
