@@ -517,9 +517,9 @@ sessions after the moment of conversion).
 
 	>>> # avg duration before conversion - per source
 	>>> # label sessions with a conversion
-	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='github_press') >= 1
+	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='github_press_marketing') >= 1
 	>>> # label hits where at that point in time, there are 0 conversions in the session
-	>>> df_marketing_selection['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_marketing_selection, 'github_press') == 0
+	>>> df_marketing_selection['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_marketing_selection, 'github_press_marketing') == 0
 	>>> # filter on above created labels to find the users who converted for the very first time
 	>>> converted_users = df_marketing_selection[(df_marketing_selection.converted_users & df_marketing_selection.zero_conversions_at_moment)]
 	>>> modelhub.aggregate.session_duration(converted_users, groupby=['utm_source']).to_frame().head()
@@ -641,7 +641,7 @@ Top used product features for users from marketing campaigns, before they conver
 	>>> # top used product features for users coming from marketing campaigns, before they convert
 	>>> if is_bigquery(df.engine):
 	...     df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
-	>>> top_features_before_conversion_from_marketing = modelhub.agg.top_product_features_before_conversion(df_marketing_selection, name='github_press')
+	>>> top_features_before_conversion_from_marketing = modelhub.agg.top_product_features_before_conversion(df_marketing_selection, name='github_press_marketing')
 	>>> top_features_before_conversion_from_marketing.head(20)
 	                                                                                                     unique_users
 	application      feature_nice_name                                                       event_type
