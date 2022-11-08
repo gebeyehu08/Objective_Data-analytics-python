@@ -644,10 +644,6 @@ class DocusaurusTranslator(Translator):
     def visit_note(self, node):
         """Sphinx note directive."""
         self.add(':::note\n\n')
-        if ('get_objectiv_dataframe' in self.title):
-            # print("NOTE:", node)
-            for child in node.children:
-                child.walkabout(self)
 
 
     def depart_note(self, node):
@@ -1070,11 +1066,7 @@ class DocusaurusTranslator(Translator):
         """Table entry: https://docutils.sourceforge.io/docs/ref/doctree.html#entry"""
         length = 0
         i = len(self.table_entries) - 1
-        if ('get_objectiv_dataframe' in self.title):
-            print("TABLE_ROWS LENGTH:", len(self.table_rows))
         for row in self.table_rows:
-            # if ('get_objectiv_dataframe' in self.title):
-            #     print("ROW:", row)
             if len(row.children) > i:
                 entry_length = len(row.children[i].astext())
                 if entry_length > length:
