@@ -10,6 +10,7 @@ import bach
 from typing import Optional, Dict, List
 
 from bach.expression import Expression
+from bach.partitioning import WindowFrameBoundary
 from sql_models.util import is_postgres, is_bigquery, is_athena, quote_identifier
 
 import modelhub
@@ -330,6 +331,13 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         uuid_series = ['network_userid', 'domain_sessionid']
         for series in uuid_series:
             df_cp.loc[df_cp[series] == '', series] = None
+
+        # users might be anonymized in early events of a session, therefore we should consider the last
+        # network_userid registered for the domain_sessionid
+        window = df_cp.sort_values(by=['collector_tstamp']).groupby(by='domain_sessionid').window(
+            end_boundary=WindowFrameBoundary.FOLLOWING
+        )
+        df_cp['network_userid'] = df_cp['network_userid'].window_last_value(window=window)
 
         # Anonymous users have no network_userid, but their domain_sessionid is useable as user_id as well
         df_cp[ObjectivSupportedColumns.USER_ID.value] = (

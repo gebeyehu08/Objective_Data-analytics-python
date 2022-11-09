@@ -152,6 +152,41 @@ def test_process_data(db_params) -> None:
 
 
 @pytest.mark.skip_postgres
+def test_apply_snowplow_domain_session_id(db_params) -> None:
+    context_pipeline = _get_extracted_contexts_pipeline(db_params)
+    engine = context_pipeline._engine
+    pdf = pd.DataFrame(
+        {
+            'event_id': ['1', '2', '3'],
+            'network_userid': ['00000000-0000-0000-0000-000000000000', None, '1'],
+            'domain_sessionid': ['2', '2', '2'],
+            'collector_tstamp': [
+                datetime.datetime(2022, 1, 1, 12, 0, 0),
+                datetime.datetime(2022, 1, 1, 12, 0, 1),
+                datetime.datetime(2022, 1, 1, 12, 0, 2)
+            ],
+            'true_tstamp': [
+                datetime.datetime(2022, 1, 1, 12, 0, 0),
+                datetime.datetime(2022, 1, 1, 12, 0, 1),
+                datetime.datetime(2022, 1, 1, 12, 0, 2)
+            ],
+            'contexts_io_objectiv_location_stack_1_0_0': ['{}'] * 3,
+        }
+    )
+    df = bach.DataFrame.from_pandas(engine, pdf).reset_index(drop=True)
+    result = context_pipeline._process_data(df)
+    assert_equals_data(
+        result.sort_values(by='event_id')[['event_id', 'user_id']],
+        expected_columns=['event_id', 'user_id'],
+        expected_data=[
+            ['1', '1'],
+            ['2', '1'],
+            ['3', '1'],
+        ],
+    )
+
+
+@pytest.mark.skip_postgres
 def test_apply_filters_duplicated_event_ids(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
