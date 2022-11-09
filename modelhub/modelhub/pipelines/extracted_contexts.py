@@ -330,7 +330,10 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         # there is a risk of raising an exception when trying to parse string values to UUID
         uuid_series = ['network_userid', 'domain_sessionid']
         for series in uuid_series:
-            df_cp.loc[df_cp[series] == '', series] = None
+            mask = (
+                (df_cp[series] == '') | (df_cp[series] == '00000000-0000-0000-0000-000000000000')
+            )
+            df_cp.loc[mask, series] = None
 
         # users might be anonymized in early events of a session, therefore we should consider the last
         # network_userid registered for the domain_sessionid
