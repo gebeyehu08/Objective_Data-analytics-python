@@ -337,7 +337,9 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         window = df_cp.sort_values(by=['collector_tstamp']).groupby(by='domain_sessionid').window(
             end_boundary=WindowFrameBoundary.FOLLOWING
         )
-        df_cp['network_userid'] = df_cp['network_userid'].window_last_value(window=window)
+        df_cp.loc[df_cp['domain_sessionid'].notnull(), 'network_userid'] = (
+            df_cp['network_userid'].window_last_value(window=window)
+        )
 
         # Anonymous users have no network_userid, but their domain_sessionid is useable as user_id as well
         df_cp[ObjectivSupportedColumns.USER_ID.value] = (
