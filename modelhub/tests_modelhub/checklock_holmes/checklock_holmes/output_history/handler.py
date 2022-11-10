@@ -1,4 +1,5 @@
 import json
+import os
 import pickle
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
@@ -195,12 +196,16 @@ class OutputHistoryHandler:
                 )
                 continue
 
-            # if pickel_file was found in current check, then do comparison
+            # if pickle_file was found in current check, then do comparison
             c_key = current_pickle_files[h_pickle_file]
-            history_obj = self._client.get_object(Bucket=self.bucket_name, Key=h_key)
-            history_df = pd.read_pickle(history_obj['Body'])
-            current_obj = self._client.get_object(Bucket=self.bucket_name, Key=c_key)
-            current_df = pd.read_pickle(current_obj['Body'])
+            if settings.aws_bucket:
+                history_obj = self._client.get_object(Bucket=settings.aws_bucket, Key=h_key)
+                history_df = pd.read_pickle(history_obj['Body'])
+                current_obj = self._client.get_object(Bucket=settings.aws_bucket, Key=c_key)
+                current_df = pd.read_pickle(current_obj['Body'])
+            else:
+                history_df = pd.read_pickle(h_key)
+                current_df = pd.read_pickle(c_key)
 
             diff = ''
             try:
@@ -237,8 +242,17 @@ class OutputHistoryHandler:
         return results
 
     def _get_pickle_file_keys_by_check_key(self, check_key: str) -> Dict[str, str]:
+        if not settings.aws_bucket:
+            try:
+                mapping = {}
+                for file_name in os.listdir(f'{LOCAL_OUTPUT_FILE_DIR}/{check_key}'):
+                    mapping[file_name] = f'{LOCAL_OUTPUT_FILE_DIR}/{check_key}/{file_name}'
+                return mapping
+            except FileNotFoundError:
+                return {}
+
         objs = self._client.list_objects(
-            Bucket=self.bucket_name, Prefix=check_key + '/', Delimiter='/',
+            Bucket=settings.aws_bucket.name, Prefix=check_key + '/', Delimiter='/',
         ).get('Contents', [])
 
         # return mapping of pickle file names and their full path.
