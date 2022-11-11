@@ -7,8 +7,9 @@ on:
       - 'tracker/plugins/locale-context/**'
       - '.github/workflows/verify-locale-codes.yml'
 
-  schedule:
-    - cron:  '30 10,22 * * *'
+# Disabled temporarily, host has been banned
+#  schedule:
+#    - cron:  '30 10,22 * * *'
 
 jobs:
   verify-locale-codes:
