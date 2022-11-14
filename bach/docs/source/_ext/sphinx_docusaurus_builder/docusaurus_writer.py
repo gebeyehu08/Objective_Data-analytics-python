@@ -954,6 +954,8 @@ class DocusaurusTranslator(Translator):
         """A data arrangement with rows and columns:
         https://docutils.sourceforge.io/docs/ref/doctree.html#table"""
         self.in_table = False
+        self.table_rows.clear()
+        self.table_entries = []
         if(len(self.tables) > 0):
             self.tables.pop()
         self.ensure_eol()
@@ -1004,17 +1006,25 @@ class DocusaurusTranslator(Translator):
 
     def depart_thead(self, node):
         """Table head: https://docutils.sourceforge.io/docs/ref/doctree.html#thead"""
-        # end table head with as many "| -- |"s as there are table entries
-        for i in range(len(self.table_entries)):
-            length = 0
-            for row in self.table_rows:
-                if len(row.children) > i:
-                    entry_length = len(row.children[i].astext())
-                    if entry_length > length:
-                        length = entry_length
-            self.add('| ' + ''.join(_.map(range(length), lambda: '-')) + ' ')
+        # end table head with as many "|:--|"s as there are table columns, using the length of their contents
+        column_lengths = []
+        for row in node.children:
+            # capture each column's length
+            if len(row.children) > 0:
+                i = 0
+                for child in row.children:
+                    column_length = len(child.astext())
+                    # add to column lengths if it's not in there yet, or larger than the largest value
+                    if len(column_lengths) <= i:
+                        column_lengths.append(column_length)
+                    elif column_length > column_lengths[i]:
+                        column_lengths[i] = column_length
+                    i += 1
+
+        for column_length in column_lengths:
+            padding = ''.join(_.map(range(column_length), lambda: '-'))
+            self.add('|:' + padding + '-')
         self.add('|\n')
-        self.table_entries = []
         self.theads.pop()
 
 
@@ -1039,7 +1049,7 @@ class DocusaurusTranslator(Translator):
 
     def depart_row(self, node):
         """Table row: https://docutils.sourceforge.io/docs/ref/doctree.html#row"""
-        self.add(' |\n')
+        self.add('|\n')
         if not len(self.theads):
             self.table_entries = []
 
