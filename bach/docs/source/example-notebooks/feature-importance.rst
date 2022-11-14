@@ -66,7 +66,6 @@ locations and conversion. Make sure to think of this assumption when using this 
 
 .. doctest:: feature-importance
 	:skipif: engine is None
-	:options: +ELLIPSIS
 
 	>>> # define which events to use as conversion events
 	>>> df['use_modeling'] = modelhub.add_conversion_event(data=df, location_stack=df.location_stack.json[{'id': 'modeling', '_type': 'RootLocationContext'}:], event_type='PressEvent', name='use_modeling')
