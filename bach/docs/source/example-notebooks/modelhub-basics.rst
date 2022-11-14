@@ -144,21 +144,7 @@ type of event and the location in the product where the event was triggered
 	:skipif: engine is None
 
 	>>> # define a conversion event, and label events whether they converted
-	>>> modelhub.add_conversion_event(location_stack=df.location_stack.json[{'id': 'Quickstart Guide', '_type': 'LinkContext'}:], event_type='PressEvent', name='quickstart_presses')
-	>>> df['conversion_events'] = modelhub.map.is_conversion_event(df, 'quickstart_presses')
-	>>> df.conversion_events.head(10)
-	event_id
-	d4a0cb80-729c-4e17-9a42-6cb48672250f    False
-	75afa7bc-5237-4033-a833-bf9e0e85a3c1    False
-	0ae59c2c-2a2e-480c-8212-23d7aed2ae3c    False
-	e2d95395-e7c1-4ab1-bf32-616bb485ff02    False
-	75447a30-f379-4a8f-8568-77b9cb0b5039    False
-	8e86f8e3-be55-4c5c-8a23-ba8dea38c35d    False
-	854ec5e1-5c27-4c3b-b01c-98671eaa8da7    False
-	adc6d6e1-9525-4e9c-9a02-1f79cd6428a6    False
-	17aad036-4cca-4c31-a115-9601510907fc    False
-	e139877e-ef37-426e-bc89-15e11d87effb    False
-	Name: conversion_events, dtype: bool
+	>>> df['quickstart_presses'] = modelhub.add_conversion_event(data=df, location_stack=df.location_stack.json[{'id': 'Quickstart Guide', '_type': 'LinkContext'}:], event_type='PressEvent')
 
 Combine mapping with filtering and aggregattion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -166,13 +152,13 @@ Combine mapping with filtering and aggregattion
 As the map functions above return a SeriesBoolean, they can be combined with filter and aggregation models. 
 We use the same aggregation model we showed earlier (:doc:`unique_users 
 <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`), but now applying the 
-`df.conversion_events` filter to just look at unique converted users per day.
+`df.quickstart_presses` filter to just look at unique converted users per day.
 
 .. doctest:: modelhub
 	:skipif: engine is None
 
 	>>> # filter unique users on whether they've converted
-	>>> modelhub.aggregate.unique_users(df[df.conversion_events]).sort_index(ascending=False).head(10)
+	>>> modelhub.aggregate.unique_users(df[df.quickstart_presses]).sort_index(ascending=False).head(10)
 	time_aggregation
 	2022-03-31    1
 	2022-03-28    1
@@ -297,7 +283,7 @@ the open model hub and Bach work seamlessly together.
 	>>> 
 	>>> # use Bach to do any supported operation using pandas syntax.
 	>>> # select users that converted
-	>>> converted_users = df[df.conversion_events].user_id.unique()
+	>>> converted_users = df[df.quickstart_presses].user_id.unique()
 	>>> # select PressEvents of users that converted
 	>>> df_selection = df[(df.event_type == 'PressEvent') & (df.user_id.isin(converted_users))]
 	>>> # calculate the number of PressEvents before conversion per session
@@ -373,8 +359,7 @@ dashboards with this <https://objectiv.io/docs/home/up#creating-bi-dashboards>`_
 	DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 	df = modelhub.get_objectiv_dataframe(db_url=DB_URL, start_date='2022-03-01', end_date='2022-03-31')
 	df['is_new_user'] = modelhub.map.is_new_user(df)
-	modelhub.add_conversion_event(location_stack=df.location_stack.json[{'id': 'Quickstart Guide', '_type': 'LinkContext'}:], event_type='PressEvent', name='quickstart_presses')
-	df['conversion_events'] = modelhub.map.is_conversion_event(df, 'quickstart_presses')
+	df['quickstart_presses'] = modelhub.add_conversion_event(data=df, location_stack=df.location_stack.json[{'id': 'Quickstart Guide', '_type': 'LinkContext'}:], event_type='PressEvent')
 	df['is_new_user_month'] = modelhub.map.is_new_user(df, time_aggregation = '%Y-%m')
 	df['is_twice_converted'] = modelhub.map.conversions_in_time(df, name='quickstart_presses')==2
 	new_user_share = modelhub.agg.unique_users(df[df.is_new_user]) / modelhub.agg.unique_users(df)

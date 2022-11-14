@@ -66,11 +66,20 @@ locations and conversion. Make sure to think of this assumption when using this 
 
 .. doctest:: feature-importance
 	:skipif: engine is None
-	
+	:options: +ELLIPSIS
+
 	>>> # define which events to use as conversion events
-	>>> modelhub.add_conversion_event(location_stack=df.location_stack.json[{'id': 'modeling', '_type': 'RootLocationContext'}:], event_type='PressEvent', name='use_modeling')
+	>>> df['use_modeling'] = modelhub.add_conversion_event(data=df, location_stack=df.location_stack.json[{'id': 'modeling', '_type': 'RootLocationContext'}:], event_type='PressEvent', name='use_modeling')
 	>>> # the features that we use for predicting
 	>>> df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+	>>> df.head()
+	                                             day                  moment                               user_id                                                                                location_stack              event_type                                             stack_event_types  session_id  session_hit_number root_location  use_modeling   root
+	event_id                                                                                                                                                                                                                                                                                                                                                             
+	d4a0cb80-729c-4e17-9a42-6cb48672250f  2022-03-15 2022-03-15 08:36:33.123  005aa19c-7e80-4960-928c-a0853355ee5f  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...              PressEvent                 [AbstractEvent, InteractiveEvent, PressEvent]         260                   1            []         False  about
+	75afa7bc-5237-4033-a833-bf9e0e85a3c1  2022-03-15 2022-03-15 08:36:44.625  005aa19c-7e80-4960-928c-a0853355ee5f  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...              PressEvent                 [AbstractEvent, InteractiveEvent, PressEvent]         260                   2            []         False  about
+	dfd0f458-3f81-43d5-a5ce-4696e4429113  2022-05-05 2022-05-05 07:14:47.345  007f5fd7-7535-434e-aa3e-3d52f06d63ce  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInteractiveEvent]        1115                   1            []         False  about
+	fd7c9b06-ea9d-4cf7-9538-3373a04172cd  2022-05-05 2022-05-05 07:15:16.612  007f5fd7-7535-434e-aa3e-3d52f06d63ce  [{'id': 'about', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractL...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInteractiveEvent]        1115                   2            []         False  about
+	2865beed-f191-467a-9359-7f1d858f6638  2022-04-14 2022-04-14 21:17:36.140  00b011eb-74ee-4d01-a00f-36617c6a0ee1  [{'id': 'home', '_type': 'RootLocationContext', '_types': ['AbstractContext', 'AbstractLo...  ApplicationLoadedEvent  [AbstractEvent, ApplicationLoadedEvent, NonInteractiveEvent]         684                   1            []         False   home
 
 We estimate conversion by using the number of presses in each root location with a logistic regression model. 
 The coefficients of this regression can be interpreted as the contribution to conversion (direction and 

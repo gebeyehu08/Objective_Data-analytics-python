@@ -428,10 +428,10 @@ GitHub repo.
 	:skipif: engine is None
 
 	>>> # create a column that extracts all location stacks that lead to our GitHub repo
-	>>> df['github_press'] = df.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
-	>>> df.loc[df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press'] = df.location_stack
+	>>> df['github_press_ls'] = df.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
+	>>> df.loc[df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press_ls'] = df.location_stack
 	>>> # define which events to use as conversion events
-	>>> modelhub.add_conversion_event(location_stack=df.github_press, event_type='PressEvent', name='github_press')
+	>>> df['github_press'] = modelhub.add_conversion_event(data=df, location_stack=df.github_press_ls, event_type='PressEvent')
 
 This conversion event can then be used by several models using the defined name ('github_press'). First we 
 calculate the number of unique converted users.

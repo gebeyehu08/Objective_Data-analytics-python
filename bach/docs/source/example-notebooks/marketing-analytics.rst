@@ -277,18 +277,15 @@ website or docs to our GitHub repo.
 	>>> # in this example: clicking any link leading to our GitHub repo
 	>>> # create a column that extracts all location stacks that lead to our GitHub repo
 	>>> df_acquisition['ls_conversion'] = df_acquisition[(df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'browse-on-github'}] != []) | (df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'github-stars-button'}] != []) | (df_acquisition.location_stack.ls[:{'_type':'LinkContext', 'id':'github'}] != [])].location_stack
-	>>> modelhub.add_conversion_event(location_stack=df_acquisition['ls_conversion'], event_type='PressEvent', name='github_press')
+	>>> df_acquisition['is_conversion_event'] = modelhub.add_conversion_event(data=df_acquisition, location_stack=df_acquisition['ls_conversion'], event_type='PressEvent')
 	>>> df_marketing_selection['ls_conversion'] = df_marketing_selection[(df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'browse-on-github'}] != []) | (df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'github-stars-button'}] != []) | (df_marketing_selection.location_stack.ls[:{'_type':'LinkContext', 'id':'github'}] != [])].location_stack
-	>>> modelhub.add_conversion_event(location_stack=df_marketing_selection['ls_conversion'], event_type='PressEvent', name='github_press_marketing')
-	>>> df_acquisition['is_conversion_event'] = modelhub.map.is_conversion_event(df_acquisition, 'github_press')
-	>>> df_marketing_selection['is_conversion_event'] = modelhub.map.is_conversion_event(df_marketing_selection, 'github_press_marketing')
+	>>> df_marketing_selection['is_conversion_event'] = modelhub.add_conversion_event(data=df_marketing_selection, location_stack=df_marketing_selection['ls_conversion'], event_type='PressEvent')
 
 .. admonition:: Reference
 	:class: api-reference
 
 	* :doc:`bach.series.series_json.JsonAccessor <../bach/api-reference/Series/Json/bach.SeriesJson.json>`
 	* :doc:`modelhub.ModelHub.add_conversion_event <../open-model-hub/api-reference/ModelHub/modelhub.ModelHub.add_conversion_event>`
-	* :doc:`modelhub.Map.is_conversion_event <../open-model-hub/models/helper-functions/modelhub.Map.is_conversion_event>`	
 
 Daily conversions from marketing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -424,7 +421,6 @@ Daily conversion rate overall
 .. admonition:: Reference
 	:class: api-reference
 
-	* :doc:`modelhub.Map.is_conversion_event <../open-model-hub/models/helper-functions/modelhub.Map.is_conversion_event>`
 	* :doc:`bach.DataFrame.dropna <../bach/api-reference/DataFrame/bach.DataFrame.dropna>`
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
 	* :doc:`bach.Series.sort_index <../bach/api-reference/Series/bach.Series.sort_index>`
@@ -473,7 +469,6 @@ Conversions per marketing _campaign_ daily
 	:class: api-reference
 
 	* :doc:`modelhub.Aggregate.unique_users <../open-model-hub/models/aggregation/modelhub.Aggregate.unique_users>`
-	* :doc:`modelhub.Map.is_conversion_event <../open-model-hub/models/helper-functions/modelhub.Map.is_conversion_event>`
 	* :doc:`bach.DataFrame.dropna <../bach/api-reference/DataFrame/bach.DataFrame.dropna>`
 	* :doc:`bach.DataFrame.sort_values <../bach/api-reference/DataFrame/bach.DataFrame.sort_values>`
 	* :doc:`bach.Series.sort_index <../bach/api-reference/Series/bach.Series.sort_index>`
@@ -517,9 +512,9 @@ sessions after the moment of conversion).
 
 	>>> # avg duration before conversion - per source
 	>>> # label sessions with a conversion
-	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='github_press_marketing') >= 1
+	>>> df_marketing_selection['converted_users'] = modelhub.map.conversions_counter(df_marketing_selection, name='is_conversion_event') >= 1
 	>>> # label hits where at that point in time, there are 0 conversions in the session
-	>>> df_marketing_selection['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_marketing_selection, 'github_press_marketing') == 0
+	>>> df_marketing_selection['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_marketing_selection, 'is_conversion_event') == 0
 	>>> # filter on above created labels to find the users who converted for the very first time
 	>>> converted_users = df_marketing_selection[(df_marketing_selection.converted_users & df_marketing_selection.zero_conversions_at_moment)]
 	>>> modelhub.aggregate.session_duration(converted_users, groupby=['utm_source']).to_frame().head()
@@ -641,7 +636,7 @@ Top used product features for users from marketing campaigns, before they conver
 	>>> # top used product features for users coming from marketing campaigns, before they convert
 	>>> if is_bigquery(df.engine):
 	...     df_marketing_selection = df_marketing_selection.materialize(materialization='temp_table')
-	>>> top_features_before_conversion_from_marketing = modelhub.agg.top_product_features_before_conversion(df_marketing_selection, name='github_press_marketing')
+	>>> top_features_before_conversion_from_marketing = modelhub.agg.top_product_features_before_conversion(df_marketing_selection, name='is_conversion_event')
 	>>> top_features_before_conversion_from_marketing.head(20)
 	                                                                                                     unique_users
 	application      feature_nice_name                                                       event_type
