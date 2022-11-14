@@ -12,6 +12,7 @@ from checklock_holmes.checklock_kernel.manager import (
 from checklock_holmes.checklock_nb_client.execution_manager import (
     WatsonExecutionManager
 )
+from checklock_holmes.models.kernel_models import ChecklockKernelConfig
 from checklock_holmes.utils.supported_db_engines import SupportedDBEngine
 
 
@@ -28,12 +29,10 @@ class ChecklockNBClient(PapermillNotebookClient):
     def __init__(
         self,
         nb_man: WatsonExecutionManager,
-        notebook_name: str,
-        db_engine: SupportedDBEngine,
-        check_id: UUID,
+        kernel_config: ChecklockKernelConfig,
         **kwargs
     ):
-        km = AsyncChecklockKernelManager(notebook_name, db_engine, check_id, **kwargs)
+        km = AsyncChecklockKernelManager(kernel_config, **kwargs)
         super(ChecklockNBClient, self).__init__(nb_man, km=km, **kwargs)
 
     async def async_execute(self, reset_kc: bool = False, **kwargs: Any) -> nbformat.NotebookNode:

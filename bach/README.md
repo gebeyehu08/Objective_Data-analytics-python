@@ -8,7 +8,7 @@ Bach is part of [Objectiv](https://objectiv.io/), an open-source data collection
 ## Installation
 To install Bach, use the following command:
 ```bash
-pip install objectiv-bach
+pip install objectiv-bach           # just the Bach library, supports PostgreSQL out of the box
 pip install objectiv-bach[bigquery] # for Google BigQuery support
 pip install objectiv-bach[athena]   # for AWS Athena support
 ```

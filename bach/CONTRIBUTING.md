@@ -7,7 +7,7 @@ If you want the latest and greatest from your local checkout, install objectiv_b
 
 
 ```
-pip install -e .
+pip install -e .           # just the Bach library, supports PostgreSQL out of the box
 pip install -e .[bigquery] # for Google BigQuery support
 pip install -e .[athena]   # for AWS Athena support
 ```

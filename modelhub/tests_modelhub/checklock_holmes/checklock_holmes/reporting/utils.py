@@ -1,12 +1,16 @@
 """
 Copyright 2022 Objectiv B.V.
 """
+from collections import defaultdict
 from datetime import datetime
-from typing import List
+from typing import Dict, List
 
 from tabulate import tabulate
 
 from checklock_holmes.models.nb_checker_models import NoteBookCheck
+from checklock_holmes.models.output_history_models import (
+    ComparisonStatus, OutputComparisonReport
+)
 from checklock_holmes.utils import constants
 
 
@@ -35,6 +39,16 @@ def get_github_issue_filename() -> str:
     current_check_time = datetime.now()
     return constants.GITHUB_ISSUE_FILENAME_TEMPLATE.format(
         date_str=current_check_time.strftime(constants.GTIHUB_ISSUE_DATE_STR_FORMAT)
+    )
+
+
+def get_output_reports_filename() -> str:
+    """
+    Generates output report file name based on checking time.
+    """
+    current_check_time = datetime.now()
+    return constants.OUTPUT_REPORT_FILENAME_TEMPLATE.format(
+        date_str=current_check_time.strftime(constants.OUTPUT_REPORT_DATE_STR_FORMAT)
     )
 
 
@@ -103,4 +117,65 @@ def display_check_results(
     if failed_checks:
         perc_failed = round(failed_checks/len(nb_checks) * 100, 2)
         print(constants.FAILED_CHECK_MESSAGE.format(failed_checks=failed_checks, perc_failed=perc_failed))
-        print(constants.MORE_INFORMATION_MESSAGE.format(github_issue_file=github_files_path))
+        print(constants.MORE_INFORMATION_FAILED_CHECKS_MESSAGE.format(github_issue_file=github_files_path))
+
+
+def _generate_output_comparison_file(
+    comparison_results: List[OutputComparisonReport], report_filename: str
+) -> None:
+    str_reports = []
+    for report in comparison_results:
+        report_title = constants.OUTPUT_REPORT_TITLE_TEMPLATE.format(
+            engine=report.db_engine, notebook=report.notebook_name,
+        )
+        str_results = []
+        for result in report.results:
+            result_str = constants.OUTPUT_REPORT_COMPARISON_TEMPLATE.format(
+                history_file=result.history_file,
+                current_file=result.current_file,
+                status=result.status.value,
+                cell_source=result.cell_source,
+            )
+            assertion_results_str = ''
+            if result.status == ComparisonStatus.DIFFERENT_OUTPUT:
+                assertion_results_str = constants.OUTPUT_ASSERTION_ERROR_TEMPLATE.format(
+                    difference=result.difference
+                )
+
+            str_results.append(result_str + '\n' + assertion_results_str)
+
+        str_reports.append(report_title + '\n'.join(str_results))
+
+    with open(report_filename, 'a') as file:
+        file.write('\n'.join(str_reports))
+
+
+def display_comparison_results(
+    comparison_results: List[OutputComparisonReport], output_reports_file_path: str
+) -> None:
+    if not comparison_results:
+        return
+
+    _generate_output_comparison_file(comparison_results, output_reports_file_path)
+
+    headers = constants.OUTPUT_REPORT_CONSOLE_HEADERS.copy()
+    data_to_show = []
+    for report in comparison_results:
+        stats: Dict[ComparisonStatus, int] = defaultdict(int)
+
+        for result in report.results:
+            stats[result.status] += 1
+        data_to_show += [
+            [
+                report.notebook_name,
+                report.db_engine,
+                status.name,
+                amount,
+            ]
+            for status, amount in stats.items()
+        ]
+
+    print(tabulate(data_to_show, headers=headers, tablefmt="simple", floatfmt=".4f"))
+    print(constants.MORE_INFORMATION_OUTPUT_COMPARISON_CHECKS.format(
+        output_report_file=output_reports_file_path)
+    )

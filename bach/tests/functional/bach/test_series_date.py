@@ -64,7 +64,9 @@ def test_date_format(engine, recwarn):
 
     all_formats = [
         # tuple, types: (str, bool). Content: format, whether the format should raise a warning
+        ('', False),
         ('Year: %Y', False),
+        ('ISO Week: %V', False),
         ('%Y', False),
         ('%y%Y', False),
         ('%Y-%m-%d', False),
@@ -97,7 +99,9 @@ def test_date_format(engine, recwarn):
         expected_columns=expected_columns,
         expected_data=[
             [
+                '', '',
                 'Year: 2022', 'Year: 2021',
+                'ISO Week: 52', 'ISO Week: 18',
                 '2022', '2021',
                 '222022', '212021',
                 '2022-01-01', '2021-05-03',
@@ -110,11 +114,59 @@ def test_date_format(engine, recwarn):
                 'HH24:MI:SS MS', 'HH24:MI:SS MS',
                 '00:00:00.000000', '11:28:36.388000',
                 '%q %1 %_', '%q %1 %_',
-                '%: % | A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
-                '%: % | A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
+                '%: % | A: Saturday | B: January | F: 2022-01-01 | H: 00 | I: 12 | M: 00 | R: 00:00 | S: 00 | T: 00:00:00 | V: 52 | Y: 2022 | a: Sat | b: Jan | d: 01 | j: 001 | m: 01 | y: 22',
+                '%: % | A: Monday | B: May | F: 2021-05-03 | H: 11 | I: 11 | M: 28 | R: 11:28 | S: 36 | T: 11:28:36 | V: 18 | Y: 2021 | a: Mon | b: May | d: 03 | j: 123 | m: 05 | y: 21',
                 '00.000000', '36.388000'
             ],
         ],
+    )
+
+
+def test_date_format_week_edge_cases(engine):
+    # Test for strftime() that tests a lot of dates, to make sure we cover edge cases around particular dates
+    # for the formatting codes %a/%A (day of week), %j (day of year), and (%V) week number
+    codes = ['%a', '%A', '%j', '%V']
+    years = [
+        (2000, True),   # Starts on Saturday  - leap year
+        (2019, False),  # Starts on Tuesday   - non leap year
+        (2020, True),   # Starts on Wednesday - leap year
+        (2021, False),  # Starts on Friday    - non leap year
+        (2022, False),  # Starts on Saturday  - non leap year
+        (2023, False),  # Starts on Sunday    - non leap year
+        (2024, True),   # Starts on Monday    - leap year
+        (2025, False),  # Starts on Wednesday - non leap year
+        (2026, False),  # Starts on Thursday  - non leap year
+    ]
+    dates = []
+    for year, is_leap_year in years:
+        last_day_february = 29 if is_leap_year else 28
+        dates.extend([
+            datetime.date(year, 1, 1),
+            datetime.date(year, 1, 2),
+            datetime.date(year, 1, 3),
+            datetime.date(year, 1, 4),
+            datetime.date(year, 1, 5),
+            datetime.date(year, 1, 6),
+            datetime.date(year, 1, 7),
+            datetime.date(year, 2, last_day_february),
+            datetime.date(year, 3, 1),
+            datetime.date(year, 12, 31)
+        ])
+
+    df = DataFrame.from_pandas(engine=engine, df=pd.DataFrame({'date': dates}))
+    for code in codes:
+        df[code] = df['date'].dt.strftime(code)
+    df = df.sort_index()
+
+    expected_data = [
+        [index, date] + [date.strftime(code) for code in codes]
+        for index, date in enumerate(dates)
+    ]
+    assert_equals_data(
+        df,
+        use_to_pandas=True,
+        expected_columns=['_index_0', 'date'] + codes,
+        expected_data=expected_data
     )
 
 

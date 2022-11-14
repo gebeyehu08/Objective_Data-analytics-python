@@ -58,6 +58,7 @@ extensions = [
     'sphinx.ext.autosummary',  # auto generate autodoc directives
     'sphinx.ext.doctest',  # run examples /tests
     'sphinx_exec_code',
+    'sphinx_toolbox.more_autodoc.typevars',
     # 'sphinx.ext.intersphinx',       # generate links to external sphinx projects
     'numpydoc',  # use numpy style docs
     "IPython.sphinxext.ipython_directive",
