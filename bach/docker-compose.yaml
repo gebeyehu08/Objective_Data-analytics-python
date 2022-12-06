@@ -1,0 +1,89 @@
+#################################
+### Bach Demonstration Setup. ###
+#################################
+#
+# WARNING: this is for demonstration purposes ONLY, and not safe to use for anything else.
+#  All authentication is disabled, and ports are exposed to localhost.
+#
+# This file spins up two containers:
+# 1. Jupyter notebook with Bach installed
+# 2. Postgres database with some very minimal test data
+#
+#
+##########
+### Usage
+##########
+#
+#  To start containers:
+# `docker-compose up -d`
+# Then point browser at http://127.0.0.1:8888/lab/workspaces/auto-a/tree/demo/demo.ipynb?token=objectiv
+#
+
+## Image sources
+# By default this uses ready built images from dockerhub, or local images if available. To use a different
+# image repository, set OBJECTIV_CONTAINER_URL to that repo.
+# To use a specific image tag instead of latest set OBJECTIV_CONTAINER_TAG
+
+
+
+x-db_env_variables: &db_env_variables
+  # warning: never put production credentials in here!
+  POSTGRES_USER: 'objectiv'
+  POSTGRES_PASSWORD: 'no_password_set'
+  POSTGRES_DB: 'objectiv'
+  POSTGRES_HOSTNAME: 'bach_demo_postgres'
+  POSTGRES_PORT: 5432
+
+version: "3.4"
+services:
+
+  bach_demo_postgres:
+    container_name: bach_demo_postgres
+    image: postgres:latest
+    # Expose postgres to localhost, this makes testing easier.
+    ports:
+      - 127.0.0.1:5432:5432
+    networks:
+      - bach_demo_shared_network
+    environment:
+      <<: *db_env_variables
+      # WARNING: Disabling authentication here!!!
+      POSTGRES_HOST_AUTH_METHOD: 'trust'
+    volumes:
+      - ./create_test_data.sql:/docker-entrypoint-initdb.d/create_test_data.sql
+
+  bach_demo_notebook:
+    container_name: bach_demo_notebook
+    image: ${OBJECTIV_CONTAINER_URL-objectiv}/notebook:${OBJECTIV_CONTAINER_TAG-latest}
+    ports:
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:8053:8053"
+    networks:
+      - bach_demo_shared_network
+    restart: unless-stopped
+    depends_on:
+      # we make it depend on the postgres instance
+      # so we have the best chance of the db being up in time
+      - bach_demo_postgres
+    environment:
+      <<: *db_env_variables
+      OBJECTIV_VERSION_CHECK_DISABLE: ${OBJECTIV_VERSION_CHECK_DISABLE-false}
+      # Don't load object-analytics demo data
+      OBJECTIV_SKIP_IMPORT: "true"
+    volumes:
+      - ./demo_volume:/services/notebooks/demo
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
+      interval: 30s
+      timeout: 2s
+      retries: 3
+
+# use bridged networking, so we can access services provided from the host
+networks:
+  bach_demo_shared_network:
+    driver: bridge
+
+volumes:
+  demo_volume:
+    external: False
+
