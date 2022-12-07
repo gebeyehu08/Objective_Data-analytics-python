@@ -467,7 +467,7 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
                     COALESCE(useragent, '') AS user_agent,
                     COALESCE(user_ipaddress, '') AS remote_address,
                     ["AbstractContext","AbstractGlobalContext","HttpContext"] as _types
-                ))            
+                ))
                 """
             ))
             df_cp['http'] = http_from_sp
@@ -488,12 +488,13 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
                     'unsupported' AS source_platform,
                     mkt_term as term,
                     ['AbstractContext','AbstractGlobalContext','MarketingContext'] as _types
-                ))            
+                ))
                 """
             ))
-            df_cp.loc[df_cp['marketing'].elements[0].isnull(), 'marketing'] = marketing_from_sp
-        return df_cp
 
+            mkt_series_list = df_cp['marketing'].copy_override_type(bach.SeriesList, instance_dtype=[{}])
+            df_cp.loc[mkt_series_list.isnull(), 'marketing'] = marketing_from_sp
+        return df_cp
 
 
 class AthenaQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
