@@ -312,7 +312,7 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
         'domain_sessionid': bach.SeriesString.dtype,
         'se_action': bach.SeriesString.dtype,
         'se_category': bach.SeriesString.dtype,
-        'true_tstamp': bach.SeriesTimestamp.dtype
+        'derived_tstamp': bach.SeriesTimestamp.dtype
     }
 
     def _process_data(self, df: bach.DataFrame) -> bach.DataFrame:
@@ -326,15 +326,6 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
             }
         )
 
-        # avoid having empty string in series that fill user_id series, otherwise
-        # there is a risk of raising an exception when trying to parse string values to UUID
-        uuid_series = ['network_userid', 'domain_sessionid']
-        for series in uuid_series:
-            mask = (
-                (df_cp[series] == '') | (df_cp[series] == '00000000-0000-0000-0000-000000000000')
-            )
-            df_cp.loc[mask, series] = None
-
         # users might be anonymized in early events of a session, therefore we should consider the last
         # network_userid registered for the domain_sessionid
         window = df_cp.sort_values(by=['collector_tstamp']).groupby(by='domain_sessionid').window(
@@ -344,11 +335,22 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
             df_cp['network_userid'].window_last_value(window=window)
         )
 
+        # If the last network_userid was all zeros, the user never unanonimized, let's set it to NULL
+        all_zero_uuid = '00000000-0000-0000-0000-000000000000'
+        df_cp.loc[(df_cp['network_userid'] == all_zero_uuid), 'network_userid'] = None
+
         # Anonymous users have no network_userid, but their domain_sessionid is useable as user_id as well
         df_cp[ObjectivSupportedColumns.USER_ID.value] = (
             df_cp['network_userid'].fillna(df_cp['domain_sessionid'])
         )
         df_cp = df_cp.drop(columns=['network_userid', 'domain_sessionid'])
+
+        # avoid having empty string in series that fill user_id series, otherwise
+        # there is a risk of raising an exception when trying to parse string values to UUID
+        df_cp.loc[
+            (df_cp[ObjectivSupportedColumns.USER_ID.value] == ''),
+            ObjectivSupportedColumns.USER_ID.value
+        ] = None
 
         # Mark duplicated event_ids
         # Unfortunately, some events might share an event ID due to
@@ -365,19 +367,19 @@ class SnowplowExtractedContextsPipeline(BaseExtractedContextsPipeline, ABC):
             df_cp['event_id'].window_row_number(window=window) > 1
         )
         # Snowplow data source has no moment and day columns, therefore we need to generate them
-        if df_cp['true_tstamp'].dtype == 'timestamp':
-            df_cp['moment'] = df_cp['true_tstamp']
+        if df_cp['derived_tstamp'].dtype == 'timestamp':
+            df_cp['moment'] = df_cp['derived_tstamp']
         else:
-            df_cp['moment'] = df_cp['true_tstamp'].copy_override(
+            df_cp['moment'] = df_cp['derived_tstamp'].copy_override(
                 expression=bach.expression.Expression.construct(
-                    f'TIMESTAMP_MILLIS({{}})', df_cp['true_tstamp']
+                    f'TIMESTAMP_MILLIS({{}})', df_cp['derived_tstamp']
                 )
             ).copy_override_type(bach.SeriesTimestamp)
 
         if 'day' not in df_cp.data_columns:
             df_cp['day'] = df_cp['moment'].astype('date')
 
-        return df_cp.drop(columns=['true_tstamp', 'collector_tstamp'])
+        return df_cp.drop(columns=['derived_tstamp', 'collector_tstamp'])
 
 
 class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
@@ -448,12 +450,50 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
         )
         df_cp[ls_series_name] = ls_series_dict.elements['location_stack']
 
-        return df_cp.astype(
+        df_cp = df_cp.astype(
             {
                 ls_series_name: 'objectiv_location_stack',
                 **{gc: 'objectiv_global_context' for gc in self._global_contexts}
             }
         )
+        if 'http' in df_cp.data_columns:
+            # We replace the objectiv http context with the SP generated one, since we can not be sure
+            # the remote address is set otherwise.
+            http_from_sp = df_cp['http'].copy_override(expression=Expression.construct(
+                """
+                to_json_string(array(select as struct
+                    'http_context' AS id,
+                    COALESCE(page_referrer, '') AS referrer,
+                    COALESCE(useragent, '') AS user_agent,
+                    COALESCE(user_ipaddress, '') AS remote_address,
+                    ["AbstractContext","AbstractGlobalContext","HttpContext"] as _types
+                ))            
+                """
+            ))
+            df_cp['http'] = http_from_sp
+
+        if 'marketing' in df_cp.data_columns:
+            # We replace the objectiv marketing context only when it's missing, since it
+            # requires the mkt enrichment and that's not always there.
+            marketing_from_sp = df_cp['marketing'].copy_override(expression=Expression.construct(
+                """
+                to_json_string(array(select as struct
+                    'utm' AS id,
+                    mkt_campaign as campaign,
+                    mkt_medium as medium,
+                    mkt_source as source,
+                    mkt_content as context,
+                    'unsupported' as creative_format,
+                    'unsupported' as marketing_tactic,
+                    'unsupported' AS source_platform,
+                    mkt_term as term,
+                    ['AbstractContext','AbstractGlobalContext','MarketingContext'] as _types
+                ))            
+                """
+            ))
+            df_cp.loc[df_cp['marketing'].elements[0].isnull(), 'marketing'] = marketing_from_sp
+        return df_cp
+
 
 
 class AthenaQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):

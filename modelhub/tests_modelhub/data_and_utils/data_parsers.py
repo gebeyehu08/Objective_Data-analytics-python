@@ -39,8 +39,8 @@ def get_extracted_contexts_data_from_parsed_objectiv_data(data_format: DBParams.
         ec_event_data['user_id'] = UUID(
             parsed_sp_event_data['network_userid'] or parsed_sp_event_data['domain_sessionid']
         )
-        ec_event_data['day'] = date.fromtimestamp(parsed_sp_event_data['true_tstamp'].timestamp())
-        ec_event_data['moment'] = parsed_sp_event_data['true_tstamp']
+        ec_event_data['day'] = date.fromtimestamp(parsed_sp_event_data['derived_tstamp'].timestamp())
+        ec_event_data['moment'] = parsed_sp_event_data['derived_tstamp']
 
         extracted_contexts_data.append(ec_event_data)
 
@@ -86,7 +86,7 @@ def _parse_event_data_to_snowplow_format(event_data: Dict[str, Any], data_format
         ),
         'se_action': event_data['value']['_type'],
         'se_category': json.dumps(event_data['value']['_types']),
-        'true_tstamp': datetime.utcfromtimestamp(parsed_time_val / 1e3),
+        'derived_tstamp': datetime.utcfromtimestamp(parsed_time_val / 1e3),
     }
     if data_format == DBParams.Format.SNOWPLOW:
         parsed_event_data.update(_parse_native_taxonomy_to_native_snowplow(event_data['value']))
