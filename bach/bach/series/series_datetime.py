@@ -15,7 +15,7 @@ from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, Seri
 from bach.expression import Expression, join_expressions, StringValueToken
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
-    parse_c_code_to_bigquery_code, parse_c_code_to_athena_code, warn_non_supported_format_codes
+    parse_c_code_to_bigquery_code, warn_non_supported_format_codes, parse_c_code_to_athena_expression
 from bach.types import DtypeOrAlias, StructuredDtype, value_to_series_type, get_series_type_from_dtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException, is_athena
@@ -74,8 +74,8 @@ class DateTimeOperation:
         code semantics: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
 
         The subset of codes that are supported across all databases is:
-            `%A`, `%B`, `%F`, `%H`, `%I`, `%M`, `%R`, `%S`, `%T`, `%Y`, `%a`, `%b`, `%d`, `%j`, `%m`, `%y`,
-            `%%`
+            `%A`, `%B`, `%F`, `%H`, `%I`, `%M`, `%R`, `%S`, `%T`, `%V`, %Y`, `%a`, `%b`, `%d`, `%j`, `%m`,
+            `%y`, `%%`
 
         Additionally one specific combination is supported: `%S.%f`
 
@@ -98,15 +98,12 @@ class DateTimeOperation:
                 'to_char({}, {})', series, Expression.string_value(parsed_format_str)
             )
         elif is_athena(engine):
-            parsed_format_str = parse_c_code_to_athena_code(format_str)
             if isinstance(series, SeriesTime):
                 # for time series, we should convert the float values into a timestamp,
                 # otherwise date_format won't work
                 series = SeriesTimestamp.from_total_seconds(series.copy_override_type(SeriesFloat64))
 
-            expression = Expression.construct(
-                'date_format({}, {})', series, Expression.string_value(parsed_format_str)
-            )
+            expression = parse_c_code_to_athena_expression(series.expression, format_str)
         elif is_bigquery(engine):
             if isinstance(series, SeriesTime):
                 # BigQuery provides a different function for formatting time, parsing a time to timestamp

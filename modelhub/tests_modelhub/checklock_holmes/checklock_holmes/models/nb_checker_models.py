@@ -75,7 +75,7 @@ class NoteBookCheckSettings(BaseModel):
         """
         Creates issue directory if provided dir does not exist
         """
-        _check_dir(dir)
+        create_dir_if_not_exists(dir)
         return dir
 
     @validator('dump_nb_scripts_dir')
