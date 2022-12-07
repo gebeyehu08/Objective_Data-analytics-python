@@ -474,7 +474,7 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
 
         if 'marketing' in df_cp.data_columns:
             # We replace the objectiv marketing context only when it's missing, since it
-            # requires the mkt enrichment and that's not always there.
+            # requires the mkt enrichment running in the SP pipeline and that's not always there.
             marketing_from_sp = df_cp['marketing'].copy_override(expression=Expression.construct(
                 """
                 to_json_string(array(select as struct
