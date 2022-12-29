@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-__version__ = '0.0.27.dev1'
+__version__ = '0.0.27.dev2'
 
 from modelhub.modelhub import ModelHub
 from modelhub.aggregate import Aggregate
