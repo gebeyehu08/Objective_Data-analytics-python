@@ -477,7 +477,8 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
             # requires the mkt enrichment running in the SP pipeline and that's not always there.
             marketing_from_sp = df_cp['marketing'].copy_override(expression=Expression.construct(
                 """
-                to_json_string(array(select as struct
+                CASE WHEN ({} = '[]')
+                THEN to_json_string(array(select as struct
                     'utm' AS id,
                     mkt_campaign as campaign,
                     mkt_medium as medium,
@@ -489,11 +490,13 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
                     mkt_term as term,
                     ['AbstractContext','AbstractGlobalContext','MarketingContext'] as _types
                 ))
+                ELSE {} END
                 """
-            ))
+            , df_cp['marketing'], df_cp['marketing']))
 
-            mkt_series_list = df_cp['marketing'].copy_override_type(bach.SeriesList, instance_dtype=[{}])
-            df_cp.loc[mkt_series_list.isnull(), 'marketing'] = marketing_from_sp
+            # mkt_series_list = df_cp['marketing'].copy_override_type(bach.SeriesList, instance_dtype=[{}])
+            # df_cp.loc[mkt_series_list.elements[0].isnull(), 'marketing'] = marketing_from_sp
+        df_cp['marketing'] = marketing_from_sp
         return df_cp
 
 
