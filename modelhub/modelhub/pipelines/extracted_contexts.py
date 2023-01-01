@@ -491,8 +491,7 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
                     ['AbstractContext','AbstractGlobalContext','MarketingContext'] as _types
                 ))
                 ELSE {} END
-                """
-            , df_cp['marketing'], df_cp['marketing']))
+                """, df_cp['marketing'], df_cp['marketing']))
 
             # mkt_series_list = df_cp['marketing'].copy_override_type(bach.SeriesList, instance_dtype=[{}])
             # df_cp.loc[mkt_series_list.elements[0].isnull(), 'marketing'] = marketing_from_sp
