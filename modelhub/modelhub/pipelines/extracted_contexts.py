@@ -462,11 +462,11 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
             http_from_sp = df_cp['http'].copy_override(expression=Expression.construct(
                 """
                 to_json_string(array(select as struct
-                    'http_context' AS id,
-                    COALESCE(page_referrer, '') AS referrer,
-                    COALESCE(useragent, '') AS user_agent,
-                    COALESCE(user_ipaddress, '') AS remote_address,
-                    ["AbstractContext","AbstractGlobalContext","HttpContext"] as _types
+                    'http_context' AS `id`,
+                    COALESCE(`page_referrer`, '') AS `referrer`,
+                    COALESCE(`useragent`, '') AS `user_agent`,
+                    COALESCE(`user_ipaddress`, '') AS `remote_address`,
+                    ["AbstractContext","AbstractGlobalContext","HttpContext"] as `_types`
                 ))
                 """
             ))
@@ -479,16 +479,16 @@ class BigQueryExtractedContextsPipeline(SnowplowExtractedContextsPipeline):
                 """
                 CASE WHEN ({} = '[]')
                 THEN to_json_string(array(select as struct
-                    'utm' AS id,
-                    mkt_campaign as campaign,
-                    mkt_medium as medium,
-                    mkt_source as source,
-                    mkt_content as context,
-                    'unsupported' as creative_format,
-                    'unsupported' as marketing_tactic,
-                    'unsupported' AS source_platform,
-                    mkt_term as term,
-                    ['AbstractContext','AbstractGlobalContext','MarketingContext'] as _types
+                    'utm' AS `id`,
+                    `mkt_campaign` as `campaign`,
+                    `mkt_medium` as `medium`,
+                    `mkt_source` as `source`,
+                    `mkt_content` as `context`,
+                    'unsupported' as `creative_format`,
+                    'unsupported' as `marketing_tactic`,
+                    'unsupported' AS `source_platform`,
+                    `mkt_term` as `term`,
+                    ['AbstractContext','AbstractGlobalContext','MarketingContext'] as `_types`
                 ))
                 ELSE {} END
                 """, df_cp['marketing'], df_cp['marketing']))
