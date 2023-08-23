@@ -50,16 +50,3 @@ Objectiv is also available as [a fully managed cloud setup](https://www.objectiv
 Instrument Objectiv’s tracker to start collecting user data that embraces [the open analytics taxonomy](https://objectiv.io/docs/taxonomy). Our very supportive [tracking SDKs](https://objectiv.io/docs/tracking) will help you set up error-free tracking in your app with the least amount of effort.
 
 ---
-
-## Compatibility
-
-Objectiv runs in your favorite Python notebook and integrates with Snowplow for ingestion. It plays nice with most popular tools & infra in the modern data stack.
-
-![objectiv-stack-compatibility](https://user-images.githubusercontent.com/82152911/194339752-1ccce4bc-fb67-41e6-aa7d-c0ec6586e2d5.svg)
-
-Also see the [full overview of Objectiv’s components & compatibility](https://objectiv.io/docs/home/compatibility/).
-
-## Get Help
-* [Check out the documentation](https://objectiv.io/docs/) for instructions on how to set up and run Objectiv
-* [Join Objectiv on Slack](https://objectiv.io/join-slack) to get help from the team and community.
-* [Create an issue](https://github.com/objectiv/objectiv-analytics/issues) to report a bug or request a feature. 
